@@ -1,4 +1,4 @@
-﻿namespace Evens.Models
+﻿namespace Events.Data
 {
     public class Class1
     {

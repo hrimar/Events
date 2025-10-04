@@ -2,7 +2,7 @@ using System;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 
-namespace Evens.Crawler
+namespace Events.Crawler
 {
     public class Function1
     {
