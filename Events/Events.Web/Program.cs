@@ -1,4 +1,9 @@
 using Events.Data.Context;
+using Events.Data.Services;
+using Events.Data.Repositories.Implementations;
+using Events.Data.Repositories.Interfaces;
+using Events.Services.Implementations;
+using Events.Services.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,18 +18,62 @@ builder.Services.AddDbContext<EventsDbContext>(options =>
         dbOptions.MigrationsAssembly("Events.Data")));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
-    .AddEntityFrameworkStores<EventsDbContext>();
+builder.Services.AddDefaultIdentity<IdentityUser>(options =>
+{
+    options.SignIn.RequireConfirmedAccount = true;
 
-// TODO: Register repositories
+    //if (builder.Environment.IsDevelopment()) // for simpler registration and operation with User logins
+    //{
+        //    options.Password.RequireDigit = true;
+        //    options.Password.RequireLowercase = true;
+        //    options.Password.RequireNonAlphanumeric = false; // true;
+        //    options.Password.RequireUppercase = false; // true;
+        //    options.Password.RequiredLength = 6;
+        //    options.Password.RequiredUniqueChars = 1;
+    //}
+})
+.AddRoles<IdentityRole>()
+.AddEntityFrameworkStores<EventsDbContext>();
 
+// Register repositories
+builder.Services.AddScoped<IEventRepository, EventRepository>();
+builder.Services.AddScoped<ITagRepository, TagRepository>();
+builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 
-// TODO: Register services
+// Register services
+builder.Services.AddScoped<IEventService, EventService>();
+builder.Services.AddScoped<ITagService, TagService>();
 
 builder.Services.AddRazorPages();
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
+
+// Migrate and seed the database in Development only. Re-throw in development to see the issue
+if (app.Environment.IsDevelopment())
+{
+    using (var scope = app.Services.CreateScope())
+    {
+        var context = scope.ServiceProvider.GetRequiredService<EventsDbContext>();
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+
+        try
+        {
+            logger.LogInformation("Ensuring database exists and applying migrations...");
+            await context.Database.MigrateAsync();
+            logger.LogInformation("Database migrations completed successfully");
+
+            logger.LogInformation("Starting database seeding...");
+            await DbSeederService.SeedDatabaseAsync(app.Services, logger);
+            logger.LogInformation("Database seeding completed successfully");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "An error occurred while setting up the database");
+            throw;
+        }
+    }
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
