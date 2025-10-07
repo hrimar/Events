@@ -9,6 +9,6 @@
     "WEBSITE_RUN_FROM_PACKAGE": "1"
   },
   "ConnectionStrings": {
-     "EventsConnection": "Server=DESKTOP-F9M2OPA\\SQLEXPRESS;Database=EventsDb;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=true;Encrypt=true"
+     "EventsConnection": ".;Database=EventsDb;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=true;Encrypt=true"
   }
 }
