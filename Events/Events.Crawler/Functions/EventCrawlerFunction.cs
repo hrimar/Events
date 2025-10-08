@@ -23,8 +23,7 @@ public class EventCrawlerFunction
     }
 
     [Function("CrawlEventsFunction")]
-    //public async Task Run([TimerTrigger("0 0 4 * * *")] TimerInfo myTimer) // 4:00 AM daily
-    public async Task Run([TimerTrigger("0 59 12 * * *")] TimerInfo myTimer)
+    public async Task Run([TimerTrigger("0 0 4 * * *")] TimerInfo myTimer) // 4:00 AM daily
     {
         _logger.LogInformation("Event crawler function started at: {Time}", DateTime.UtcNow);
 
@@ -32,21 +31,21 @@ public class EventCrawlerFunction
         {
             // Crawl all sources
             var crawlResult = await _crawlerService.CrawlAllSourcesAsync();
-            
-            _logger.LogInformation("Crawling completed. Found {EventCount} events from {SourceCount} sources", 
+
+            _logger.LogInformation("Crawling completed. Found {EventCount} events from {SourceCount} sources",
                 crawlResult.EventsFound, _crawlerService.GetSupportedSources().Count());
 
             if (crawlResult.Success && crawlResult.Events.Any())
             {
                 // Process and save events to database
                 var processingResult = await _eventProcessingService.ProcessAndTagEventsAsync(crawlResult.Events);
-                
-                _logger.LogInformation("Processing completed. Created: {Created}, Updated: {Updated}, Skipped: {Skipped}", 
+
+                _logger.LogInformation("Processing completed. Created: {Created}, Updated: {Updated}, Skipped: {Skipped}",
                     processingResult.EventsCreated, processingResult.EventsUpdated, processingResult.EventsSkipped);
 
                 if (processingResult.Errors.Any())
                 {
-                    _logger.LogWarning("Processing completed with errors: {Errors}", 
+                    _logger.LogWarning("Processing completed with errors: {Errors}",
                         string.Join(", ", processingResult.Errors));
                 }
             }
@@ -69,28 +68,30 @@ public class EventCrawlerFunction
         try
         {
             var result = await _crawlerService.CrawlEventsAsync(source);
-            
+
             if (result.Success && result.Events.Any())
             {
                 var processingResult = await _eventProcessingService.ProcessAndTagEventsAsync(result.Events);
-                _logger.LogInformation("Manual crawl completed for {Source}. Processed {Count} events", 
+                _logger.LogInformation("Manual crawl completed for {Source}. Processed {Count} events",
                     source, processingResult.EventsProcessed);
 
                 var response = req.CreateResponse(HttpStatusCode.OK);
-                await response.WriteAsJsonAsync(new { 
-                    success = true, 
+                await response.WriteAsJsonAsync(new
+                {
+                    success = true,
                     eventsProcessed = processingResult.EventsProcessed,
                     eventsCreated = processingResult.EventsCreated,
-                    eventsUpdated = processingResult.EventsUpdated 
+                    eventsUpdated = processingResult.EventsUpdated
                 });
                 return response;
             }
             else
             {
                 var response = req.CreateResponse(HttpStatusCode.OK);
-                await response.WriteAsJsonAsync(new { 
-                    success = false, 
-                    message = result.ErrorMessage ?? "No events found" 
+                await response.WriteAsJsonAsync(new
+                {
+                    success = false,
+                    message = result.ErrorMessage ?? "No events found"
                 });
                 return response;
             }
@@ -98,11 +99,12 @@ public class EventCrawlerFunction
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error during manual crawl for source: {Source}", source);
-            
+
             var errorResponse = req.CreateResponse(HttpStatusCode.InternalServerError);
-            await errorResponse.WriteAsJsonAsync(new { 
-                success = false, 
-                error = ex.Message 
+            await errorResponse.WriteAsJsonAsync(new
+            {
+                success = false,
+                error = ex.Message
             });
             return errorResponse;
         }

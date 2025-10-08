@@ -6,9 +6,11 @@
     "FUNCTIONS_EXTENSION_VERSION": "~4",
     "SCM_DO_BUILD_DURING_DEPLOYMENT": "true",
     "ENABLE_ORYX_BUILD": "true",
-    "WEBSITE_RUN_FROM_PACKAGE": "1"
+    "WEBSITE_RUN_FROM_PACKAGE": "1",
+    "Groq:ApiKey": ""
+    //"OpenAI:ApiKey": ""
   },
   "ConnectionStrings": {
-     "EventsConnection": ".;Database=EventsDb;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=true;Encrypt=true"
+     "EventsConnection": "Server=.;Database=EventsDb;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=true;Encrypt=true"
   }
 }

@@ -18,8 +18,7 @@ public class CrawlerService : ICrawlerService
 
     public async Task<CrawlResult> CrawlEventsAsync(string source, DateTime? targetDate = null)
     {
-        var crawler = _crawlers.FirstOrDefault(c => 
-            c.SourceName.Equals(source, StringComparison.OrdinalIgnoreCase));
+        var crawler = _crawlers.FirstOrDefault(c => c.SourceName.Equals(source, StringComparison.OrdinalIgnoreCase));
 
         if (crawler == null)
         {
@@ -45,8 +44,8 @@ public class CrawlerService : ICrawlerService
         {
             _logger.LogInformation("Starting crawl for source: {Source}", source);
             var result = await crawler.CrawlAsync(targetDate);
-            _logger.LogInformation("Completed crawl for {Source}. Found {EventCount} events", 
-                source, result.EventsFound);
+            _logger.LogInformation("Completed crawl for {Source}. Found {EventCount} events", source, result.EventsFound);
+
             return result;
         }
         catch (Exception ex)
@@ -66,7 +65,7 @@ public class CrawlerService : ICrawlerService
         var allResults = new List<CrawlResult>();
         var startTime = DateTime.UtcNow;
 
-        foreach (var crawler in _crawlers.Where(c => c.IsHealthy() & c.CrawlerType != CrawlerType.HttpApi)) // TODO: ignore HttpApi for now
+        foreach (var crawler in _crawlers.Where(c => c.IsHealthy()))
         {
             try
             {

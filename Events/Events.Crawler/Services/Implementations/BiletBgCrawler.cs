@@ -109,21 +109,12 @@ public class BiletBgCrawler : IHttpApiCrawler
             var ticket = await GetDataAsync<BiletTicketDto>(nextPageUrl);
             if (ticket?.Events != null)
                 allEvents.AddRange(ticket.Events);
-
-            //nextPageUrl = ExtractNextPagePath(ticket?.NextPageUrl);
+                        
             nextPageUrl = ticket?.NextPageUrl;
         }
         while (!string.IsNullOrEmpty(nextPageUrl));
 
         return allEvents;
-    }
-
-    private string? ExtractNextPagePath(string? nextPageUrl)
-    {
-        if (string.IsNullOrEmpty(nextPageUrl)) return null;
-        
-        var uri = new Uri(nextPageUrl);
-        return uri.PathAndQuery.TrimStart('/');
     }
 
     private CrawledEventDto MapToStandardDto(BiletEventDto biletEvent)

@@ -1,5 +1,4 @@
-using Events.Crawler.DTOs;
-using Events.Crawler.DTOs.Common;
+﻿using Events.Crawler.DTOs.Common;
 using Events.Crawler.Models;
 using Events.Crawler.Services.Interfaces;
 using Events.Models.Entities;
@@ -120,30 +119,82 @@ public class EventProcessingService : IEventProcessingService
         }
     }
 
+    //public async Task<Event> MapToEntityAsync(CrawledEventDto crawledEvent)
+    //{
+    //    try
+    //    {
+    //        // Use AI to classify the event if description is available
+    //        //var category = EventCategory.Exhibitions; // Default // TODO: Implement AI classification
+    //        EventCategory? category = null;
+
+    //        if (!string.IsNullOrEmpty(crawledEvent.Description))
+    //        {
+    //            try
+    //            {
+    //                // TODO: Implement AI classification
+    //                category = await _aiTaggingService.ClassifyEventAsync(crawledEvent.Name, crawledEvent.Description);
+    //            }
+    //            catch (Exception ex)
+    //            {
+    //                _logger.LogWarning(ex, "Failed to classify event {EventName}, using default category", crawledEvent.Name);
+    //            }
+    //        }
+
+    //        var eventEntity = new Event
+    //        {
+    //            Name = TruncateString(crawledEvent.Name, 200),
+    //            Description = TruncateString(crawledEvent.Description, 2000),
+    //            Date = crawledEvent.StartDate ?? DateTime.Now.AddDays(1), // Default to tomorrow if no date
+    //            StartTime = crawledEvent.StartDate?.TimeOfDay,
+    //            Location = TruncateString(crawledEvent.Location ?? "TBD", 300),
+    //            ImageUrl = TruncateString(crawledEvent.ImageUrl, 500),
+    //            TicketUrl = TruncateString(crawledEvent.TicketUrl, 500),
+    //            SourceUrl = TruncateString(crawledEvent.SourceUrl, 500),
+    //            Price = crawledEvent.Price,
+    //            IsFree = crawledEvent.IsFree || crawledEvent.Price == 0,
+    //            Category = category,
+    //            Status = EventStatus.Draft,
+    //            CreatedAt = DateTime.UtcNow,
+    //            UpdatedAt = DateTime.UtcNow
+    //        };
+
+    //        return eventEntity;
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        _logger.LogError(ex, "Error mapping crawled event to entity: {EventName}", crawledEvent.Name);
+    //        throw;
+    //    }
+    //}
     public async Task<Event> MapToEntityAsync(CrawledEventDto crawledEvent)
     {
         try
         {
-            // Use AI to classify the event if description is available
-            //var category = EventCategory.Exhibitions; // Default // TODO: Implement AI classification with Claude
-            if (!string.IsNullOrEmpty(crawledEvent.Description))
+            EventCategory? category = null;
+
+            // AI clasification only if we have both name and description
+            if (!string.IsNullOrEmpty(crawledEvent.Name) && !string.IsNullOrEmpty(crawledEvent.Description))
             {
                 try
                 {
-                    // TODO: Implement AI classification with Claude
-                    //category = await _aiTaggingService.ClassifyEventAsync(crawledEvent.Name, crawledEvent.Description);
+                    category = await _aiTaggingService.ClassifyEventAsync(crawledEvent.Name, crawledEvent.Description);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning(ex, "Failed to classify event {EventName}, using default category", crawledEvent.Name);
+                    _logger.LogWarning(ex, "AI classification failed for event {EventName}", crawledEvent.Name);
                 }
+            }
+
+            if (category == null)
+            {
+                _logger.LogInformation("Event '{EventName}' will be created as Draft for manual categorization", crawledEvent.Name);
             }
 
             var eventEntity = new Event
             {
                 Name = TruncateString(crawledEvent.Name, 200),
                 Description = TruncateString(crawledEvent.Description, 2000),
-                Date = crawledEvent.StartDate ?? DateTime.Now.AddDays(1), // Default to tomorrow if no date
+                Date = crawledEvent.StartDate ?? DateTime.Now.AddDays(1),
                 StartTime = crawledEvent.StartDate?.TimeOfDay,
                 Location = TruncateString(crawledEvent.Location ?? "TBD", 300),
                 ImageUrl = TruncateString(crawledEvent.ImageUrl, 500),
@@ -151,8 +202,8 @@ public class EventProcessingService : IEventProcessingService
                 SourceUrl = TruncateString(crawledEvent.SourceUrl, 500),
                 Price = crawledEvent.Price,
                 IsFree = crawledEvent.IsFree || crawledEvent.Price == 0,
-                //Category = category,
-                Status = EventStatus.Published,
+                Category = category,
+                Status = category.HasValue ? EventStatus.Published : EventStatus.Draft,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
