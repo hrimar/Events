@@ -1,5 +1,4 @@
 using Events.Crawler.Services.Interfaces;
-using Events.Crawler.DTOs;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;

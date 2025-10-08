@@ -119,53 +119,6 @@ public class EventProcessingService : IEventProcessingService
         }
     }
 
-    //public async Task<Event> MapToEntityAsync(CrawledEventDto crawledEvent)
-    //{
-    //    try
-    //    {
-    //        // Use AI to classify the event if description is available
-    //        //var category = EventCategory.Exhibitions; // Default // TODO: Implement AI classification
-    //        EventCategory? category = null;
-
-    //        if (!string.IsNullOrEmpty(crawledEvent.Description))
-    //        {
-    //            try
-    //            {
-    //                // TODO: Implement AI classification
-    //                category = await _aiTaggingService.ClassifyEventAsync(crawledEvent.Name, crawledEvent.Description);
-    //            }
-    //            catch (Exception ex)
-    //            {
-    //                _logger.LogWarning(ex, "Failed to classify event {EventName}, using default category", crawledEvent.Name);
-    //            }
-    //        }
-
-    //        var eventEntity = new Event
-    //        {
-    //            Name = TruncateString(crawledEvent.Name, 200),
-    //            Description = TruncateString(crawledEvent.Description, 2000),
-    //            Date = crawledEvent.StartDate ?? DateTime.Now.AddDays(1), // Default to tomorrow if no date
-    //            StartTime = crawledEvent.StartDate?.TimeOfDay,
-    //            Location = TruncateString(crawledEvent.Location ?? "TBD", 300),
-    //            ImageUrl = TruncateString(crawledEvent.ImageUrl, 500),
-    //            TicketUrl = TruncateString(crawledEvent.TicketUrl, 500),
-    //            SourceUrl = TruncateString(crawledEvent.SourceUrl, 500),
-    //            Price = crawledEvent.Price,
-    //            IsFree = crawledEvent.IsFree || crawledEvent.Price == 0,
-    //            Category = category,
-    //            Status = EventStatus.Draft,
-    //            CreatedAt = DateTime.UtcNow,
-    //            UpdatedAt = DateTime.UtcNow
-    //        };
-
-    //        return eventEntity;
-    //    }
-    //    catch (Exception ex)
-    //    {
-    //        _logger.LogError(ex, "Error mapping crawled event to entity: {EventName}", crawledEvent.Name);
-    //        throw;
-    //    }
-    //}
     public async Task<Event> MapToEntityAsync(CrawledEventDto crawledEvent)
     {
         try
@@ -196,7 +149,7 @@ public class EventProcessingService : IEventProcessingService
                 Description = TruncateString(crawledEvent.Description, 2000),
                 Date = crawledEvent.StartDate ?? DateTime.Now.AddDays(1),
                 StartTime = crawledEvent.StartDate?.TimeOfDay,
-                Location = TruncateString(crawledEvent.Location ?? "TBD", 300),
+                Location = TruncateString(crawledEvent.Location ?? "TBD", 300), // TODO: Clarify missed locations in bilet.bg
                 ImageUrl = TruncateString(crawledEvent.ImageUrl, 500),
                 TicketUrl = TruncateString(crawledEvent.TicketUrl, 500),
                 SourceUrl = TruncateString(crawledEvent.SourceUrl, 500),

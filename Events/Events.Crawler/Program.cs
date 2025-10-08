@@ -34,13 +34,6 @@ var host = new HostBuilder()
         // Crawler-specific services
         services.AddScoped<ICrawlerService, CrawlerService>();
         services.AddScoped<IEventProcessingService, EventProcessingService>();
-        ////services.AddHttpClient<OpenAiTaggingService>();
-        ////services.AddScoped<IAiTaggingService, OpenAiTaggingService>();
-        //services.AddHttpClient<AzureOpenAiTaggingService>();
-        //services.AddScoped<IAiTaggingService, AzureOpenAiTaggingService>();
-        //services.AddHttpClient<OpenAiTaggingService>();
-        //services.AddScoped<IAiTaggingService, OpenAiTaggingService>();
-        services.AddHttpClient<GroqTaggingService>();
         services.AddScoped<IAiTaggingService, GroqTaggingService>();
 
         // HTTP clients for API crawlers
