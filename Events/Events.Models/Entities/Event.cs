@@ -33,8 +33,7 @@ public class Event
 
     public decimal? Price { get; set; }
 
-    [Required]
-    public EventCategory Category { get; set; }
+    public EventCategory? Category { get; set; }
 
     public int? SubCategoryId { get; set; }
 

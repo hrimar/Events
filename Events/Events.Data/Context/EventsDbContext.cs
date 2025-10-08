@@ -32,6 +32,8 @@ public class EventsDbContext : IdentityDbContext
             entity.Property(e => e.SourceUrl).HasMaxLength(500);
             entity.Property(e => e.Price).HasColumnType("decimal(18,2)");
 
+            entity.Property(e => e.Category).IsRequired(false);
+
             entity.HasIndex(e => e.Date);
             entity.HasIndex(e => e.Category);
             entity.HasIndex(e => e.Status);
