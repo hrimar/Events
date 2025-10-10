@@ -10,5 +10,4 @@ public interface IEventProcessingService
     Task<ProcessingResult> ProcessAndTagEventsAsync(IEnumerable<CrawledEventDto> crawledEvents);
     Task<Event?> FindExistingEventAsync(CrawledEventDto crawledEvent);
     Task<Event> MapToEntityAsync(CrawledEventDto crawledEvent);
-    Task TagEventsAsync(IEnumerable<int> eventIds);
 }

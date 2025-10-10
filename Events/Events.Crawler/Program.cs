@@ -26,9 +26,11 @@ var host = new HostBuilder()
         services.AddScoped<IEventRepository, EventRepository>();
         services.AddScoped<ITagRepository, TagRepository>();
         services.AddScoped<ICategoryRepository, CategoryRepository>();
+        services.AddScoped<ISubCategoryRepository, SubCategoryRepository>();
 
         // Core services (shared with web app)
         services.AddScoped<IEventService, EventService>();
+        services.AddScoped<ISubCategoryService, SubCategoryService>();
         services.AddScoped<ITagService, TagService>();
 
         // Crawler-specific services

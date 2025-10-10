@@ -36,17 +36,23 @@ public class TicketStationCrawler : IWebScrapingCrawler
 
         try
         {
-            // Ensure browsers are installed before attempting to crawl
-            await EnsureBrowsersInstalledAsync();
+            EnsureBrowsersInstalled();
 
             var ticketStationEvents = await GetTicketStationEventsAsync("https://ticketstation.bg/bg/attractions");
 
-            result.EventsFound = ticketStationEvents.Count;
-            result.Events = ticketStationEvents.Select(MapTicketStationToStandardDto).ToList();
-            result.EventsProcessed = result.Events.Count;
+            var sofiaEvents = ticketStationEvents
+                .Select(MapTicketStationToStandardDto)
+                .Where(e => e != null) // Filter out null (non-Sofia) events
+                .Cast<CrawledEventDto>()
+                .ToList();
+
+            result.EventsFound = ticketStationEvents.Count; // Total found events
+            result.Events = sofiaEvents; // Only Sofia events
+            result.EventsProcessed = sofiaEvents.Count;
             result.Success = true;
 
-            _logger.LogInformation("Successfully crawled {EventCount} events from TicketStation", ticketStationEvents.Count);
+            _logger.LogInformation("Crawled {TotalEvents} events from TicketStation, {SofiaEvents} in Sofia",
+                ticketStationEvents.Count, sofiaEvents.Count);
         }
         catch (Exception ex)
         {
@@ -66,7 +72,7 @@ public class TicketStationCrawler : IWebScrapingCrawler
     {
         try
         {
-            await EnsureBrowsersInstalledAsync();
+            EnsureBrowsersInstalled();
 
             using var playwright = await Playwright.CreateAsync();
             var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
@@ -115,7 +121,7 @@ public class TicketStationCrawler : IWebScrapingCrawler
     {
         try
         {
-            await EnsureBrowsersInstalledAsync();
+            EnsureBrowsersInstalled();
 
             using var playwright = await Playwright.CreateAsync();
             var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
@@ -161,7 +167,7 @@ public class TicketStationCrawler : IWebScrapingCrawler
         }
     }
 
- 
+
     private async Task<List<TicketStationEventDto>> GetTicketStationEventsAsync(string url)
     {
         var retryCount = 0;
@@ -314,8 +320,17 @@ public class TicketStationCrawler : IWebScrapingCrawler
         return new List<TicketStationEventDto>();
     }
 
-    private CrawledEventDto MapTicketStationToStandardDto(TicketStationEventDto ticketStationEvent)
+    private CrawledEventDto? MapTicketStationToStandardDto(TicketStationEventDto ticketStationEvent)
     {
+        // Early filtration for Events because we are interested in Events from Sofia only
+        var city = ticketStationEvent.City?.Trim().ToLowerInvariant();
+        if (string.IsNullOrEmpty(city) || !IsSofiaCity(city))
+        {
+            _logger.LogDebug("Filtering out non-Sofia event: {EventName} in {City}",
+                ticketStationEvent.Name, ticketStationEvent.City);
+            return null; // Skip non-Sofia events
+        }
+
         return new CrawledEventDto
         {
             ExternalId = GenerateEventId(ticketStationEvent.Name, ticketStationEvent.Url),
@@ -354,7 +369,6 @@ public class TicketStationCrawler : IWebScrapingCrawler
     {
         if (string.IsNullOrWhiteSpace(dateText)) return null;
 
-        // Опитай различни формати за български дати
         var formats = new[]
         {
             "dd.MM.yyyy",
@@ -383,8 +397,7 @@ public class TicketStationCrawler : IWebScrapingCrawler
         return null;
     }
 
-
-    private async Task EnsureBrowsersInstalledAsync()
+    private void EnsureBrowsersInstalled()
     {
         if (_browsersInstalled) return;
 
@@ -462,5 +475,16 @@ public class TicketStationCrawler : IWebScrapingCrawler
         var chromePath = Path.Combine(latestChromiumDir, "chrome-win", "chrome.exe");
 
         return File.Exists(chromePath) ? chromePath : null;
+    }
+
+    private static bool IsSofiaCity(string city)
+    {
+        var sofiaCities = new[]
+        {
+        "софия", "sofia", "софија", "sofija",
+        "гр. софия", "гр.софия", "sofia city"
+    };
+
+        return sofiaCities.Any(sc => city.Contains(sc));
     }
 }

@@ -12,9 +12,14 @@ public class Event
     public string Name { get; set; } = string.Empty;
 
     [Required]
-    public DateTime Date { get; set; }
+    public DateTime Date { get; set; } // TODO: Make it nullable as ticketstation don't have date for some events
 
     public TimeSpan? StartTime { get; set; }
+
+    //// TODO: Add City to be able to filter and save to DB only City == Sofia
+    //[Required]
+    //[MaxLength(100)]
+    //public string City { get; set; } = string.Empty;
 
     [Required]
     [MaxLength(300)]
@@ -33,9 +38,11 @@ public class Event
 
     public decimal? Price { get; set; }
 
-    public EventCategory? Category { get; set; }
+    public int? CategoryId { get; set; }
+    public virtual Category? Category { get; set; }
 
     public int? SubCategoryId { get; set; }
+    public virtual SubCategory? SubCategory { get; set; }
 
     public EventStatus Status { get; set; } = EventStatus.Published;
 

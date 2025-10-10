@@ -4,6 +4,7 @@ using Events.Data.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Events.Data.Migrations
 {
     [DbContext(typeof(EventsDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251009154330_AddSubCategories")]
+    partial class AddSubCategories
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -60,7 +63,7 @@ namespace Events.Data.Migrations
                         {
                             Id = 1,
                             CategoryType = 1,
-                            CreatedAt = new DateTime(2025, 10, 9, 17, 50, 34, 183, DateTimeKind.Utc).AddTicks(4898),
+                            CreatedAt = new DateTime(2025, 10, 9, 15, 43, 29, 641, DateTimeKind.Utc).AddTicks(2842),
                             Description = "Musical events and concerts",
                             Name = "Music"
                         },
@@ -68,7 +71,7 @@ namespace Events.Data.Migrations
                         {
                             Id = 2,
                             CategoryType = 2,
-                            CreatedAt = new DateTime(2025, 10, 9, 17, 50, 34, 183, DateTimeKind.Utc).AddTicks(4901),
+                            CreatedAt = new DateTime(2025, 10, 9, 15, 43, 29, 641, DateTimeKind.Utc).AddTicks(2846),
                             Description = "Art exhibitions and shows",
                             Name = "Art"
                         },
@@ -76,7 +79,7 @@ namespace Events.Data.Migrations
                         {
                             Id = 3,
                             CategoryType = 3,
-                            CreatedAt = new DateTime(2025, 10, 9, 17, 50, 34, 183, DateTimeKind.Utc).AddTicks(4903),
+                            CreatedAt = new DateTime(2025, 10, 9, 15, 43, 29, 641, DateTimeKind.Utc).AddTicks(2848),
                             Description = "Business conferences and networking",
                             Name = "Business"
                         },
@@ -84,7 +87,7 @@ namespace Events.Data.Migrations
                         {
                             Id = 4,
                             CategoryType = 4,
-                            CreatedAt = new DateTime(2025, 10, 9, 17, 50, 34, 183, DateTimeKind.Utc).AddTicks(4904),
+                            CreatedAt = new DateTime(2025, 10, 9, 15, 43, 29, 641, DateTimeKind.Utc).AddTicks(2850),
                             Description = "Sports events and competitions",
                             Name = "Sports"
                         },
@@ -92,7 +95,7 @@ namespace Events.Data.Migrations
                         {
                             Id = 5,
                             CategoryType = 5,
-                            CreatedAt = new DateTime(2025, 10, 9, 17, 50, 34, 183, DateTimeKind.Utc).AddTicks(4905),
+                            CreatedAt = new DateTime(2025, 10, 9, 15, 43, 29, 641, DateTimeKind.Utc).AddTicks(2852),
                             Description = "Theatre performances and plays",
                             Name = "Theatre"
                         },
@@ -100,7 +103,7 @@ namespace Events.Data.Migrations
                         {
                             Id = 6,
                             CategoryType = 6,
-                            CreatedAt = new DateTime(2025, 10, 9, 17, 50, 34, 183, DateTimeKind.Utc).AddTicks(4906),
+                            CreatedAt = new DateTime(2025, 10, 9, 15, 43, 29, 641, DateTimeKind.Utc).AddTicks(2854),
                             Description = "Movie screenings and film festivals",
                             Name = "Cinema"
                         },
@@ -108,7 +111,7 @@ namespace Events.Data.Migrations
                         {
                             Id = 7,
                             CategoryType = 7,
-                            CreatedAt = new DateTime(2025, 10, 9, 17, 50, 34, 183, DateTimeKind.Utc).AddTicks(4907),
+                            CreatedAt = new DateTime(2025, 10, 9, 15, 43, 29, 641, DateTimeKind.Utc).AddTicks(2855),
                             Description = "Various festivals and celebrations",
                             Name = "Festivals"
                         },
@@ -116,7 +119,7 @@ namespace Events.Data.Migrations
                         {
                             Id = 8,
                             CategoryType = 8,
-                            CreatedAt = new DateTime(2025, 10, 9, 17, 50, 34, 183, DateTimeKind.Utc).AddTicks(4908),
+                            CreatedAt = new DateTime(2025, 10, 9, 15, 43, 29, 641, DateTimeKind.Utc).AddTicks(2857),
                             Description = "Exhibitions and displays",
                             Name = "Exhibitions"
                         },
@@ -124,7 +127,7 @@ namespace Events.Data.Migrations
                         {
                             Id = 9,
                             CategoryType = 9,
-                            CreatedAt = new DateTime(2025, 10, 9, 17, 50, 34, 183, DateTimeKind.Utc).AddTicks(4909),
+                            CreatedAt = new DateTime(2025, 10, 9, 15, 43, 29, 641, DateTimeKind.Utc).AddTicks(2859),
                             Description = "Professional conferences and seminars",
                             Name = "Conferences"
                         },
@@ -132,7 +135,7 @@ namespace Events.Data.Migrations
                         {
                             Id = 10,
                             CategoryType = 10,
-                            CreatedAt = new DateTime(2025, 10, 9, 17, 50, 34, 183, DateTimeKind.Utc).AddTicks(4910),
+                            CreatedAt = new DateTime(2025, 10, 9, 15, 43, 29, 641, DateTimeKind.Utc).AddTicks(2860),
                             Description = "Educational workshops and training",
                             Name = "Workshops"
                         });
@@ -146,7 +149,7 @@ namespace Events.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("CategoryId")
+                    b.Property<int?>("Category")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedAt")
@@ -201,7 +204,7 @@ namespace Events.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CategoryId");
+                    b.HasIndex("Category");
 
                     b.HasIndex("Date");
 
@@ -266,7 +269,7 @@ namespace Events.Data.Migrations
                         new
                         {
                             Id = 1,
-                            CreatedAt = new DateTime(2025, 10, 9, 17, 50, 34, 183, DateTimeKind.Utc).AddTicks(5087),
+                            CreatedAt = new DateTime(2025, 10, 9, 15, 43, 29, 641, DateTimeKind.Utc).AddTicks(3228),
                             Description = "Rock music events and concerts",
                             EnumValue = 1,
                             Name = "Rock",
@@ -275,7 +278,7 @@ namespace Events.Data.Migrations
                         new
                         {
                             Id = 2,
-                            CreatedAt = new DateTime(2025, 10, 9, 17, 50, 34, 183, DateTimeKind.Utc).AddTicks(5091),
+                            CreatedAt = new DateTime(2025, 10, 9, 15, 43, 29, 641, DateTimeKind.Utc).AddTicks(3233),
                             Description = "Jazz performances and sessions",
                             EnumValue = 2,
                             Name = "Jazz",
@@ -284,7 +287,7 @@ namespace Events.Data.Migrations
                         new
                         {
                             Id = 3,
-                            CreatedAt = new DateTime(2025, 10, 9, 17, 50, 34, 183, DateTimeKind.Utc).AddTicks(5093),
+                            CreatedAt = new DateTime(2025, 10, 9, 15, 43, 29, 641, DateTimeKind.Utc).AddTicks(3236),
                             Description = "Heavy metal and metal subgenres",
                             EnumValue = 3,
                             Name = "Metal",
@@ -293,7 +296,7 @@ namespace Events.Data.Migrations
                         new
                         {
                             Id = 4,
-                            CreatedAt = new DateTime(2025, 10, 9, 17, 50, 34, 183, DateTimeKind.Utc).AddTicks(5095),
+                            CreatedAt = new DateTime(2025, 10, 9, 15, 43, 29, 641, DateTimeKind.Utc).AddTicks(3238),
                             Description = "Pop music events",
                             EnumValue = 4,
                             Name = "Pop",
@@ -302,7 +305,7 @@ namespace Events.Data.Migrations
                         new
                         {
                             Id = 5,
-                            CreatedAt = new DateTime(2025, 10, 9, 17, 50, 34, 183, DateTimeKind.Utc).AddTicks(5142),
+                            CreatedAt = new DateTime(2025, 10, 9, 15, 43, 29, 641, DateTimeKind.Utc).AddTicks(3279),
                             Description = "Funk music events",
                             EnumValue = 5,
                             Name = "Funk",
@@ -311,7 +314,7 @@ namespace Events.Data.Migrations
                         new
                         {
                             Id = 6,
-                            CreatedAt = new DateTime(2025, 10, 9, 17, 50, 34, 183, DateTimeKind.Utc).AddTicks(5147),
+                            CreatedAt = new DateTime(2025, 10, 9, 15, 43, 29, 641, DateTimeKind.Utc).AddTicks(3285),
                             Description = "Punk music events",
                             EnumValue = 6,
                             Name = "Punk",
@@ -320,7 +323,7 @@ namespace Events.Data.Migrations
                         new
                         {
                             Id = 7,
-                            CreatedAt = new DateTime(2025, 10, 9, 17, 50, 34, 183, DateTimeKind.Utc).AddTicks(5150),
+                            CreatedAt = new DateTime(2025, 10, 9, 15, 43, 29, 641, DateTimeKind.Utc).AddTicks(3290),
                             Description = "Opera music events",
                             EnumValue = 7,
                             Name = "Opera",
@@ -329,7 +332,7 @@ namespace Events.Data.Migrations
                         new
                         {
                             Id = 8,
-                            CreatedAt = new DateTime(2025, 10, 9, 17, 50, 34, 183, DateTimeKind.Utc).AddTicks(5151),
+                            CreatedAt = new DateTime(2025, 10, 9, 15, 43, 29, 641, DateTimeKind.Utc).AddTicks(3292),
                             Description = "Classical music concerts",
                             EnumValue = 8,
                             Name = "Classical",
@@ -338,7 +341,7 @@ namespace Events.Data.Migrations
                         new
                         {
                             Id = 9,
-                            CreatedAt = new DateTime(2025, 10, 9, 17, 50, 34, 183, DateTimeKind.Utc).AddTicks(5153),
+                            CreatedAt = new DateTime(2025, 10, 9, 15, 43, 29, 641, DateTimeKind.Utc).AddTicks(3295),
                             Description = "Electronic music and DJ sets",
                             EnumValue = 9,
                             Name = "Electronic",
@@ -347,7 +350,7 @@ namespace Events.Data.Migrations
                         new
                         {
                             Id = 10,
-                            CreatedAt = new DateTime(2025, 10, 9, 17, 50, 34, 183, DateTimeKind.Utc).AddTicks(5156),
+                            CreatedAt = new DateTime(2025, 10, 9, 15, 43, 29, 641, DateTimeKind.Utc).AddTicks(3299),
                             Description = "Folk and traditional music",
                             EnumValue = 10,
                             Name = "Folk",
@@ -356,7 +359,7 @@ namespace Events.Data.Migrations
                         new
                         {
                             Id = 11,
-                            CreatedAt = new DateTime(2025, 10, 9, 17, 50, 34, 183, DateTimeKind.Utc).AddTicks(5157),
+                            CreatedAt = new DateTime(2025, 10, 9, 15, 43, 29, 641, DateTimeKind.Utc).AddTicks(3301),
                             Description = "Blues music performances",
                             EnumValue = 11,
                             Name = "Blues",
@@ -365,7 +368,7 @@ namespace Events.Data.Migrations
                         new
                         {
                             Id = 12,
-                            CreatedAt = new DateTime(2025, 10, 9, 17, 50, 34, 183, DateTimeKind.Utc).AddTicks(5160),
+                            CreatedAt = new DateTime(2025, 10, 9, 15, 43, 29, 641, DateTimeKind.Utc).AddTicks(3305),
                             Description = "Country music events",
                             EnumValue = 12,
                             Name = "Country",
@@ -374,7 +377,7 @@ namespace Events.Data.Migrations
                         new
                         {
                             Id = 13,
-                            CreatedAt = new DateTime(2025, 10, 9, 17, 50, 34, 183, DateTimeKind.Utc).AddTicks(5163),
+                            CreatedAt = new DateTime(2025, 10, 9, 15, 43, 29, 641, DateTimeKind.Utc).AddTicks(3311),
                             Description = "Reggae music events",
                             EnumValue = 13,
                             Name = "Reggae",
@@ -383,7 +386,7 @@ namespace Events.Data.Migrations
                         new
                         {
                             Id = 14,
-                            CreatedAt = new DateTime(2025, 10, 9, 17, 50, 34, 183, DateTimeKind.Utc).AddTicks(5165),
+                            CreatedAt = new DateTime(2025, 10, 9, 15, 43, 29, 641, DateTimeKind.Utc).AddTicks(3313),
                             Description = "Hip-hop and rap events",
                             EnumValue = 14,
                             Name = "HipHop",
@@ -392,7 +395,7 @@ namespace Events.Data.Migrations
                         new
                         {
                             Id = 15,
-                            CreatedAt = new DateTime(2025, 10, 9, 17, 50, 34, 183, DateTimeKind.Utc).AddTicks(5168),
+                            CreatedAt = new DateTime(2025, 10, 9, 15, 43, 29, 641, DateTimeKind.Utc).AddTicks(3317),
                             Description = "Alternative music events",
                             EnumValue = 15,
                             Name = "Alternative",
@@ -401,7 +404,7 @@ namespace Events.Data.Migrations
                         new
                         {
                             Id = 16,
-                            CreatedAt = new DateTime(2025, 10, 9, 17, 50, 34, 183, DateTimeKind.Utc).AddTicks(5176),
+                            CreatedAt = new DateTime(2025, 10, 9, 15, 43, 29, 641, DateTimeKind.Utc).AddTicks(3326),
                             Description = "Football matches and events",
                             EnumValue = 1,
                             Name = "Football",
@@ -410,7 +413,7 @@ namespace Events.Data.Migrations
                         new
                         {
                             Id = 17,
-                            CreatedAt = new DateTime(2025, 10, 9, 17, 50, 34, 183, DateTimeKind.Utc).AddTicks(5178),
+                            CreatedAt = new DateTime(2025, 10, 9, 15, 43, 29, 641, DateTimeKind.Utc).AddTicks(3387),
                             Description = "Basketball games and tournaments",
                             EnumValue = 2,
                             Name = "Basketball",
@@ -419,7 +422,7 @@ namespace Events.Data.Migrations
                         new
                         {
                             Id = 18,
-                            CreatedAt = new DateTime(2025, 10, 9, 17, 50, 34, 183, DateTimeKind.Utc).AddTicks(5181),
+                            CreatedAt = new DateTime(2025, 10, 9, 15, 43, 29, 641, DateTimeKind.Utc).AddTicks(3392),
                             Description = "Tennis matches and tournaments",
                             EnumValue = 3,
                             Name = "Tennis",
@@ -428,7 +431,7 @@ namespace Events.Data.Migrations
                         new
                         {
                             Id = 19,
-                            CreatedAt = new DateTime(2025, 10, 9, 17, 50, 34, 183, DateTimeKind.Utc).AddTicks(5183),
+                            CreatedAt = new DateTime(2025, 10, 9, 15, 43, 29, 641, DateTimeKind.Utc).AddTicks(3394),
                             Description = "Volleyball games",
                             EnumValue = 4,
                             Name = "Volleyball",
@@ -437,7 +440,7 @@ namespace Events.Data.Migrations
                         new
                         {
                             Id = 20,
-                            CreatedAt = new DateTime(2025, 10, 9, 17, 50, 34, 183, DateTimeKind.Utc).AddTicks(5185),
+                            CreatedAt = new DateTime(2025, 10, 9, 15, 43, 29, 641, DateTimeKind.Utc).AddTicks(3397),
                             Description = "Swimming competitions",
                             EnumValue = 5,
                             Name = "Swimming",
@@ -446,7 +449,7 @@ namespace Events.Data.Migrations
                         new
                         {
                             Id = 21,
-                            CreatedAt = new DateTime(2025, 10, 9, 17, 50, 34, 183, DateTimeKind.Utc).AddTicks(5186),
+                            CreatedAt = new DateTime(2025, 10, 9, 15, 43, 29, 641, DateTimeKind.Utc).AddTicks(3399),
                             Description = "Track and field events",
                             EnumValue = 6,
                             Name = "Athletics",
@@ -455,7 +458,7 @@ namespace Events.Data.Migrations
                         new
                         {
                             Id = 22,
-                            CreatedAt = new DateTime(2025, 10, 9, 17, 50, 34, 183, DateTimeKind.Utc).AddTicks(5193),
+                            CreatedAt = new DateTime(2025, 10, 9, 15, 43, 29, 641, DateTimeKind.Utc).AddTicks(3407),
                             Description = "Boxing events and competitions",
                             EnumValue = 7,
                             Name = "Boxing",
@@ -464,7 +467,7 @@ namespace Events.Data.Migrations
                         new
                         {
                             Id = 23,
-                            CreatedAt = new DateTime(2025, 10, 9, 17, 50, 34, 183, DateTimeKind.Utc).AddTicks(5196),
+                            CreatedAt = new DateTime(2025, 10, 9, 15, 43, 29, 641, DateTimeKind.Utc).AddTicks(3412),
                             Description = "Wrestling events and competitions",
                             EnumValue = 8,
                             Name = "Wrestling",
@@ -473,7 +476,7 @@ namespace Events.Data.Migrations
                         new
                         {
                             Id = 24,
-                            CreatedAt = new DateTime(2025, 10, 9, 17, 50, 34, 183, DateTimeKind.Utc).AddTicks(5199),
+                            CreatedAt = new DateTime(2025, 10, 9, 15, 43, 29, 641, DateTimeKind.Utc).AddTicks(3417),
                             Description = "Gymnastics events and competitions",
                             EnumValue = 9,
                             Name = "Gymnastics",
@@ -482,7 +485,7 @@ namespace Events.Data.Migrations
                         new
                         {
                             Id = 25,
-                            CreatedAt = new DateTime(2025, 10, 9, 17, 50, 34, 183, DateTimeKind.Utc).AddTicks(5202),
+                            CreatedAt = new DateTime(2025, 10, 9, 15, 43, 29, 641, DateTimeKind.Utc).AddTicks(3421),
                             Description = "Cycling events and competitions",
                             EnumValue = 10,
                             Name = "Cycling",
@@ -725,17 +728,10 @@ namespace Events.Data.Migrations
 
             modelBuilder.Entity("Events.Models.Entities.Event", b =>
                 {
-                    b.HasOne("Events.Models.Entities.Category", "Category")
-                        .WithMany()
-                        .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.HasOne("Events.Models.Entities.SubCategory", "SubCategory")
                         .WithMany("Events")
                         .HasForeignKey("SubCategoryId")
                         .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("Category");
 
                     b.Navigation("SubCategory");
                 });
