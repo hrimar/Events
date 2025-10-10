@@ -29,21 +29,24 @@ public class GroqTaggingService : IAiTaggingService
 
     public async Task<EventCategory?> ClassifyEventAsync(string eventName, string description)
     {
-        // Rate limiting with exponential backoff
         await _rateLimiter.WaitAsync();
         try
         {
             await EnsureRateLimit();
-            var prompt = $@"Analyze this Bulgarian event and classify it. Return ONLY the number (1-10):
+
+            // Enhanced prompt with better context and examples
+            var prompt = $@"Analyze this Bulgarian event and classify it with subcategory. Return format: ""CATEGORY_NUMBER|SUBCATEGORY_NAME""
 
 Event: {eventName}
 Description: {description}
 
-Categories:
+Categories with Subcategories:
 1=Music (концерти, музикални изпълнения, bands, DJ sets, festivals with music)
+  - Rock, Jazz, Metal, Pop, Classical, Electronic, Folk, Blues, HipHop, Punk, Funk, Opera, Country, Reggae, Alternative
 2=Art (изложби, галерии, visual arts, художествени инсталации)
 3=Business (networking, бизнес събития, предприемачество, стартъп събития)
 4=Sports (спортни събития, мачове, турнири, състезания)
+  - Football, Basketball, Tennis, Volleyball, Swimming, Athletics, Boxing, Wrestling, Gymnastics, Cycling
 5=Theatre (театрални постановки, драма, комедия, мюзикъли)
 6=Cinema (кино прожекции, филми, премиери, документални)
 7=Festivals (многодневни фестивали, културни празници, тематични събития)
@@ -51,32 +54,34 @@ Categories:
 9=Conferences (конференции, семинари, лекции, научни форуми)
 10=Workshops (работилници, курсове, обучения, майсторски класове)
 
-Detailed Examples:
-- ""Slayer концерт в Зала 1"" = 1 (Music - metal concert)
-- ""Iron Maiden live in Sofia"" = 1 (Music - rock concert)
-- ""Джаз вечер с John Coltrane Tribute"" = 1 (Music - jazz performance)
-- ""Изложба на Пикасо в НХГ"" = 2 (Art - painting exhibition)
-- ""StartUp Bulgaria 2024"" = 3 (Business - startup event)
-- ""Левски - ЦСКА дерби"" = 4 (Sports - football match)
-- ""Хамлет в Народния театър"" = 5 (Theatre - drama performance)
-- ""Премиера на Дюн 2"" = 6 (Cinema - movie premiere)
-- ""Панаир на книгата София"" = 7 (Festival - cultural festival)
-- ""Изложба Тракийско злато"" = 8 (Exhibition - historical exhibition)
-- ""TEDx Sofia 2024"" = 9 (Conference - technology conference)
-- ""UX/UI Design Workshop"" = 10 (Workshop - design training)
+Enhanced Examples:
+- ""Slayer концерт в Зала 1"" = ""1|Metal"" (Thrash/Heavy Metal concert)
+- ""Iron Maiden live in Sofia"" = ""1|Metal"" (Heavy Metal concert)
+- ""Джаз вечер с John Coltrane Tribute"" = ""1|Jazz"" (Jazz performance)
+- ""Ed Sheeran концерт"" = ""1|Pop"" (Pop music concert)
+- ""Софийска филхармония - Бетовен 9-та симфония"" = ""1|Classical"" (Classical music)
+- ""Техно парти с Armin van Buuren"" = ""1|Electronic"" (Electronic/Techno music)
+- ""Левски - ЦСКА дерби"" = ""4|Football"" (Football match)
+- ""ATP турнир по тенис"" = ""4|Tennis"" (Tennis tournament)
+- ""Хамлет в Народния театър"" = ""5|"" (Theatre - no specific subcategory)
+- ""Изложба на Пикасо в НХГ"" = ""2|"" (Art exhibition - no subcategory)
 
-If you cannot determine the category with confidence, return 0.
+Rules:
+- For Music/Sports events, try to determine specific subcategory
+- For other categories, subcategory can be empty
+- If uncertain about category, return ""0|""
+- Return ONLY the format ""NUMBER|SUBCATEGORY"" (subcategory can be empty)
 
-Return only the number (0-10):";
+Return format: ""CATEGORY_NUMBER|SUBCATEGORY_NAME"":";
 
             var requestBody = new
             {
                 messages = new[]
                 {
-                    new { role = "user", content = prompt }
-                },
+                new { role = "user", content = prompt }
+            },
                 model = "llama-3.1-8b-instant",
-                max_tokens = 5,
+                max_tokens = 20, // Increase tokens for subcategory response
                 temperature = 0.1
             };
 
@@ -85,24 +90,33 @@ Return only the number (0-10):";
             if (response.IsSuccessStatusCode)
             {
                 var result = await response.Content.ReadFromJsonAsync<GroqResponse>();
-                var categoryText = result?.Choices?.FirstOrDefault()?.Message?.Content?.Trim();
+                var responseText = result?.Choices?.FirstOrDefault()?.Message?.Content?.Trim();
 
-                if (int.TryParse(categoryText, out var categoryId))
+                if (!string.IsNullOrEmpty(responseText))
                 {
-                    if (categoryId == 0)
+                    var parts = responseText.Split('|');
+                    if (parts.Length >= 1 && int.TryParse(parts[0], out var categoryId))
                     {
-                        _logger.LogWarning("AI could not classify '{EventName}' with confidence", eventName);
-                        return null;
-                    }
+                        if (categoryId == 0)
+                        {
+                            _logger.LogWarning("AI could not classify '{EventName}' with confidence", eventName);
+                            return null;
+                        }
 
-                    if (Enum.IsDefined(typeof(EventCategory), categoryId))
-                    {
-                        _logger.LogInformation("AI classified '{EventName}' as {Category}", eventName, (EventCategory)categoryId);
-                        return (EventCategory)categoryId;
+                        if (Enum.IsDefined(typeof(EventCategory), categoryId))
+                        {
+                            // Store subcategory for later use in GenerateTagsAsync
+                            var subcategory = parts.Length > 1 ? parts[1].Trim() : null;
+
+                            _logger.LogInformation("AI classified '{EventName}' as {Category} | {SubCategory}",
+                                eventName, (EventCategory)categoryId, subcategory ?? "None");
+
+                            return (EventCategory)categoryId;
+                        }
                     }
                 }
 
-                _logger.LogWarning("AI returned invalid response: '{Response}' for event '{EventName}'", categoryText, eventName);
+                _logger.LogWarning("AI returned invalid response: '{Response}' for event '{EventName}'", responseText, eventName);
             }
             else
             {
@@ -127,18 +141,16 @@ Return only the number (0-10):";
     {
         try
         {
-            var category = await ClassifyEventAsync(eventName, description);
+            // Enhanced AI classification that returns both category and subcategory
+            var aiResult = await ClassifyEventWithSubcategoryAsync(eventName, description);
+
+            var category = aiResult.Category;
+            var suggestedSubCategory = aiResult.SubCategory;
+
             var tags = ExtractTagsWithKeywords(eventName, description, location, category);
             var musicGenres = category == EventCategory.Music
                 ? ExtractMusicGenresWithKeywords(eventName, description)
                 : Enumerable.Empty<string>();
-
-            // Extract subcategory suggestion
-            string? suggestedSubCategory = null;
-            if (category.HasValue)
-            {
-                suggestedSubCategory = ExtractSubCategory(eventName, description, category.Value);
-            }
 
             var allTags = tags.Concat(musicGenres).Distinct().Take(6).ToList();
 
@@ -147,9 +159,9 @@ Return only the number (0-10):";
 
             return new TaggingResult
             {
-                SuggestedCategory = category,
-                SuggestedSubCategory = suggestedSubCategory,
-                SuggestedTags = allTags,
+                SuggestedCategory = category, // AI-suggested category
+                SuggestedSubCategory = suggestedSubCategory, // AI-suggested subcategory
+                SuggestedTags = allTags, // AI-suggested tags
                 Confidence = allTags.ToDictionary(tag => tag, _ => 0.8)
             };
         }
@@ -163,6 +175,112 @@ Return only the number (0-10):";
     public async Task<IEnumerable<string>> ExtractMusicGenresAsync(string eventName, string description)
     {
         return await Task.FromResult(ExtractMusicGenresWithKeywords(eventName, description));
+    }
+
+    private async Task<(EventCategory? Category, string? SubCategory)> ClassifyEventWithSubcategoryAsync(string eventName, string description)
+    {
+        await _rateLimiter.WaitAsync();
+        try
+        {
+            await EnsureRateLimit();
+
+            var prompt = $@"Classify this Bulgarian event with category and subcategory. Return format: ""CATEGORY|SUBCATEGORY""
+
+Event: {eventName}
+Description: {description}
+
+Categories with Subcategories:
+1=Music → Rock, Jazz, Metal, Pop, Classical, Electronic, Folk, Blues, HipHop, Punk, Funk, Opera, Country, Reggae, Alternative
+2=Art → (no subcategories)
+3=Business → (no subcategories)  
+4=Sports → Football, Basketball, Tennis, Volleyball, Swimming, Athletics, Boxing, Wrestling, Gymnastics, Cycling
+5=Theatre → (no subcategories)
+6=Cinema → (no subcategories)
+7=Festivals → (no subcategories)
+8=Exhibitions → (no subcategories)
+9=Conferences → (no subcategories)
+10=Workshops → (no subcategories)
+
+Examples:
+""Slayer концерт"" → ""1|Metal""
+""Джаз клуб вечер"" → ""1|Jazz""
+""Ed Sheeran live"" → ""1|Pop""
+""Софийска филхармония"" → ""1|Classical""
+""Левски - ЦСКА"" → ""4|Football""
+""Тенис турнир"" → ""4|Tennis""
+""Театрална постановка"" → ""5|""
+""Изложба картини"" → ""2|""
+
+Return format ""CATEGORY|SUBCATEGORY"" (subcategory can be empty):";
+
+            var requestBody = new
+            {
+                messages = new[]
+                {
+                new { role = "user", content = prompt }
+            },
+                model = "llama-3.1-8b-instant",
+                max_tokens = 15,
+                temperature = 0.1
+            };
+
+            var response = await _http.PostAsJsonAsync("openai/v1/chat/completions", requestBody);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<GroqResponse>();
+                var responseText = result?.Choices?.FirstOrDefault()?.Message?.Content?.Trim();
+
+                if (!string.IsNullOrEmpty(responseText))
+                {
+                    var parts = responseText.Split('|');
+                    if (parts.Length >= 1 && int.TryParse(parts[0], out var categoryId))
+                    {
+                        if (categoryId == 0)
+                        {
+                            return (null, null);
+                        }
+
+                        if (Enum.IsDefined(typeof(EventCategory), categoryId))
+                        {
+                            var category = (EventCategory)categoryId;
+                            var subcategory = parts.Length > 1 && !string.IsNullOrWhiteSpace(parts[1])
+                                ? parts[1].Trim()
+                                : null;
+
+                            _logger.LogInformation("AI classified '{EventName}' as {Category} | {SubCategory}",
+                                eventName, category, subcategory ?? "None");
+
+                            return (category, subcategory);
+                        }
+                    }
+                }
+            }
+
+            // Fallback to our method for category and subcategory extraction
+            var fallbackCategory = await ClassifyEventAsync(eventName, description);
+            var fallbackSubcategory = fallbackCategory.HasValue
+                ? ExtractSubCategory(eventName, description, fallbackCategory.Value)
+                : null;
+
+            return (fallbackCategory, fallbackSubcategory);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in AI category+subcategory classification for '{EventName}'", eventName);
+
+            // Fallback to keyword-based classification
+            var category = TryClassifyWithKeywords(eventName, description);
+            var subcategory = category.HasValue
+                ? ExtractSubCategory(eventName, description, category.Value)
+                : null;
+
+            return (category, subcategory);
+        }
+        finally
+        {
+            _rateLimiter.Release();
+        }
     }
 
     private EventCategory? TryClassifyWithKeywords(string eventName, string description)

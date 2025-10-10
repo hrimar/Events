@@ -25,7 +25,7 @@ public class EventCrawlerFunction
 
     [Function("CrawlEventsFunction")]
     public async Task Run([TimerTrigger("0 0 4 * * *")] TimerInfo myTimer) // 4:00 AM daily
-    //public async Task Run([TimerTrigger("0 18 13 * * *")] TimerInfo myTimer) // for debugging at exact time
+    //public async Task Run([TimerTrigger("0 04 16 * * *")] TimerInfo myTimer) // for debugging at exact time
     {
         using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(80)); // 1 hour 20 minutes internal timeout
 
@@ -61,7 +61,7 @@ public class EventCrawlerFunction
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error during event crawling process");
-            throw;
+            throw; // Re-throw to trigger Azure Function retry policy
         }
 
         _logger.LogInformation("Event crawler function completed at: {Time}", DateTime.UtcNow);
