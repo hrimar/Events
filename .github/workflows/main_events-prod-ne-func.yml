@@ -1,14 +1,16 @@
-name: Build and deploy to Azure Function App - Linux
+name: Build and deploy dotnet core app to Azure Function App - events-prod-ne-func
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
   workflow_dispatch:
 
 env:
-  AZURE_FUNCTIONAPP_PACKAGE_PATH: './Events.Crawler'
+  SOLUTION_PATH: 'Events'
+  FUNCTION_PROJECT_PATH: 'Events/Events.Crawler'
   DOTNET_VERSION: '8.0.x'
-  AZURE_FUNCTIONAPP_NAME: 'events-prod-ne-func'  # Update with your Linux function name
+  AZURE_FUNCTIONAPP_NAME: 'events-prod-ne-func'
 
 jobs:
   build-and-deploy:
@@ -31,24 +33,42 @@ jobs:
         with:
           node-version: '18'
 
-      - name: Install Playwright Dependencies
+      - name: Install System Dependencies for Playwright
         run: |
-          # Install system dependencies for Playwright on Linux
           sudo apt-get update
           sudo apt-get install -y libnss3-dev libatk-bridge2.0-dev libdrm2 libxkbcommon0 libgtk-3-0
 
-      - name: 'Restore and Build Project'
+      - name: 'Restore and Build Solution'
         shell: bash
         run: |
-          cd ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
-          dotnet restore
-          dotnet build --configuration Release --no-restore
-          dotnet publish --configuration Release --output ../output --no-build
+          cd ${{ env.SOLUTION_PATH }}
+          if ls *.sln 1> /dev/null 2>&1; then
+            echo "Building from solution file..."
+            dotnet restore *.sln
+            dotnet build *.sln --configuration Release --no-restore
+          else
+            echo "Building individual projects..."
+            # Build in dependency order
+            dotnet restore Events.Models/Events.Models.csproj
+            dotnet restore Events.Data/Events.Data.csproj
+            dotnet restore Events.Services/Events.Services.csproj
+            dotnet restore Events.Crawler/Events.Crawler.csproj
+            
+            dotnet build Events.Models/Events.Models.csproj --configuration Release --no-restore
+            dotnet build Events.Data/Events.Data.csproj --configuration Release --no-restore
+            dotnet build Events.Services/Events.Services.csproj --configuration Release --no-restore
+            dotnet build Events.Crawler/Events.Crawler.csproj --configuration Release --no-restore
+          fi
 
-      - name: Install Playwright Browsers in Output
+      - name: 'Publish Function App'
+        shell: bash
         run: |
-          cd ./output
-          # Install only chromium to reduce package size
+          cd ${{ env.FUNCTION_PROJECT_PATH }}
+          dotnet publish --configuration Release --output ../../output --no-build
+
+      - name: Install Playwright Browsers
+        run: |
+          cd output
           npx playwright install chromium --with-deps
 
       - name: Login to Azure
