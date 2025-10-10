@@ -1,53 +1,66 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/azure/functions-action
-# More GitHub Actions for Azure: https://github.com/Azure/actions
-
-name: Build and deploy dotnet core project to Azure Function App - events-prod-ne-func
+name: Build and deploy to Azure Function App - Linux
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   workflow_dispatch:
 
 env:
-  AZURE_FUNCTIONAPP_PACKAGE_PATH: '.' # set this to the path to your web app project, defaults to the repository root
-  DOTNET_VERSION: '8.0.x' # set this to the dotnet version to use
+  AZURE_FUNCTIONAPP_PACKAGE_PATH: './Events.Crawler'
+  DOTNET_VERSION: '8.0.x'
+  AZURE_FUNCTIONAPP_NAME: 'events-prod-ne-func'  # Update with your Linux function name
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     permissions:
-      id-token: write #This is required for requesting the JWT
-      contents: read #This is required for actions/checkout
+      id-token: write
+      contents: read
 
     steps:
       - name: 'Checkout GitHub Action'
         uses: actions/checkout@v4
 
       - name: Setup DotNet ${{ env.DOTNET_VERSION }} Environment
-        uses: actions/setup-dotnet@v1
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: 'Resolve Project Dependencies Using Dotnet'
+      - name: Setup Node.js (for Playwright)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install Playwright Dependencies
+        run: |
+          # Install system dependencies for Playwright on Linux
+          sudo apt-get update
+          sudo apt-get install -y libnss3-dev libatk-bridge2.0-dev libdrm2 libxkbcommon0 libgtk-3-0
+
+      - name: 'Restore and Build Project'
         shell: bash
         run: |
-          pushd './${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}'
-          dotnet build --configuration Release --output ./output
-          popd
-      
+          cd ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
+          dotnet restore
+          dotnet build --configuration Release --no-restore
+          dotnet publish --configuration Release --output ../output --no-build
+
+      - name: Install Playwright Browsers in Output
+        run: |
+          cd ./output
+          # Install only chromium to reduce package size
+          npx playwright install chromium --with-deps
+
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_0144735B704F47E39850FC5E141C33E1 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_2BFAD533C4BA4F18ACF8926718A6B376 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_DB0C4D734B7A411DB2AFA96E8D671734 }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_D149CD43094347E294E9C71E8D945430 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_FEBB774751BD404CBEB6446EB656CB5B }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_99F71B0EA7524611B2C2E462A446E8AC }}
 
-      - name: 'Run Azure Functions Action'
+      - name: 'Deploy to Azure Functions'
         uses: Azure/functions-action@v1
-        id: fa
         with:
-          app-name: 'events-prod-ne-func'
+          app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
           slot-name: 'Production'
-          package: '${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/output'
-          
+          package: './output'
