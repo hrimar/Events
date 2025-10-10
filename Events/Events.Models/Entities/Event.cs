@@ -12,7 +12,7 @@ public class Event
     public string Name { get; set; } = string.Empty;
 
     [Required]
-    public DateTime Date { get; set; }
+    public DateTime Date { get; set; } // TODO: Make it nullable as ticketstation don't have date for some events
 
     public TimeSpan? StartTime { get; set; }
 

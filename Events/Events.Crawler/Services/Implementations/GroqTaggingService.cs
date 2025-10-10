@@ -13,6 +13,9 @@ public class GroqTaggingService : IAiTaggingService
     private readonly HttpClient _http;
     private readonly string _apiKey;
     private readonly ILogger<GroqTaggingService> _logger;
+    private static readonly SemaphoreSlim _rateLimiter = new(3, 3); // Max 3 concurrent requests
+    private static DateTime _lastRequest = DateTime.MinValue;
+    private static readonly object _lockObject = new();
 
     public GroqTaggingService(HttpClient http, IConfiguration config, ILogger<GroqTaggingService> logger)
     {
@@ -26,8 +29,11 @@ public class GroqTaggingService : IAiTaggingService
 
     public async Task<EventCategory?> ClassifyEventAsync(string eventName, string description)
     {
+        // Rate limiting with exponential backoff
+        await _rateLimiter.WaitAsync();
         try
         {
+            await EnsureRateLimit();
             var prompt = $@"Analyze this Bulgarian event and classify it. Return ONLY the number (1-10):
 
 Event: {eventName}
@@ -106,10 +112,14 @@ Return only the number (0-10):";
 
             return TryClassifyWithKeywords(eventName, description);
         }
-        catch (Exception ex)
+        catch (HttpRequestException ex) when (ex.Message.Contains("rate_limit_exceeded"))
         {
-            _logger.LogError(ex, "Error with AI classification for '{EventName}'", eventName);
+            _logger.LogWarning("Rate limit exceeded, falling back to keyword classification");
             return TryClassifyWithKeywords(eventName, description);
+        }
+        finally
+        {
+            _rateLimiter.Release();
         }
     }
 
@@ -390,6 +400,27 @@ Return only the number (0-10):";
             return "Athletics";
 
         return null;
+    }
+
+    private async Task EnsureRateLimit()
+    {
+        // Use Task.Run for the synchronous lock operation
+        await Task.Run(() =>
+        {
+            lock (_lockObject)
+            {
+                var timeSinceLastRequest = DateTime.UtcNow - _lastRequest;
+                if (timeSinceLastRequest < TimeSpan.FromMilliseconds(500)) // 500ms delay
+                {
+                    var delay = TimeSpan.FromMilliseconds(500) - timeSinceLastRequest;
+                    if (delay > TimeSpan.Zero)
+                    {
+                        Task.Delay(delay).Wait();
+                    }
+                }
+                _lastRequest = DateTime.UtcNow;
+            }
+        });
     }
 }
 

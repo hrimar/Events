@@ -354,7 +354,6 @@ public class TicketStationCrawler : IWebScrapingCrawler
     {
         if (string.IsNullOrWhiteSpace(dateText)) return null;
 
-        // Опитай различни формати за български дати
         var formats = new[]
         {
             "dd.MM.yyyy",

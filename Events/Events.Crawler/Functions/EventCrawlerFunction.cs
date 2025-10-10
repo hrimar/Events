@@ -3,6 +3,7 @@ using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
 using System.Net;
+using System.Net.NetworkInformation;
 
 namespace Events.Crawler.Functions;
 
@@ -24,37 +25,43 @@ public class EventCrawlerFunction
 
     [Function("CrawlEventsFunction")]
     //public async Task Run([TimerTrigger("0 0 4 * * *")] TimerInfo myTimer) // 4:00 AM daily
-    public async Task Run([TimerTrigger("0 31 9 * * *")] TimerInfo myTimer) // for debugging at exact time
+    public async Task Run([TimerTrigger("0 32 12 * * *")] TimerInfo myTimer) // for debugging at exact time
     {
+        using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(80)); // 1 hour 20 minutes internal timeout
+
         _logger.LogInformation("Event crawler function started at: {Time}", DateTime.UtcNow);
 
         try
         {
-            // Crawl all sources
             var crawlResult = await _crawlerService.CrawlAllSourcesAsync();
-
-            _logger.LogInformation("Crawling completed. Found {EventCount} events from {SourceCount} sources",
-                crawlResult.EventsFound, _crawlerService.GetSupportedSources().Count());
+            _logger.LogInformation("Crawling completed. Found {EventCount} events", crawlResult.EventsFound);
 
             if (crawlResult.Success && crawlResult.Events.Any())
             {
-                // Process and save events to database
-                var processingResult = await _eventProcessingService.ProcessAndTagEventsAsync(crawlResult.Events);
+                var events = crawlResult.Events.ToList();
+                const int batchSize = 50;
 
-                _logger.LogInformation("Processing completed. Created: {Created}, Updated: {Updated}, Skipped: {Skipped}",
-                    processingResult.EventsCreated, processingResult.EventsUpdated, processingResult.EventsSkipped);
-
-                if (processingResult.Errors.Any())
+                for (int i = 0; i < events.Count; i += batchSize)
                 {
-                    _logger.LogWarning("Processing completed with errors: {Errors}",
-                        string.Join(", ", processingResult.Errors));
+                    cts.Token.ThrowIfCancellationRequested(); // Check for timeout
+
+                    var batch = events.Skip(i).Take(batchSize);
+                    var processingResult = await _eventProcessingService.ProcessAndTagEventsAsync(batch);
+
+                    _logger.LogInformation("Batch {BatchNumber}: Created {Created}, Updated {Updated}, Skipped {Skipped}",
+                        (i / batchSize) + 1, processingResult.EventsCreated, processingResult.EventsUpdated, processingResult.EventsSkipped);
                 }
             }
+        }
+        catch (OperationCanceledException)
+        {
+            _logger.LogWarning("Function execution was cancelled due to timeout");
+            throw;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error during event crawling process");
-            throw; // Re-throw to trigger Azure Function retry policy
+            throw;
         }
 
         _logger.LogInformation("Event crawler function completed at: {Time}", DateTime.UtcNow);
