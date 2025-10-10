@@ -1,4 +1,4 @@
-using Events.Crawler.Services.Interfaces;
+﻿using Events.Crawler.Services.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
@@ -42,10 +42,19 @@ public class BiletBgCrawler : IHttpApiCrawler
             var currentDate = (targetDate ?? DateTime.Now).ToString("yyyy-MM-dd");
             var events = await GetAllEventsForDate(currentDate);
 
-            result.EventsFound = events.Count;
-            result.Events = events.Select(MapToStandardDto).ToList();
-            result.EventsProcessed = result.Events.Count;
+            var sofiaEvents = events
+                .Select(MapToStandardDto)
+                .Where(e => e != null) // Filter out null (non-Sofia) events
+                .Cast<CrawledEventDto>()
+                .ToList();
+
+            result.EventsFound = events.Count; // Total found events
+            result.Events = sofiaEvents; // Only Sofia events
+            result.EventsProcessed = sofiaEvents.Count;
             result.Success = true;
+
+            _logger.LogInformation("Crawled {TotalEvents} events from Bilet.bg, {SofiaEvents} in Sofia",
+                events.Count, sofiaEvents.Count);
         }
         catch (Exception ex)
         {
@@ -116,8 +125,17 @@ public class BiletBgCrawler : IHttpApiCrawler
         return allEvents;
     }
 
-    private CrawledEventDto MapToStandardDto(BiletEventDto biletEvent)
+    private CrawledEventDto? MapToStandardDto(BiletEventDto biletEvent)
     {
+        // Early filtration for Events because we are interested in Events from Sofia only
+        var city = biletEvent.Place?.City?.Trim().ToLowerInvariant();
+        if (string.IsNullOrEmpty(city) || !IsSofiaCity(city))
+        {
+            _logger.LogDebug("Filtering out non-Sofia event: {EventName} in {City}",
+                biletEvent.Name, biletEvent.Place?.City);
+            return null; // Skip non-Sofia events
+        }
+
         return new CrawledEventDto
         {
             ExternalId = biletEvent.Id.ToString(),
@@ -128,8 +146,8 @@ public class BiletBgCrawler : IHttpApiCrawler
             StartDate = TryParseDate(biletEvent.StartDate),
             EndDate = TryParseDate(biletEvent.EndDate),
             ImageUrl = biletEvent.Image,
-            SourceUrl = !string.IsNullOrEmpty(biletEvent.Slug) 
-                ? $"https://bilet.bg/event/{biletEvent.Slug}" 
+            SourceUrl = !string.IsNullOrEmpty(biletEvent.Slug)
+                ? $"https://bilet.bg/event/{biletEvent.Slug}"
                 : null,
             RawData = new Dictionary<string, object>
             {
@@ -138,6 +156,17 @@ public class BiletBgCrawler : IHttpApiCrawler
                 ["created_at"] = biletEvent.CreatedAt ?? ""
             }
         };
+    }
+
+    private static bool IsSofiaCity(string city)
+    {
+        var sofiaCities = new[]
+        {
+        "софия", "sofia", "софија", "sofija",
+        "гр. софия", "гр.София", "sofia city"
+    };
+
+        return sofiaCities.Any(sc => city.Contains(sc));
     }
 
     private DateTime? TryParseDate(string? dateString)

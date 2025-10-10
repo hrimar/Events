@@ -24,8 +24,8 @@ public class EventCrawlerFunction
     }
 
     [Function("CrawlEventsFunction")]
-    //public async Task Run([TimerTrigger("0 0 4 * * *")] TimerInfo myTimer) // 4:00 AM daily
-    public async Task Run([TimerTrigger("0 32 12 * * *")] TimerInfo myTimer) // for debugging at exact time
+    public async Task Run([TimerTrigger("0 0 4 * * *")] TimerInfo myTimer) // 4:00 AM daily
+    //public async Task Run([TimerTrigger("0 18 13 * * *")] TimerInfo myTimer) // for debugging at exact time
     {
         using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(80)); // 1 hour 20 minutes internal timeout
 
