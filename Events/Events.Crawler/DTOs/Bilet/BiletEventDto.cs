@@ -13,6 +13,9 @@ public class BiletEventDto
     [JsonPropertyName("description")]
     public string? Description { get; set; }
 
+    [JsonPropertyName("venue")]
+    public BiletPlaceDto? Place { get; set; }
+
     [JsonPropertyName("start_date")]
     public string? StartDate { get; set; }
 

@@ -383,36 +383,39 @@ public class TicketStationCrawler : IWebScrapingCrawler
         return null;
     }
 
-
     private async Task EnsureBrowsersInstalledAsync()
     {
         if (_browsersInstalled) return;
 
-        lock (_installLock)
+        // Use Task.Run for the synchronous lock operation
+        await Task.Run(() =>
         {
-            if (_browsersInstalled) return;
-
-            try
+            lock (_installLock)
             {
-                _logger.LogInformation("Checking Playwright browser installation...");
+                if (_browsersInstalled) return;
 
-                var chromiumPath = GetChromiumPath();
-                if (string.IsNullOrEmpty(chromiumPath) || !File.Exists(chromiumPath))
+                try
                 {
-                    _logger.LogWarning("Playwright browsers not found. Attempting to install...");
-                    InstallPlaywrightBrowsers();
-                }
+                    _logger.LogInformation("Checking Playwright browser installation...");
 
-                _browsersInstalled = true;
-                _logger.LogInformation("Playwright browsers are ready");
+                    var chromiumPath = GetChromiumPath();
+                    if (string.IsNullOrEmpty(chromiumPath) || !File.Exists(chromiumPath))
+                    {
+                        _logger.LogWarning("Playwright browsers not found. Attempting to install...");
+                        InstallPlaywrightBrowsers();
+                    }
+
+                    _browsersInstalled = true;
+                    _logger.LogInformation("Playwright browsers are ready");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to ensure Playwright browsers are installed");
+                    throw new InvalidOperationException(
+                        "Playwright browsers are not installed. Please run 'npx playwright install chromium' manually.", ex);
+                }
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to ensure Playwright browsers are installed");
-                throw new InvalidOperationException(
-                    "Playwright browsers are not installed. Please run 'npx playwright install chromium' manually.", ex);
-            }
-        }
+        });
     }
 
     private void InstallPlaywrightBrowsers()

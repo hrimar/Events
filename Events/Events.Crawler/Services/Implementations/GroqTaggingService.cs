@@ -123,14 +123,22 @@ Return only the number (0-10):";
                 ? ExtractMusicGenresWithKeywords(eventName, description)
                 : Enumerable.Empty<string>();
 
+            // Extract subcategory suggestion
+            string? suggestedSubCategory = null;
+            if (category.HasValue)
+            {
+                suggestedSubCategory = ExtractSubCategory(eventName, description, category.Value);
+            }
+
             var allTags = tags.Concat(musicGenres).Distinct().Take(6).ToList();
 
-            _logger.LogInformation("Generated comprehensive tags for '{EventName}': Category={Category}, Tags=[{Tags}]",
-                eventName, category?.ToString() ?? "None", string.Join(", ", allTags));
+            _logger.LogInformation("Generated comprehensive tags for '{EventName}': Category={Category}, SubCategory={SubCategory}, Tags=[{Tags}]",
+                eventName, category?.ToString() ?? "None", suggestedSubCategory ?? "None", string.Join(", ", allTags));
 
             return new TaggingResult
             {
                 SuggestedCategory = category,
+                SuggestedSubCategory = suggestedSubCategory,
                 SuggestedTags = allTags,
                 Confidence = allTags.ToDictionary(tag => tag, _ => 0.8)
             };
@@ -144,7 +152,7 @@ Return only the number (0-10):";
 
     public async Task<IEnumerable<string>> ExtractMusicGenresAsync(string eventName, string description)
     {
-        return ExtractMusicGenresWithKeywords(eventName, description);
+        return await Task.FromResult(ExtractMusicGenresWithKeywords(eventName, description));
     }
 
     private EventCategory? TryClassifyWithKeywords(string eventName, string description)
@@ -289,8 +297,15 @@ Return only the number (0-10):";
 
     private TaggingResult GenerateEnhancedFallbackTags(string eventName, string description, string? location)
     {
-        var category = TryClassifyWithKeywords(eventName, description); // Използва TryClassifyWithKeywords
+        var category = TryClassifyWithKeywords(eventName, description);
         var tags = ExtractTagsWithKeywords(eventName, description, location, category);
+
+        // Extract subcategory for fallback
+        string? suggestedSubCategory = null;
+        if (category.HasValue)
+        {
+            suggestedSubCategory = ExtractSubCategory(eventName, description, category.Value);
+        }
 
         // Add music genres if it's a music event
         if (category == EventCategory.Music)
@@ -303,9 +318,78 @@ Return only the number (0-10):";
         return new TaggingResult
         {
             SuggestedCategory = category,
+            SuggestedSubCategory = suggestedSubCategory,
             SuggestedTags = tags,
             Confidence = tags.ToDictionary(tag => tag, _ => 0.8)
         };
+    }
+
+    private string? ExtractSubCategory(string eventName, string description, EventCategory category)
+    {
+        var text = $"{eventName} {description}".ToLower();
+
+        return category switch
+        {
+            EventCategory.Music => ExtractMusicSubCategory(text),
+            EventCategory.Sports => ExtractSportsSubCategory(text),
+            _ => null // TODO: add other Subcategories
+        };
+    }
+
+    private string? ExtractMusicSubCategory(string text)
+    {
+        // Metal detection with high priority
+        if (new[] { "slayer", "metallica", "megadeth", "anthrax", "iron maiden", "black sabbath" }.Any(keyword => text.Contains(keyword)))
+            return "Metal";
+
+        if (new[] { "jazz", "джаз", "coltrane", "miles davis" }.Any(keyword => text.Contains(keyword)))
+            return "Jazz";
+
+        if (new[] { "rock", "рок", "led zeppelin", "pink floyd" }.Any(keyword => text.Contains(keyword)))
+            return "Rock";
+
+        if (new[] { "classical", "класическа", "symphony", "симфония", "orchestra", "оркестър" }.Any(keyword => text.Contains(keyword)))
+            return "Classical";
+
+        if (new[] { "electronic", "електронна", "techno", "house", "dj" }.Any(keyword => text.Contains(keyword)))
+            return "Electronic";
+
+        if (new[] { "folk", "фолк", "народна" }.Any(keyword => text.Contains(keyword)))
+            return "Folk";
+
+        if (new[] { "blues", "блус" }.Any(keyword => text.Contains(keyword)))
+            return "Blues";
+
+        if (new[] { "pop", "поп" }.Any(keyword => text.Contains(keyword)))
+            return "Pop";
+
+        if (new[] { "hip-hop", "хип-хоп", "rap", "рап" }.Any(keyword => text.Contains(keyword)))
+            return "HipHop";
+
+        return null;
+    }
+
+    private string? ExtractSportsSubCategory(string text)
+    {
+        if (new[] { "футбол", "football" }.Any(keyword => text.Contains(keyword)))
+            return "Football";
+
+        if (new[] { "баскетбол", "basketball" }.Any(keyword => text.Contains(keyword)))
+            return "Basketball";
+
+        if (new[] { "тенис", "tennis" }.Any(keyword => text.Contains(keyword)))
+            return "Tennis";
+
+        if (new[] { "волейбол", "volleyball" }.Any(keyword => text.Contains(keyword)))
+            return "Volleyball";
+
+        if (new[] { "плуване", "swimming" }.Any(keyword => text.Contains(keyword)))
+            return "Swimming";
+
+        if (new[] { "атлетика", "athletics" }.Any(keyword => text.Contains(keyword)))
+            return "Athletics";
+
+        return null;
     }
 }
 

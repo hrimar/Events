@@ -65,7 +65,7 @@ public class CrawlerService : ICrawlerService
         var allResults = new List<CrawlResult>();
         var startTime = DateTime.UtcNow;
 
-        foreach (var crawler in _crawlers.Where(c => c.IsHealthy()))
+        foreach (var crawler in _crawlers.Where(c => c.IsHealthy() & c.CrawlerType == CrawlerType.HttpApi)) // for testing type by type
         {
             try
             {

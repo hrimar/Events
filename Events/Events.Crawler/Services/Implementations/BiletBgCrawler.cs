@@ -124,6 +124,7 @@ public class BiletBgCrawler : IHttpApiCrawler
             Source = SourceName,
             Name = biletEvent.Name ?? "",
             Description = biletEvent.Description,
+            Location = $"{biletEvent.Place?.City} {biletEvent.Place?.Address} {biletEvent.Place?.Name}",
             StartDate = TryParseDate(biletEvent.StartDate),
             EndDate = TryParseDate(biletEvent.EndDate),
             ImageUrl = biletEvent.Image,

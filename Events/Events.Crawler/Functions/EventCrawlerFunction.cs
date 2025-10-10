@@ -23,7 +23,8 @@ public class EventCrawlerFunction
     }
 
     [Function("CrawlEventsFunction")]
-    public async Task Run([TimerTrigger("0 0 4 * * *")] TimerInfo myTimer) // 4:00 AM daily
+    //public async Task Run([TimerTrigger("0 0 4 * * *")] TimerInfo myTimer) // 4:00 AM daily
+    public async Task Run([TimerTrigger("0 31 9 * * *")] TimerInfo myTimer) // for debugging at exact time
     {
         _logger.LogInformation("Event crawler function started at: {Time}", DateTime.UtcNow);
 
