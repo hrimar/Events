@@ -122,6 +122,18 @@ namespace Events.Web.Areas.Identity.Pages.Account
                 {
                     _logger.LogInformation("User created a new account with password.");
 
+                    // Assign default "User" role to new users
+                    var roleResult = await _userManager.AddToRoleAsync(user, "User");
+                    if (roleResult.Succeeded)
+                    {
+                        _logger.LogInformation("User assigned to 'User' role successfully.");
+                    }
+                    else
+                    {
+                        _logger.LogWarning("Failed to assign 'User' role to new user: {Errors}",
+                            string.Join(", ", roleResult.Errors.Select(e => e.Description)));
+                    }
+
                     var userId = await _userManager.GetUserIdAsync(user);
                     var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
                     code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));

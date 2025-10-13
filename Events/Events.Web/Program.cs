@@ -36,29 +36,44 @@ static void ConfigureDatabase(WebApplicationBuilder builder)
     builder.Services.AddDbContext<EventsDbContext>(options =>
         options.UseSqlServer(connectionString, dbOptions =>
             dbOptions.MigrationsAssembly("Events.Data")));
-    
+
     builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 }
 
 static void ConfigureIdentity(WebApplicationBuilder builder)
 {
-    builder.Services.AddDefaultIdentity<IdentityUser>(options =>
+    //    builder.Services.AddDefaultIdentity<IdentityUser>(options => // this doesn't work with roles
+    //{
+    //        options.SignIn.RequireConfirmedAccount = true;
+
+    //        // Uncomment for development with relaxed password requirements
+    //        // if (builder.Environment.IsDevelopment())
+    //        // {
+    //        //     options.Password.RequireDigit = true;
+    //        //     options.Password.RequireLowercase = true;
+    //        //     options.Password.RequireNonAlphanumeric = false;
+    //        //     options.Password.RequireUppercase = false;
+    //        //     options.Password.RequiredLength = 6;
+    //        //     options.Password.RequiredUniqueChars = 1;
+    //        // }
+    //    })
+    //        .AddRoles<IdentityRole>()
+    //        .AddEntityFrameworkStores<EventsDbContext>();
+    builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
     {
-        options.SignIn.RequireConfirmedAccount = true;
-        
-        // Uncomment for development with relaxed password requirements
-        // if (builder.Environment.IsDevelopment())
-        // {
-        //     options.Password.RequireDigit = true;
-        //     options.Password.RequireLowercase = true;
-        //     options.Password.RequireNonAlphanumeric = false;
-        //     options.Password.RequireUppercase = false;
-        //     options.Password.RequiredLength = 6;
-        //     options.Password.RequiredUniqueChars = 1;
-        // }
+        // Disable email confirmation for development
+        if (builder.Environment.IsDevelopment())
+        {
+            options.SignIn.RequireConfirmedAccount = false;
+        }
+        else
+        {
+            options.SignIn.RequireConfirmedAccount = true;
+        }
     })
-    .AddRoles<IdentityRole>()
-    .AddEntityFrameworkStores<EventsDbContext>();
+        .AddEntityFrameworkStores<EventsDbContext>()
+        .AddDefaultTokenProviders()
+        .AddDefaultUI();
 }
 
 static void RegisterServices(WebApplicationBuilder builder)
