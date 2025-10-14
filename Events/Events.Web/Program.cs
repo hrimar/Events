@@ -43,19 +43,8 @@ static void ConfigureDatabase(WebApplicationBuilder builder)
 static void ConfigureIdentity(WebApplicationBuilder builder)
 {
     //    builder.Services.AddDefaultIdentity<IdentityUser>(options => // this doesn't work with roles
-    //{
+    //    {
     //        options.SignIn.RequireConfirmedAccount = true;
-
-    //        // Uncomment for development with relaxed password requirements
-    //        // if (builder.Environment.IsDevelopment())
-    //        // {
-    //        //     options.Password.RequireDigit = true;
-    //        //     options.Password.RequireLowercase = true;
-    //        //     options.Password.RequireNonAlphanumeric = false;
-    //        //     options.Password.RequireUppercase = false;
-    //        //     options.Password.RequiredLength = 6;
-    //        //     options.Password.RequiredUniqueChars = 1;
-    //        // }
     //    })
     //        .AddRoles<IdentityRole>()
     //        .AddEntityFrameworkStores<EventsDbContext>();

@@ -1,8 +1,109 @@
-﻿@{
+﻿@* @{
     ViewData["Title"] = "Home Page";
 }
 
 <div class="text-center">
     <h1 class="display-4">Welcome</h1>
+    
+    
+
+    @{    var emails = ViewData["Emails"] as List<string>;}
+
+    <div class="text-center">
+        @if (emails != null && emails.Any())
+        {
+            <h3>User Emails (for test purposes only):</h3>
+            <ul>
+                @foreach (var email in emails)
+                {
+                    <li>@email</li>
+                }
+            </ul>
+        }
+    </div>
+
+    
     <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
 </div>
+ *@
+
+@using Events.Models.Entities
+@model IEnumerable<Event>
+
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+<section class="bg-primary text-white py-5">
+    <div class="container">
+        <h1 class="display-5 fw-bold mb-3">Discover the best events</h1>
+        <p class="lead">Concerts, theatre, sports in Bulgaria</p>
+        
+        <div class="row mt-4">
+            <div class="col-6 col-md-3 mb-2">
+                <a href="?category=Music" class="btn btn-outline-light w-100">
+                    <i class="fas fa-music"></i> Music
+                </a>
+            </div>
+            <div class="col-6 col-md-3 mb-2">
+                <a href="?category=Sports" class="btn btn-outline-light w-100">
+                    <i class="fas fa-running"></i> Sports
+                </a>
+            </div>
+            <div class="col-6 col-md-3 mb-2">
+                <a href="?category=Theatre" class="btn btn-outline-light w-100">
+                    <i class="fas fa-theater-masks"></i> Theatre
+                </a>
+            </div>
+            <div class="col-6 col-md-3 mb-2">
+                <a href="?free=true" class="btn btn-success w-100">
+                    <i class="fas fa-gift"></i> Free
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="py-5">
+    <div class="container">
+        <h2 class="mb-4">Upcoming events</h2>
+        
+        <div class="row">
+            @foreach(var eventItem in Model ?? Enumerable.Empty<Event>())
+            {
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card event-card">
+                        <div class="event-image" style="background-image: url('@(eventItem.ImageUrl ?? "/images/default-event.jpg")')">
+                            @if(eventItem.Price.HasValue)
+                            {
+                                <div class="event-price">@eventItem.Price.Value.ToString("F0") BGN</div>
+                            }
+                            else
+                            {
+                                <div class="event-price event-free">Free</div>
+                            }
+                        </div>
+                        
+                        <div class="card-body">
+                            <h5 class="event-title">@eventItem.Name</h5>
+                            <div class="event-date">
+                                <i class="fas fa-calendar me-1"></i>
+                                @eventItem.Date.ToString("dd.MM.yyyy HH:mm")
+                            </div>
+                            <div class="event-venue">
+                                <i class="fas fa-map-marker-alt me-1"></i>
+                                @eventItem.Location
+                            </div>
+                        </div>
+                        
+                        <div class="card-footer bg-transparent">
+                            <a href="@eventItem.TicketUrl" target="_blank" class="btn btn-primary btn-sm">
+                                Buy tickets
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</section>
