@@ -16,7 +16,7 @@ public class EventViewModel
     public string? TicketUrl { get; set; }
     public bool IsFree { get; set; }
     public decimal? Price { get; set; }
-    public string PriceDisplay => IsFree ? "Free" : Price?.ToString("F0") + " BGN";
+    public string PriceDisplay => IsFree ? "Free" : Price?.ToString("F0") + " EUR";
     public string? CategoryName { get; set; }
     public string? SubCategoryName { get; set; }
     public EventStatus Status { get; set; }
