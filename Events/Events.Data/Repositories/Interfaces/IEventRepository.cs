@@ -17,4 +17,17 @@ public interface IEventRepository
     Task<Event> UpdateAsync(Event eventEntity);
     Task DeleteAsync(int id);
     Task<bool> ExistsAsync(int id);
+
+    // pagination and filtering
+    Task<(IEnumerable<Event> Events, int TotalCount)> GetPagedEventsAsync(
+    int page,
+    int pageSize,
+    EventStatus? status = null,
+    string? categoryName = null,
+    bool? isFree = null,
+    DateTime? fromDate = null);
+
+    Task<IEnumerable<Event>> GetFeaturedEventsAsync(int count = 10);
+    Task<IEnumerable<Event>> GetUpcomingEventsAsync(int count = 10);
+    Task<int> GetTotalEventsCountAsync(EventStatus? status = null);
 }

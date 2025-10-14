@@ -1,49 +1,54 @@
 using System.Diagnostics;
-using System.Threading.Tasks;
-using Events.Data.Context;
 using Events.Web.Models;
-using Microsoft.AspNetCore.Identity;
+using Events.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace Events.Web.Controllers
 {
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
-        private readonly EventsDbContext _context;
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly IEventService _eventService;
 
-        public HomeController(ILogger<HomeController> logger, EventsDbContext context, UserManager<IdentityUser> userManager)
+        public HomeController(ILogger<HomeController> logger, IEventService eventService)
         {
             _logger = logger;
-            _context = context;
-            _userManager = userManager;
+            _eventService = eventService;
         }
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(int page = 1, int pageSize = 12, string? category = null, bool? free = null)
         {
-            //// Get users with their roles for testing
-            //var users = await _context.Users.ToListAsync();
-            //var userEmails = new List<string>();
+            try
+            {
+                // Get paginated events via service layer
+                var (events, totalCount) = await _eventService.GetPagedEventsAsync(page, pageSize, null, category, free);
 
-            //foreach (var user in users)
-            //{
-            //    var roles = await _userManager.GetRolesAsync(user);
-            //    var rolesString = roles.Any() ? $" ({string.Join(", ", roles)})" : "";
-            //    userEmails.Add($"{user.Email}{rolesString}");
-            //}
+                var eventViewModels = EventViewModel.FromEntities(events);
 
-            //ViewData["Emails"] = userEmails;
-            //return View();
+                var paginatedEvents = new PaginatedList<EventViewModel>(eventViewModels, totalCount, page, pageSize);
 
-            var events = await _context.Events
-                 //.Where(e => e.Status == Data.Enums.EventStatus.Active && e.Date >= DateTime.UtcNow)
-                .Where(e => e.Date >= DateTime.UtcNow)
-                .OrderBy(e => e.Date)
-                .Take(12)
-                .ToListAsync();
-            return View(events);
+                var viewModel = new HomePageViewModel
+                {
+                    Events = eventViewModels,
+                    TotalEvents = totalCount,
+                    PaginatedEvents = paginatedEvents
+                };
+
+                ViewBag.CurrentCategory = category;
+                ViewBag.CurrentFree = free;
+
+                return View(viewModel);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading home page");
+
+                var emptyViewModel = new HomePageViewModel
+                {
+                    PaginatedEvents = new PaginatedList<EventViewModel>(new List<EventViewModel>(), 0, 1, pageSize)
+                };
+                return View(emptyViewModel);
+            }
         }
 
         public IActionResult Privacy()

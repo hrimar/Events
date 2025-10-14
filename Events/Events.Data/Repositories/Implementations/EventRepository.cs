@@ -36,6 +36,90 @@ public class EventRepository : IEventRepository
             .ToListAsync();
     }
 
+    public async Task<(IEnumerable<Event> Events, int TotalCount)> GetPagedEventsAsync(
+        int page,
+        int pageSize,
+        EventStatus? status = null,
+        string? categoryName = null,
+        bool? isFree = null,
+        DateTime? fromDate = null)
+    {
+        var query = _context.Events
+            .Include(e => e.Category)
+            .Include(e => e.SubCategory)
+            .Include(e => e.EventTags)
+            .ThenInclude(et => et.Tag)
+            .AsQueryable();
+
+        if (status.HasValue)
+        {
+            query = query.Where(e => e.Status == status.Value);
+        }
+
+        if (!string.IsNullOrEmpty(categoryName))
+        {
+            query = query.Where(e => e.Category != null && e.Category.Name == categoryName);
+        }
+
+        if (isFree.HasValue)
+        {
+            query = query.Where(e => e.IsFree == isFree.Value);
+        }
+
+        if (fromDate.HasValue)
+        {
+            query = query.Where(e => e.Date >= fromDate.Value);
+        }
+
+        var totalCount = await query.CountAsync();
+
+        var events = await query
+            .OrderBy(e => e.Date)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return (events, totalCount);
+    }
+
+    public async Task<IEnumerable<Event>> GetFeaturedEventsAsync(int count = 10)
+    {
+        return await _context.Events
+            .Include(e => e.Category)
+            .Include(e => e.SubCategory)
+            .Include(e => e.EventTags)
+            .ThenInclude(et => et.Tag)
+            .Where(e => e.Status == EventStatus.Published && e.Date >= DateTime.UtcNow)
+            .OrderBy(e => e.Date)
+            .Take(count)
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<Event>> GetUpcomingEventsAsync(int count = 10)
+    {
+        return await _context.Events
+            .Include(e => e.Category)
+            .Include(e => e.SubCategory)
+            .Include(e => e.EventTags)
+            .ThenInclude(et => et.Tag)
+            .Where(e => e.Status == EventStatus.Published && e.Date >= DateTime.UtcNow)
+            .OrderBy(e => e.Date)
+            .Take(count)
+            .ToListAsync();
+    }
+
+    public async Task<int> GetTotalEventsCountAsync(EventStatus? status = null)
+    {
+        var query = _context.Events.AsQueryable();
+
+        if (status.HasValue)
+        {
+            query = query.Where(e => e.Status == status.Value);
+        }
+
+        return await query.CountAsync();
+    }
+
     public async Task<IEnumerable<Event>> GetByDateRangeAsync(DateTime startDate, DateTime endDate)
     {
         return await _context.Events
