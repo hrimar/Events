@@ -16,26 +16,32 @@ namespace Events.Web.Controllers
             _eventService = eventService;
         }
 
-        public async Task<IActionResult> Index(int page = 1, int pageSize = 12, string? category = null, bool? free = null)
+        public async Task<IActionResult> Index()
         {
             try
             {
-                // Get paginated events via service layer
-                var (events, totalCount) = await _eventService.GetPagedEventsAsync(page, pageSize, null, category, free);
+                // Get only featured events for homepage - no pagination needed
+                var featuredEvents = await _eventService.GetFeaturedEventsAsync(6);
+                var totalEvents = await _eventService.GetTotalEventsCountAsync(Events.Models.Enums.EventStatus.Published);
 
-                var eventViewModels = EventViewModel.FromEntities(events);
+                // Get today's events count
+                var todayEvents = await _eventService.GetPagedEventsAsync(1, 100,
+                    Events.Models.Enums.EventStatus.Published, null, null, DateTime.Today);
 
-                var paginatedEvents = new PaginatedList<EventViewModel>(eventViewModels, totalCount, page, pageSize);
+                // Get this week's events count
+                var weekStart = DateTime.Today.AddDays(-(int)DateTime.Today.DayOfWeek);
+                var weekEnd = weekStart.AddDays(7);
+                var weekEvents = await _eventService.GetEventsByDateRangeAsync(weekStart, weekEnd);
+
+                var eventViewModels = EventViewModel.FromEntities(featuredEvents);
 
                 var viewModel = new HomePageViewModel
                 {
-                    Events = eventViewModels,
-                    TotalEvents = totalCount,
-                    PaginatedEvents = paginatedEvents
+                    FeaturedEvents = eventViewModels,
+                    TotalEvents = totalEvents,
+                    TodayEvents = todayEvents.Events.Count(),
+                    ThisWeekEvents = weekEvents.Count()
                 };
-
-                ViewBag.CurrentCategory = category;
-                ViewBag.CurrentFree = free;
 
                 return View(viewModel);
             }
@@ -43,10 +49,7 @@ namespace Events.Web.Controllers
             {
                 _logger.LogError(ex, "Error loading home page");
 
-                var emptyViewModel = new HomePageViewModel
-                {
-                    PaginatedEvents = new PaginatedList<EventViewModel>(new List<EventViewModel>(), 0, 1, pageSize)
-                };
+                var emptyViewModel = new HomePageViewModel();
                 return View(emptyViewModel);
             }
         }

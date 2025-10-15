@@ -1,5 +1,8 @@
-﻿<!DOCTYPE html>
-<html lang="bg">
+﻿@using Events.Models.Enums
+@using Events.Web.Models
+
+<!DOCTYPE html>
+<html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -40,7 +43,7 @@
                         @foreach(var category in EventsPageViewModel.AvailableCategories)
                         {
                             <li>
-                                <a class="dropdown-item" asp-controller="Events" asp-action="Category" asp-route-category="@category.Value">
+                                <a class="dropdown-item" asp-controller="Events" asp-action="Index" asp-route-category="@category.Value">
                                     <i class="@category.IconClass me-2"></i>@category.DisplayName
                                 </a>
                             </li>
@@ -49,7 +52,6 @@
                 </li>
             </ul>
             
-            <!-- Search in navigation -->
             <form class="d-none d-lg-flex flex-grow-1 mx-4" asp-controller="Events" asp-action="Index" method="get">
                 <input class="form-control me-2" type="search" name="search" placeholder="Search events...">
                 <button class="btn btn-primary" type="submit">
@@ -72,10 +74,10 @@
             <div class="row">
                 <div class="col-md-6">
                     <h6>Sofia Events</h6>
-                    <p>Твоят портал за събития</p>
+                    <p>Your events portal</p>
                 </div>
                 <div class="col-md-6 text-end">
-                    <a href="#" class="text-white-50 text-decoration-none">Контакти</a>
+                    <a href="#" class="text-white-50 text-decoration-none">Contacts</a>
                 </div>
             </div>
         </div>

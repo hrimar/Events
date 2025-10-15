@@ -1,0 +1,275 @@
+@model Events.Web.Models.EventViewModel
+
+@{
+    ViewData["Title"] = Model.Name;
+    var relatedEvents = ViewBag.RelatedEvents as List<Events.Web.Models.EventViewModel> ?? new List<Events.Web.Models.EventViewModel>();
+}
+
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
+            <li class="breadcrumb-item"><a asp-controller="Events" asp-action="Index">Events</a></li>
+            @if(!string.IsNullOrEmpty(Model.CategoryName))
+            {
+                <li class="breadcrumb-item">
+                    <a asp-controller="Events" asp-action="Category" asp-route-category="@Model.CategoryName">@Model.CategoryName</a>
+                </li>
+            }
+            <li class="breadcrumb-item active" aria-current="page">@Model.Name</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- Main Event Details -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <!-- Event Image -->
+                <div class="event-detail-image">
+                    <img src="@Model.DefaultImage" 
+                         alt="@Model.Name" 
+                         class="w-100"
+                         style="height: 400px; object-fit: contain; background: #f8f9fa;"
+                         onerror="this.src='/images/default-event.jpg'">
+                    
+                    <div class="event-price-overlay @(Model.IsFree ? "event-free" : "")">
+                        @Model.PriceDisplay
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <!-- Title and Basic Info -->
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h1 class="h2 mb-2">@Model.Name</h1>
+                            
+                            @if(!string.IsNullOrEmpty(Model.CategoryName))
+                            {
+                                <div class="mb-2">
+                                    <a href="/Events/Category/@Model.CategoryName" class="badge bg-primary text-decoration-none me-2">
+                                        @Model.CategoryName
+                                    </a>
+                                    @if(!string.IsNullOrEmpty(Model.SubCategoryName))
+                                    {
+                                        <span class="badge bg-secondary">@Model.SubCategoryName</span>
+                                    }
+                                </div>
+                            }
+                        </div>
+                        
+                        <button class="btn btn-outline-danger" onclick="toggleFavorite(@Model.Id)">
+                            <i class="fas fa-heart"></i> Save
+                        </button>
+                    </div>
+
+                    <!-- Event Details Grid -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center mb-3">
+                                <i class="fas fa-calendar text-primary me-3" style="width: 20px;"></i>
+                                <div>
+                                    <strong>Date & Time</strong><br>
+                                    <span class="text-muted">@Model.FormattedDate at @Model.FormattedTime</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center mb-3">
+                                <i class="fas fa-map-marker-alt text-primary me-3" style="width: 20px;"></i>
+                                <div>
+                                    <strong>Location</strong><br>
+                                    <span class="text-muted">@Model.Location</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        @if(!Model.IsFree && Model.Price.HasValue)
+                        {
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center mb-3">
+                                    <i class="fas fa-tag text-primary me-3" style="width: 20px;"></i>
+                                    <div>
+                                        <strong>Price</strong><br>
+                                        <span class="text-success fs-5">@Model.Price.Value.ToString("F0") BGN</span>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+
+                        @if(Model.Tags.Any())
+                        {
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-start mb-3">
+                                    <i class="fas fa-tags text-primary me-3 mt-1" style="width: 20px;"></i>
+                                    <div>
+                                        <strong>Tags</strong><br>
+                                        <div class="mt-1">
+                                            @foreach(var tag in Model.Tags)
+                                            {
+                                                <span class="badge bg-light text-dark me-1 mb-1">@tag</span>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Description -->
+                    @if(!string.IsNullOrEmpty(Model.Description))
+                    {
+                        <div class="mb-4">
+                            <h4>About this event</h4>
+                            <div class="text-muted">
+                                @Html.Raw(Model.Description.Replace("\n", "<br>"))
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Action Card -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body text-center">
+                    @if(Model.HasTicketUrl)
+                    {
+                        <a href="@Model.TicketUrl" target="_blank" class="btn btn-primary btn-lg w-100 mb-3">
+                            <i class="fas fa-ticket-alt me-2"></i>Buy Tickets
+                        </a>
+                        <small class="text-muted">You'll be redirected to the official ticketing site</small>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            Ticket information not available
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Share Card -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <h6 class="card-title">Share this event</h6>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-primary btn-sm flex-fill" onclick="shareEvent('facebook')">
+                            <i class="fab fa-facebook-f"></i>
+                        </button>
+                        <button class="btn btn-outline-info btn-sm flex-fill" onclick="shareEvent('twitter')">
+                            <i class="fab fa-twitter"></i>
+                        </button>
+                        <button class="btn btn-outline-success btn-sm flex-fill" onclick="shareEvent('whatsapp')">
+                            <i class="fab fa-whatsapp"></i>
+                        </button>
+                        <button class="btn btn-outline-secondary btn-sm flex-fill" onclick="copyLink()">
+                            <i class="fas fa-link"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Related Events -->
+            @if(relatedEvents.Any())
+            {
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <h6 class="card-title">More @Model.CategoryName Events</h6>
+                        
+                        @foreach(var relatedEvent in relatedEvents.Take(3))
+                        {
+                            <div class="d-flex mb-3">
+                                <img src="@relatedEvent.DefaultImage" 
+                                     alt="@relatedEvent.Name"
+                                     class="rounded me-3"
+                                     style="width: 60px; height: 60px; object-fit: cover;"
+                                     onerror="this.src='/images/default-event.jpg'">
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1">
+                                        <a href="/Events/Details/@relatedEvent.Id" class="text-decoration-none">
+                                            @relatedEvent.Name
+                                        </a>
+                                    </h6>
+                                    <small class="text-muted">
+                                        <i class="fas fa-calendar me-1"></i>@relatedEvent.FormattedDate
+                                    </small>
+                                </div>
+                            </div>
+                        }
+                        
+                        <a href="/Events/Category/@Model.CategoryName" class="btn btn-outline-primary btn-sm w-100">
+                            View All @Model.CategoryName Events
+                        </a>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function toggleFavorite(eventId) {
+            $.post('/api/favorites/toggle', { eventId: eventId })
+                .done(function(data) {
+                    // Toggle heart icon
+                    const heartIcon = event.target.closest('button').querySelector('i');
+                    heartIcon.classList.toggle('fas');
+                    heartIcon.classList.toggle('far');
+                    console.log('Favorite toggled for event:', eventId);
+                })
+                .fail(function() {
+                    console.log('Error toggling favorite');
+                });
+        }
+
+        function shareEvent(platform) {
+            const url = encodeURIComponent(window.location.href);
+            const title = encodeURIComponent('@Model.Name');
+            
+            let shareUrl = '';
+            switch(platform) {
+                case 'facebook':
+                    shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${url}`;
+                    break;
+                case 'twitter':
+                    shareUrl = `https://twitter.com/intent/tweet?url=${url}&text=${title}`;
+                    break;
+                case 'whatsapp':
+                    shareUrl = `https://wa.me/?text=${title} ${url}`;
+                    break;
+            }
+            
+            if(shareUrl) {
+                window.open(shareUrl, '_blank', 'width=600,height=400');
+            }
+        }
+
+        function copyLink() {
+            navigator.clipboard.writeText(window.location.href)
+                .then(() => {
+                    // Show toast notification
+                    const toast = document.createElement('div');
+                    toast.className = 'toast position-fixed top-0 end-0 m-3';
+                    toast.innerHTML = `
+                        <div class="toast-body bg-success text-white">
+                            <i class="fas fa-check me-2"></i>Link copied to clipboard!
+                        </div>
+                    `;
+                    document.body.appendChild(toast);
+                    
+                    setTimeout(() => {
+                        document.body.removeChild(toast);
+                    }, 3000);
+                })
+                .catch(() => {
+                    console.log('Failed to copy link');
+                });
+        }
+    </script>
+}
