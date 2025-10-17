@@ -42,8 +42,10 @@ var host = new HostBuilder()
         services.AddHttpClient<BiletBgCrawler>();
         
         // Register crawler strategies
-        services.AddScoped<IEventCrawlerStrategy, BiletBgCrawler>();
-        services.AddScoped<IEventCrawlerStrategy, TicketStationCrawler>();
+        services.AddScoped<IEventCrawlerStrategy, BiletBgCrawler>(); // via HttpClient
+        services.AddScoped<IEventCrawlerStrategy, TicketStationCrawler>(); // via Playwright
+        services.AddScoped<IEventCrawlerStrategy, EpaygoCrawler>(); // via Playwright
+        services.AddScoped<IEventCrawlerStrategy, EventimCrawler>(); // via Playwright
     })
     .Build();
 
