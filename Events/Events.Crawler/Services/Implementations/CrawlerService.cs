@@ -60,29 +60,38 @@ public class CrawlerService : ICrawlerService
         }
     }
 
-    public async Task<CrawlResult> CrawlAllSourcesAsync(DateTime? targetDate = null) 
+    public async Task<CrawlResult> CrawlAllSourcesAsync(DateTime? targetDate = null)
     {
         var allResults = new List<CrawlResult>();
         var startTime = DateTime.UtcNow;
+        var healthyCrawlers = _crawlers.Where(c => c.IsHealthy() && c.CrawlerType == CrawlerType.HttpApi).ToList();
 
-        foreach (var crawler in _crawlers.Where(c => c.IsHealthy() ))
+        // Running all crawlers in parallel instead of sequentially
+        var crawlTasks = healthyCrawlers.Select(async crawler =>
         {
             try
             {
-                var result = await crawler.CrawlAsync(targetDate);
-                allResults.Add(result);
+                _logger.LogInformation("Starting parallel crawl for source: {Source}", crawler.SourceName);
+                return await crawler.CrawlAsync(targetDate);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error crawling source: {Source}", crawler.SourceName);
-                allResults.Add(new CrawlResult
+                return new CrawlResult
                 {
                     Source = crawler.SourceName,
                     Success = false,
                     ErrorMessage = ex.Message
-                });
+                };
             }
-        }
+        });
+
+        var results = await Task.WhenAll(crawlTasks);
+        allResults.AddRange(results);
+
+        var totalDuration = DateTime.UtcNow - startTime;
+        _logger.LogInformation("All crawlers completed in {TotalDuration}. Total events found: {TotalEvents}",
+            totalDuration, allResults.Sum(r => r.EventsFound));
 
         return new CrawlResult
         {

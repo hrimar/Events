@@ -1,4 +1,4 @@
-using Events.Crawler.Services.Interfaces;
+﻿using Events.Crawler.Services.Interfaces;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
@@ -25,21 +25,24 @@ public class EventCrawlerFunction
 
     [Function("CrawlEventsFunction")]
     //public async Task Run([TimerTrigger("0 0 4 * * *")] TimerInfo myTimer) // 4:00 AM daily
-    public async Task Run([TimerTrigger("0 47 15 * * *")] TimerInfo myTimer) // for debugging at exact time
+    public async Task Run([TimerTrigger("0 56 14 * * *")] TimerInfo myTimer) // for debugging at exact time
     {
-        using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(80)); // 1 hour 20 minutes internal timeout
+        using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(90));
 
         _logger.LogInformation("Event crawler function started at: {Time}", DateTime.UtcNow);
 
         try
         {
             var crawlResult = await _crawlerService.CrawlAllSourcesAsync();
-            _logger.LogInformation("Crawling completed. Found {EventCount} events", crawlResult.EventsFound);
+            _logger.LogInformation("Parallel crawling completed in {Duration}. Found {EventCount} events",
+                crawlResult.Duration, crawlResult.EventsFound);
 
             if (crawlResult.Success && crawlResult.Events.Any())
             {
                 var events = crawlResult.Events.ToList();
-                const int batchSize = 50;
+                const int batchSize = 30;
+
+                _logger.LogInformation("Starting processing of {EventCount} events in batches of {BatchSize}", events.Count, batchSize);
 
                 for (int i = 0; i < events.Count; i += batchSize)
                 {
