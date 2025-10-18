@@ -169,7 +169,7 @@ public class EventProcessingService : IEventProcessingService
             {
                 Name = TruncateString(crawledEvent.Name, 200),
                 Description = TruncateString(crawledEvent.Description, 2000),
-                Date = crawledEvent.StartDate ?? DateTime.Now.AddDays(1), // TODO: Handle missing date better
+                Date = crawledEvent.StartDate ?? DateTime.MinValue, // TODO: Handle missing date better
                 StartTime = crawledEvent.StartDate?.TimeOfDay,
                 Location = TruncateString(crawledEvent.Location ?? "TBD", 300),
                 ImageUrl = TruncateString(crawledEvent.ImageUrl, 500),

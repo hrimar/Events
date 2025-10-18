@@ -64,7 +64,7 @@ public class CrawlerService : ICrawlerService
     {
         var allResults = new List<CrawlResult>();
         var startTime = DateTime.UtcNow;
-        var healthyCrawlers = _crawlers.Where(c => c.IsHealthy() && c.CrawlerType == CrawlerType.HttpApi).ToList();
+        var healthyCrawlers = _crawlers.Where(c => c.IsHealthy() ).ToList(); // && c.CrawlerType == CrawlerType.HttpApi
 
         // Running all crawlers in parallel instead of sequentially
         var crawlTasks = healthyCrawlers.Select(async crawler =>

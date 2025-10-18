@@ -176,7 +176,11 @@ public class EpaygoCrawler : IWebScrapingCrawler
             try
             {
                 using var playwright = await Playwright.CreateAsync();
-                var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = true });
+                await using var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
+                {
+                    Headless = true,
+                    Args = new[] { "--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage" }
+                });
                 var page = await browser.NewPageAsync();
 
                 try
@@ -195,160 +199,225 @@ public class EpaygoCrawler : IWebScrapingCrawler
                     catch (TimeoutException)
                     {
                         _logger.LogWarning("Timeout waiting for .event_content_box elements");
-                        await Task.Delay(5000); // Fallback wait
+                        await Task.Delay(5000);
                     }
 
-                    // Additional wait for dynamic content
                     await Task.Delay(3000);
 
-                    // Get all elements with class 'event_content_box'
-                    var eventElements = await page.QuerySelectorAllAsync(".event_content_box");
+                    // process elements in smaller batch size
+                    var totalElements = await page.EvaluateAsync<int>("document.querySelectorAll('.event_content_box').length");
+                    _logger.LogInformation("Found {EventCount} event content boxes", totalElements);
+
                     var events = new List<EpaygoEventDto>();
+                    const int batchSize = 50;
 
-                    _logger.LogInformation("Found {EventCount} event content boxes", eventElements.Count);
-
-                    foreach (var element in eventElements)
+                    for (int batchStart = 0; batchStart < totalElements; batchStart += batchSize)
                     {
-                        try
+                        var batchEnd = Math.Min(batchStart + batchSize, totalElements);
+                        _logger.LogDebug("Processing batch {Start}-{End} of {Total}", batchStart + 1, batchEnd, totalElements);
+
+                        // get fresh elements for each batch
+                        var batchElements = await page.QuerySelectorAllAsync($".event_content_box:nth-child(n+{batchStart + 1}):nth-child(-n+{batchEnd})");
+
+                        foreach (var element in batchElements.Take(batchEnd - batchStart))
                         {
-                            var eventDto = new EpaygoEventDto();
-
-                            // Navigate to the col_all_box div within each event_content_box
-                            var colAllBox = await element.QuerySelectorAsync(".col_all_box");
-                            if (colAllBox == null)
+                            try
                             {
-                                continue;
-                            }
-
-                            // Extract image URL from .h_all element's style attribute
-                            var imageElement = await colAllBox.QuerySelectorAsync(".h_all");
-                            if (imageElement != null)
-                            {
-                                var styleAttribute = await imageElement.GetAttributeAsync("style");
-                                if (!string.IsNullOrEmpty(styleAttribute))
+                                // element validation
+                                bool isValid;
+                                try
                                 {
-                                    // Extract URL from background-image: url('...') pattern
-                                    var match = Regex.Match(styleAttribute, @"background-image:\s*url\(['""]?([^'""]+)['""]?\)");
-                                    if (match.Success)
+                                    isValid = await element.IsVisibleAsync();
+                                }
+                                catch
+                                {
+                                    continue; // Skip garbage collected elements
+                                }
+
+                                if (!isValid) continue;
+
+                                var eventDto = new EpaygoEventDto();
+
+                                // Navigate to the col_all_box div within each event_content_box
+                                var colAllBox = await element.QuerySelectorAsync(".col_all_box");
+                                if (colAllBox == null)
+                                {
+                                    continue;
+                                }
+
+                                // Extract image URL from .h_all element's style attribute
+                                var imageElement = await colAllBox.QuerySelectorAsync(".h_all");
+                                if (imageElement != null)
+                                {
+                                    try
                                     {
-                                        eventDto.ImageUrl = match.Groups[1].Value;
-                                        // Make URL absolute if it's relative
-                                        if (!string.IsNullOrEmpty(eventDto.ImageUrl) && eventDto.ImageUrl.StartsWith("/"))
+                                        var styleAttribute = await imageElement.GetAttributeAsync("style");
+                                        if (!string.IsNullOrEmpty(styleAttribute))
                                         {
-                                            var baseUri = new Uri(url);
-                                            eventDto.ImageUrl = $"{baseUri.Scheme}://{baseUri.Host}{eventDto.ImageUrl}";
+                                            var match = Regex.Match(styleAttribute, @"background-image:\s*url\(['""]?([^'""]+)['""]?\)");
+                                            if (match.Success)
+                                            {
+                                                eventDto.ImageUrl = match.Groups[1].Value;
+                                                if (!string.IsNullOrEmpty(eventDto.ImageUrl) && eventDto.ImageUrl.StartsWith("/"))
+                                                {
+                                                    var baseUri = new Uri(url);
+                                                    eventDto.ImageUrl = $"{baseUri.Scheme}://{baseUri.Host}{eventDto.ImageUrl}";
+                                                }
+                                            }
+                                        }
+
+                                        var orderBtnElement = await imageElement.QuerySelectorAsync(".event_order_btn a[href]");
+                                        if (orderBtnElement != null)
+                                        {
+                                            eventDto.TicketUrl = await orderBtnElement.GetAttributeAsync("href");
+                                            if (!string.IsNullOrEmpty(eventDto.TicketUrl) && eventDto.TicketUrl.StartsWith("/"))
+                                            {
+                                                var baseUri = new Uri(url);
+                                                eventDto.TicketUrl = $"{baseUri.Scheme}://{baseUri.Host}{eventDto.TicketUrl}";
+                                            }
+                                        }
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        _logger.LogDebug("Error extracting image/ticket URL: {Error}", ex.Message);
+                                    }
+                                }
+
+                                // Extract date(s) from .headline_date_t_all element(s)
+                                try
+                                {
+                                    var dateElements = await colAllBox.QuerySelectorAllAsync(".headline_date_t_all");
+                                    if (dateElements.Count > 0)
+                                    {
+                                        var dateTexts = new List<string>();
+                                        foreach (var dateEl in dateElements)
+                                        {
+                                            try
+                                            {
+                                                var dateText = await dateEl.InnerTextAsync();
+                                                if (!string.IsNullOrWhiteSpace(dateText))
+                                                {
+                                                    dateTexts.Add(dateText.Trim());
+                                                }
+                                            }
+                                            catch
+                                            {
+                                                // Skip problematic date elements
+                                            }
+                                        }
+
+                                        if (dateTexts.Count > 1)
+                                        {
+                                            eventDto.Date = string.Join(" - ", dateTexts);
+                                        }
+                                        else if (dateTexts.Count == 1)
+                                        {
+                                            eventDto.Date = dateTexts[0];
                                         }
                                     }
                                 }
-
-                                // Extract ticket purchase URL from .event_order_btn within .h_all
-                                var orderBtnElement = await imageElement.QuerySelectorAsync(".event_order_btn a[href]");
-                                if (orderBtnElement != null)
+                                catch (Exception ex)
                                 {
-                                    eventDto.TicketUrl = await orderBtnElement.GetAttributeAsync("href");
-                                    // Make URL absolute if it's relative
-                                    if (!string.IsNullOrEmpty(eventDto.TicketUrl) && eventDto.TicketUrl.StartsWith("/"))
+                                    _logger.LogDebug("Error extracting dates: {Error}", ex.Message);
+                                }
+
+                                // Extract name from .headline_text_t_all element
+                                try
+                                {
+                                    var nameElement = await colAllBox.QuerySelectorAsync(".headline_text_t_all");
+                                    if (nameElement != null)
                                     {
-                                        var baseUri = new Uri(url);
-                                        eventDto.TicketUrl = $"{baseUri.Scheme}://{baseUri.Host}{eventDto.TicketUrl}";
+                                        eventDto.Name = await nameElement.InnerTextAsync();
                                     }
                                 }
-                            }
-
-                            // Extract date(s) from .headline_date_t_all element(s) - Handle both single and date ranges
-                            var dateElements = await colAllBox.QuerySelectorAllAsync(".headline_date_t_all");
-                            if (dateElements.Count > 0)
-                            {
-                                var dateTexts = new List<string>();
-                                foreach (var dateEl in dateElements)
+                                catch (Exception ex)
                                 {
-                                    var dateText = await dateEl.InnerTextAsync();
-                                    if (!string.IsNullOrWhiteSpace(dateText))
+                                    _logger.LogDebug("Error extracting name: {Error}", ex.Message);
+                                }
+
+                                // Fallback URL extraction if not found in order button
+                                if (string.IsNullOrEmpty(eventDto.TicketUrl))
+                                {
+                                    try
                                     {
-                                        dateTexts.Add(dateText.Trim());
-                                    }
-                                }
-
-                                // Concatenate all dates (for date ranges or multiple dates)
-                                if (dateTexts.Count > 1)
-                                {
-                                    eventDto.Date = string.Join(" - ", dateTexts); // Join with " - " for date ranges
-                                }
-                                else if (dateTexts.Count == 1)
-                                {
-                                    eventDto.Date = dateTexts[0]; // Single date
-                                }
-                            }
-
-                            // Extract name from .headline_text_t_all element
-                            var nameElement = await colAllBox.QuerySelectorAsync(".headline_text_t_all");
-                            if (nameElement != null)
-                            {
-                                eventDto.Name = await nameElement.InnerTextAsync();
-                            }
-
-                            // Fallback URL extraction if not found in order button
-                            if (string.IsNullOrEmpty(eventDto.TicketUrl))
-                            {
-                                var linkElement = await element.QuerySelectorAsync("a[href]");
-                                if (linkElement != null)
-                                {
-                                    var href = await linkElement.GetAttributeAsync("href");
-                                    if (!string.IsNullOrEmpty(href))
-                                    {
-                                        // Make URL absolute if it's relative
-                                        if (href.StartsWith("/"))
+                                        var linkElement = await element.QuerySelectorAsync("a[href]");
+                                        if (linkElement != null)
                                         {
-                                            var baseUri = new Uri(url);
-                                            eventDto.TicketUrl = $"{baseUri.Scheme}://{baseUri.Host}{href}";
-                                        }
-                                        else
-                                        {
-                                            eventDto.TicketUrl = href;
+                                            var href = await linkElement.GetAttributeAsync("href");
+                                            if (!string.IsNullOrEmpty(href))
+                                            {
+                                                if (href.StartsWith("/"))
+                                                {
+                                                    var baseUri = new Uri(url);
+                                                    eventDto.TicketUrl = $"{baseUri.Scheme}://{baseUri.Host}{href}";
+                                                }
+                                                else
+                                                {
+                                                    eventDto.TicketUrl = href;
+                                                }
+                                            }
                                         }
                                     }
+                                    catch (Exception ex)
+                                    {
+                                        _logger.LogDebug("Error extracting fallback URL: {Error}", ex.Message);
+                                    }
                                 }
-                            }
 
-                            // Set description as the full text content for now
-                            eventDto.Description = await element.InnerTextAsync();
-
-                            // Try to extract price from description if available
-                            var fullText = eventDto.Description;
-                            if (!string.IsNullOrEmpty(fullText))
-                            {
-                                // Look for price patterns
-                                var priceMatch = Regex.Match(fullText, @"(\d+(?:\.\d{2})?)\s*(?:лв|BGN|EUR)", RegexOptions.IgnoreCase);
-                                if (priceMatch.Success && decimal.TryParse(priceMatch.Groups[1].Value, out decimal price))
+                                // Set description as the full text content for now
+                                try
                                 {
-                                    eventDto.Price = price;
-                                    eventDto.IsFree = price == 0;
+                                    eventDto.Description = await element.InnerTextAsync();
+                                }
+                                catch (Exception ex)
+                                {
+                                    _logger.LogDebug("Error extracting description: {Error}", ex.Message);
+                                    eventDto.Description = eventDto.Name; // Fallback
+                                }
+
+                                // Try to extract price from description if available
+                                var fullText = eventDto.Description;
+                                if (!string.IsNullOrEmpty(fullText))
+                                {
+                                    var priceMatch = Regex.Match(fullText, @"(\d+(?:\.\d{2})?)\s*(?:лв|BGN|EUR)", RegexOptions.IgnoreCase);
+                                    if (priceMatch.Success && decimal.TryParse(priceMatch.Groups[1].Value, out decimal price))
+                                    {
+                                        eventDto.Price = price;
+                                        eventDto.IsFree = price == 0;
+                                    }
+                                }
+
+                                eventDto.SourceUrl = url;
+
+                                // Only add events that have at least a name
+                                if (!string.IsNullOrEmpty(eventDto.Name))
+                                {
+                                    events.Add(eventDto);
+                                    _logger.LogDebug("Extracted event: {EventName} on {EventDate}", eventDto.Name, eventDto.Date);
                                 }
                             }
-
-                            // Set source URL to the current page URL
-                            eventDto.SourceUrl = url;
-
-                            // Only add events that have at least a name
-                            if (!string.IsNullOrEmpty(eventDto.Name))
+                            catch (Exception ex)
                             {
-                                events.Add(eventDto);
-
-                                _logger.LogDebug("Extracted event: {EventName} on {EventDate} with price {Price}",
-                                    eventDto.Name, eventDto.Date, eventDto.Price);
+                                _logger.LogDebug(ex, "Error extracting event data from element");
                             }
                         }
-                        catch (Exception ex)
+
+                        // ПРОМЯНА 5: Memory cleanup between batchs
+                        if (batchStart > 0 && batchStart % 100 == 0)
                         {
-                            _logger.LogWarning(ex, "Error extracting event data from Epaygo element");
+                            GC.Collect();
+                            GC.WaitForPendingFinalizers();
+                            await Task.Delay(500); // Brief pause
+                            _logger.LogDebug("Memory cleanup after processing {ProcessedCount} elements", batchStart);
                         }
                     }
 
+                    _logger.LogInformation("Successfully processed {EventCount} events from Epaygo", events.Count);
                     return events;
                 }
                 finally
                 {
-                    await browser.CloseAsync();
+                    await page.CloseAsync();
                 }
             }
             catch (Exception ex)
