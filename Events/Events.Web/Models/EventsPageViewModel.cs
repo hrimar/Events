@@ -12,7 +12,11 @@ public class EventsPageViewModel
     public DateTime? ToDate { get; set; }
     public string PageTitle { get; set; } = "All Events";
 
-    // Available categories from the enum
+    // Sorting functionality
+    public string? SortBy { get; set; }
+    public string? SortOrder { get; set; } = "asc";
+
+    // Available categories for filter dropdown
     public static List<CategoryDisplayItem> AvailableCategories =>
         Enum.GetValues<EventCategory>()
             .Select(category => new CategoryDisplayItem
@@ -23,12 +27,22 @@ public class EventsPageViewModel
             })
             .ToList();
 
+    // Sort options
+    public static List<SortOption> AvailableSortOptions => new()
+    {
+        new() { Value = "date", DisplayName = "Date", IconClass = "fas fa-calendar" },
+        new() { Value = "name", DisplayName = "Name", IconClass = "fas fa-sort-alpha-up" },
+        new() { Value = "price", DisplayName = "Price", IconClass = "fas fa-dollar-sign" },
+        new() { Value = "category", DisplayName = "Category", IconClass = "fas fa-tags" }
+    };
+
     // Helper properties for UI
     public bool HasActiveFilters => !string.IsNullOrEmpty(CurrentCategory) ||
                                    IsFreeFilter.HasValue ||
                                    !string.IsNullOrEmpty(SearchTerm) ||
                                    FromDate.HasValue ||
-                                   ToDate.HasValue;
+                                   ToDate.HasValue ||
+                                   !string.IsNullOrEmpty(SortBy);
 
     public string FiltersQueryString
     {
@@ -51,11 +65,16 @@ public class EventsPageViewModel
             if (ToDate.HasValue)
                 filters.Add($"toDate={ToDate.Value:yyyy-MM-dd}");
 
+            if (!string.IsNullOrEmpty(SortBy))
+                filters.Add($"sortBy={SortBy}");
+
+            if (!string.IsNullOrEmpty(SortOrder))
+                filters.Add($"sortOrder={SortOrder}");
+
             return filters.Count > 0 ? string.Join("&", filters) : "";
         }
     }
 
-    // Helper methods for category display
     private static string GetCategoryDisplayName(EventCategory category) => category switch
     {
         EventCategory.Music => "Music",
@@ -87,8 +106,7 @@ public class EventsPageViewModel
     };
 }
 
-// Helper class for category display
-public class CategoryDisplayItem
+public class SortOption
 {
     public string Value { get; set; } = string.Empty;
     public string DisplayName { get; set; } = string.Empty;

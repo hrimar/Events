@@ -95,6 +95,57 @@
     </div>
 </section>
 
+<!-- Sorting and View Options -->
+<div class="bg-white py-3 border-bottom">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <div class="d-flex align-items-center gap-3">
+                    <span class="text-muted">Sort by:</span>
+                    <div class="btn-group" role="group">
+                        @foreach(var sortOption in EventsPageViewModel.AvailableSortOptions)
+                        {
+                            var isCurrentSort = Model.SortBy == sortOption.Value;
+                            var newSortOrder = isCurrentSort && Model.SortOrder == "asc" ? "desc" : "asc";
+                            
+                            <a href="@Url.Action("Index", "Events", new {
+                                    category = Model.CurrentCategory,
+                                    free = Model.IsFreeFilter,
+                                    search = Model.SearchTerm,
+                                    fromDate = Model.FromDate?.ToString("yyyy-MM-dd"),
+                                    toDate = Model.ToDate?.ToString("yyyy-MM-dd"),
+                                    sortBy = sortOption.Value,
+                                    sortOrder = newSortOrder,
+                                    page = 1
+                            })" 
+                               class="btn btn-sm @(isCurrentSort ? "btn-primary" : "btn-outline-secondary")">
+                                <i class="@sortOption.IconClass me-1"></i>@sortOption.DisplayName
+                                @if(isCurrentSort)
+                                {
+                                    <i class="fas fa-chevron-@(Model.SortOrder == "asc" ? "up" : "down") ms-1"></i>
+                                }
+                            </a>
+                        }
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 text-end">
+                <div class="d-flex align-items-center justify-content-end gap-2">
+                    <span class="text-muted">View:</span>
+                    <div class="btn-group btn-group-sm" role="group">
+                        <button type="button" class="btn btn-outline-secondary active" id="grid-view">
+                            <i class="fas fa-th"></i>
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" id="list-view">
+                            <i class="fas fa-list"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Results Section -->
 <section class="py-4">
     <div class="container">

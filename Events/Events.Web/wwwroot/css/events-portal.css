@@ -261,6 +261,117 @@
     }
 
 @keyframes spin {
-    0% { transform: translateY(-50%) rotate(0deg); }
-    100% { transform: translateY(-50%) rotate(360deg); }
+    0% {
+        transform: translateY(-50%) rotate(0deg);
+    }
+
+    100% {
+        transform: translateY(-50%) rotate(360deg);
+    }
 }
+
+/* Sorting and view controls */
+.sorting-controls {
+    background: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.btn-group .btn {
+    border-radius: 6px !important;
+    margin-right: 4px;
+}
+
+    .btn-group .btn:last-child {
+        margin-right: 0;
+    }
+
+/* Sort button animations */
+.btn-sm {
+    transition: all 0.2s ease;
+}
+
+    .btn-sm:hover {
+        transform: translateY(-1px);
+    }
+
+/* Active sort indicator */
+.btn-primary .fa-chevron-up,
+.btn-primary .fa-chevron-down {
+    animation: pulse 1s ease-in-out;
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 0.5;
+    }
+
+    50% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0.5;
+    }
+}
+
+/* List view styles (for future implementation) */
+.events-list-view .event-card {
+    flex-direction: row;
+    max-width: 100%;
+}
+
+.events-list-view .event-image-container {
+    width: 200px;
+    height: 150px;
+    flex-shrink: 0;
+}
+
+.events-list-view .card-body {
+    flex: 1;
+}
+
+/* Loading states */
+.loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #007bff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+/* Enhanced filter badges */
+.filter-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 12px;
+    background: #e3f2fd;
+    color: #1976d2;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    margin: 2px;
+}
+
+    .filter-badge .remove-filter {
+        cursor: pointer;
+        opacity: 0.7;
+        transition: opacity 0.2s ease;
+    }
+
+        .filter-badge .remove-filter:hover {
+            opacity: 1;
+        }
