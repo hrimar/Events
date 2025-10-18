@@ -151,4 +151,32 @@ public class EventsController : Controller
             return RedirectToAction(nameof(Index));
         }
     }
+
+    [HttpGet("/Events/Search")]
+    public async Task<IActionResult> Search(string query)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(query) || query.Length < 2)
+            {
+                return Json(new object[0]);
+            }
+
+            var results = await _eventService.SearchEventsAsync(query);
+            var suggestions = results.Take(10).Select(e => new {
+                id = e.Id,
+                name = e.Name,
+                category = e.Category?.Name,
+                location = e.Location,
+                date = e.Date.ToString("dd.MM.yyyy")
+            });
+
+            return Json(suggestions);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in autocomplete search for query {Query}", query);
+            return Json(new object[0]);
+        }
+    }
 }
