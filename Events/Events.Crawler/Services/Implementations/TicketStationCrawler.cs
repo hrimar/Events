@@ -256,23 +256,22 @@ public class TicketStationCrawler : IWebScrapingCrawler
                                 }
                             }
 
-                            // Extract URL if there's a link in the card
-                            var linkElement = await card.QuerySelectorAsync("a[href]");
-                            if (linkElement != null)
+                            var href = await card.GetAttributeAsync("href");
+                            if (!string.IsNullOrEmpty(href))
                             {
-                                eventDto.Url = await linkElement.GetAttributeAsync("href");
-                                // Make URL absolute if it's relative
-                                if (!string.IsNullOrEmpty(eventDto.Url) && eventDto.Url.StartsWith("/"))
+                                // Set TicketUrl as the full absolute URL
+                                if (href.StartsWith("/"))
                                 {
-                                    var baseUri = new Uri(url);
-                                    eventDto.Url = $"{baseUri.Scheme}://{baseUri.Host}{eventDto.Url}";
+                                    eventDto.TicketUrl = $"https://ticketstation.bg{href}";
+                                }
+                                else
+                                {
+                                    eventDto.TicketUrl = href;
                                 }
                             }
-                            else
-                            {
-                                // Fallback to source URL
-                                eventDto.Url = url;
-                            }
+
+                            // Set Url to always be the base URL
+                            eventDto.Url = "https://ticketstation.bg";
 
                             // Set description from item-info content
                             eventDto.Description = await itemInfo.InnerTextAsync();
@@ -341,6 +340,7 @@ public class TicketStationCrawler : IWebScrapingCrawler
             Location = CleanText(ticketStationEvent.City),
             ImageUrl = ticketStationEvent.ImageUrl,
             SourceUrl = ticketStationEvent.Url,
+            TicketUrl = ticketStationEvent.TicketUrl,
             Price = ticketStationEvent.Price,
             IsFree = ticketStationEvent.Price == null || ticketStationEvent.Price == 0,
             RawData = new Dictionary<string, object>

@@ -149,6 +149,9 @@ public class BiletBgCrawler : IHttpApiCrawler
             SourceUrl = !string.IsNullOrEmpty(biletEvent.Slug)
                 ? $"https://bilet.bg/event/{biletEvent.Slug}"
                 : null,
+            TicketUrl = !string.IsNullOrEmpty(biletEvent.Slug)
+                ? $"https://bilet.bg/bg/cart/{biletEvent.Slug}"
+                : null,
             RawData = new Dictionary<string, object>
             {
                 ["bilet_id"] = biletEvent.Id,
