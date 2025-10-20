@@ -375,3 +375,188 @@
         .filter-badge .remove-filter:hover {
             opacity: 1;
         }
+
+/* Base Theme Support */
+* {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+body {
+    background-color: var(--body-bg);
+    color: var(--text-primary);
+}
+
+/* Navigation */
+.navbar {
+    background-color: var(--navbar-bg) !important;
+    box-shadow: var(--shadow-sm);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.navbar-brand, .nav-link {
+    color: var(--text-primary) !important;
+}
+
+    .nav-link:hover, .nav-link:focus {
+        color: var(--primary-color) !important;
+    }
+
+/* Cards */
+.card {
+    background-color: var(--card-bg);
+    border-color: var(--border-color);
+}
+
+.event-card {
+    background-color: var(--event-card-bg);
+    box-shadow: var(--event-card-shadow);
+    border: 1px solid var(--border-color);
+}
+
+    .event-card:hover {
+        box-shadow: var(--event-card-hover-shadow);
+    }
+
+/* Event Price Badge */
+.event-price {
+    background-color: var(--event-price-bg);
+    color: var(--text-light);
+}
+
+    .event-price.event-free {
+        background-color: var(--event-price-free-bg);
+    }
+
+/* Form Elements */
+.form-control, .form-select {
+    background-color: var(--input-bg);
+    border-color: var(--input-border);
+    color: var(--text-primary);
+}
+
+    .form-control:focus, .form-select:focus {
+        background-color: var(--input-bg);
+        border-color: var(--input-focus-border);
+        box-shadow: var(--input-focus-shadow);
+        color: var(--text-primary);
+    }
+
+/* Buttons */
+.btn-primary {
+    background-color: var(--btn-primary-bg);
+    border-color: var(--btn-primary-bg);
+}
+
+.btn-outline-primary {
+    color: var(--primary-color);
+    border-color: var(--btn-outline-border);
+}
+
+    .btn-outline-primary:hover {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+
+.btn-outline-secondary {
+    color: var(--text-secondary);
+    border-color: var(--border-color);
+}
+
+    .btn-outline-secondary:hover {
+        background-color: var(--secondary-color);
+        color: var(--text-light);
+    }
+
+/* Sections */
+.filters-section {
+    background-color: var(--sidebar-bg) !important;
+    border-bottom: 1px solid var(--border-color);
+}
+
+/* Text Colors */
+.text-muted {
+    color: var(--text-muted) !important;
+}
+
+.text-secondary {
+    color: var(--text-secondary) !important;
+}
+
+/* Badges */
+.badge {
+    color: var(--text-light);
+}
+
+/* Footer */
+footer {
+    background-color: var(--footer-bg) !important;
+    border-top: 1px solid var(--border-color);
+}
+
+/* Pagination */
+.pagination .page-link {
+    background-color: var(--card-bg);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+    .pagination .page-link:hover {
+        background-color: var(--sidebar-bg);
+        color: var(--primary-color);
+    }
+
+.pagination .page-item.active .page-link {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+/* Theme Switcher Styles */
+.theme-switcher {
+    position: relative;
+}
+
+    .theme-switcher .dropdown-menu {
+        background-color: var(--card-bg);
+        border-color: var(--border-color);
+        box-shadow: var(--shadow);
+    }
+
+    .theme-switcher .dropdown-item {
+        color: var(--text-primary);
+    }
+
+        .theme-switcher .dropdown-item:hover {
+            background-color: var(--sidebar-bg);
+            color: var(--primary-color);
+        }
+
+/* Event Image Container - Dark Theme Friendly */
+.event-image-container {
+    background-color: var(--sidebar-bg);
+    border: 1px solid var(--border-light);
+}
+
+/* Autocomplete Dark Theme Support */
+.ui-autocomplete {
+    background-color: var(--card-bg) !important;
+    border-color: var(--border-color) !important;
+    box-shadow: var(--shadow) !important;
+}
+
+    .ui-autocomplete .ui-menu-item {
+        color: var(--text-primary) !important;
+    }
+
+        .ui-autocomplete .ui-menu-item:hover,
+        .ui-state-focus {
+            background-color: var(--sidebar-bg) !important;
+            color: var(--primary-color) !important;
+        }
+
+.autocomplete-item {
+    color: var(--text-primary) !important;
+}
+
+    .autocomplete-item .text-muted {
+        color: var(--text-muted) !important;
+    }

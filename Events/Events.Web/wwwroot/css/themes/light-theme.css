@@ -1,0 +1,52 @@
+/* Light Theme Variables */
+:root[data-theme="light"] {
+  /* Primary Colors */
+  --primary-color: #007bff;
+  --secondary-color: #6c757d;
+  --success-color: #28a745;
+  --danger-color: #dc3545;
+  --warning-color: #ffc107;
+  --info-color: #17a2b8;
+  
+  /* Background Colors */
+  --body-bg: #ffffff;
+  --content-bg: #ffffff;
+  --sidebar-bg: #f8f9fa;
+  --card-bg: #ffffff;
+  --navbar-bg: #ffffff;
+  --footer-bg: #343a40;
+  
+  /* Text Colors */
+  --text-primary: #212529;
+  --text-secondary: #6c757d;
+  --text-muted: #868e96;
+  --text-light: #f8f9fa;
+  
+  /* Border Colors */
+  --border-color: #dee2e6;
+  --border-light: #e9ecef;
+  --border-dark: #adb5bd;
+  
+  /* Shadows */
+  --shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  --shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  --shadow-lg: 0 1rem 3rem rgba(0, 0, 0, 0.175);
+  
+  /* Event Card Specific */
+  --event-card-bg: #ffffff;
+  --event-card-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  --event-card-hover-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  --event-price-bg: #28a745;
+  --event-price-free-bg: #17a2b8;
+  
+  /* Form Elements */
+  --input-bg: #ffffff;
+  --input-border: #ced4da;
+  --input-focus-border: #007bff;
+  --input-focus-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+  
+  /* Buttons */
+  --btn-primary-bg: #007bff;
+  --btn-secondary-bg: #6c757d;
+  --btn-outline-border: #007bff;
+}
