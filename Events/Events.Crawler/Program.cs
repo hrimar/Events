@@ -18,6 +18,7 @@ var host = new HostBuilder()
     .ConfigureFunctionsWebApplication()
     .ConfigureServices((context, services) =>
     {
+        // Add logging first
         services.AddLogging();
 
         try
@@ -27,8 +28,6 @@ var host = new HostBuilder()
                 ?? context.Configuration["ConnectionStrings__EventsConnection"]
                 ?? context.Configuration["ConnectionStrings:EventsConnection"];
 
-            var isDevelopment = context.HostingEnvironment.IsDevelopment();
-
             Console.WriteLine($"Environment: {context.HostingEnvironment.EnvironmentName}");
             Console.WriteLine($"Connection string found: {!string.IsNullOrEmpty(connectionString)}");
 
@@ -36,9 +35,13 @@ var host = new HostBuilder()
             {
                 Console.WriteLine("Configuring full services with database...");
 
+                // Configure DbContext with retry policy to handle connection issues
                 services.AddDbContext<EventsDbContext>(options =>
                     options.UseSqlServer(connectionString, dbOptions =>
-                        dbOptions.MigrationsAssembly("Events.Data")));
+                    {
+                        dbOptions.MigrationsAssembly("Events.Data");
+                        dbOptions.EnableRetryOnFailure(maxRetryCount: 3, maxRetryDelay: TimeSpan.FromSeconds(10), errorNumbersToAdd: null);
+                    }));
 
                 // Core repositories
                 services.AddScoped<IEventRepository, EventRepository>();
@@ -71,9 +74,9 @@ var host = new HostBuilder()
             {
                 Console.WriteLine("No connection string found, configuring stub services...");
 
-                // Create stub implementations that return meaningful errors
-                services.AddScoped<ICrawlerService, StubCrawlerService>();
-                services.AddScoped<IEventProcessingService, StubEventProcessingService>();
+                // Register stub services that don't perform any operations during construction
+                services.AddSingleton<ICrawlerService, StubCrawlerService>();
+                services.AddSingleton<IEventProcessingService, StubEventProcessingService>();
 
                 Console.WriteLine("Stub services configured");
             }
@@ -81,18 +84,17 @@ var host = new HostBuilder()
         catch (Exception ex)
         {
             Console.WriteLine($"Service configuration error: {ex.Message}");
-            Console.WriteLine($"Stack trace: {ex.StackTrace}");
 
-            // Register error-reporting services
-            services.AddScoped<ICrawlerService, StubCrawlerService>();
-            services.AddScoped<IEventProcessingService, StubEventProcessingService>();
+            // Register minimal stub services
+            services.AddSingleton<ICrawlerService, StubCrawlerService>();
+            services.AddSingleton<IEventProcessingService, StubEventProcessingService>();
         }
     })
     .Build();
 
 host.Run();
 
-
+// Lightweight stub implementations that don't cause timeouts
 public class StubCrawlerService : ICrawlerService
 {
     public Task<CrawlResult> CrawlEventsAsync(string source, DateTime? targetDate = null)
@@ -101,8 +103,10 @@ public class StubCrawlerService : ICrawlerService
         {
             Source = source,
             Success = false,
-            ErrorMessage = "Database connection not configured. Please add 'ConnectionStrings:EventsConnection' to application settings.",
-            Events = new List<CrawledEventDto>()
+            ErrorMessage = "Database connection not configured. Please configure 'ConnectionStrings:EventsConnection' in application settings.",
+            Events = new List<CrawledEventDto>(),
+            CrawledAt = DateTime.UtcNow,
+            Duration = TimeSpan.Zero
         });
     }
 
@@ -112,8 +116,10 @@ public class StubCrawlerService : ICrawlerService
         {
             Source = "all",
             Success = false,
-            ErrorMessage = "Database connection not configured. Please add 'ConnectionStrings:EventsConnection' to application settings.",
-            Events = new List<CrawledEventDto>()
+            ErrorMessage = "Database connection not configured. Please configure 'ConnectionStrings:EventsConnection' in application settings.",
+            Events = new List<CrawledEventDto>(),
+            CrawledAt = DateTime.UtcNow,
+            Duration = TimeSpan.Zero
         });
     }
 
@@ -130,6 +136,9 @@ public class StubEventProcessingService : IEventProcessingService
         return Task.FromResult(new ProcessingResult
         {
             EventsProcessed = 0,
+            EventsCreated = 0,
+            EventsUpdated = 0,
+            EventsSkipped = 0,
             Errors = new List<string> { "Database connection not configured" }
         });
     }
@@ -139,6 +148,9 @@ public class StubEventProcessingService : IEventProcessingService
         return Task.FromResult(new ProcessingResult
         {
             EventsProcessed = 0,
+            EventsCreated = 0,
+            EventsUpdated = 0,
+            EventsSkipped = 0,
             Errors = new List<string> { "Database connection not configured" }
         });
     }
