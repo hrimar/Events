@@ -69,6 +69,97 @@ public class EventCrawlerFunction
         _logger.LogInformation("Event crawler function completed at: {Time}", DateTime.UtcNow);
     }
 
+
+    [Function("CrawlAllEventsManual")]
+    public async Task<HttpResponseData> CrawlAllEventsManual(
+        [HttpTrigger(AuthorizationLevel.Function, "post", Route = "crawl-all")] HttpRequestData req)
+    {
+        _logger.LogInformation("Manual crawl all sources requested");
+
+        try
+        {
+            using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(8));
+
+            _logger.LogInformation("Event crawler function started at: {Time}", DateTime.UtcNow);
+
+            var crawlResult = await _crawlerService.CrawlAllSourcesAsync();
+            _logger.LogInformation("Parallel crawling completed in {Duration}. Found {EventCount} events",
+                crawlResult.Duration, crawlResult.EventsFound);
+
+            var totalProcessed = 0;
+            var totalCreated = 0;
+            var totalUpdated = 0;
+            var totalSkipped = 0;
+
+            if (crawlResult.Success && crawlResult.Events.Any())
+            {
+                var events = crawlResult.Events.ToList();
+                const int batchSize = 10; // Reduced for time constraints
+
+                _logger.LogInformation("Starting processing of {EventCount} events in batches of {BatchSize}", events.Count, batchSize);
+
+                for (int i = 0; i < events.Count; i += batchSize)
+                {
+                    cts.Token.ThrowIfCancellationRequested();
+
+                    var batch = events.Skip(i).Take(batchSize);
+                    var processingResult = await _eventProcessingService.ProcessAndTagEventsAsync(batch);
+
+                    totalCreated += processingResult.EventsCreated;
+                    totalUpdated += processingResult.EventsUpdated;
+                    totalSkipped += processingResult.EventsSkipped;
+                    totalProcessed += processingResult.EventsProcessed;
+
+                    _logger.LogInformation("Batch {BatchNumber}: Created {Created}, Updated {Updated}, Skipped {Skipped}",
+                        (i / batchSize) + 1, processingResult.EventsCreated, processingResult.EventsUpdated, processingResult.EventsSkipped);
+                }
+            }
+
+            _logger.LogInformation("Event crawler function completed at: {Time}", DateTime.UtcNow);
+
+            var response = req.CreateResponse(HttpStatusCode.OK);
+            await response.WriteAsJsonAsync(new
+            {
+                success = true,
+                message = "Crawl completed successfully",
+                crawlDuration = crawlResult.Duration,
+                eventsFound = crawlResult.EventsFound,
+                eventsProcessed = totalProcessed,
+                eventsCreated = totalCreated,
+                eventsUpdated = totalUpdated,
+                eventsSkipped = totalSkipped,
+                startTime = DateTime.UtcNow.Subtract(crawlResult.Duration),
+                endTime = DateTime.UtcNow
+            });
+            return response;
+        }
+        catch (OperationCanceledException)
+        {
+            _logger.LogWarning("Function execution was cancelled due to timeout");
+
+            var timeoutResponse = req.CreateResponse(HttpStatusCode.RequestTimeout);
+            await timeoutResponse.WriteAsJsonAsync(new
+            {
+                success = false,
+                error = "Function execution was cancelled due to timeout"
+            });
+            return timeoutResponse;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error during manual crawl all sources");
+
+            var errorResponse = req.CreateResponse(HttpStatusCode.InternalServerError);
+            await errorResponse.WriteAsJsonAsync(new
+            {
+                success = false,
+                error = ex.Message,
+                stackTrace = ex.StackTrace
+            });
+            return errorResponse;
+        }
+    }
+
     [Function("CrawlSpecificSourceFunction")]
     public async Task<HttpResponseData> CrawlSpecificSource(
         [HttpTrigger(AuthorizationLevel.Function, "post", Route = "crawl/{source}")] HttpRequestData req, 
