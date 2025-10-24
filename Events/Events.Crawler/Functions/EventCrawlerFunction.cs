@@ -3,7 +3,6 @@ using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
 using System.Net;
-using System.Net.NetworkInformation;
 
 namespace Events.Crawler.Functions;
 
@@ -24,8 +23,8 @@ public class EventCrawlerFunction
     }
 
     [Function("CrawlEventsFunction")]
-    public async Task Run([TimerTrigger("0 0 4 * * *")] TimerInfo myTimer) // 4:00 AM daily
-    //public async Task Run([TimerTrigger("0 56 14 * * *")] TimerInfo myTimer) // for debugging at exact time
+    public async Task CrawlEventsTimerFunction([TimerTrigger("0 0 4 * * *")] TimerInfo myTimer)
+    //public async Task CrawlEventsTimerFunction([TimerTrigger("0 56 14 * * *")] TimerInfo myTimer) // for debugging
     {
         using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(8));
 
@@ -40,13 +39,13 @@ public class EventCrawlerFunction
             if (crawlResult.Success && crawlResult.Events.Any())
             {
                 var events = crawlResult.Events.ToList();
-                const int batchSize = 30;
+                const int batchSize = 10; // Reduced for time constraints
 
                 _logger.LogInformation("Starting processing of {EventCount} events in batches of {BatchSize}", events.Count, batchSize);
 
                 for (int i = 0; i < events.Count; i += batchSize)
                 {
-                    cts.Token.ThrowIfCancellationRequested(); // Check for timeout
+                    cts.Token.ThrowIfCancellationRequested();
 
                     var batch = events.Skip(i).Take(batchSize);
                     var processingResult = await _eventProcessingService.ProcessAndTagEventsAsync(batch);
@@ -72,7 +71,8 @@ public class EventCrawlerFunction
 
     [Function("CrawlSpecificSourceFunction")]
     public async Task<HttpResponseData> CrawlSpecificSource(
-        [HttpTrigger(AuthorizationLevel.Function, "post", Route = "crawl/{source}")] HttpRequestData req, string source)
+        [HttpTrigger(AuthorizationLevel.Function, "post", Route = "crawl/{source}")] HttpRequestData req, 
+        string source)
     {
         _logger.LogInformation("Manual crawl requested for source: {Source}", source);
 
@@ -119,5 +119,19 @@ public class EventCrawlerFunction
             });
             return errorResponse;
         }
+    }
+
+    [Function("HealthCheckFunction")]
+    public async Task<HttpResponseData> HealthCheck(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "health")] HttpRequestData req)
+    {
+        var response = req.CreateResponse(HttpStatusCode.OK);
+        await response.WriteAsJsonAsync(new
+        {
+            status = "healthy",
+            timestamp = DateTime.UtcNow,
+            functions = new[] { "CrawlEventsFunction", "CrawlSpecificSourceFunction" }
+        });
+        return response;
     }
 }
