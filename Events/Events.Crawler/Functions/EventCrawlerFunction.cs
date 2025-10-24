@@ -95,7 +95,7 @@ public class EventCrawlerFunction
             if (crawlResult.Success && crawlResult.Events.Any())
             {
                 var events = crawlResult.Events.ToList();
-                const int batchSize = 10; // Reduced for time constraints
+                const int batchSize = 10;
 
                 _logger.LogInformation("Starting processing of {EventCount} events in batches of {BatchSize}", events.Count, batchSize);
 
@@ -224,6 +224,59 @@ public class EventCrawlerFunction
             timestamp = DateTime.UtcNow,
             functions = new[] { "CrawlEventsFunction", "CrawlSpecificSourceFunction", "CrawlAllEventsManual" }
         });
+        return response;
+    }
+
+    [Function("DiagnosticFunction")]
+    public async Task<HttpResponseData> DiagnosticCheck(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "diagnostic")] HttpRequestData req)
+    {
+        var response = req.CreateResponse(HttpStatusCode.OK);
+        
+        try
+        {
+            var diagnostics = new
+            {
+                timestamp = DateTime.UtcNow,
+                crawlerServiceAvailable = _crawlerService != null,
+                eventProcessingServiceAvailable = _eventProcessingService != null,
+                loggerAvailable = _logger != null
+            };
+
+            try
+            {
+                var sources = _crawlerService?.GetSupportedSources()?.ToList() ?? new List<string>();
+                
+                await response.WriteAsJsonAsync(new
+                {
+                    status = "healthy",
+                    services = diagnostics,
+                    supportedSources = sources,
+                    message = "All services are properly configured"
+                });
+            }
+            catch (Exception serviceEx)
+            {
+                await response.WriteAsJsonAsync(new
+                {
+                    status = "service_error",
+                    services = diagnostics,
+                    error = serviceEx.Message,
+                    message = "Services are registered but not properly configured"
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            await response.WriteAsJsonAsync(new
+            {
+                status = "critical_error",
+                error = ex.Message,
+                stackTrace = ex.StackTrace,
+                message = "Critical dependency injection failure"
+            });
+        }
+        
         return response;
     }
 }
