@@ -1,9 +1,11 @@
-﻿using Events.Crawler.Services.Interfaces;
+﻿using Events.Crawler.Models;
+using Events.Crawler.Services.Interfaces;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Net;
-using Events.Crawler.Models;
 
 namespace Events.Crawler.Functions;
 
@@ -232,21 +234,33 @@ public class EventCrawlerFunction
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "diagnostic")] HttpRequestData req)
     {
         var response = req.CreateResponse(HttpStatusCode.OK);
-        
+
         try
         {
+            // Check configuration
+            var configuration = req.FunctionContext.InstanceServices.GetService<IConfiguration>();
+            var connectionString = configuration?.GetConnectionString("EventsConnection");
+            var alternativeConnectionString = configuration?["ConnectionStrings__EventsConnection"];
+            var appSettingsConnectionString = configuration?["ConnectionStrings:EventsConnection"];
+
             var diagnostics = new
             {
                 timestamp = DateTime.UtcNow,
                 crawlerServiceAvailable = _crawlerService != null,
                 eventProcessingServiceAvailable = _eventProcessingService != null,
-                loggerAvailable = _logger != null
+                loggerAvailable = _logger != null,
+                connectionStringFound = !string.IsNullOrEmpty(connectionString),
+                alternativeConnectionStringFound = !string.IsNullOrEmpty(alternativeConnectionString),
+                appSettingsConnectionStringFound = !string.IsNullOrEmpty(appSettingsConnectionString),
+                connectionStringLength = connectionString?.Length ?? 0,
+                alternativeConnectionStringLength = alternativeConnectionString?.Length ?? 0,
+                appSettingsConnectionStringLength = appSettingsConnectionString?.Length ?? 0
             };
 
             try
             {
                 var sources = _crawlerService?.GetSupportedSources()?.ToList() ?? new List<string>();
-                
+
                 await response.WriteAsJsonAsync(new
                 {
                     status = "healthy",
@@ -276,7 +290,7 @@ public class EventCrawlerFunction
                 message = "Critical dependency injection failure"
             });
         }
-        
+
         return response;
     }
 }

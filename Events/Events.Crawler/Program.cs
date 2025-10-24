@@ -22,7 +22,11 @@ var host = new HostBuilder()
 
         try
         {
-            var connectionString = context.Configuration.GetConnectionString("EventsConnection");
+            // Try multiple connection string formats for Azure compatibility
+            var connectionString = context.Configuration.GetConnectionString("EventsConnection")
+                ?? context.Configuration["ConnectionStrings__EventsConnection"]
+                ?? context.Configuration["ConnectionStrings:EventsConnection"];
+
             var isDevelopment = context.HostingEnvironment.IsDevelopment();
 
             Console.WriteLine($"Environment: {context.HostingEnvironment.EnvironmentName}");
