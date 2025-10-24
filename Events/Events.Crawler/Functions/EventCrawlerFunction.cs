@@ -237,20 +237,9 @@ public class EventCrawlerFunction
 
         try
         {
-            // Get configuration without heavy operations
-            var configuration = req.FunctionContext.InstanceServices.GetService<IConfiguration>();
-
-            // Check different connection string formats
-            var connectionString = configuration?.GetConnectionString("EventsConnection");
-            var alternativeConnectionString = configuration?["ConnectionStrings__EventsConnection"];
-            var appSettingsConnectionString = configuration?["ConnectionStrings:EventsConnection"];
-
-            var hasAnyConnection = !string.IsNullOrEmpty(connectionString) ||
-                                  !string.IsNullOrEmpty(alternativeConnectionString) ||
-                                  !string.IsNullOrEmpty(appSettingsConnectionString);
-
-            var diagnostics = new
+            var result = new
             {
+                status = "startup_successful",
                 timestamp = DateTime.UtcNow,
                 environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Unknown",
                 servicesInjected = new
@@ -259,58 +248,23 @@ public class EventCrawlerFunction
                     eventProcessingService = _eventProcessingService != null,
                     logger = _logger != null
                 },
-                connectionStrings = new
-                {
-                    standardFormat = !string.IsNullOrEmpty(connectionString),
-                    underscoreFormat = !string.IsNullOrEmpty(alternativeConnectionString),
-                    appSettingsFormat = !string.IsNullOrEmpty(appSettingsConnectionString),
-                    anyConnectionFound = hasAnyConnection
-                },
                 serviceTypes = new
                 {
                     crawlerServiceType = _crawlerService?.GetType().Name ?? "null",
                     eventProcessingServiceType = _eventProcessingService?.GetType().Name ?? "null"
-                }
+                },
+                message = "Function app started successfully. Services are available."
             };
 
-            try
-            {
-                // Only call lightweight methods
-                var isStubService = _crawlerService?.GetType().Name == "StubCrawlerService";
-                var supportedSources = isStubService ?
-                    new[] { "bilet.bg", "ticketstation.bg", "eventim.bg", "epaygo.bg" } :
-                    new[] { "Services configured but not tested to avoid timeout" };
-
-                await response.WriteAsJsonAsync(new
-                {
-                    status = hasAnyConnection ? "configured" : "needs_configuration",
-                    diagnostics,
-                    supportedSources,
-                    isStubService,
-                    message = hasAnyConnection ?
-                        "Connection string found, services should be fully configured" :
-                        "No connection string found, using stub services"
-                });
-            }
-            catch (Exception serviceEx)
-            {
-                await response.WriteAsJsonAsync(new
-                {
-                    status = "service_error",
-                    diagnostics,
-                    error = serviceEx.Message,
-                    message = "Error testing services"
-                });
-            }
+            await response.WriteAsJsonAsync(result);
         }
         catch (Exception ex)
         {
             await response.WriteAsJsonAsync(new
             {
-                status = "critical_error",
+                status = "diagnostic_error",
                 error = ex.Message,
-                stackTrace = ex.StackTrace?.Split('\n').Take(5).ToArray(), // Limit stack trace
-                message = "Critical error in diagnostic function"
+                message = "Error in diagnostic function"
             });
         }
 
