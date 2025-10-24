@@ -3,6 +3,7 @@ using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
 using System.Net;
+using Events.Crawler.Models;
 
 namespace Events.Crawler.Functions;
 
@@ -221,7 +222,7 @@ public class EventCrawlerFunction
         {
             status = "healthy",
             timestamp = DateTime.UtcNow,
-            functions = new[] { "CrawlEventsFunction", "CrawlSpecificSourceFunction" }
+            functions = new[] { "CrawlEventsFunction", "CrawlSpecificSourceFunction", "CrawlAllEventsManual" }
         });
         return response;
     }
