@@ -88,8 +88,36 @@ public class EventsDbContext : IdentityDbContext
                 Name = musicSub.ToString(),
                 Description = GetMusicSubCategoryDescription(musicSub),
                 ParentCategory = EventCategory.Music,
-                CategoryId = 1, // Music Category
+                CategoryId = 1,
                 EnumValue = (int)musicSub
+            });
+        }
+
+        // Art subcategories (CategoryId = 2)
+        foreach (ArtSubCategory artSub in Enum.GetValues<ArtSubCategory>())
+        {
+            subCategories.Add(new SubCategory
+            {
+                Id = id++,
+                Name = artSub.ToString(),
+                Description = GetArtSubCategoryDescription(artSub),
+                ParentCategory = EventCategory.Art,
+                CategoryId = 2,
+                EnumValue = (int)artSub
+            });
+        }
+
+        // Business subcategories (CategoryId = 3)
+        foreach (BusinessSubCategory businessSub in Enum.GetValues<BusinessSubCategory>())
+        {
+            subCategories.Add(new SubCategory
+            {
+                Id = id++,
+                Name = businessSub.ToString(),
+                Description = GetBusinessSubCategoryDescription(businessSub),
+                ParentCategory = EventCategory.Business,
+                CategoryId = 3,
+                EnumValue = (int)businessSub
             });
         }
 
@@ -102,8 +130,92 @@ public class EventsDbContext : IdentityDbContext
                 Name = sportsSub.ToString(),
                 Description = GetSportsSubCategoryDescription(sportsSub),
                 ParentCategory = EventCategory.Sports,
-                CategoryId = 4, // Sports Category
+                CategoryId = 4,
                 EnumValue = (int)sportsSub
+            });
+        }
+
+        // Theatre subcategories (CategoryId = 5)
+        foreach (TheatreSubCategory theatreSub in Enum.GetValues<TheatreSubCategory>())
+        {
+            subCategories.Add(new SubCategory
+            {
+                Id = id++,
+                Name = theatreSub.ToString(),
+                Description = GetTheatreSubCategoryDescription(theatreSub),
+                ParentCategory = EventCategory.Theatre,
+                CategoryId = 5,
+                EnumValue = (int)theatreSub
+            });
+        }
+
+        // Cinema subcategories (CategoryId = 6)
+        foreach (CinemaSubCategory cinemaSub in Enum.GetValues<CinemaSubCategory>())
+        {
+            subCategories.Add(new SubCategory
+            {
+                Id = id++,
+                Name = cinemaSub.ToString(),
+                Description = GetCinemaSubCategoryDescription(cinemaSub),
+                ParentCategory = EventCategory.Cinema,
+                CategoryId = 6,
+                EnumValue = (int)cinemaSub
+            });
+        }
+
+        // Festivals subcategories (CategoryId = 7)
+        foreach (FestivalsSubCategory festivalsSub in Enum.GetValues<FestivalsSubCategory>())
+        {
+            subCategories.Add(new SubCategory
+            {
+                Id = id++,
+                Name = festivalsSub.ToString(),
+                Description = GetFestivalsSubCategoryDescription(festivalsSub),
+                ParentCategory = EventCategory.Festivals,
+                CategoryId = 7,
+                EnumValue = (int)festivalsSub
+            });
+        }
+
+        // Exhibitions subcategories (CategoryId = 8)
+        foreach (ExhibitionsSubCategory exhibitionsSub in Enum.GetValues<ExhibitionsSubCategory>())
+        {
+            subCategories.Add(new SubCategory
+            {
+                Id = id++,
+                Name = exhibitionsSub.ToString(),
+                Description = GetExhibitionsSubCategoryDescription(exhibitionsSub),
+                ParentCategory = EventCategory.Exhibitions,
+                CategoryId = 8,
+                EnumValue = (int)exhibitionsSub
+            });
+        }
+
+        // Conferences subcategories (CategoryId = 9)
+        foreach (ConferencesSubCategory conferencesSub in Enum.GetValues<ConferencesSubCategory>())
+        {
+            subCategories.Add(new SubCategory
+            {
+                Id = id++,
+                Name = conferencesSub.ToString(),
+                Description = GetConferencesSubCategoryDescription(conferencesSub),
+                ParentCategory = EventCategory.Conferences,
+                CategoryId = 9,
+                EnumValue = (int)conferencesSub
+            });
+        }
+
+        // Workshops subcategories (CategoryId = 10)
+        foreach (WorkshopsSubCategory workshopsSub in Enum.GetValues<WorkshopsSubCategory>())
+        {
+            subCategories.Add(new SubCategory
+            {
+                Id = id++,
+                Name = workshopsSub.ToString(),
+                Description = GetWorkshopsSubCategoryDescription(workshopsSub),
+                ParentCategory = EventCategory.Workshops,
+                CategoryId = 10,
+                EnumValue = (int)workshopsSub
             });
         }
 
@@ -128,6 +240,52 @@ public class EventsDbContext : IdentityDbContext
         };
     }
 
+    private static string GetArtSubCategoryDescription(ArtSubCategory category)
+    {
+        return category switch
+        {
+            ArtSubCategory.Painting => "Painting exhibitions and shows",
+            ArtSubCategory.Sculpture => "Sculpture exhibitions",
+            ArtSubCategory.Photography => "Photography exhibitions",
+            ArtSubCategory.DigitalArt => "Digital art exhibitions",
+            ArtSubCategory.StreetArt => "Street art and urban art events",
+            ArtSubCategory.Graffiti => "Graffiti art exhibitions",
+            ArtSubCategory.Illustration => "Illustration exhibitions",
+            ArtSubCategory.PerformanceArt => "Performance art events",
+            ArtSubCategory.InstallationArt => "Installation art exhibitions",
+            ArtSubCategory.ContemporaryArt => "Contemporary art exhibitions",
+            ArtSubCategory.VisualArts => "Visual arts events",
+            ArtSubCategory.MixedMedia => "Mixed media art exhibitions",
+            ArtSubCategory.ConceptualArt => "Conceptual art exhibitions",
+            ArtSubCategory.Other => "Other art events",
+            _ => $"{category} art events"
+        };
+    }
+
+    private static string GetBusinessSubCategoryDescription(BusinessSubCategory category)
+    {
+        return category switch
+        {
+            BusinessSubCategory.NetworkingEvents => "Business networking events",
+            BusinessSubCategory.Startups => "Startup events and pitches",
+            BusinessSubCategory.Entrepreneurship => "Entrepreneurship seminars",
+            BusinessSubCategory.Marketing => "Marketing conferences",
+            BusinessSubCategory.Sales => "Sales training and events",
+            BusinessSubCategory.Leadership => "Leadership development events",
+            BusinessSubCategory.Finance => "Finance and investment events",
+            BusinessSubCategory.RealEstate => "Real estate events",
+            BusinessSubCategory.Investment => "Investment seminars",
+            BusinessSubCategory.ECommerce => "E-commerce events",
+            BusinessSubCategory.Innovation => "Innovation forums",
+            BusinessSubCategory.Technology => "Technology business events",
+            BusinessSubCategory.HRManagement => "HR and management events",
+            BusinessSubCategory.BusinessStrategy => "Business strategy workshops",
+            BusinessSubCategory.ProductDevelopment => "Product development events",
+            BusinessSubCategory.Other => "Other business events",
+            _ => $"{category} business events"
+        };
+    }
+
     private static string GetSportsSubCategoryDescription(SportsSubCategory category)
     {
         return category switch
@@ -140,6 +298,127 @@ public class EventsDbContext : IdentityDbContext
             SportsSubCategory.Athletics => "Track and field events",
             SportsSubCategory.Other => "Other sports events and competitions",
             _ => $"{category} events and competitions"
+        };
+    }
+
+    private static string GetTheatreSubCategoryDescription(TheatreSubCategory category)
+    {
+        return category switch
+        {
+            TheatreSubCategory.Drama => "Drama theatre performances",
+            TheatreSubCategory.Comedy => "Comedy theatre shows",
+            TheatreSubCategory.MusicalTheatre => "Musical theatre productions",
+            TheatreSubCategory.Tragedy => "Tragedy theatre performances",
+            TheatreSubCategory.ExperimentalTheatre => "Experimental theatre",
+            TheatreSubCategory.PuppetTheatre => "Puppet theatre shows",
+            TheatreSubCategory.Improvisation => "Improvisation theatre",
+            TheatreSubCategory.StreetTheatre => "Street theatre performances",
+            TheatreSubCategory.Monodrama => "Monodrama performances",
+            TheatreSubCategory.ChildrensTheatre => "Children's theatre shows",
+            TheatreSubCategory.Other => "Other theatre performances",
+            _ => $"{category} theatre events"
+        };
+    }
+
+    private static string GetCinemaSubCategoryDescription(CinemaSubCategory category)
+    {
+        return category switch
+        {
+            CinemaSubCategory.FeatureFilms => "Feature film screenings",
+            CinemaSubCategory.ShortFilms => "Short film screenings",
+            CinemaSubCategory.Documentaries => "Documentary screenings",
+            CinemaSubCategory.Animation => "Animation film screenings",
+            CinemaSubCategory.IndependentCinema => "Independent cinema screenings",
+            CinemaSubCategory.BulgarianCinema => "Bulgarian cinema screenings",
+            CinemaSubCategory.InternationalCinema => "International cinema screenings",
+            CinemaSubCategory.FilmPremieres => "Film premiere events",
+            CinemaSubCategory.StudentFilms => "Student film screenings",
+            CinemaSubCategory.FilmFestivals => "Film festival events",
+            CinemaSubCategory.Other => "Other cinema events",
+            _ => $"{category} cinema events"
+        };
+    }
+
+    private static string GetFestivalsSubCategoryDescription(FestivalsSubCategory category)
+    {
+        return category switch
+        {
+            FestivalsSubCategory.MusicFestivals => "Music festival events",
+            FestivalsSubCategory.FilmFestivals => "Film festival events",
+            FestivalsSubCategory.ArtFestivals => "Art festival events",
+            FestivalsSubCategory.FoodAndWineFestivals => "Food and wine festivals",
+            FestivalsSubCategory.CulturalFestivals => "Cultural festival events",
+            FestivalsSubCategory.FolkloreFestivals => "Folklore festival events",
+            FestivalsSubCategory.StreetFestivals => "Street festival events",
+            FestivalsSubCategory.SummerFestivals => "Summer festival events",
+            FestivalsSubCategory.LightFestivals => "Light festival events",
+            FestivalsSubCategory.CraftBeerFestivals => "Craft beer festivals",
+            FestivalsSubCategory.EcoFestivals => "Eco festival events",
+            FestivalsSubCategory.DanceFestivals => "Dance festival events",
+            FestivalsSubCategory.TechFestivals => "Tech festival events",
+            FestivalsSubCategory.Other => "Other festival events",
+            _ => $"{category} festival events"
+        };
+    }
+
+    private static string GetExhibitionsSubCategoryDescription(ExhibitionsSubCategory category)
+    {
+        return category switch
+        {
+            ExhibitionsSubCategory.ArtExhibitions => "Art exhibitions",
+            ExhibitionsSubCategory.PhotographyExhibitions => "Photography exhibitions",
+            ExhibitionsSubCategory.HistoricalExhibitions => "Historical exhibitions",
+            ExhibitionsSubCategory.ScienceExhibitions => "Science exhibitions",
+            ExhibitionsSubCategory.TechnologyExhibitions => "Technology exhibitions",
+            ExhibitionsSubCategory.AutomotiveExhibitions => "Automotive exhibitions",
+            ExhibitionsSubCategory.DesignExhibitions => "Design exhibitions",
+            ExhibitionsSubCategory.CulturalHeritageExhibitions => "Cultural heritage exhibitions",
+            ExhibitionsSubCategory.EducationalExhibitions => "Educational exhibitions",
+            ExhibitionsSubCategory.CraftExhibitions => "Craft exhibitions",
+            ExhibitionsSubCategory.Other => "Other exhibitions",
+            _ => $"{category} exhibitions"
+        };
+    }
+
+    private static string GetConferencesSubCategoryDescription(ConferencesSubCategory category)
+    {
+        return category switch
+        {
+            ConferencesSubCategory.TechConferences => "Technology conferences",
+            ConferencesSubCategory.BusinessConferences => "Business conferences",
+            ConferencesSubCategory.StartupConferences => "Startup conferences",
+            ConferencesSubCategory.AcademicConferences => "Academic conferences",
+            ConferencesSubCategory.MarketingConferences => "Marketing conferences",
+            ConferencesSubCategory.ScienceConferences => "Science conferences",
+            ConferencesSubCategory.HealthAndMedicineConferences => "Health and medicine conferences",
+            ConferencesSubCategory.AIAndInnovationConferences => "AI and innovation conferences",
+            ConferencesSubCategory.ITSecurityConferences => "IT security conferences",
+            ConferencesSubCategory.EnvironmentalConferences => "Environmental conferences",
+            ConferencesSubCategory.HRConferences => "HR conferences",
+            ConferencesSubCategory.Other => "Other conferences",
+            _ => $"{category} conferences"
+        };
+    }
+
+    private static string GetWorkshopsSubCategoryDescription(WorkshopsSubCategory category)
+    {
+        return category switch
+        {
+            WorkshopsSubCategory.ArtWorkshops => "Art workshops",
+            WorkshopsSubCategory.MusicWorkshops => "Music workshops",
+            WorkshopsSubCategory.DanceWorkshops => "Dance workshops",
+            WorkshopsSubCategory.PhotographyWorkshops => "Photography workshops",
+            WorkshopsSubCategory.CookingWorkshops => "Cooking workshops",
+            WorkshopsSubCategory.CraftWorkshops => "Craft workshops",
+            WorkshopsSubCategory.StartupAndEntrepreneurshipWorkshops => "Startup and entrepreneurship workshops",
+            WorkshopsSubCategory.PersonalDevelopmentWorkshops => "Personal development workshops",
+            WorkshopsSubCategory.CodingWorkshops => "Coding workshops",
+            WorkshopsSubCategory.LanguageWorkshops => "Language workshops",
+            WorkshopsSubCategory.TheatreWorkshops => "Theatre workshops",
+            WorkshopsSubCategory.YogaAndWellnessWorkshops => "Yoga and wellness workshops",
+            WorkshopsSubCategory.MarketingWorkshops => "Marketing workshops",
+            WorkshopsSubCategory.Other => "Other workshops",
+            _ => $"{category} workshops"
         };
     }
 
