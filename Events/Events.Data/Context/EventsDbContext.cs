@@ -196,7 +196,8 @@ public class EventsDbContext : IdentityDbContext
             new Category { Id = 7, Name = "Festivals", CategoryType = EventCategory.Festivals, Description = "Various festivals and celebrations" },
             new Category { Id = 8, Name = "Exhibitions", CategoryType = EventCategory.Exhibitions, Description = "Exhibitions and displays" },
             new Category { Id = 9, Name = "Conferences", CategoryType = EventCategory.Conferences, Description = "Professional conferences and seminars" },
-            new Category { Id = 10, Name = "Workshops", CategoryType = EventCategory.Workshops, Description = "Educational workshops and training" }
+            new Category { Id = 10, Name = "Workshops", CategoryType = EventCategory.Workshops, Description = "Educational workshops and training" },
+            new Category { Id = 11, Name = "Undefined", CategoryType = EventCategory.Undefined, Description = "Events pending categorization" }
         );
     }
 }

@@ -11,5 +11,6 @@ public enum EventCategory
     Festivals = 7,
     Exhibitions = 8,
     Conferences = 9,
-    Workshops = 10
+    Workshops = 10,
+    Undefined = 11
 }

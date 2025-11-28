@@ -171,7 +171,7 @@ public class EventProcessingService : IEventProcessingService
                 SourceUrl = TruncateString(crawledEvent.SourceUrl, 500),
                 Price = crawledEvent.Price,
                 IsFree = crawledEvent.IsFree || crawledEvent.Price == 0,
-                CategoryId = categoryId ?? 1, // Default to Music if no category found
+                CategoryId = categoryId ?? 11, // Default to Undefined if no category found
                 Status = category.HasValue ? EventStatus.Published : EventStatus.Draft,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
