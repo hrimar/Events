@@ -11,5 +11,6 @@ public enum SportsSubCategory
     Boxing = 7,
     Wrestling = 8,
     Gymnastics = 9,
-    Cycling = 10
+    Cycling = 10,
+    Other = 99
 }

@@ -16,5 +16,6 @@ public enum MusicSubCategory
     Country = 12,
     Reggae = 13,
     HipHop = 14,
-    Alternative = 15
+    Alternative = 15,
+    Other = 99
 }

@@ -123,6 +123,7 @@ public class EventsDbContext : IdentityDbContext
             MusicSubCategory.Folk => "Folk and traditional music",
             MusicSubCategory.Blues => "Blues music performances",
             MusicSubCategory.HipHop => "Hip-hop and rap events",
+            MusicSubCategory.Other => "Other music events",
             _ => $"{category} music events"
         };
     }
@@ -137,6 +138,7 @@ public class EventsDbContext : IdentityDbContext
             SportsSubCategory.Volleyball => "Volleyball games",
             SportsSubCategory.Swimming => "Swimming competitions",
             SportsSubCategory.Athletics => "Track and field events",
+            SportsSubCategory.Other => "Other sports events and competitions",
             _ => $"{category} events and competitions"
         };
     }
