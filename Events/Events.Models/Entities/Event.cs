@@ -38,11 +38,9 @@ public class Event
 
     public decimal? Price { get; set; }
 
-    public int? CategoryId { get; set; }
-    public virtual Category? Category { get; set; }
-
-    public int? SubCategoryId { get; set; }
-    public virtual SubCategory? SubCategory { get; set; }
+    [Required]
+    public int CategoryId { get; set; }
+    public Category Category { get; set; } = null!;
 
     public EventStatus Status { get; set; } = EventStatus.Published;
 
@@ -53,5 +51,5 @@ public class Event
     [MaxLength(500)]
     public string? SourceUrl { get; set; }
 
-    public virtual ICollection<EventTag> EventTags { get; set; } = new List<EventTag>();
+    public ICollection<EventTag> EventTags { get; set; } = new List<EventTag>();
 }

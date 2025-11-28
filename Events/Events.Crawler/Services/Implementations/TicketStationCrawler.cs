@@ -325,8 +325,7 @@ public class TicketStationCrawler : IWebScrapingCrawler
         var city = ticketStationEvent.City?.Trim().ToLowerInvariant();
         if (string.IsNullOrEmpty(city) || !IsSofiaCity(city))
         {
-            _logger.LogDebug("Filtering out non-Sofia event: {EventName} in {City}",
-                ticketStationEvent.Name, ticketStationEvent.City);
+            _logger.LogDebug("Filtering out non-Sofia event: {EventName} in {City}", ticketStationEvent.Name, ticketStationEvent.City);
             return null; // Skip non-Sofia events
         }
 
@@ -483,7 +482,7 @@ public class TicketStationCrawler : IWebScrapingCrawler
         {
         "софия", "sofia", "софија", "sofija",
         "гр. софия", "гр.софия", "sofia city"
-    };
+        };
 
         return sofiaCities.Any(sc => city.Contains(sc));
     }

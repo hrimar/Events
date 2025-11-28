@@ -130,7 +130,6 @@ public class EventProcessingService : IEventProcessingService
         {
             EventCategory? category = null;
             int? categoryId = null;
-            int? subCategoryId = null;
 
             if (!string.IsNullOrEmpty(crawledEvent.Name))
             {
@@ -148,11 +147,6 @@ public class EventProcessingService : IEventProcessingService
                     if (category.HasValue)
                     {
                         categoryId = (int)category.Value;
-
-                        if (!string.IsNullOrEmpty(taggingResult.SuggestedSubCategory))
-                        {
-                            subCategoryId = await GetSubCategoryIdAsync(category.Value, taggingResult.SuggestedSubCategory);
-                        }
                     }
                 }
                 catch (OperationCanceledException)
@@ -177,8 +171,7 @@ public class EventProcessingService : IEventProcessingService
                 SourceUrl = TruncateString(crawledEvent.SourceUrl, 500),
                 Price = crawledEvent.Price,
                 IsFree = crawledEvent.IsFree || crawledEvent.Price == 0,
-                CategoryId = categoryId,
-                SubCategoryId = subCategoryId,
+                CategoryId = categoryId ?? 1, // Default to Music if no category found
                 Status = category.HasValue ? EventStatus.Published : EventStatus.Draft,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
@@ -287,88 +280,6 @@ public class EventProcessingService : IEventProcessingService
         }
 
         return string.IsNullOrWhiteSpace(cleaned) ? null : cleaned;
-    }
-
-    private async Task<int?> GetSubCategoryIdAsync(EventCategory category, string subCategoryName)
-    {
-        try
-        {
-            var subCategory = await _subCategoryService.GetByNameAsync(category, subCategoryName);
-            if (subCategory != null)
-            {
-                return subCategory.Id;
-            }
-
-            var enumValue = MapSubCategoryNameToEnum(category, subCategoryName);
-            if (enumValue.HasValue)
-            {
-                subCategory = await _subCategoryService.GetByEnumValueAsync(category, enumValue.Value);
-                return subCategory?.Id;
-            }
-
-            _logger.LogWarning("Could not find subcategory '{SubCategory}' for category '{Category}'",
-                subCategoryName, category);
-            return null;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error getting subcategory ID for '{SubCategory}' in category '{Category}'",
-                subCategoryName, category);
-            return null;
-        }
-    }
-
-    private static int? MapSubCategoryNameToEnum(EventCategory category, string subCategoryName)
-    {
-        var lowerName = subCategoryName.ToLower();
-
-        return category switch
-        {
-            EventCategory.Music => MapMusicSubCategory(lowerName),
-            EventCategory.Sports => MapSportsSubCategory(lowerName),
-            _ => null
-        };
-    }
-
-    private static int? MapMusicSubCategory(string name)
-    {
-        return name switch
-        {
-            "rock" or "рок" => (int)MusicSubCategory.Rock,
-            "jazz" or "джаз" => (int)MusicSubCategory.Jazz,
-            "metal" or "метъл" or "heavy metal" or "thrash metal" => (int)MusicSubCategory.Metal,
-            "pop" or "поп" => (int)MusicSubCategory.Pop,
-            "classical" or "класическа" or "класическа музика" => (int)MusicSubCategory.Classical,
-            "electronic" or "електронна" or "techno" or "house" => (int)MusicSubCategory.Electronic,
-            "folk" or "фолк" or "народна" => (int)MusicSubCategory.Folk,
-            "blues" or "блус" => (int)MusicSubCategory.Blues,
-            "hip-hop" or "хип-хоп" or "rap" or "рап" => (int)MusicSubCategory.HipHop,
-            "punk" or "пънк" => (int)MusicSubCategory.Punk,
-            "funk" or "фънк" => (int)MusicSubCategory.Funk,
-            "opera" or "опера" => (int)MusicSubCategory.Opera,
-            "country" or "кънтри" => (int)MusicSubCategory.Country,
-            "reggae" or "регей" => (int)MusicSubCategory.Reggae,
-            "alternative" or "алтернативна" => (int)MusicSubCategory.Alternative,
-            _ => null
-        };
-    }
-
-    private static int? MapSportsSubCategory(string name)
-    {
-        return name switch
-        {
-            "football" or "футбол" => (int)SportsSubCategory.Football,
-            "basketball" or "баскетбол" => (int)SportsSubCategory.Basketball,
-            "tennis" or "тенис" => (int)SportsSubCategory.Tennis,
-            "volleyball" or "волейбол" => (int)SportsSubCategory.Volleyball,
-            "swimming" or "плуване" => (int)SportsSubCategory.Swimming,
-            "athletics" or "атлетика" => (int)SportsSubCategory.Athletics,
-            "boxing" or "бокс" => (int)SportsSubCategory.Boxing,
-            "wrestling" or "борба" => (int)SportsSubCategory.Wrestling,
-            "gymnastics" or "гимнастика" => (int)SportsSubCategory.Gymnastics,
-            "cycling" or "колоездене" => (int)SportsSubCategory.Cycling,
-            _ => null
-        };
     }
 
     private async Task<Event?> UpdateEventFromCrawledDataAsync(Event existingEvent, CrawledEventDto crawledEvent, IEventService eventService)

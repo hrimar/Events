@@ -34,20 +34,14 @@ public class EventsDbContext : IdentityDbContext
             entity.Property(e => e.SourceUrl).HasMaxLength(500);
             entity.Property(e => e.Price).HasColumnType("decimal(18,2)");
 
-            // Configure Categopry and SubCategory relationship
+            // Configure Category relationship
             entity.HasOne(e => e.Category)
-                .WithMany() // Categories don't need Events collection
+                .WithMany(c => c.Events)
                 .HasForeignKey(e => e.CategoryId)
-                .OnDelete(DeleteBehavior.SetNull);
-
-            entity.HasOne(e => e.SubCategory)
-                .WithMany(sc => sc.Events)
-                .HasForeignKey(e => e.SubCategoryId)
-                .OnDelete(DeleteBehavior.SetNull);
+                .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasIndex(e => e.Date);
             entity.HasIndex(e => e.CategoryId);
-            entity.HasIndex(e => e.SubCategoryId);
             entity.HasIndex(e => e.Status);
         });
 
@@ -58,26 +52,34 @@ public class EventsDbContext : IdentityDbContext
             entity.Property(sc => sc.Name).IsRequired().HasMaxLength(100);
             entity.Property(sc => sc.Description).HasMaxLength(500);
 
-            entity.HasIndex(sc => new { sc.ParentCategory, sc.EnumValue }).IsUnique();
-            entity.HasIndex(sc => sc.ParentCategory);
+            entity.HasIndex(sc => new { sc.CategoryId, sc.EnumValue }).IsUnique();
+            entity.HasIndex(sc => sc.CategoryId);
+
+            // Set database default for CreatedAt
+            entity.Property(sc => sc.CreatedAt)
+                .HasDefaultValueSql("GETUTCDATE()");
+
+            // Configure Category relationship
+            entity.HasOne(sc => sc.Category)
+                .WithMany(c => c.SubCategories)
+                .HasForeignKey(sc => sc.CategoryId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
-        // Other configurations...
         ConfigureTagEntity(modelBuilder);
         ConfigureEventTagEntity(modelBuilder);
         ConfigureCategoryEntity(modelBuilder);
 
-        // Seed data
         SeedCategories(modelBuilder);
         SeedSubCategories(modelBuilder);
     }
 
-    private static void SeedSubCategories(ModelBuilder modelBuilder) // TODO: Add also other subcategoryes like ArtSubCategory
+    private static void SeedSubCategories(ModelBuilder modelBuilder)
     {
         var subCategories = new List<SubCategory>();
         int id = 1;
 
-        // Music subcategories
+        // Music subcategories (CategoryId = 1)
         foreach (MusicSubCategory musicSub in Enum.GetValues<MusicSubCategory>())
         {
             subCategories.Add(new SubCategory
@@ -86,12 +88,12 @@ public class EventsDbContext : IdentityDbContext
                 Name = musicSub.ToString(),
                 Description = GetMusicSubCategoryDescription(musicSub),
                 ParentCategory = EventCategory.Music,
-                EnumValue = (int)musicSub,
-                CreatedAt = DateTime.UtcNow
+                CategoryId = 1, // Music Category
+                EnumValue = (int)musicSub
             });
         }
 
-        // Sports subcategories
+        // Sports subcategories (CategoryId = 4)
         foreach (SportsSubCategory sportsSub in Enum.GetValues<SportsSubCategory>())
         {
             subCategories.Add(new SubCategory
@@ -100,8 +102,8 @@ public class EventsDbContext : IdentityDbContext
                 Name = sportsSub.ToString(),
                 Description = GetSportsSubCategoryDescription(sportsSub),
                 ParentCategory = EventCategory.Sports,
-                EnumValue = (int)sportsSub,
-                CreatedAt = DateTime.UtcNow
+                CategoryId = 4, // Sports Category
+                EnumValue = (int)sportsSub
             });
         }
 
@@ -174,7 +176,11 @@ public class EventsDbContext : IdentityDbContext
             entity.Property(c => c.Name).IsRequired().HasMaxLength(100);
             entity.Property(c => c.Description).HasMaxLength(500);
             entity.Property(c => c.DefaultImageUrl).HasMaxLength(500);
-            entity.HasIndex(c => c.CategoryType);
+            entity.HasIndex(c => c.CategoryType).IsUnique();
+            
+            // Set database default for CreatedAt
+            entity.Property(c => c.CreatedAt)
+                .HasDefaultValueSql("GETUTCDATE()");
         });
     }
 

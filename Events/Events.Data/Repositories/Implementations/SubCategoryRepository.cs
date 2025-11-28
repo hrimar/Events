@@ -18,7 +18,6 @@ public class SubCategoryRepository : ISubCategoryRepository
     public async Task<SubCategory?> GetByIdAsync(int id)
     {
         return await _context.SubCategories
-            .Include(sc => sc.Events)
             .FirstOrDefaultAsync(sc => sc.Id == id);
     }
 
@@ -97,10 +96,26 @@ public class SubCategoryRepository : ISubCategoryRepository
 
     public async Task<IEnumerable<SubCategory>> GetSubCategoriesWithEventsAsync(EventCategory category)
     {
-        return await _context.SubCategories
-            .Include(sc => sc.Events.Where(e => e.Status == EventStatus.Published))
-            .Where(sc => sc.ParentCategory == category && sc.Events.Any())
+        // Get subcategories for this category
+        var subCategories = await _context.SubCategories
+            .Where(sc => sc.ParentCategory == category)
             .OrderBy(sc => sc.Name)
             .ToListAsync();
+
+        // Filter to only those that have published events
+        // Since Event doesn't reference SubCategory directly, we check via Category
+        var result = new List<SubCategory>();
+        foreach (var subCategory in subCategories)
+        {
+            var hasEvents = await _context.Events
+                .AnyAsync(e => e.CategoryId == subCategory.CategoryId && e.Status == EventStatus.Published);
+            
+            if (hasEvents)
+            {
+                result.Add(subCategory);
+            }
+        }
+
+        return result;
     }
 }

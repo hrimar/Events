@@ -19,7 +19,6 @@ public class EventRepository : IEventRepository
     {
         return await _context.Events
             .Include(e => e.Category)
-            .Include(e => e.SubCategory)
             .Include(e => e.EventTags)
             .ThenInclude(et => et.Tag)
             .FirstOrDefaultAsync(e => e.Id == id);
@@ -29,7 +28,6 @@ public class EventRepository : IEventRepository
     {
         return await _context.Events
             .Include(e => e.Category)
-            .Include(e => e.SubCategory)
             .Include(e => e.EventTags)
             .ThenInclude(et => et.Tag)
             .OrderBy(e => e.Date)
@@ -46,7 +44,6 @@ public class EventRepository : IEventRepository
     {
         var query = _context.Events
             .Include(e => e.Category)
-            .Include(e => e.SubCategory)
             .Include(e => e.EventTags)
             .ThenInclude(et => et.Tag)
             .AsQueryable();
@@ -86,7 +83,6 @@ public class EventRepository : IEventRepository
     {
         return await _context.Events
             .Include(e => e.Category)
-            .Include(e => e.SubCategory)
             .Include(e => e.EventTags)
             .ThenInclude(et => et.Tag)
             .Where(e => e.Status == EventStatus.Published && e.Date >= DateTime.UtcNow)
@@ -99,7 +95,6 @@ public class EventRepository : IEventRepository
     {
         return await _context.Events
             .Include(e => e.Category)
-            .Include(e => e.SubCategory)
             .Include(e => e.EventTags)
             .ThenInclude(et => et.Tag)
             .Where(e => e.Status == EventStatus.Published && e.Date >= DateTime.UtcNow)
@@ -124,7 +119,6 @@ public class EventRepository : IEventRepository
     {
         return await _context.Events
             .Include(e => e.Category)
-            .Include(e => e.SubCategory)
             .Include(e => e.EventTags)
             .ThenInclude(et => et.Tag)
             .Where(e => e.Date >= startDate && e.Date <= endDate)
@@ -138,7 +132,6 @@ public class EventRepository : IEventRepository
 
         return await _context.Events
             .Include(e => e.Category)
-            .Include(e => e.SubCategory)
             .Include(e => e.EventTags)
             .ThenInclude(et => et.Tag)
             .Where(e => e.CategoryId == categoryId)
@@ -150,7 +143,6 @@ public class EventRepository : IEventRepository
     {
         return await _context.Events
             .Include(e => e.Category)
-            .Include(e => e.SubCategory)
             .Include(e => e.EventTags)
             .ThenInclude(et => et.Tag)
             .Where(e => e.Location.Contains(location))
@@ -162,7 +154,6 @@ public class EventRepository : IEventRepository
     {
         return await _context.Events
             .Include(e => e.Category)
-            .Include(e => e.SubCategory)
             .Include(e => e.EventTags)
             .ThenInclude(et => et.Tag)
             .Where(e => e.Name.Contains(searchTerm) ||
@@ -191,16 +182,6 @@ public class EventRepository : IEventRepository
         return eventEntity;
     }
 
-    public async Task DeleteAsync(int id)
-    {
-        var eventEntity = await _context.Events.FindAsync(id);
-        if (eventEntity != null)
-        {
-            _context.Events.Remove(eventEntity);
-            await _context.SaveChangesAsync();
-        }
-    }
-
     public async Task<bool> ExistsAsync(int id)
     {
         return await _context.Events.AnyAsync(e => e.Id == id);
@@ -210,7 +191,6 @@ public class EventRepository : IEventRepository
     {
         return await _context.Events
             .Include(e => e.Category)
-            .Include(e => e.SubCategory)
             .Include(e => e.EventTags)
             .ThenInclude(et => et.Tag)
             .Where(e => e.CategoryId == categoryId)
@@ -218,15 +198,13 @@ public class EventRepository : IEventRepository
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<Event>> GetBySubCategoryIdAsync(int subCategoryId)
+    public async Task DeleteAsync(int id)
     {
-        return await _context.Events
-            .Include(e => e.Category)
-            .Include(e => e.SubCategory)
-            .Include(e => e.EventTags)
-            .ThenInclude(et => et.Tag)
-            .Where(e => e.SubCategoryId == subCategoryId)
-            .OrderBy(e => e.Date)
-            .ToListAsync();
+        var eventEntity = await _context.Events.FindAsync(id);
+        if (eventEntity != null)
+        {
+            _context.Events.Remove(eventEntity);
+            await _context.SaveChangesAsync();
+        }
     }
 }

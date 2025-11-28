@@ -20,4 +20,7 @@ public class Category
     public string? DefaultImageUrl { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    public ICollection<SubCategory> SubCategories { get; set; } = new List<SubCategory>();
+    public ICollection<Event> Events { get; set; } = new List<Event>();
 }

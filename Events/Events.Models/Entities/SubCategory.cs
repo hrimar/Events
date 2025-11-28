@@ -21,5 +21,7 @@ public class SubCategory
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-    public virtual ICollection<Event> Events { get; set; } = new List<Event>();
+    [Required]
+    public int CategoryId { get; set; }
+    public Category Category { get; set; } = null!;
 }
