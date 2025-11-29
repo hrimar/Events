@@ -216,13 +216,14 @@ Examples:
 ""Джаз клуб вечер"" → ""1|Jazz""
 ""Ed Sheeran live"" → ""1|Pop""
 ""Софийска филхармония - Бетовен"" → ""1|Classical""
-""Техно парти с Arмин"" → ""1|Electronic""
+""Техно парти с Армин"" → ""1|Electronic""
 ""Народна музика концерт"" → ""1|Folk""
 ""Левски - ЦСКА дерби"" → ""4|Football""
 ""ATP турнир тенис"" → ""4|Tennis""
 ""Баскетбол мач"" → ""4|Basketball""
 ""Хамлет в Народния театър"" → ""5|Drama""
 ""Комедия в театъра"" → ""5|Comedy""
+""Детски спектакъл"" → ""5|ChildrensTheatre""
 ""Изложба картини Пикасо"" → ""2|Painting""
 ""Фотоизложба"" → ""2|Photography""
 ""Стартъп конференция"" → ""9|StartupConferences""
@@ -230,11 +231,30 @@ Examples:
 ""Програмиране курс"" → ""10|CodingWorkshops""
 ""Някакво странно събитие"" → ""11|""
 
-ВАЖНИ ПРАВИЛА:
-- ВИНАГИ опитай да определиш подкатегория от списъка
-- Ако не си сигурен за подкатегория, използвай ""Other""
-- Ако не можеш да определиш категория, върни ""11|""
-- Върни САМО ""CATEGORY|SUBCATEGORY"" (нищо друго!)
+КРИТИЧНО ВАЖНИ ПРАВИЛА - ПРОЧЕТИ ВНИМАТЕЛНО:
+
+1. ПОДКАТЕГОРИЯТА ТРЯБВА ДА Е ОТ СЪЩАТА КАТЕГОРИЯ!
+   - Ако избереш категория 1 (Music), подкатегорията може да е САМО: Rock, Jazz, Metal, Pop, Funk, Punk, Opera, Classical, Electronic, Folk, Blues, Country, Reggae, HipHop, Alternative, Other
+   - Ако избереш категория 5 (Theatre), подкатегорията може да е САМО: Drama, Comedy, MusicalTheatre, Tragedy, ExperimentalTheatre, PuppetTheatre, Improvisation, StreetTheatre, Monodrama, ChildrensTheatre, Other
+   - НЕ използвай подкатегория от друга категория!
+
+2. Примери на ГРЕШКИ (НЕ прави това!):
+   - ""5|Funk"" ❌ ГРЕШКА! Funk е музикална подкатегория, не театрална!
+   - ""5|Metal"" ❌ ГРЕШКА! Metal е музикална подкатегория, не театрална!
+   - ""1|Football"" ❌ ГРЕШКА! Football е спортна подкатегория, не музикална!
+
+3. Правилни примери:
+   - ""5|Drama"" ✅ ПРАВИЛНО! Drama е театрална подкатегория
+   - ""5|ChildrensTheatre"" ✅ ПРАВИЛНО! ChildrensTheatre е театрална подкатегория
+   - ""1|Metal"" ✅ ПРАВИЛНО! Metal е музикална подкатегория
+
+4. Ако не си сигурен за конкретна подкатегория:
+   - Използвай ""Other"" (което съществува във ВСЯКА категория)
+   - Пример: ""5|Other"" вместо да използваш грешна подкатегория
+
+5. Ако не можеш да определиш категория: върни ""11|""
+
+6. Върни САМО ""CATEGORY|SUBCATEGORY"" (нищо друго!)
 
 Return format: ""CATEGORY|SUBCATEGORY"":";
 
@@ -353,7 +373,7 @@ Return format: ""CATEGORY|SUBCATEGORY"":";
         var genreMap = new Dictionary<string[], string>
         {
             [new[] { "slayer", "metallica", "megadeth", "anthrax", "testament", "exodus", "overkill", "kreator" }] = "thrash metal",
-            [new[] { "iron maiden", "black sabbath", "judas priest", "motorhead", "dio", "ozzy osbourne", "accept" }] = "heavy metal",
+            [new[] { "iron maiden", "black sabbath", "judas priest", "motorhead", "dio", "ozzy осбърн", "accept" }] = "heavy metal",
             [new[] { "death", "cannibal corpse", "morbid angel", "obituary", "deicide", "suffocation", "dying fetus" }] = "death metal",
             [new[] { "mayhem", "darkthrone", "emperor", "immortal", "burzum", "bathory", "venom" }] = "black metal",
             [new[] { "helloween", "blind guardian", "stratovarius", "rhapsody", "gamma ray", "sonata arctica" }] = "power metal",
@@ -563,7 +583,7 @@ Return format: ""CATEGORY|SUBCATEGORY"":";
                     if (delay > TimeSpan.Zero)
                     {
                         Task.Delay(delay).Wait();
-                    }
+                      }
                 }
                 _lastRequest = DateTime.UtcNow;
             }

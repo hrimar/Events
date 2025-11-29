@@ -37,7 +37,33 @@ public static class SubCategoryMapper
             return GetOtherEnumValue(category);
         }
 
+        // Validate that the enum value belongs to the correct category
+        if (!ValidateSubCategoryBelongsToCategory(category, enumValue.Value))
+        {
+            logger.LogError("VALIDATION ERROR: SubCategory '{SubCategory}' (enum value {EnumValue}) does NOT belong to category {Category}! Using Other instead.",
+                subCategoryName, enumValue.Value, category);
+            return GetOtherEnumValue(category);
+        }
+
         return enumValue;
+    }
+
+    private static bool ValidateSubCategoryBelongsToCategory(EventCategory category, int enumValue)
+    {
+        return category switch
+        {
+            EventCategory.Music => Enum.IsDefined(typeof(MusicSubCategory), enumValue),
+            EventCategory.Art => Enum.IsDefined(typeof(ArtSubCategory), enumValue),
+            EventCategory.Business => Enum.IsDefined(typeof(BusinessSubCategory), enumValue),
+            EventCategory.Sports => Enum.IsDefined(typeof(SportsSubCategory), enumValue),
+            EventCategory.Theatre => Enum.IsDefined(typeof(TheatreSubCategory), enumValue),
+            EventCategory.Cinema => Enum.IsDefined(typeof(CinemaSubCategory), enumValue),
+            EventCategory.Festivals => Enum.IsDefined(typeof(FestivalsSubCategory), enumValue),
+            EventCategory.Exhibitions => Enum.IsDefined(typeof(ExhibitionsSubCategory), enumValue),
+            EventCategory.Conferences => Enum.IsDefined(typeof(ConferencesSubCategory), enumValue),
+            EventCategory.Workshops => Enum.IsDefined(typeof(WorkshopsSubCategory), enumValue),
+            _ => false
+        };
     }
 
     private static string NormalizeSubCategoryName(string name)
