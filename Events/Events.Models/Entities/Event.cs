@@ -16,10 +16,9 @@ public class Event
 
     public TimeSpan? StartTime { get; set; }
 
-    //// TODO: Add City to be able to filter and save to DB only City == Sofia
-    //[Required]
-    //[MaxLength(100)]
-    //public string City { get; set; } = string.Empty;
+    [Required]
+    [MaxLength(100)]
+    public string City { get; set; } = string.Empty;
 
     [Required]
     [MaxLength(300)]

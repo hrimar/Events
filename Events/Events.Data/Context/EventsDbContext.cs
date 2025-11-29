@@ -27,6 +27,7 @@ public class EventsDbContext : IdentityDbContext
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.City).IsRequired().HasMaxLength(100);
             entity.Property(e => e.Location).IsRequired().HasMaxLength(300);
             entity.Property(e => e.Description).HasMaxLength(2000);
             entity.Property(e => e.ImageUrl).HasMaxLength(500);
@@ -47,6 +48,7 @@ public class EventsDbContext : IdentityDbContext
                 .OnDelete(DeleteBehavior.SetNull); // If SubCategory is deleted, the Events stays and SubCategoryId is set to null
 
             entity.HasIndex(e => e.Date);
+            entity.HasIndex(e => e.City);
             entity.HasIndex(e => e.CategoryId);
             entity.HasIndex(e => e.SubCategoryId);
             entity.HasIndex(e => e.Status);
