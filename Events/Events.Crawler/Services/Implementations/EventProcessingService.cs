@@ -1,5 +1,6 @@
 ﻿using Events.Crawler.DTOs.Common;
 using Events.Crawler.Models;
+using Events.Crawler.Services;
 using Events.Crawler.Services.Interfaces;
 using Events.Models.Entities;
 using Events.Models.Enums;
@@ -124,12 +125,39 @@ public class EventProcessingService : IEventProcessingService
         }
     }
 
+    private async Task<int?> GetSubCategoryIdAsync(EventCategory category, string? subCategoryName)
+    {
+        if (string.IsNullOrWhiteSpace(subCategoryName))
+        {
+            return null;
+        }
+
+        try
+        {
+            var enumValue = SubCategoryMapper.MapSubCategoryToEnumValue(category, subCategoryName, _logger);
+
+            if (enumValue.HasValue)
+            {
+                var subCategory = await _subCategoryService.GetByEnumValueAsync(category, enumValue.Value);
+                return subCategory?.Id;
+            }
+
+            return null;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting SubCategory ID for {Category}/{SubCategoryName}", category, subCategoryName);
+            return null;
+        }
+    }
+
     public async Task<Event> MapToEntityAsync(CrawledEventDto crawledEvent)
     {
         try
         {
             EventCategory? category = null;
             int? categoryId = null;
+            int? subCategoryId = null;
 
             if (!string.IsNullOrEmpty(crawledEvent.Name))
             {
@@ -143,10 +171,20 @@ public class EventProcessingService : IEventProcessingService
 
                     var taggingResult = await taggingTask.WaitAsync(cts.Token);
                     category = taggingResult.SuggestedCategory;
+                    var suggestedSubCategory = taggingResult.SuggestedSubCategory;
 
                     if (category.HasValue)
                     {
                         categoryId = (int)category.Value;
+
+                        subCategoryId = await GetSubCategoryIdAsync(category.Value, suggestedSubCategory);
+
+                        if (subCategoryId.HasValue)
+                        {
+                            _logger.LogInformation(
+                                "Mapped '{EventName}' to Category={Category}, SubCategory={SubCategory} (ID={SubCategoryId})",
+                                crawledEvent.Name, category, suggestedSubCategory, subCategoryId);
+                        }
                     }
                 }
                 catch (OperationCanceledException)
@@ -172,6 +210,7 @@ public class EventProcessingService : IEventProcessingService
                 Price = crawledEvent.Price,
                 IsFree = crawledEvent.IsFree || crawledEvent.Price == 0,
                 CategoryId = categoryId ?? 11, // Default to Undefined if no category found
+                SubCategoryId = subCategoryId,
                 Status = category.HasValue ? EventStatus.Published : EventStatus.Draft,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow

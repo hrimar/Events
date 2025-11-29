@@ -18,6 +18,7 @@ public class EventViewModel
     public decimal? Price { get; set; }
     public string PriceDisplay => IsFree ? "Free" : Price?.ToString("F0") + " EUR";
     public string? CategoryName { get; set; }
+    public string? SubCategoryName { get; set; }
     public EventStatus Status { get; set; }
     public List<string> Tags { get; set; } = new();
     
@@ -44,6 +45,7 @@ public class EventViewModel
             IsFree = eventEntity.IsFree,
             Price = eventEntity.Price,
             CategoryName = eventEntity.Category?.Name,
+            SubCategoryName = eventEntity.SubCategory?.Name,
             Status = eventEntity.Status,
             Tags = eventEntity.EventTags?.Select(et => et.Tag.Name).ToList() ?? new List<string>()
         };

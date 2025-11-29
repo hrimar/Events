@@ -42,6 +42,9 @@ public class Event
     public int CategoryId { get; set; }
     public Category Category { get; set; } = null!;
 
+    public int? SubCategoryId { get; set; }
+    public SubCategory? SubCategory { get; set; }
+
     public EventStatus Status { get; set; } = EventStatus.Published;
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

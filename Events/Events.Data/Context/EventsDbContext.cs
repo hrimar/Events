@@ -40,8 +40,15 @@ public class EventsDbContext : IdentityDbContext
                 .HasForeignKey(e => e.CategoryId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            // Configure SubCategory relationship
+            entity.HasOne(e => e.SubCategory)
+                .WithMany(sc => sc.Events)
+                .HasForeignKey(e => e.SubCategoryId)
+                .OnDelete(DeleteBehavior.SetNull); // If SubCategory is deleted, the Events stays and SubCategoryId is set to null
+
             entity.HasIndex(e => e.Date);
             entity.HasIndex(e => e.CategoryId);
+            entity.HasIndex(e => e.SubCategoryId);
             entity.HasIndex(e => e.Status);
         });
 
