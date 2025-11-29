@@ -33,13 +33,13 @@ public class EventProcessingService : IEventProcessingService
     {
         var result = new ProcessingResult();
 
+        using var scope = _serviceProvider.CreateScope();
+        var eventService = scope.ServiceProvider.GetRequiredService<IEventService>();
+
         foreach (var crawledEvent in crawledEvents)
         {
             try
             {
-                using var scope = _serviceProvider.CreateScope();
-                var eventService = scope.ServiceProvider.GetRequiredService<IEventService>();
-
                 var existingEvent = await FindExistingEventAsync(crawledEvent, eventService);
 
                 if (existingEvent != null)
@@ -57,7 +57,7 @@ public class EventProcessingService : IEventProcessingService
                 }
                 else
                 {
-                    var newEvent = await MapToEntityAsync(crawledEvent);
+                    var newEvent = await CreateEventEntityAsync(crawledEvent);
                     var createdEvent = await eventService.CreateEventAsync(newEvent);
                     result.EventsCreated++;
                     result.ProcessedEventIds.Add(createdEvent.Id);
@@ -67,8 +67,7 @@ public class EventProcessingService : IEventProcessingService
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error processing crawled event: {EventName} from {Source}",
-                    crawledEvent.Name, crawledEvent.Source);
+                _logger.LogError(ex, "Error processing crawled event: {EventName} from {Source}", crawledEvent.Name, crawledEvent.Source);
                 result.Errors.Add($"Error processing event '{crawledEvent.Name}': {ex.Message}");
             }
         }
@@ -151,78 +150,82 @@ public class EventProcessingService : IEventProcessingService
         }
     }
 
-    public async Task<Event> MapToEntityAsync(CrawledEventDto crawledEvent)
+    private async Task<(EventCategory? Category, int? SubCategoryId)> CategorizeEventAsync(CrawledEventDto crawledEvent)
     {
+        if (string.IsNullOrEmpty(crawledEvent.Name))
+        {
+            return (null, null);
+        }
+
         try
         {
-            EventCategory? category = null;
-            int? categoryId = null;
-            int? subCategoryId = null;
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+            var taggingTask = _aiTaggingService.GenerateTagsAsync(
+                crawledEvent.Name,
+                crawledEvent.Description ?? "",
+                crawledEvent.Location);
 
-            if (!string.IsNullOrEmpty(crawledEvent.Name))
+            var taggingResult = await taggingTask.WaitAsync(cts.Token);
+            var category = taggingResult.SuggestedCategory;
+            var suggestedSubCategory = taggingResult.SuggestedSubCategory;
+
+            if (!category.HasValue)
             {
-                try
-                {
-                    using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
-                    var taggingTask = _aiTaggingService.GenerateTagsAsync(
-                        crawledEvent.Name,
-                        crawledEvent.Description ?? "",
-                        crawledEvent.Location);
-
-                    var taggingResult = await taggingTask.WaitAsync(cts.Token);
-                    category = taggingResult.SuggestedCategory;
-                    var suggestedSubCategory = taggingResult.SuggestedSubCategory;
-
-                    if (category.HasValue)
-                    {
-                        categoryId = (int)category.Value;
-
-                        subCategoryId = await GetSubCategoryIdAsync(category.Value, suggestedSubCategory);
-
-                        if (subCategoryId.HasValue)
-                        {
-                            _logger.LogInformation(
-                                "Mapped '{EventName}' to Category={Category}, SubCategory={SubCategory} (ID={SubCategoryId})",
-                                crawledEvent.Name, category, suggestedSubCategory, subCategoryId);
-                        }
-                    }
-                }
-                catch (OperationCanceledException)
-                {
-                    _logger.LogWarning("AI classification timeout for event {EventName}, skipping AI", crawledEvent.Name);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "AI classification failed for event {EventName}", crawledEvent.Name);
-                }
+                return (null, null);
             }
 
-            var eventEntity = new Event
-            {
-                Name = TruncateString(crawledEvent.Name, 200),
-                Description = TruncateString(crawledEvent.Description, 2000),
-                Date = crawledEvent.StartDate ?? DateTime.MinValue, // TODO: Handle missing date better
-                StartTime = crawledEvent.StartDate?.TimeOfDay,
-                Location = TruncateString(crawledEvent.Location ?? "TBD", 300),
-                ImageUrl = TruncateString(crawledEvent.ImageUrl, 500),
-                TicketUrl = TruncateString(crawledEvent.TicketUrl, 500),
-                SourceUrl = TruncateString(crawledEvent.SourceUrl, 500),
-                Price = crawledEvent.Price,
-                IsFree = crawledEvent.IsFree || crawledEvent.Price == 0,
-                CategoryId = categoryId ?? 11, // Default to Undefined if no category found
-                SubCategoryId = subCategoryId,
-                Status = category.HasValue ? EventStatus.Published : EventStatus.Draft,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
-            };
+            var subCategoryId = await GetSubCategoryIdAsync(category.Value, suggestedSubCategory);
 
-            return eventEntity;
+            if (subCategoryId.HasValue)
+            {
+                _logger.LogInformation("Categorized '{EventName}' as Category={Category}, SubCategory={SubCategory} (ID={SubCategoryId})",
+                    crawledEvent.Name, category, suggestedSubCategory, subCategoryId);
+            }
+            else
+            {
+                _logger.LogInformation("Categorized '{EventName}' as Category={Category}, no subcategory found", crawledEvent.Name, category);
+            }
+
+            return (category, subCategoryId);
+        }
+        catch (OperationCanceledException)
+        {
+            _logger.LogWarning("AI categorization timeout for event {EventName}, skipping AI", crawledEvent.Name);
+            return (null, null);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error mapping crawled event to entity: {EventName}", crawledEvent.Name);
-            throw;
+            _logger.LogWarning(ex, "AI categorization failed for event {EventName}", crawledEvent.Name);
+            return (null, null);
         }
+    }
+
+    private Event MapToEntity(CrawledEventDto crawledEvent, EventCategory? category, int? subCategoryId)
+    {
+        return new Event
+        {
+            Name = TruncateString(crawledEvent.Name, 200),
+            Description = TruncateString(crawledEvent.Description, 2000),
+            Date = crawledEvent.StartDate ?? DateTime.MinValue, // TODO: Handle missing date better
+            StartTime = crawledEvent.StartDate?.TimeOfDay,
+            Location = TruncateString(crawledEvent.Location ?? "TBD", 300),
+            ImageUrl = TruncateString(crawledEvent.ImageUrl, 500),
+            TicketUrl = TruncateString(crawledEvent.TicketUrl, 500),
+            SourceUrl = TruncateString(crawledEvent.SourceUrl, 500),
+            Price = crawledEvent.Price,
+            IsFree = crawledEvent.IsFree || crawledEvent.Price == 0,
+            CategoryId = category.HasValue ? (int)category.Value : 11, // Default to Undefined
+            SubCategoryId = subCategoryId,
+            Status = category.HasValue ? EventStatus.Published : EventStatus.Draft,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+    }
+
+    public async Task<Event> CreateEventEntityAsync(CrawledEventDto crawledEvent)
+    {
+        var (category, subCategoryId) = await CategorizeEventAsync(crawledEvent);
+        return MapToEntity(crawledEvent, category, subCategoryId);
     }
 
     private async Task TagEventsBatchAsync(IEnumerable<int> eventIds)
