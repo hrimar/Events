@@ -147,6 +147,13 @@ Return format: ""CATEGORY_NUMBER|SUBCATEGORY_NAME"":";
             var category = aiResult.Category;
             var suggestedSubCategory = aiResult.SubCategory;
 
+            // Log if AI used "Other" subcategory
+            if (suggestedSubCategory == "Other" && category.HasValue)
+            {
+                _logger.LogInformation("AI selected 'Other' subcategory for '{EventName}' in category {Category} - may need manual review", 
+                    eventName, category);
+            }
+
             var tags = ExtractTagsWithKeywords(eventName, description, location, category);
             var musicGenres = category == EventCategory.Music
                 ? ExtractMusicGenresWithKeywords(eventName, description)
@@ -184,34 +191,52 @@ Return format: ""CATEGORY_NUMBER|SUBCATEGORY_NAME"":";
         {
             await EnsureRateLimit();
 
-            var prompt = $@"Classify this Bulgarian event with category and subcategory. Return format: ""CATEGORY|SUBCATEGORY""
+            var prompt = $@"Classify this Bulgarian event with category and subcategory. Return ONLY format: ""CATEGORY|SUBCATEGORY""
 
 Event: {eventName}
 Description: {description}
 
-Categories with Subcategories:
-1=Music → Rock, Jazz, Metal, Pop, Classical, Electronic, Folk, Blues, HipHop, Punk, Funk, Opera, Country, Reggae, Alternative
-2=Art → (no subcategories)
-3=Business → (no subcategories)  
-4=Sports → Football, Basketball, Tennis, Volleyball, Swimming, Athletics, Boxing, Wrestling, Gymnastics, Cycling
-5=Theatre → (no subcategories)
-6=Cinema → (no subcategories)
-7=Festivals → (no subcategories)
-8=Exhibitions → (no subcategories)
-9=Conferences → (no subcategories)
-10=Workshops → (no subcategories)
+Categories with ALL Subcategories:
+1=Music → Rock, Jazz, Metal, Pop, Funk, Punk, Opera, Classical, Electronic, Folk, Blues, Country, Reggae, HipHop, Alternative, Other
+2=Art → Painting, Sculpture, Photography, DigitalArt, StreetArt, Graffiti, Illustration, PerformanceArt, InstallationArt, ContemporaryArt, VisualArts, MixedMedia, ConceptualArt, Other
+3=Business → NetworkingEvents, Startups, Entrepreneurship, Marketing, Sales, Leadership, Finance, RealEstate, Investment, ECommerce, Innovation, Technology, HRManagement, BusinessStrategy, ProductDevelopment, Other
+4=Sports → Football, Basketball, Tennis, Volleyball, Swimming, Athletics, Boxing, Wrestling, Gymnastics, Cycling, Other
+5=Theatre → Drama, Comedy, MusicalTheatre, Tragedy, ExperimentalTheatre, PuppetTheatre, Improvisation, StreetTheatre, Monodrama, ChildrensTheatre, Other
+6=Cinema → FeatureFilms, ShortFilms, Documentaries, Animation, IndependentCinema, BulgarianCinema, InternationalCinema, FilmPremieres, StudentFilms, FilmFestivals, Other
+7=Festivals → MusicFestivals, FilmFestivals, ArtFestivals, FoodAndWineFestivals, CulturalFestivals, FolkloreFestivals, StreetFestivals, SummerFestivals, LightFestivals, CraftBeerFestivals, EcoFestivals, DanceFestivals, TechFestivals, Other
+8=Exhibitions → ArtExhibitions, PhotographyExhibitions, HistoricalExhibitions, ScienceExhibitions, TechnologyExhibitions, AutomotiveExhibitions, DesignExhibitions, CulturalHeritageExhibitions, EducationalExhibitions, CraftExhibitions, Other
+9=Conferences → TechConferences, BusinessConferences, StartupConferences, AcademicConferences, MarketingConferences, ScienceConferences, HealthAndMedicineConferences, AIAndInnovationConferences, ITSecurityConferences, EnvironmentalConferences, HRConferences, Other
+10=Workshops → ArtWorkshops, MusicWorkshops, DanceWorkshops, PhotographyWorkshops, CookingWorkshops, CraftWorkshops, StartupAndEntrepreneurshipWorkshops, PersonalDevelopmentWorkshops, CodingWorkshops, LanguageWorkshops, TheatreWorkshops, YogaAndWellnessWorkshops, MarketingWorkshops, Other
+11=Undefined → (uncategorized events)
 
 Examples:
 ""Slayer концерт"" → ""1|Metal""
+""Metallica live"" → ""1|Metal""
+""Iron Maiden в София"" → ""1|Metal""
 ""Джаз клуб вечер"" → ""1|Jazz""
 ""Ed Sheeran live"" → ""1|Pop""
-""Софийска филхармония"" → ""1|Classical""
-""Левски - ЦСКА"" → ""4|Football""
-""Тенис турнир"" → ""4|Tennis""
-""Театрална постановка"" → ""5|""
-""Изложба картини"" → ""2|""
+""Софийска филхармония - Бетовен"" → ""1|Classical""
+""Техно парти с Arмин"" → ""1|Electronic""
+""Народна музика концерт"" → ""1|Folk""
+""Левски - ЦСКА дерби"" → ""4|Football""
+""ATP турнир тенис"" → ""4|Tennis""
+""Баскетбол мач"" → ""4|Basketball""
+""Хамлет в Народния театър"" → ""5|Drama""
+""Комедия в театъра"" → ""5|Comedy""
+""Изложба картини Пикасо"" → ""2|Painting""
+""Фотоизложба"" → ""2|Photography""
+""Стартъп конференция"" → ""9|StartupConferences""
+""Кулинарна работилница"" → ""10|CookingWorkshops""
+""Програмиране курс"" → ""10|CodingWorkshops""
+""Някакво странно събитие"" → ""11|""
 
-Return format ""CATEGORY|SUBCATEGORY"" (subcategory can be empty):";
+ВАЖНИ ПРАВИЛА:
+- ВИНАГИ опитай да определиш подкатегория от списъка
+- Ако не си сигурен за подкатегория, използвай ""Other""
+- Ако не можеш да определиш категория, върни ""11|""
+- Върни САМО ""CATEGORY|SUBCATEGORY"" (нищо друго!)
+
+Return format: ""CATEGORY|SUBCATEGORY"":";
 
             var requestBody = new
             {
@@ -220,7 +245,7 @@ Return format ""CATEGORY|SUBCATEGORY"" (subcategory can be empty):";
                 new { role = "user", content = prompt }
             },
                 model = "llama-3.1-8b-instant",
-                max_tokens = 15,
+                max_tokens = 20,
                 temperature = 0.1
             };
 
@@ -233,23 +258,28 @@ Return format ""CATEGORY|SUBCATEGORY"" (subcategory can be empty):";
 
                 if (!string.IsNullOrEmpty(responseText))
                 {
+                    _logger.LogInformation("AI raw response for '{EventName}': {Response}", eventName, responseText);
+
                     var parts = responseText.Split('|');
                     if (parts.Length >= 1 && int.TryParse(parts[0], out var categoryId))
                     {
-                        if (categoryId == 0)
+                        if (categoryId == 11)
                         {
-                            return (null, null);
+                            _logger.LogWarning("AI classified '{EventName}' as Undefined - requires manual categorization", eventName);
+                            return ((EventCategory)11, null);
                         }
 
                         if (Enum.IsDefined(typeof(EventCategory), categoryId))
                         {
                             var category = (EventCategory)categoryId;
-                            var subcategory = parts.Length > 1 && !string.IsNullOrWhiteSpace(parts[1])
-                                ? parts[1].Trim()
-                                : null;
+                            var subcategory = parts.Length > 1 && !string.IsNullOrWhiteSpace(parts[1]) ? parts[1].Trim() : "Other";
 
-                            _logger.LogInformation("AI classified '{EventName}' as {Category} | {SubCategory}",
-                                eventName, category, subcategory ?? "None");
+                            if (subcategory == "Other")
+                            {
+                                _logger.LogInformation("AI used 'Other' subcategory for '{EventName}' in category {Category}", eventName, category);
+                            }
+
+                            _logger.LogInformation("AI classified '{EventName}' as {Category} | {SubCategory}", eventName, category, subcategory);
 
                             return (category, subcategory);
                         }
@@ -258,9 +288,10 @@ Return format ""CATEGORY|SUBCATEGORY"" (subcategory can be empty):";
             }
 
             // Fallback to our method for category and subcategory extraction
+            _logger.LogWarning("AI failed to classify '{EventName}', using fallback", eventName);
             var fallbackCategory = await ClassifyEventAsync(eventName, description);
             var fallbackSubcategory = fallbackCategory.HasValue
-                ? ExtractSubCategory(eventName, description, fallbackCategory.Value)
+                ? ExtractSubCategory(eventName, description, fallbackCategory.Value) ?? "Other"
                 : null;
 
             return (fallbackCategory, fallbackSubcategory);
@@ -271,9 +302,7 @@ Return format ""CATEGORY|SUBCATEGORY"" (subcategory can be empty):";
 
             // Fallback to keyword-based classification
             var category = TryClassifyWithKeywords(eventName, description);
-            var subcategory = category.HasValue
-                ? ExtractSubCategory(eventName, description, category.Value)
-                : null;
+            var subcategory = category.HasValue ? ExtractSubCategory(eventName, description, category.Value) ?? "Other" : null;
 
             return (category, subcategory);
         }
