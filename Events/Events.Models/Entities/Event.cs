@@ -37,6 +37,8 @@ public class Event
 
     public decimal? Price { get; set; }
 
+    public bool IsFeatured { get; set; } = false;
+
     [Required]
     public int CategoryId { get; set; }
     public Category Category { get; set; } = null!;
