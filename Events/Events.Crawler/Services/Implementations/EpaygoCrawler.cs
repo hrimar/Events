@@ -17,6 +17,23 @@ public class EpaygoCrawler : IWebScrapingCrawler
     private static bool _browsersInstalled = false;
     private static readonly object _installLock = new();
 
+    // Bulgarian months dictionary - created once, reused for all date parsing
+    private static readonly Dictionary<string, int> BulgarianMonths = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["януари"] = 1, ["ян"] = 1,
+        ["февруари"] = 2, ["фев"] = 2,
+        ["март"] = 3, ["мар"] = 3,
+        ["април"] = 4, ["апр"] = 4,
+        ["май"] = 5,
+        ["юни"] = 6, ["юн"] = 6,
+        ["юли"] = 7, ["юл"] = 7,
+        ["август"] = 8, ["авг"] = 8,
+        ["септември"] = 9, ["сеп"] = 9,
+        ["октомври"] = 10, ["окт"] = 10,
+        ["ноември"] = 11, ["ное"] = 11,
+        ["декември"] = 12, ["дек"] = 12
+    };
+
     public string SourceName => "epaygo.bg";
     public CrawlerType CrawlerType => CrawlerType.WebScraping;
 
@@ -52,8 +69,7 @@ public class EpaygoCrawler : IWebScrapingCrawler
             result.EventsProcessed = sofiaEvents.Count;
             result.Success = true;
 
-            _logger.LogInformation("Crawled {TotalEvents} events from Epaygo, {SofiaEvents} in Sofia",
-                epaygoEvents.Count, sofiaEvents.Count);
+            _logger.LogInformation("Crawled {TotalEvents} events from Epaygo, {SofiaEvents} in Sofia", epaygoEvents.Count, sofiaEvents.Count);
         }
         catch (Exception ex)
         {
@@ -308,11 +324,11 @@ public class EpaygoCrawler : IWebScrapingCrawler
 
                                         if (dateTexts.Count > 1)
                                         {
-                                            eventDto.Date = string.Join(" - ", dateTexts);
+                                            eventDto.Date = string.Join(" - ", dateTexts); // incoming format: "от 06\nфевруари - до 06\nянуари"
                                         }
                                         else if (dateTexts.Count == 1)
                                         {
-                                            eventDto.Date = dateTexts[0];
+                                            eventDto.Date = dateTexts[0]; // incoming format: "29\nноември"
                                         }
                                     }
                                 }
@@ -402,7 +418,7 @@ public class EpaygoCrawler : IWebScrapingCrawler
                             }
                         }
 
-                        // ПРОМЯНА 5: Memory cleanup between batchs
+                        // Memory cleanup between batchs
                         if (batchStart > 0 && batchStart % 100 == 0)
                         {
                             GC.Collect();
@@ -476,8 +492,16 @@ public class EpaygoCrawler : IWebScrapingCrawler
 
     private DateTime? TryParseEventDate(string? dateText)
     {
-        if (string.IsNullOrWhiteSpace(dateText)) return null;
+        if (string.IsNullOrWhiteSpace(dateText)) return DateTime.MinValue;
 
+        // Attempt to parse Bulgarian format
+        var bulgarianDate = ParseBulgarianDate(dateText);
+        if (bulgarianDate.HasValue)
+        {
+            return bulgarianDate.Value;
+        }
+
+        // Fallback to common date formats
         var formats = new[]
         {
             "dd.MM.yyyy",
@@ -505,7 +529,155 @@ public class EpaygoCrawler : IWebScrapingCrawler
         }
 
         _logger.LogDebug("Could not parse date: {DateText}", dateText);
-        return null;
+        return DateTime.MinValue; // 0001-01-01 for invalid date
+    }
+
+    private DateTime? ParseBulgarianDate(string? dateText)
+    {
+        if (string.IsNullOrWhiteSpace(dateText))
+        {
+            return null;
+        }
+
+        try
+        {
+            // Text normalization - remove \n, extra spaces
+            var normalized = dateText.Replace("\n", " ").Replace("\r", "").Trim();
+            normalized = Regex.Replace(normalized, @"\s+", " "); // Multiple spaces -> one
+
+            var today = DateTime.Today;
+
+            // Check for range: "от 06 февруари до 06 януари" или "06 февруари - 10 март"
+            if (normalized.Contains(" до ") || normalized.Contains(" - "))
+            {
+                var separator = normalized.Contains(" до ") ? " до " : " - ";
+                var parts = normalized.Split(new[] { separator }, StringSplitOptions.RemoveEmptyEntries);
+
+                if (parts.Length == 2)
+                {
+                    // Remove "от" if present
+                    var startDateText = parts[0].Replace("от", "").Replace("-", "").Trim();
+                    var endDateText = parts[1].Trim();
+
+                    var startDate = ParseSingleBulgarianDate(startDateText, today);
+                    var endDate = ParseSingleBulgarianDate(endDateText, today);
+
+                    // Take the earlier date, but not before today
+                    if (startDate.HasValue && endDate.HasValue)
+                    {
+                        var earlierDate = startDate.Value < endDate.Value ? startDate.Value : endDate.Value;
+                        return earlierDate >= today ? earlierDate : today;
+                    }
+
+                    // If only one is valid
+                    if (startDate.HasValue)
+                    {
+                        return startDate.Value >= today ? startDate.Value : today;
+                    }
+
+                    if (endDate.HasValue)
+                    {
+                        return endDate.Value >= today ? endDate.Value : today;
+                    }
+                }
+            }
+
+            // Single date: "29 ноември" или "29 ноември 2025"
+            return ParseSingleBulgarianDate(normalized, today);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogDebug(ex, "Error parsing Bulgarian date: {DateText}", dateText);
+            return null;
+        }
+    }
+
+    private DateTime? ParseSingleBulgarianDate(string dateText, DateTime today)
+    {
+        if (string.IsNullOrWhiteSpace(dateText))
+        {
+            return null;
+        }
+
+        try
+        {
+            // Regex pattern: "29 ноември" or "29 ноември 2025"
+            var pattern = @"(\d{1,2})\s+([а-яА-Я]+)(?:\s+(\d{4}))?";
+            var match = Regex.Match(dateText, pattern);
+
+            if (!match.Success)
+            {
+                return null;
+            }
+
+            var dayStr = match.Groups[1].Value;
+            var monthStr = match.Groups[2].Value.ToLowerInvariant();
+            var yearStr = match.Groups[3].Success ? match.Groups[3].Value : null;
+
+            // Parse day
+            if (!int.TryParse(dayStr, out int day) || day < 1 || day > 31)
+            {
+                _logger.LogDebug("Invalid day: {Day}", dayStr);
+                return null;
+            }
+
+            // Find month using static dictionary
+            if (!BulgarianMonths.TryGetValue(monthStr, out int month))
+            {
+                _logger.LogDebug("Unknown Bulgarian month: {Month}", monthStr);
+                return null;
+            }
+
+            // Determine year
+            int year;
+            if (!string.IsNullOrEmpty(yearStr))
+            {
+                // Year is specified directly
+                year = int.Parse(yearStr);
+            }
+            else
+            {
+                // No year - determine if it's current or next
+                year = today.Year;
+
+                // If the month has passed (less than current), use next year
+                if (month < today.Month)
+                {
+                    year++;
+                }
+            }
+
+            // Check for validity of the date
+            if (!IsValidDate(year, month, day))
+            {
+                _logger.LogDebug("Invalid date: {Year}-{Month:D2}-{Day:D2}", year, month, day);
+                return null;
+            }
+
+            var parsedDate = new DateTime(year, month, day);
+
+            _logger.LogDebug("Parsed Bulgarian date '{DateText}' as {ParsedDate}", dateText, parsedDate.ToString("yyyy-MM-dd"));
+
+            return parsedDate;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogDebug(ex, "Error parsing single Bulgarian date: {DateText}", dateText);
+            return null;
+        }
+    }
+
+    private bool IsValidDate(int year, int month, int day)
+    {
+        try
+        {
+            _ = new DateTime(year, month, day);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     private void EnsureBrowsersInstalled()
@@ -533,8 +705,7 @@ public class EpaygoCrawler : IWebScrapingCrawler
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to ensure Playwright browsers are installed");
-                throw new InvalidOperationException(
-                    "Playwright browsers are not installed. Please run 'npx playwright install chromium' manually.", ex);
+                throw new InvalidOperationException("Playwright browsers are not installed. Please run 'npx playwright install chromium' manually.", ex);
             }
         }
     }
