@@ -53,15 +53,14 @@ public class EventService : IEventService
     {
         try
         {
-            // by default will show only published events from today
-            status ??= EventStatus.Published;
-            fromDate ??= DateTime.UtcNow;
-
             if (page < 1) page = 1;
-            if (pageSize < 1 || pageSize > 100) pageSize = 12;
+            
+            // Allow large pageSize for "get all" scenarios (Controller uses int.MaxValue)
+            if (pageSize < 1) pageSize = 12;
+            if (pageSize > 50000) pageSize = 50000; // Safety limit to prevent memory issues
 
-            _logger.LogInformation("Getting paged events: Page {Page}, PageSize {PageSize}, Status {Status}, Category {Category}",
-                page, pageSize, status, categoryName);
+            _logger.LogInformation("Getting paged events: Page {Page}, PageSize {PageSize}, Status {Status}, Category {Category}, FromDate {FromDate}",
+                page, pageSize, status, categoryName, fromDate);
 
             return await _eventRepository.GetPagedEventsAsync(page, pageSize, status, categoryName, isFree, fromDate);
         }
