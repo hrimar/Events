@@ -445,7 +445,8 @@ public class EpaygoCrawler : IWebScrapingCrawler
             Name = CleanText(epaygoEvent.Name) ?? "Unknown Event",
             Description = CleanText(epaygoEvent.Description),
             StartDate = TryParseEventDate(epaygoEvent.Date),
-            Location = CleanText(epaygoEvent.City) ?? "София",
+            City = CleanText(epaygoEvent.City) ?? "",
+            Location = "", // TODO:
             ImageUrl = epaygoEvent.ImageUrl,
             SourceUrl = epaygoEvent.SourceUrl,
             TicketUrl = epaygoEvent.TicketUrl,

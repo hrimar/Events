@@ -202,19 +202,22 @@ public class EventProcessingService : IEventProcessingService
 
     private Event MapToEntity(CrawledEventDto crawledEvent, EventCategory? category, int? subCategoryId)
     {
+        var categoryId = category.HasValue ? (int)category.Value : 11; // Default to Undefined
+
         return new Event
         {
             Name = TruncateString(crawledEvent.Name, 200),
             Description = TruncateString(crawledEvent.Description, 2000),
             Date = crawledEvent.StartDate ?? DateTime.MinValue, // TODO: Handle missing date better
             StartTime = crawledEvent.StartDate?.TimeOfDay,
-            Location = TruncateString(crawledEvent.Location ?? "TBD", 300),
+            City = TruncateString(crawledEvent.City, 100),
+            Location = TruncateString(crawledEvent.Location ?? "", 300),
             ImageUrl = TruncateString(crawledEvent.ImageUrl, 500),
             TicketUrl = TruncateString(crawledEvent.TicketUrl, 500),
             SourceUrl = TruncateString(crawledEvent.SourceUrl, 500),
             Price = crawledEvent.Price,
             IsFree = crawledEvent.IsFree || crawledEvent.Price == 0,
-            CategoryId = category.HasValue ? (int)category.Value : 11, // Default to Undefined
+            CategoryId = categoryId,
             SubCategoryId = subCategoryId,
             Status = category.HasValue ? EventStatus.Published : EventStatus.Draft,
             CreatedAt = DateTime.UtcNow,

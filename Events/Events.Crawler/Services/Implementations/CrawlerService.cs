@@ -90,8 +90,7 @@ public class CrawlerService : ICrawlerService
         allResults.AddRange(results);
 
         var totalDuration = DateTime.UtcNow - startTime;
-        _logger.LogInformation("All crawlers completed in {TotalDuration}. Total events found: {TotalEvents}",
-            totalDuration, allResults.Sum(r => r.EventsFound));
+        _logger.LogInformation("All crawlers completed in {TotalDuration}. Total events found: {TotalEvents}", totalDuration, allResults.Sum(r => r.EventsFound));
 
         return new CrawlResult
         {

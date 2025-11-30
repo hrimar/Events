@@ -336,7 +336,8 @@ public class TicketStationCrawler : IWebScrapingCrawler
             Name = CleanText(ticketStationEvent.Name) ?? "Unknown Event",
             Description = CleanText(ticketStationEvent.Description),
             StartDate = TryParseEventDate(ticketStationEvent.Date),
-            Location = CleanText(ticketStationEvent.City),
+            City = CleanText(ticketStationEvent.City) ?? "",
+            Location = CleanText(ticketStationEvent.City), // TODO:
             ImageUrl = ticketStationEvent.ImageUrl,
             SourceUrl = ticketStationEvent.Url,
             TicketUrl = ticketStationEvent.TicketUrl,

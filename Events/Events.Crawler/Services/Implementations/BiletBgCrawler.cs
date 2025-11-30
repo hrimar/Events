@@ -53,8 +53,7 @@ public class BiletBgCrawler : IHttpApiCrawler
             result.EventsProcessed = sofiaEvents.Count;
             result.Success = true;
 
-            _logger.LogInformation("Crawled {TotalEvents} events from Bilet.bg, {SofiaEvents} in Sofia",
-                events.Count, sofiaEvents.Count);
+            _logger.LogInformation("Crawled {TotalEvents} events from Bilet.bg, {SofiaEvents} in Sofia", events.Count, sofiaEvents.Count);
         }
         catch (Exception ex)
         {
@@ -131,8 +130,7 @@ public class BiletBgCrawler : IHttpApiCrawler
         var city = biletEvent.Place?.City?.Trim().ToLowerInvariant();
         if (string.IsNullOrEmpty(city) || !IsSofiaCity(city))
         {
-            _logger.LogDebug("Filtering out non-Sofia event: {EventName} in {City}",
-                biletEvent.Name, biletEvent.Place?.City);
+            _logger.LogDebug("Filtering out non-Sofia event: {EventName} in {City}", biletEvent.Name, biletEvent.Place?.City);
             return null; // Skip non-Sofia events
         }
 
@@ -142,7 +140,8 @@ public class BiletBgCrawler : IHttpApiCrawler
             Source = SourceName,
             Name = biletEvent.Name ?? "",
             Description = biletEvent.Description,
-            Location = $"{biletEvent.Place?.City} {biletEvent.Place?.Address} {biletEvent.Place?.Name}",
+            City = city,
+            Location = $"{biletEvent.Place?.Address} {biletEvent.Place?.Name}".Trim(),
             StartDate = TryParseDate(biletEvent.StartDate),
             EndDate = TryParseDate(biletEvent.EndDate),
             ImageUrl = biletEvent.Image,
@@ -156,7 +155,8 @@ public class BiletBgCrawler : IHttpApiCrawler
             {
                 ["bilet_id"] = biletEvent.Id,
                 ["slug"] = biletEvent.Slug ?? "",
-                ["created_at"] = biletEvent.CreatedAt ?? ""
+                ["created_at"] = biletEvent.CreatedAt ?? "",
+                ["city"] = biletEvent.Place?.City ?? ""
             }
         };
     }

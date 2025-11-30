@@ -67,9 +67,10 @@ var host = new HostBuilder()
         });
 
         // Crawler strategies
-        services.AddScoped<IEventCrawlerStrategy, BiletBgCrawler>();
-        services.AddScoped<IEventCrawlerStrategy, TicketStationCrawler>();
-        services.AddScoped<IEventCrawlerStrategy, EpaygoCrawler>();
+        services.AddScoped<IEventCrawlerStrategy, BiletBgCrawler>(); // via HttpClient
+        services.AddScoped<IEventCrawlerStrategy, TicketStationCrawler>(); // via Playwright
+        services.AddScoped<IEventCrawlerStrategy, EpaygoCrawler>(); // via Playwright
+        services.AddScoped<IEventCrawlerStrategy, EventimCrawler>(); // via Playwright & AJAX
 
         Console.WriteLine("Services configured successfully");
     })

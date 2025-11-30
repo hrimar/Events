@@ -54,8 +54,7 @@ public class EventimCrawler : IWebScrapingCrawler
             result.EventsProcessed = sofiaEvents.Count;
             result.Success = true;
 
-            _logger.LogInformation("Crawled {TotalEvents} events from Eventim, {SofiaEvents} in Sofia",
-                eventimEvents.Count, sofiaEvents.Count);
+            _logger.LogInformation("Crawled {TotalEvents} events from Eventim, {SofiaEvents} in Sofia", eventimEvents.Count, sofiaEvents.Count);
         }
         catch (Exception ex)
         {
@@ -344,8 +343,7 @@ public class EventimCrawler : IWebScrapingCrawler
                     var sofiaEventsCount = eventInstances.Count;
                     allEvents.AddRange(eventInstances);
 
-                    _logger.LogDebug("Sofia events from this page: {SofiaEvents}, Total: {TotalEvents}", 
-                        sofiaEventsCount, allEvents.Count);
+                    _logger.LogDebug("Sofia events from this page: {SofiaEvents}, Total: {TotalEvents}", sofiaEventsCount, allEvents.Count);
 
                     consecutiveEmptyPages = 0;
                 }
@@ -387,8 +385,7 @@ public class EventimCrawler : IWebScrapingCrawler
             }
         }
 
-        _logger.LogInformation("Total collected Sofia events: {TotalEvents} (from {TotalPages} pages)", 
-            allEvents.Count, totalProcessed);
+        _logger.LogInformation("Total collected Sofia events: {TotalEvents} (from {TotalPages} pages)", allEvents.Count, totalProcessed);
         return allEvents;
     }
 
@@ -452,8 +449,7 @@ public class EventimCrawler : IWebScrapingCrawler
             "Голяма сцена"
         };
 
-        return sofiaVariants.Any(variant =>
-            city.Contains(variant, StringComparison.OrdinalIgnoreCase));
+        return sofiaVariants.Any(variant => city.Contains(variant, StringComparison.OrdinalIgnoreCase));
     }
 
     private CrawledEventDto? MapEventimToStandardDto(EventimEventInstance eventimEvent)
@@ -465,7 +461,8 @@ public class EventimCrawler : IWebScrapingCrawler
             Name = CleanText(eventimEvent.Name) ?? "Unknown Event",
             Description = CleanText(eventimEvent.Description),
             StartDate = TryParseEventDate(eventimEvent.Date),
-            Location = BuildLocation(eventimEvent.City, eventimEvent.Venue),
+            City = eventimEvent.City ?? "",
+            Location = eventimEvent.Venue ?? "",
             ImageUrl = eventimEvent.ImageUrl,
             SourceUrl = eventimEvent.SourceUrl,
             TicketUrl = eventimEvent.TicketUrl,
@@ -480,19 +477,6 @@ public class EventimCrawler : IWebScrapingCrawler
                 ["crawled_from"] = "https://www.eventim.bg/api/search"
             }
         };
-    }
-
-    private string BuildLocation(string? city, string? venue)
-    {
-        var parts = new List<string>();
-        
-        if (!string.IsNullOrEmpty(city))
-            parts.Add(city);
-            
-        if (!string.IsNullOrEmpty(venue))
-            parts.Add(venue);
-            
-        return parts.Any() ? string.Join(", ", parts) : "София";
     }
 
     private string GenerateEventId(string? title, string? url)
