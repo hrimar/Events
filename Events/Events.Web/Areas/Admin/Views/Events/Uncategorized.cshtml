@@ -1,0 +1,191 @@
+@model UncategorizedEventsViewModel
+
+@{
+    ViewData["Title"] = "Uncategorized Events";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-question-circle me-2 text-warning"></i>Uncategorized Events</h1>
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-2"></i>Back to All Events
+    </a>
+</div>
+
+<!-- Info Card -->
+<div class="alert alert-warning mb-4">
+    <i class="fas fa-exclamation-triangle me-2"></i>
+    <strong>@Model.Events.TotalCount uncategorized events</strong> need your attention. 
+    Please review and assign appropriate categories to improve event discovery.
+</div>
+
+<!-- Search Form -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-10">
+                <input type="text" class="form-control" name="search" value="@Model.SearchTerm" placeholder="Search events by name or description...">
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-search me-1"></i>Search
+                </button>
+            </div>
+            @if(!string.IsNullOrEmpty(Model.SearchTerm))
+            {
+                <div class="col-12">
+                    <a href="@Url.Action("Uncategorized")" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-times me-1"></i>Clear Search
+                    </a>
+                </div>
+            }
+        </form>
+    </div>
+</div>
+
+<!-- Uncategorized Events List -->
+@if(Model.Events.Items.Any())
+{
+    <div class="row">
+        @foreach(var evt in Model.Events.Items)
+        {
+            <div class="col-md-6 mb-4">
+                <div class="card h-100 border-warning">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-4">
+                                <img src="@evt.DefaultImage" alt="@evt.Name" class="img-fluid rounded" style="height: 120px; object-fit: cover; width: 100%;">
+                            </div>
+                            <div class="col-8">
+                                <h5 class="card-title">@evt.Name</h5>
+                                <p class="card-text small">
+                                    <i class="fas fa-calendar me-1"></i>@evt.FormattedDate @evt.FormattedTime<br/>
+                                    <i class="fas fa-map-marker-alt me-1"></i>@evt.Location<br/>
+                                    @if(evt.IsFree)
+                                    {
+                                        <span class="badge bg-success mt-1">Free</span>
+                                    }
+                                    else if(evt.Price.HasValue)
+                                    {
+                                        <span class="badge bg-primary mt-1">@evt.PriceDisplay</span>
+                                    }
+                                </p>
+                                @if(!string.IsNullOrEmpty(evt.ShortDescription))
+                                {
+                                    <p class="card-text small text-muted">@evt.ShortDescription</p>
+                                }
+                            </div>
+                        </div>
+                        
+                        <!-- Quick Categorize Form -->
+                        <div class="mt-3 pt-3 border-top">
+                            <form asp-action="UpdateCategory" method="post">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@evt.Id" />
+                                
+                                <div class="row g-2">
+                                    <div class="col-md-5">
+                                        <label class="form-label small">Category *</label>
+                                        <select name="categoryId" class="form-select form-select-sm" required>
+                                            <option value="">Select Category</option>
+                                            <option value="1">Music</option>
+                                            <option value="2">Art</option>
+                                            <option value="3">Business</option>
+                                            <option value="4">Sports</option>
+                                            <option value="5">Theatre</option>
+                                            <option value="6">Cinema</option>
+                                            <option value="7">Festivals</option>
+                                            <option value="8">Exhibitions</option>
+                                            <option value="9">Conferences</option>
+                                            <option value="10">Workshops</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-5">
+                                        <label class="form-label small">Subcategory</label>
+                                        <select name="subCategoryId" class="form-select form-select-sm">
+                                            <option value="">None (Optional)</option>
+                                            <!-- TODO: Populate dynamically based on category selection -->
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2 d-flex align-items-end">
+                                        <button type="submit" class="btn btn-success btn-sm w-100">
+                                            <i class="fas fa-save"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-transparent">
+                        <div class="d-flex gap-2">
+                            <a asp-action="Edit" asp-route-id="@evt.Id" class="btn btn-outline-primary btn-sm flex-grow-1">
+                                <i class="fas fa-edit me-1"></i>Full Edit
+                            </a>
+                            @if(!string.IsNullOrEmpty(evt.SourceUrl))
+                            {
+                                <a href="@evt.SourceUrl" target="_blank" class="btn btn-outline-secondary btn-sm">
+                                    <i class="fas fa-external-link-alt"></i>
+                                </a>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Pagination -->
+    @if(Model.Events.TotalPages > 1)
+    {
+        <nav aria-label="Events pagination" class="mt-4">
+            <ul class="pagination justify-content-center">
+                @if(Model.Events.HasPreviousPage)
+                {
+                    <li class="page-item">
+                        <a class="page-link" href="?page=@(Model.Events.CurrentPage - 1)@(!string.IsNullOrEmpty(Model.SearchTerm) ? "&search=" + Model.SearchTerm : "")">
+                            <i class="fas fa-chevron-left"></i> Previous
+                        </a>
+                    </li>
+                }
+                
+                @for(var i = Math.Max(1, Model.Events.CurrentPage - 2); 
+                     i <= Math.Min(Model.Events.TotalPages, Model.Events.CurrentPage + 2); i++)
+                {
+                    <li class="page-item @(i == Model.Events.CurrentPage ? "active" : "")">
+                        <a class="page-link" href="?page=@i@(!string.IsNullOrEmpty(Model.SearchTerm) ? "&search=" + Model.SearchTerm : "")">@i</a>
+                    </li>
+                }
+                
+                @if(Model.Events.HasNextPage)
+                {
+                    <li class="page-item">
+                        <a class="page-link" href="?page=@(Model.Events.CurrentPage + 1)@(!string.IsNullOrEmpty(Model.SearchTerm) ? "&search=" + Model.SearchTerm : "")">
+                            Next <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                }
+            </ul>
+        </nav>
+    }
+}
+else
+{
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <i class="fas fa-check-circle text-success" style="font-size: 4rem;"></i>
+            <h4 class="mt-3 text-success">Great job!</h4>
+            <p class="text-muted">
+                @if(!string.IsNullOrEmpty(Model.SearchTerm))
+                {
+                    <text>No uncategorized events found matching "@Model.SearchTerm".</text>
+                }
+                else
+                {
+                    <text>All events have been categorized.</text>
+                }
+            </p>
+            <a asp-action="Index" class="btn btn-primary mt-3">
+                <i class="fas fa-list me-2"></i>View All Events
+            </a>
+        </div>
+    </div>
+}

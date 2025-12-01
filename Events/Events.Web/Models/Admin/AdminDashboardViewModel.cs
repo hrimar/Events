@@ -12,8 +12,8 @@ public class AdminDashboardViewModel
     public int EventsAddedThisMonth { get; set; }
 
     public List<CategoryStatistic> CategoryStatistics { get; set; } = new();
-    public List<EventViewModel> RecentEvents { get; set; } = new();
-    public List<EventViewModel> PendingCategorization { get; set; } = new();
+    public List<AdminEventViewModel> RecentEvents { get; set; } = new();
+    public List<AdminEventViewModel> PendingCategorization { get; set; } = new();
 }
 
 public class CategoryStatistic

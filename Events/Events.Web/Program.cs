@@ -13,6 +13,8 @@ ConfigureDatabase(builder);
 
 ConfigureIdentity(builder);
 
+ConfigureAuthorization(builder);
+
 RegisterServices(builder);
 
 builder.Services.AddRazorPages();
@@ -42,12 +44,6 @@ static void ConfigureDatabase(WebApplicationBuilder builder)
 
 static void ConfigureIdentity(WebApplicationBuilder builder)
 {
-    //    builder.Services.AddDefaultIdentity<IdentityUser>(options => // this doesn't work with roles
-    //    {
-    //        options.SignIn.RequireConfirmedAccount = true;
-    //    })
-    //        .AddRoles<IdentityRole>()
-    //        .AddEntityFrameworkStores<EventsDbContext>();
     builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
     {
         // Disable email confirmation for development
@@ -63,6 +59,14 @@ static void ConfigureIdentity(WebApplicationBuilder builder)
         .AddEntityFrameworkStores<EventsDbContext>()
         .AddDefaultTokenProviders()
         .AddDefaultUI();
+}
+
+static void ConfigureAuthorization(WebApplicationBuilder builder)
+{
+    builder.Services.AddAuthorization(options =>
+    {
+        options.AddPolicy("RequireAdminRole", policy => policy.RequireRole("Administrator", "EventManager"));
+    });
 }
 
 static void RegisterServices(WebApplicationBuilder builder)
@@ -118,9 +122,15 @@ static void ConfigureHttpPipeline(WebApplication app)
     app.UseAuthentication();
     app.UseAuthorization();
 
-    // Route configuration
+    // Admin Area route
+    app.MapControllerRoute(
+        name: "admin",
+        pattern: "{area:exists}/{controller=Dashboard}/{action=Index}/{id?}");
+
+    // Default route
     app.MapControllerRoute(
         name: "default",
         pattern: "{controller=Home}/{action=Index}/{id?}");
+    
     app.MapRazorPages();
 }
