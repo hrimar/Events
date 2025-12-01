@@ -1,6 +1,7 @@
 using Events.Models.Entities;
 using Events.Models.Enums;
 using Events.Services.Interfaces;
+using Events.Data.Repositories.Interfaces;
 using Events.Web.Models;
 using Events.Web.Models.Admin;
 using Microsoft.AspNetCore.Authorization;
@@ -14,11 +15,19 @@ public class EventsController : Controller
 {
     private readonly ILogger<EventsController> _logger;
     private readonly IEventService _eventService;
+    private readonly ICategoryRepository _categoryRepository;
+    private readonly ISubCategoryRepository _subCategoryRepository;
 
-    public EventsController(ILogger<EventsController> logger, IEventService eventService)
+    public EventsController(
+        ILogger<EventsController> logger, 
+        IEventService eventService,
+        ICategoryRepository categoryRepository,
+        ISubCategoryRepository subCategoryRepository)
     {
         _logger = logger;
         _eventService = eventService;
+        _categoryRepository = categoryRepository;
+        _subCategoryRepository = subCategoryRepository;
     }
 
     // GET: Admin/Events
@@ -158,6 +167,32 @@ public class EventsController : Controller
                 .Take(pageSize)
                 .ToList();
 
+            // Load available categories
+            var categories = await _categoryRepository.GetAllAsync();
+            var availableCategories = categories
+                .Where(c => c.Id != 11) // Exclude Undefined category
+                .Select(c => new CategoryOption
+                {
+                    Id = c.Id,
+                    Name = c.Name
+                })
+                .OrderBy(c => c.Name)
+                .ToList();
+
+            // Load all subcategories grouped by category
+            var allSubCategories = await _subCategoryRepository.GetAllAsync();
+            var subCategoriesDict = allSubCategories
+                .GroupBy(sc => sc.CategoryId)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.Select(sc => new SubCategoryOption
+                    {
+                        Id = sc.Id,
+                        Name = sc.Name,
+                        CategoryId = sc.CategoryId
+                    }).OrderBy(sc => sc.Name).ToList()
+                );
+
             var viewModel = new UncategorizedEventsViewModel
             {
                 Events = new PaginatedList<AdminEventViewModel>(
@@ -165,11 +200,10 @@ public class EventsController : Controller
                     totalCount,
                     page,
                     pageSize),
-                SearchTerm = search
+                SearchTerm = search,
+                AvailableCategories = availableCategories,
+                AvailableSubCategories = subCategoriesDict
             };
-
-            // TODO: Add available categories and subcategories from repository
-            // This will be populated in next step when we add category service methods
 
             return View(viewModel);
         }
@@ -242,8 +276,22 @@ public class EventsController : Controller
                 SourceUrl = eventEntity.SourceUrl
             };
 
-            // TODO: Populate available categories and subcategories
-            // This will be added in next step
+            // Load available categories
+            var categories = await _categoryRepository.GetAllAsync();
+            viewModel.AvailableCategories = categories.Select(c => new CategoryOption
+            {
+                Id = c.Id,
+                Name = c.Name
+            }).OrderBy(c => c.Name).ToList();
+
+            // Load all subcategories (will be filtered by JavaScript)
+            var allSubCategories = await _subCategoryRepository.GetAllAsync();
+            viewModel.AvailableSubCategories = allSubCategories.Select(sc => new SubCategoryOption
+            {
+                Id = sc.Id,
+                Name = sc.Name,
+                CategoryId = sc.CategoryId
+            }).OrderBy(sc => sc.Name).ToList();
 
             return View(viewModel);
         }
@@ -268,7 +316,22 @@ public class EventsController : Controller
 
             if (!ModelState.IsValid)
             {
-                // TODO: Repopulate available categories and subcategories
+                // Repopulate available categories and subcategories
+                var categories = await _categoryRepository.GetAllAsync();
+                model.AvailableCategories = categories.Select(c => new CategoryOption
+                {
+                    Id = c.Id,
+                    Name = c.Name
+                }).OrderBy(c => c.Name).ToList();
+
+                var allSubCategories = await _subCategoryRepository.GetAllAsync();
+                model.AvailableSubCategories = allSubCategories.Select(sc => new SubCategoryOption
+                {
+                    Id = sc.Id,
+                    Name = sc.Name,
+                    CategoryId = sc.CategoryId
+                }).OrderBy(sc => sc.Name).ToList();
+
                 return View(model);
             }
 
@@ -306,6 +369,23 @@ public class EventsController : Controller
         {
             _logger.LogError(ex, "Error updating event {EventId}", id);
             TempData["ErrorMessage"] = "An error occurred while updating the event.";
+            
+            // Repopulate dropdowns on error
+            var categories = await _categoryRepository.GetAllAsync();
+            model.AvailableCategories = categories.Select(c => new CategoryOption
+            {
+                Id = c.Id,
+                Name = c.Name
+            }).OrderBy(c => c.Name).ToList();
+
+            var allSubCategories = await _subCategoryRepository.GetAllAsync();
+            model.AvailableSubCategories = allSubCategories.Select(sc => new SubCategoryOption
+            {
+                Id = sc.Id,
+                Name = sc.Name,
+                CategoryId = sc.CategoryId
+            }).OrderBy(sc => sc.Name).ToList();
+
             return View(model);
         }
     }

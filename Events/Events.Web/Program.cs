@@ -74,6 +74,7 @@ static void RegisterServices(WebApplicationBuilder builder)
     builder.Services.AddScoped<IEventRepository, EventRepository>();
     builder.Services.AddScoped<ITagRepository, TagRepository>();
     builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+    builder.Services.AddScoped<ISubCategoryRepository, SubCategoryRepository>();
 
     builder.Services.AddScoped<IEventService, EventService>();
     builder.Services.AddScoped<ITagService, TagService>();

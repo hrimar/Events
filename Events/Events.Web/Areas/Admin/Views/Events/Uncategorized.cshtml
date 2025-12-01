@@ -78,32 +78,25 @@
                         
                         <!-- Quick Categorize Form -->
                         <div class="mt-3 pt-3 border-top">
-                            <form asp-action="UpdateCategory" method="post">
+                            <form asp-action="UpdateCategory" method="post" class="categorize-form">
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="id" value="@evt.Id" />
                                 
                                 <div class="row g-2">
                                     <div class="col-md-5">
                                         <label class="form-label small">Category *</label>
-                                        <select name="categoryId" class="form-select form-select-sm" required>
+                                        <select name="categoryId" class="form-select form-select-sm category-select" data-event-id="@evt.Id" required>
                                             <option value="">Select Category</option>
-                                            <option value="1">Music</option>
-                                            <option value="2">Art</option>
-                                            <option value="3">Business</option>
-                                            <option value="4">Sports</option>
-                                            <option value="5">Theatre</option>
-                                            <option value="6">Cinema</option>
-                                            <option value="7">Festivals</option>
-                                            <option value="8">Exhibitions</option>
-                                            <option value="9">Conferences</option>
-                                            <option value="10">Workshops</option>
+                                            @foreach(var category in Model.AvailableCategories)
+                                            {
+                                                <option value="@category.Id">@category.Name</option>
+                                            }
                                         </select>
                                     </div>
                                     <div class="col-md-5">
                                         <label class="form-label small">Subcategory</label>
-                                        <select name="subCategoryId" class="form-select form-select-sm">
+                                        <select name="subCategoryId" class="form-select form-select-sm subcategory-select" data-event-id="@evt.Id">
                                             <option value="">None (Optional)</option>
-                                            <!-- TODO: Populate dynamically based on category selection -->
                                         </select>
                                     </div>
                                     <div class="col-md-2 d-flex align-items-end">
@@ -188,4 +181,32 @@ else
             </a>
         </div>
     </div>
+}
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Subcategories data from server
+            var subCategoriesData = @Html.Raw(Json.Serialize(Model.AvailableSubCategories));
+            
+            // Handle category change for each form
+            $('.category-select').change(function() {
+                var categoryId = parseInt($(this).val());
+                var eventId = $(this).data('event-id');
+                var subCategorySelect = $('.subcategory-select[data-event-id="' + eventId + '"]');
+                
+                // Clear subcategory options
+                subCategorySelect.empty();
+                subCategorySelect.append('<option value="">None (Optional)</option>');
+                
+                // Add filtered subcategories
+                if (categoryId && subCategoriesData[categoryId]) {
+                    subCategoriesData[categoryId].forEach(function(sc) {
+                        subCategorySelect.append(
+                            $('<option></option>').val(sc.id).text(sc.name)
+                        );
+                    });
+                }
+            });
+        });
+    </script>
 }
