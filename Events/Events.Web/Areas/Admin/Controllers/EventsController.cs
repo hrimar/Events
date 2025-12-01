@@ -246,13 +246,26 @@ public class EventsController : Controller
                 return NotFound();
             }
 
+            // Store old category for logging
+            var oldCategoryId = eventEntity.CategoryId;
+
+            // Update category and subcategory
             eventEntity.CategoryId = categoryId;
             eventEntity.SubCategoryId = subCategoryId;
+            
+            // Automatically set status to Published when categorizing from Undefined
+            // CategoryId = 11 is Undefined
+            if (oldCategoryId == 11 && categoryId != 11)
+            {
+                eventEntity.Status = EventStatus.Published;
+                _logger.LogInformation("Event {EventId} status automatically changed to Published after categorization", id);
+            }
+            
             await _eventService.UpdateEventAsync(eventEntity);
 
-            _logger.LogInformation("Event {EventId} category updated to {CategoryId}", id, categoryId);
+            _logger.LogInformation("Event {EventId} category updated from {OldCategory} to {CategoryId}", id, oldCategoryId, categoryId);
 
-            TempData["SuccessMessage"] = $"Event '{eventEntity.Name}' has been categorized successfully.";
+            TempData["SuccessMessage"] = $"Event '{eventEntity.Name}' has been categorized successfully and set to Published status.";
 
             return RedirectToAction(nameof(Uncategorized));
         }
