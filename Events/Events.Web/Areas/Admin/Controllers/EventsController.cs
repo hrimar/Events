@@ -40,13 +40,32 @@ public class EventsController : Controller
 
             if (!string.IsNullOrWhiteSpace(search))
             {
+                // Search with category filter if provided
                 var searchResults = await _eventService.SearchEventsAsync(search);
                 events = searchResults;
+                
+                // Apply category filter to search results if category is specified
+                if (!string.IsNullOrWhiteSpace(category))
+                {
+                    events = events.Where(e => e.Category != null && e.Category.Name == category);
+                }
+                
                 totalCount = events.Count();
+                
+                // Apply pagination manually for search results
+                events = events.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+            }
+            else if (!string.IsNullOrWhiteSpace(category))
+            {
+                // Category filter only (no search)
+                var result = await _eventService.GetPagedEventsAsync(page, pageSize, null, category, null, null);
+                events = result.Events;
+                totalCount = result.TotalCount;
             }
             else
             {
-                var result = await _eventService.GetPagedEventsAsync(page, pageSize, null, category, null, null);
+                // No filters - get all events
+                var result = await _eventService.GetPagedEventsAsync(page, pageSize, null, null, null, null);
                 events = result.Events;
                 totalCount = result.TotalCount;
             }
