@@ -383,7 +383,8 @@ public class EpaygoCrawler : IWebScrapingCrawler
                                 // Set description as the full text content for now
                                 try
                                 {
-                                    eventDto.Description = await element.InnerTextAsync();
+                                    var textContent = await element.InnerTextAsync();
+                                    eventDto.Description = textContent.Replace("Купи билет", "");
                                 }
                                 catch (Exception ex)
                                 {
@@ -391,7 +392,7 @@ public class EpaygoCrawler : IWebScrapingCrawler
                                     eventDto.Description = eventDto.Name; // Fallback
                                 }
 
-                                // Try to extract price from description if available
+                                // TODO: The price id not available in the description. Try to find another way!
                                 var fullText = eventDto.Description;
                                 if (!string.IsNullOrEmpty(fullText))
                                 {

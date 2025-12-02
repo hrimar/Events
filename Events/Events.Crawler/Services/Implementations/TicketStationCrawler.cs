@@ -38,7 +38,7 @@ public class TicketStationCrawler : IWebScrapingCrawler
         {
             EnsureBrowsersInstalled();
 
-            var ticketStationEvents = await GetTicketStationEventsAsync("https://ticketstation.bg/bg/attractions");
+            var ticketStationEvents = await GetTicketStationEventsAsync("https://ticketstation.bg/bg/attractions"); // TODO: use https://ticketstation.bg/bg/top-events instead
 
             var sofiaEvents = ticketStationEvents
                 .Select(MapTicketStationToStandardDto)
@@ -276,11 +276,8 @@ public class TicketStationCrawler : IWebScrapingCrawler
                             // Set description from item-info content
                             eventDto.Description = await itemInfo.InnerTextAsync();
 
-                            //// TODO: get the prive information from the description. It is between "..." simbol and ends with "EUR symbol
-                            //var pFrom = eventDto.Description.IndexOf("... ") + "... ".Length;
-                            //var pTo = eventDto.Description.LastIndexOf("EUR ") + 4;
-                            //var price = eventDto.Description.Substring(pFrom, pTo - pFrom);
-                            //eventDto.Price = price; // TODO: Clarify in witch currency will be shown or make price string instead of decimal 
+                            // Extract the lowest price in EUR from description
+                            eventDto.Price = ExtractLowestPriceInEur(eventDto.Description);
 
                             // Only add events that have at least a name
                             if (!string.IsNullOrEmpty(eventDto.Name))
@@ -329,7 +326,7 @@ public class TicketStationCrawler : IWebScrapingCrawler
             return null; // Skip non-Sofia events
         }
 
-        return new CrawledEventDto
+        var r= new CrawledEventDto
         {
             ExternalId = GenerateEventId(ticketStationEvent.Name, ticketStationEvent.Url),
             Source = SourceName,
@@ -351,6 +348,7 @@ public class TicketStationCrawler : IWebScrapingCrawler
                 ["crawled_from"] = "https://ticketstation.bg/bg/attractions"
             }
         };
+        return r;
     }
 
     private string GenerateEventId(string? title, string? url)
@@ -486,5 +484,65 @@ public class TicketStationCrawler : IWebScrapingCrawler
         };
 
         return sofiaCities.Any(sc => city.Contains(sc));
+    }
+
+    /// <summary>
+    /// Extracts the lowest price in EUR from text that may contain multiple prices.
+    /// Example: "30 BGN - 50 BGN\n15.34 EUR - 25.56 EUR" → 15.34
+    /// </summary>
+    private decimal? ExtractLowestPriceInEur(string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return null;
+        }
+
+        try
+        {
+            // Regex pattern to match decimal numbers before "EUR"
+            // Matches: "15.34 EUR", "15,34 EUR", "15 EUR", "25.56EUR"
+            // Pattern: optional whitespace, number (with optional . or , decimal separator), optional whitespace, "EUR"
+            var pattern = @"(\d+[.,]?\d*)\s*EUR";
+            var matches = System.Text.RegularExpressions.Regex.Matches(text, pattern, System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+            if (matches.Count == 0)
+            {
+                _logger.LogDebug("No EUR prices found in text: {Text}", text);
+                return null;
+            }
+
+            var prices = new List<decimal>();
+
+            foreach (System.Text.RegularExpressions.Match match in matches)
+            {
+                var priceStr = match.Groups[1].Value;
+                
+                // Replace comma with dot for decimal parsing (European format)
+                priceStr = priceStr.Replace(',', '.');
+
+                if (decimal.TryParse(priceStr, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal price))
+                {
+                    prices.Add(price);
+                    _logger.LogDebug("Found EUR price: {Price}", price);
+                }
+            }
+
+            if (prices.Count == 0)
+            {
+                _logger.LogDebug("No valid EUR prices could be parsed from text");
+                return null;
+            }
+
+            // Return the lowest price
+            var lowestPrice = prices.Min();
+            _logger.LogDebug("Extracted lowest price: {LowestPrice} EUR from {TotalPrices} prices found", lowestPrice, prices.Count);
+            
+            return lowestPrice;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Error extracting EUR price from text: {Text}", text);
+            return null;
+        }
     }
 }
