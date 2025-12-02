@@ -38,7 +38,7 @@ public class TicketStationCrawler : IWebScrapingCrawler
         {
             EnsureBrowsersInstalled();
 
-            var ticketStationEvents = await GetTicketStationEventsAsync("https://ticketstation.bg/bg/attractions"); // TODO: use https://ticketstation.bg/bg/top-events instead
+            var ticketStationEvents = await GetTicketStationEventsAsync("https://ticketstation.bg/bg/top-events");
 
             var sofiaEvents = ticketStationEvents
                 .Select(MapTicketStationToStandardDto)
@@ -182,7 +182,7 @@ public class TicketStationCrawler : IWebScrapingCrawler
 
                 try
                 {
-                    // Load the page
+                    // Load the main page
                     await page.GotoAsync(url, new PageGotoOptions
                     {
                         WaitUntil = WaitUntilState.DOMContentLoaded,
@@ -209,35 +209,36 @@ public class TicketStationCrawler : IWebScrapingCrawler
 
                     _logger.LogInformation("Found {ItemCount} item cards", itemCards.Count);
 
-                    foreach (var card in itemCards)
+                    // Process cards one by one to avoid stale element references
+                    int cardIndex = 0;
+                    int totalCards = itemCards.Count;
+
+                    while (cardIndex < totalCards)
                     {
                         try
                         {
-                            var eventDto = new TicketStationEventDto();
+                            // Re-query the cards on the main page to get fresh references
+                            itemCards = await page.QuerySelectorAllAsync(".item");
 
-                            // Get the item-info container
-                            var itemInfo = await card.QuerySelectorAsync(".item-info");
-                            if (itemInfo == null)
+                            if (cardIndex >= itemCards.Count)
                             {
-                                continue;
+                                _logger.LogWarning("Card index {CardIndex} is out of range. Total cards: {TotalCards}", cardIndex, itemCards.Count);
+                                break;
                             }
 
+                            var card = itemCards[cardIndex];
+                            var eventDto = new TicketStationEventDto();
+
+                            // Step 1: Extract basic info from main page                            
                             // Extract name from .item-name
-                            var nameElement = await itemInfo.QuerySelectorAsync(".item-name");
+                            var nameElement = await card.QuerySelectorAsync(".item-name");
                             if (nameElement != null)
                             {
                                 eventDto.Name = await nameElement.InnerTextAsync();
                             }
 
-                            // Extract date from .item-date
-                            var dateElement = await itemInfo.QuerySelectorAsync(".item-date");
-                            if (dateElement != null)
-                            {
-                                eventDto.Date = await dateElement.InnerTextAsync();
-                            }
-
                             // Extract city from .item-city
-                            var cityElement = await itemInfo.QuerySelectorAsync(".item-city");
+                            var cityElement = await card.QuerySelectorAsync(".item-city");
                             if (cityElement != null)
                             {
                                 eventDto.City = await cityElement.InnerTextAsync();
@@ -256,41 +257,148 @@ public class TicketStationCrawler : IWebScrapingCrawler
                                 }
                             }
 
-                            var href = await card.GetAttributeAsync("href");
-                            if (!string.IsNullOrEmpty(href))
+                            // Get href for detail page (Step 2)
+                            var detailHref = await card.GetAttributeAsync("href");
+                            if (string.IsNullOrEmpty(detailHref))
                             {
-                                // Set TicketUrl as the full absolute URL
-                                if (href.StartsWith("/"))
+                                _logger.LogWarning("No href found for event: {EventName}", eventDto.Name);
+                                cardIndex++;
+                                continue;
+                            }
+
+                            // Make detail URL absolute
+                            var detailUrl = detailHref.StartsWith("/") ? $"https://ticketstation.bg{detailHref}" : detailHref;
+
+                            eventDto.Url = "https://ticketstation.bg";
+
+                            // Step 2: Navigate to detail page to extract price
+                            try
+                            {
+                                await page.GotoAsync(detailUrl, new PageGotoOptions
                                 {
-                                    eventDto.TicketUrl = $"https://ticketstation.bg{href}";
+                                    WaitUntil = WaitUntilState.DOMContentLoaded,
+                                    Timeout = 30000
+                                });
+
+                                await Task.Delay(2000); // Wait for content to load
+
+                                // Extract price from .item-price
+                                var priceElement = await page.QuerySelectorAsync(".item-price");
+                                if (priceElement != null)
+                                {
+                                    var priceText = await priceElement.InnerTextAsync();
+                                    eventDto.Price = ExtractLowestPriceInEur(priceText);
+                                }
+
+                                // Find .item element to get href for Step 3 (location/booking page)
+                                var itemElement = await page.QuerySelectorAsync(".item");
+                                if (itemElement != null)
+                                {
+                                    var locationHref = await itemElement.GetAttributeAsync("href");
+                                    if (!string.IsNullOrEmpty(locationHref))
+                                    {
+                                        // Make location URL absolute
+                                        var locationUrl = locationHref.StartsWith("/") ? $"https://ticketstation.bg{locationHref}" : locationHref;
+
+                                        // Step 3: Navigate to location/booking page
+                                        await page.GotoAsync(locationUrl, new PageGotoOptions
+                                        {
+                                            WaitUntil = WaitUntilState.DOMContentLoaded,
+                                            Timeout = 30000
+                                        });
+
+                                        await Task.Delay(2000);
+
+                                        // Set TicketUrl to this final page URL
+                                        eventDto.TicketUrl = locationUrl;
+
+                                        // Extract description
+                                        var descriptionElement = await page.QuerySelectorAsync("#collapseDesc");
+                                        if (descriptionElement != null)
+                                        {
+                                            var descriptionText = await descriptionElement.InnerTextAsync();
+                                            eventDto.Description = descriptionText.Replace("Виж още", "").Trim();
+                                        }
+
+                                        // Extract location from venue link
+                                        var venueLink = await page.QuerySelectorAsync("a.text-wrap");
+                                        if (venueLink != null)
+                                        {
+                                            var venueSpan = await venueLink.QuerySelectorAsync("span");
+                                            if (venueSpan != null)
+                                            {
+                                                var locationText = await venueSpan.InnerTextAsync();
+
+                                                // Parse location: "Арена 8888 София" → venue="Арена 8888"
+                                                // Remove city name from location text if present
+                                                if (!string.IsNullOrEmpty(eventDto.City))
+                                                {
+                                                    locationText = locationText.Replace(eventDto.City, "").Trim();
+                                                    eventDto.Location = locationText;
+                                                }
+                                            }
+                                        }
+
+                                        // Extract date from description (set to MinValue if not found)
+                                        if (!string.IsNullOrEmpty(eventDto.Description))
+                                        {
+                                            // TODO: Try to parse date from description "на 15 май 2026 г" but for now set to MinValue
+                                            eventDto.Date = DateTime.MinValue.ToString("yyyy-MM-dd");
+                                        }
+                                    }
+                                    else
+                                    {
+                                        _logger.LogWarning("No href found in .item element for Step 3: {EventName}", eventDto.Name);
+                                    }
                                 }
                                 else
                                 {
-                                    eventDto.TicketUrl = href;
+                                    _logger.LogWarning("No .item element found for Step 3: {EventName}", eventDto.Name);
                                 }
                             }
+                            catch (Exception ex)
+                            {
+                                _logger.LogWarning(ex, "Error extracting details for event: {EventName}", eventDto.Name);
+                            }
 
-                            // Set Url to always be the base URL
-                            eventDto.Url = "https://ticketstation.bg";
-
-                            // Set description from item-info content
-                            eventDto.Description = await itemInfo.InnerTextAsync();
-
-                            // Extract the lowest price in EUR from description
-                            eventDto.Price = ExtractLowestPriceInEur(eventDto.Description);
+                            // Navigate back to main page for next item
+                            await page.GotoAsync(url, new PageGotoOptions
+                            {
+                                WaitUntil = WaitUntilState.DOMContentLoaded,
+                                Timeout = 30000
+                            });
+                            await Task.Delay(2000);
 
                             // Only add events that have at least a name
                             if (!string.IsNullOrEmpty(eventDto.Name))
                             {
                                 events.Add(eventDto);
-
-                                _logger.LogDebug("Extracted event: {EventName} on {EventDate} in {EventCity}",
-                                    eventDto.Name, eventDto.Date, eventDto.City);
+                                _logger.LogDebug("Extracted event: {EventName} on {EventDate} in {EventCity}", eventDto.Name, eventDto.Date, eventDto.City);
                             }
+
+                            // Move to next card
+                            cardIndex++;
                         }
                         catch (Exception ex)
                         {
-                            _logger.LogWarning(ex, "Error extracting event data from card");
+                            _logger.LogWarning(ex, "Error extracting event data from card at index {CardIndex}", cardIndex);
+
+                            // Try to navigate back to main page
+                            try
+                            {
+                                await page.GotoAsync(url, new PageGotoOptions
+                                {
+                                    WaitUntil = WaitUntilState.DOMContentLoaded,
+                                    Timeout = 30000
+                                });
+                                await Task.Delay(2000);
+                            }
+                            catch (Exception navEx)
+                            {
+                                _logger.LogError(navEx, "Failed to navigate back to main page after error");
+                            }
+
+                            cardIndex++;
                         }
                     }
 
@@ -326,7 +434,7 @@ public class TicketStationCrawler : IWebScrapingCrawler
             return null; // Skip non-Sofia events
         }
 
-        var r= new CrawledEventDto
+        return new CrawledEventDto
         {
             ExternalId = GenerateEventId(ticketStationEvent.Name, ticketStationEvent.Url),
             Source = SourceName,
@@ -334,7 +442,7 @@ public class TicketStationCrawler : IWebScrapingCrawler
             Description = CleanText(ticketStationEvent.Description),
             StartDate = TryParseEventDate(ticketStationEvent.Date),
             City = CleanText(ticketStationEvent.City) ?? "",
-            Location = CleanText(ticketStationEvent.City), // TODO:
+            Location = ticketStationEvent.Location,
             ImageUrl = ticketStationEvent.ImageUrl,
             SourceUrl = ticketStationEvent.Url,
             TicketUrl = ticketStationEvent.TicketUrl,
@@ -345,10 +453,9 @@ public class TicketStationCrawler : IWebScrapingCrawler
                 ["original_date_text"] = ticketStationEvent.Date ?? "",
                 ["city"] = ticketStationEvent.City ?? "",
                 ["extraction_method"] = "Playwright_TicketStation",
-                ["crawled_from"] = "https://ticketstation.bg/bg/attractions"
+                ["crawled_from"] = "https://ticketstation.bg/bg/top-events"
             }
         };
-        return r;
     }
 
     private string GenerateEventId(string? title, string? url)
@@ -516,7 +623,7 @@ public class TicketStationCrawler : IWebScrapingCrawler
             foreach (System.Text.RegularExpressions.Match match in matches)
             {
                 var priceStr = match.Groups[1].Value;
-                
+
                 // Replace comma with dot for decimal parsing (European format)
                 priceStr = priceStr.Replace(',', '.');
 
@@ -536,7 +643,7 @@ public class TicketStationCrawler : IWebScrapingCrawler
             // Return the lowest price
             var lowestPrice = prices.Min();
             _logger.LogDebug("Extracted lowest price: {LowestPrice} EUR from {TotalPrices} prices found", lowestPrice, prices.Count);
-            
+
             return lowestPrice;
         }
         catch (Exception ex)
