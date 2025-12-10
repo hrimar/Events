@@ -5,7 +5,6 @@ namespace Events.Crawler.Services.Interfaces;
 
 public interface IAiTaggingService
 {
-    Task<TaggingResult> GenerateTagsAsync(string eventName, string description, string? location = null);
-    Task<EventCategory?> ClassifyEventAsync(string eventName, string description);
-    Task<IEnumerable<string>> ExtractMusicGenresAsync(string eventName, string description);
+    // Comprehensive method for unified processing
+    Task<TaggingResult> ProcessEventComprehensivelyAsync(string eventName, string description, string? location = null);
 }

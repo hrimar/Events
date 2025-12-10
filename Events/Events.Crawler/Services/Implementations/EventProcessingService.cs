@@ -57,8 +57,18 @@ public class EventProcessingService : IEventProcessingService
                 }
                 else
                 {
-                    var newEvent = await CreateEventEntityAsync(crawledEvent);
-                    var createdEvent = await eventService.CreateEventAsync(newEvent);
+                    // Use comprehensive processing with both categorization AND tagging in one go
+                    var newEvent = await CreateEventEntityComprehensivelyAsync(crawledEvent);
+                    var createdEvent = await eventService.CreateEventAsync(newEvent.Event);
+                    
+                    // Add tags immediately after creation
+                    if (newEvent.Tags.Any())
+                    {
+                        using var tagScope = _serviceProvider.CreateScope();
+                        var tagService = tagScope.ServiceProvider.GetRequiredService<ITagService>();
+                        await AssignTagsToEventAsync(createdEvent.Id, newEvent.Tags, tagService);
+                    }
+
                     result.EventsCreated++;
                     result.ProcessedEventIds.Add(createdEvent.Id);
                 }
@@ -77,20 +87,10 @@ public class EventProcessingService : IEventProcessingService
 
     public async Task<ProcessingResult> ProcessAndTagEventsAsync(IEnumerable<CrawledEventDto> crawledEvents)
     {
+        // No longer need separate tagging step - everything is in ProcessCrawledEventsAsync
         var processingResult = await ProcessCrawledEventsAsync(crawledEvents);
 
-        if (processingResult.ProcessedEventIds.Any())
-        {
-            try
-            {
-                await TagEventsBatchAsync(processingResult.ProcessedEventIds);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error during tagging process");
-                processingResult.Errors.Add($"Tagging error: {ex.Message}");
-            }
-        }
+        _logger.LogInformation("Processed {Count} events with comprehensive AI tagging", processingResult.EventsProcessed);
 
         return processingResult;
     }
@@ -111,8 +111,7 @@ public class EventProcessingService : IEventProcessingService
                 var eventDate = crawledEvent.StartDate.Value.Date;
                 var events = await eventService.GetEventsByDateRangeAsync(eventDate, eventDate.AddDays(1));
 
-                return events.FirstOrDefault(e =>
-                    e.Name.Equals(crawledEvent.Name, StringComparison.OrdinalIgnoreCase));
+                return events.FirstOrDefault(e => e.Name.Equals(crawledEvent.Name, StringComparison.OrdinalIgnoreCase));
             }
 
             return null;
@@ -150,53 +149,53 @@ public class EventProcessingService : IEventProcessingService
         }
     }
 
-    private async Task<(EventCategory? Category, int? SubCategoryId)> CategorizeEventAsync(CrawledEventDto crawledEvent)
+    // Comprehensive event creation with single AI call
+    private async Task<(Event Event, List<string> Tags)> CreateEventEntityComprehensivelyAsync(CrawledEventDto crawledEvent)
     {
         if (string.IsNullOrEmpty(crawledEvent.Name))
         {
-            return (null, null);
+            var fallbackEvent = MapToEntity(crawledEvent, null, null);
+            return (fallbackEvent, new List<string>());
         }
 
         try
         {
-            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
-            var taggingTask = _aiTaggingService.GenerateTagsAsync(
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+
+            // SINGLE AI CALL for category + subcategory + tags
+            var comprehensiveResult = await _aiTaggingService.ProcessEventComprehensivelyAsync(
                 crawledEvent.Name,
                 crawledEvent.Description ?? "",
-                crawledEvent.Location);
+                crawledEvent.Location).WaitAsync(cts.Token);
 
-            var taggingResult = await taggingTask.WaitAsync(cts.Token);
-            var category = taggingResult.SuggestedCategory;
-            var suggestedSubCategory = taggingResult.SuggestedSubCategory;
+            var category = comprehensiveResult.SuggestedCategory;
+            var suggestedSubCategory = comprehensiveResult.SuggestedSubCategory;
+            var tags = comprehensiveResult.SuggestedTags;
 
-            if (!category.HasValue)
+            int? subCategoryId = null;
+            if (category.HasValue && !string.IsNullOrEmpty(suggestedSubCategory))
             {
-                return (null, null);
+                subCategoryId = await GetSubCategoryIdAsync(category.Value, suggestedSubCategory);
             }
 
-            var subCategoryId = await GetSubCategoryIdAsync(category.Value, suggestedSubCategory);
+            var eventEntity = MapToEntity(crawledEvent, category, subCategoryId);
 
-            if (subCategoryId.HasValue)
-            {
-                _logger.LogInformation("Categorized '{EventName}' as Category={Category}, SubCategory={SubCategory} (ID={SubCategoryId})",
-                    crawledEvent.Name, category, suggestedSubCategory, subCategoryId);
-            }
-            else
-            {
-                _logger.LogInformation("Categorized '{EventName}' as Category={Category}, no subcategory found", crawledEvent.Name, category);
-            }
+            _logger.LogInformation("Comprehensively processed '{EventName}': Category={Category}, SubCategory={SubCategory}, Tags=[{Tags}]",
+                crawledEvent.Name, category?.ToString() ?? "None", suggestedSubCategory ?? "None", string.Join(", ", tags));
 
-            return (category, subCategoryId);
+            return (eventEntity, tags);
         }
         catch (OperationCanceledException)
         {
-            _logger.LogWarning("AI categorization timeout for event {EventName}, skipping AI", crawledEvent.Name);
-            return (null, null);
+            _logger.LogWarning("AI comprehensive processing timeout for event {EventName}, using fallback", crawledEvent.Name);
+            var fallbackEvent = MapToEntity(crawledEvent, null, null);
+            return (fallbackEvent, new List<string> { "некласифицирано" });
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "AI categorization failed for event {EventName}", crawledEvent.Name);
-            return (null, null);
+            _logger.LogWarning(ex, "AI comprehensive processing failed for event {EventName}, using fallback", crawledEvent.Name);
+            var fallbackEvent = MapToEntity(crawledEvent, null, null);
+            return (fallbackEvent, new List<string> { "некласифицирано" });
         }
     }
 
@@ -227,86 +226,38 @@ public class EventProcessingService : IEventProcessingService
 
     public async Task<Event> CreateEventEntityAsync(CrawledEventDto crawledEvent)
     {
-        var (category, subCategoryId) = await CategorizeEventAsync(crawledEvent);
-        return MapToEntity(crawledEvent, category, subCategoryId);
+        var result = await CreateEventEntityComprehensivelyAsync(crawledEvent);
+        return result.Event;
     }
 
-    private async Task TagEventsBatchAsync(IEnumerable<int> eventIds)
+    // Efficient tag assignment
+    private async Task AssignTagsToEventAsync(int eventId, List<string> tags, ITagService tagService)
     {
-        const int batchSize = 5;
-        var eventIdsList = eventIds.ToList();
-
-        for (int i = 0; i < eventIdsList.Count; i += batchSize)
+        foreach (var tagName in tags)
         {
-            var batch = eventIdsList.Skip(i).Take(batchSize);
+            var cleanTagName = CleanAndValidateTagName(tagName);
+            if (string.IsNullOrEmpty(cleanTagName)) continue;
 
-            foreach (var eventId in batch)
+            try
             {
-                try
+                var existingTag = await tagService.GetTagByNameAsync(cleanTagName);
+                if (existingTag == null)
                 {
-                    using var scope = _serviceProvider.CreateScope();
-                    var eventService = scope.ServiceProvider.GetRequiredService<IEventService>();
-                    var tagService = scope.ServiceProvider.GetRequiredService<ITagService>();
-
-                    await TagSingleEventWithScopedServicesAsync(eventId, eventService, tagService);
+                    var newTag = new Tag
+                    {
+                        Name = cleanTagName,
+                        Category = null, // Will be set based on event category later
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    existingTag = await tagService.CreateTagAsync(newTag);
                 }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error tagging event {EventId}", eventId);
-                }
+
+                await tagService.AddTagToEventAsync(eventId, existingTag.Id);
             }
-
-            await Task.Delay(200);
-        }
-    }
-
-    private async Task TagSingleEventWithScopedServicesAsync(int eventId, IEventService eventService, ITagService tagService)
-    {
-        var eventEntity = await eventService.GetEventByIdAsync(eventId);
-        if (eventEntity == null) return;
-
-        try
-        {
-            var taggingResult = await _aiTaggingService.GenerateTagsAsync(
-                eventEntity.Name,
-                eventEntity.Description ?? "",
-                eventEntity.Location);
-
-            foreach (var tagName in taggingResult.SuggestedTags)
+            catch (Exception ex)
             {
-                var cleanTagName = CleanAndValidateTagName(tagName);
-                if (string.IsNullOrEmpty(cleanTagName)) continue;
-
-                await CreateOrAssignTagWithScopedServicesAsync(eventId, cleanTagName, eventEntity.CategoryId, tagService);
+                _logger.LogWarning(ex, "Failed to create/assign tag '{TagName}' to event {EventId}", cleanTagName, eventId);
             }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error in TagSingleEventWithScopedServicesAsync for event {EventId}", eventId);
-        }
-    }
-
-    private async Task CreateOrAssignTagWithScopedServicesAsync(int eventId, string tagName, int? categoryId, ITagService tagService)
-    {
-        try
-        {
-            var existingTag = await tagService.GetTagByNameAsync(tagName);
-            if (existingTag == null)
-            {
-                var newTag = new Tag
-                {
-                    Name = tagName,
-                    Category = categoryId.HasValue ? (EventCategory?)categoryId.Value : null,
-                    CreatedAt = DateTime.UtcNow
-                };
-                existingTag = await tagService.CreateTagAsync(newTag);
-            }
-
-            await tagService.AddTagToEventAsync(eventId, existingTag.Id);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Failed to create/assign tag '{TagName}' to event {EventId}", tagName, eventId);
         }
     }
 
@@ -319,9 +270,16 @@ public class EventProcessingService : IEventProcessingService
             .Replace("\r", "")
             .Replace("  ", " ");
 
-        if (cleaned.Length > 100)
+        // Enhanced cleaning for better tag quality
+        if (cleaned.Length > 50) // Reduced from 100
         {
-            cleaned = cleaned[..97] + "...";
+            cleaned = cleaned[..47] + "...";
+        }
+
+        // Skip if contains problematic characters
+        if (cleaned.Contains("ул.") || cleaned.Contains("№") || cleaned.Contains("(") || cleaned.Contains(")"))
+        {
+            return null;
         }
 
         return string.IsNullOrWhiteSpace(cleaned) ? null : cleaned;

@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.Net.Http.Json;
 using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 
 namespace Events.Crawler.Services.Implementations;
 
@@ -13,7 +14,7 @@ public class GroqTaggingService : IAiTaggingService
     private readonly HttpClient _http;
     private readonly string _apiKey;
     private readonly ILogger<GroqTaggingService> _logger;
-    private static readonly SemaphoreSlim _rateLimiter = new(3, 3); // Max 3 concurrent requests
+    private static readonly SemaphoreSlim _rateLimiter = new(2, 2); // Max 2 concurrent requests
     private static DateTime _lastRequest = DateTime.MinValue;
     private static readonly object _lockObject = new();
 
@@ -27,61 +28,47 @@ public class GroqTaggingService : IAiTaggingService
         _http.DefaultRequestHeaders.Add("Authorization", $"Bearer {_apiKey}");
     }
 
-    public async Task<EventCategory?> ClassifyEventAsync(string eventName, string description)
+    // Single comprehensive method - replaces both ClassifyEventAsync + GenerateTagsAsync
+    public async Task<TaggingResult> ProcessEventComprehensivelyAsync(string eventName, string description, string? location = null)
     {
         await _rateLimiter.WaitAsync();
         try
         {
             await EnsureRateLimit();
 
-            // Enhanced prompt with better context and examples
-            var prompt = $@"Analyze this Bulgarian event and classify it with subcategory. Return format: ""CATEGORY_NUMBER|SUBCATEGORY_NAME""
+            // Complete prompt with ALL subcategories - optimized for token efficiency
+            var prompt = $@"Event: {eventName}
+Desc: {description}
 
-Event: {eventName}
-Description: {description}
+Categories & Subcategories:
+1=Music → Rock,Jazz,Metal,Pop,Classical,Electronic,Folk,Blues,HipHop,Other
+2=Art → Painting,Sculpture,Photography,DigitalArt,Other
+3=Business → NetworkingEvents,Startups,Marketing,Other
+4=Sports → Football,Basketball,Tennis,Volleyball,Other
+5=Theatre → Drama,Comedy,MusicalTheatre,Other
+6=Cinema → FeatureFilms,Documentaries,Animation,Other
+7=Festivals → MusicFestivals,FilmFestivals,ArtFestivals,FoodAndWineFestivals,Other
+8=Exhibitions → ArtExhibitions,PhotographyExhibitions,HistoricalExhibitions,Other
+9=Conferences → TechConferences,BusinessConferences,AcademicConferences,Other
+10=Workshops → ArtWorkshops,CookingWorkshops,CodingWorkshops,Other
+11=Undefined
 
-Categories with Subcategories:
-1=Music (концерти, музикални изпълнения, bands, DJ sets, festivals with music)
-  - Rock, Jazz, Metal, Pop, Classical, Electronic, Folk, Blues, HipHop, Punk, Funk, Opera, Country, Reggae, Alternative
-2=Art (изложби, галерии, visual arts, художествени инсталации)
-3=Business (networking, бизнес събития, предприемачество, стартъп събития)
-4=Sports (спортни събития, мачове, турнири, състезания)
-  - Football, Basketball, Tennis, Volleyball, Swimming, Athletics, Boxing, Wrestling, Gymnastics, Cycling
-5=Theatre (театрални постановки, драма, комедия, мюзикъли)
-6=Cinema (кино прожекции, филми, премиери, документални)
-7=Festivals (многодневни фестивали, културни празници, тематични събития)
-8=Exhibitions (изложби, музеи, исторически експозиции)
-9=Conferences (конференции, семинари, лекции, научни форуми)
-10=Workshops (работилници, курсове, обучения, майсторски класове)
+Examples:
+""Slayer концерт"" → ""1|Metal|thrash metal,софия,концерт""
+""Левски-ЦСКА"" → ""4|Football|футбол,софия,спорт""
+""Пикасо изложба"" → ""8|ArtExhibitions|изкуство,софия,живопис""
+""София филм фест"" → ""7|FilmFestivals|филми,софия,фестивал""
 
-Enhanced Examples:
-- ""Slayer концерт в Зала 1"" = ""1|Metal"" (Thrash/Heavy Metal concert)
-- ""Iron Maiden live in Sofia"" = ""1|Metal"" (Heavy Metal concert)
-- ""Джаз вечер с John Coltrane Tribute"" = ""1|Jazz"" (Jazz performance)
-- ""Ed Sheeran концерт"" = ""1|Pop"" (Pop music concert)
-- ""Софийска филхармония - Бетовен 9-та симфония"" = ""1|Classical"" (Classical music)
-- ""Техно парти с Armin van Buuren"" = ""1|Electronic"" (Electronic/Techno music)
-- ""Левски - ЦСКА дерби"" = ""4|Football"" (Football match)
-- ""ATP турнир по тенис"" = ""4|Tennis"" (Tennis tournament)
-- ""Хамлет в Народния театър"" = ""5|"" (Theatre - no specific subcategory)
-- ""Изложба на Пикасо в НХГ"" = ""2|"" (Art exhibition - no subcategory)
+CRITICAL: Return ONLY ""CATEGORY|SUBCATEGORY|tag1,tag2,tag3"" format!
+NO explanations! NO descriptions! ONLY the format!
 
-Rules:
-- For Music/Sports events, try to determine specific subcategory
-- For other categories, subcategory can be empty
-- If uncertain about category, return ""0|""
-- Return ONLY the format ""NUMBER|SUBCATEGORY"" (subcategory can be empty)
-
-Return format: ""CATEGORY_NUMBER|SUBCATEGORY_NAME"":";
+Return:";
 
             var requestBody = new
             {
-                messages = new[]
-                {
-                new { role = "user", content = prompt }
-            },
+                messages = new[] { new { role = "user", content = prompt } },
                 model = "llama-3.1-8b-instant",
-                max_tokens = 20, // Increase tokens for subcategory response
+                max_tokens = 50,
                 temperature = 0.1
             };
 
@@ -94,24 +81,49 @@ Return format: ""CATEGORY_NUMBER|SUBCATEGORY_NAME"":";
 
                 if (!string.IsNullOrEmpty(responseText))
                 {
-                    var parts = responseText.Split('|');
-                    if (parts.Length >= 1 && int.TryParse(parts[0], out var categoryId))
+                    _logger.LogInformation("AI comprehensive response for '{EventName}': {Response}", eventName, responseText);
+
+                    // Strict validation: Check if response follows format
+                    if (!IsValidResponseFormat(responseText))
                     {
-                        if (categoryId == 0)
+                        _logger.LogWarning("AI returned invalid format for '{EventName}': {Response} - using fallback",
+                            eventName, responseText);
+                        return GenerateEnhancedFallbackTags(eventName, description, location);
+                    }
+
+                    var parts = responseText.Split('|');
+                    if (parts.Length >= 2 && int.TryParse(parts[0], out var categoryId))
+                    {
+                        if (categoryId == 11)
                         {
-                            _logger.LogWarning("AI could not classify '{EventName}' with confidence", eventName);
-                            return null;
+                            _logger.LogWarning("AI classified '{EventName}' as Undefined", eventName);
+                            return GenerateEnhancedFallbackTags(eventName, description, location);
                         }
 
                         if (Enum.IsDefined(typeof(EventCategory), categoryId))
                         {
-                            // Store subcategory for later use in GenerateTagsAsync
-                            var subcategory = parts.Length > 1 ? parts[1].Trim() : null;
+                            var category = (EventCategory)categoryId;
+                            var subcategory = parts.Length > 1 && !string.IsNullOrWhiteSpace(parts[1]) ? parts[1].Trim() : "Other";
 
-                            _logger.LogInformation("AI classified '{EventName}' as {Category} | {SubCategory}",
-                                eventName, (EventCategory)categoryId, subcategory ?? "None");
+                            // Extract tags from AI response or use fallback
+                            var aiTags = parts.Length > 2 && !string.IsNullOrWhiteSpace(parts[2])
+                                ? parts[2].Split(',').Select(t => t.Trim()).Where(t => !string.IsNullOrWhiteSpace(t)).ToList()
+                                : new List<string>();
 
-                            return (EventCategory)categoryId;
+                            // Combine AI tags with keyword-extracted tags
+                            var keywordTags = ExtractTagsWithKeywords(eventName, description, location, category);
+                            var allTags = aiTags.Concat(keywordTags).Distinct().Take(6).ToList();
+
+                            _logger.LogInformation("AI classified '{EventName}' as {Category}|{SubCategory} with tags: {Tags}",
+                                eventName, category, subcategory, string.Join(", ", allTags));
+
+                            return new TaggingResult
+                            {
+                                SuggestedCategory = category,
+                                SuggestedSubCategory = subcategory,
+                                SuggestedTags = allTags,
+                                Confidence = allTags.ToDictionary(tag => tag, _ => 0.85)
+                            };
                         }
                     }
                 }
@@ -124,212 +136,30 @@ Return format: ""CATEGORY_NUMBER|SUBCATEGORY_NAME"":";
                 _logger.LogWarning("AI API error: {StatusCode} - {Error}", response.StatusCode, errorContent);
             }
 
-            return TryClassifyWithKeywords(eventName, description);
+            return GenerateEnhancedFallbackTags(eventName, description, location);
         }
         catch (HttpRequestException ex) when (ex.Message.Contains("rate_limit_exceeded"))
         {
-            _logger.LogWarning("Rate limit exceeded, falling back to keyword classification");
-            return TryClassifyWithKeywords(eventName, description);
-        }
-        finally
-        {
-            _rateLimiter.Release();
-        }
-    }
-
-    public async Task<TaggingResult> GenerateTagsAsync(string eventName, string description, string? location = null)
-    {
-        try
-        {
-            // Enhanced AI classification that returns both category and subcategory
-            var aiResult = await ClassifyEventWithSubcategoryAsync(eventName, description);
-
-            var category = aiResult.Category;
-            var suggestedSubCategory = aiResult.SubCategory;
-
-            // Log if AI used "Other" subcategory
-            if (suggestedSubCategory == "Other" && category.HasValue)
-            {
-                _logger.LogInformation("AI selected 'Other' subcategory for '{EventName}' in category {Category} - may need manual review", 
-                    eventName, category);
-            }
-
-            var tags = ExtractTagsWithKeywords(eventName, description, location, category);
-            var musicGenres = category == EventCategory.Music
-                ? ExtractMusicGenresWithKeywords(eventName, description)
-                : Enumerable.Empty<string>();
-
-            var allTags = tags.Concat(musicGenres).Distinct().Take(6).ToList();
-
-            _logger.LogInformation("Generated comprehensive tags for '{EventName}': Category={Category}, SubCategory={SubCategory}, Tags=[{Tags}]",
-                eventName, category?.ToString() ?? "None", suggestedSubCategory ?? "None", string.Join(", ", allTags));
-
-            return new TaggingResult
-            {
-                SuggestedCategory = category, // AI-suggested category
-                SuggestedSubCategory = suggestedSubCategory, // AI-suggested subcategory
-                SuggestedTags = allTags, // AI-suggested tags
-                Confidence = allTags.ToDictionary(tag => tag, _ => 0.8)
-            };
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error generating tags with Groq for '{EventName}'", eventName);
+            _logger.LogWarning("Rate limit exceeded, using fallback classification for '{EventName}'", eventName);
             return GenerateEnhancedFallbackTags(eventName, description, location);
         }
-    }
-
-    public async Task<IEnumerable<string>> ExtractMusicGenresAsync(string eventName, string description)
-    {
-        return await Task.FromResult(ExtractMusicGenresWithKeywords(eventName, description));
-    }
-
-    private async Task<(EventCategory? Category, string? SubCategory)> ClassifyEventWithSubcategoryAsync(string eventName, string description)
-    {
-        await _rateLimiter.WaitAsync();
-        try
-        {
-            await EnsureRateLimit();
-
-            var prompt = $@"Classify this Bulgarian event with category and subcategory. Return ONLY format: ""CATEGORY|SUBCATEGORY""
-
-Event: {eventName}
-Description: {description}
-
-Categories with ALL Subcategories:
-1=Music → Rock, Jazz, Metal, Pop, Funk, Punk, Opera, Classical, Electronic, Folk, Blues, Country, Reggae, HipHop, Alternative, Other
-2=Art → Painting, Sculpture, Photography, DigitalArt, StreetArt, Graffiti, Illustration, PerformanceArt, InstallationArt, ContemporaryArt, VisualArts, MixedMedia, ConceptualArt, Other
-3=Business → NetworkingEvents, Startups, Entrepreneurship, Marketing, Sales, Leadership, Finance, RealEstate, Investment, ECommerce, Innovation, Technology, HRManagement, BusinessStrategy, ProductDevelopment, Other
-4=Sports → Football, Basketball, Tennis, Volleyball, Swimming, Athletics, Boxing, Wrestling, Gymnastics, Cycling, Other
-5=Theatre → Drama, Comedy, MusicalTheatre, Tragedy, ExperimentalTheatre, PuppetTheatre, Improvisation, StreetTheatre, Monodrama, ChildrensTheatre, Other
-6=Cinema → FeatureFilms, ShortFilms, Documentaries, Animation, IndependentCinema, BulgarianCinema, InternationalCinema, FilmPremieres, StudentFilms, FilmFestivals, Other
-7=Festivals → MusicFestivals, FilmFestivals, ArtFestivals, FoodAndWineFestivals, CulturalFestivals, FolkloreFestivals, StreetFestivals, SummerFestivals, LightFestivals, CraftBeerFestivals, EcoFestivals, DanceFestivals, TechFestivals, Other
-8=Exhibitions → ArtExhibitions, PhotographyExhibitions, HistoricalExhibitions, ScienceExhibitions, TechnologyExhibitions, AutomotiveExhibitions, DesignExhibitions, CulturalHeritageExhibitions, EducationalExhibitions, CraftExhibitions, Other
-9=Conferences → TechConferences, BusinessConferences, StartupConferences, AcademicConferences, MarketingConferences, ScienceConferences, HealthAndMedicineConferences, AIAndInnovationConferences, ITSecurityConferences, EnvironmentalConferences, HRConferences, Other
-10=Workshops → ArtWorkshops, MusicWorkshops, DanceWorkshops, PhotographyWorkshops, CookingWorkshops, CraftWorkshops, StartupAndEntrepreneurshipWorkshops, PersonalDevelopmentWorkshops, CodingWorkshops, LanguageWorkshops, TheatreWorkshops, YogaAndWellnessWorkshops, MarketingWorkshops, Other
-11=Undefined → (uncategorized events)
-
-Examples:
-""Slayer концерт"" → ""1|Metal""
-""Metallica live"" → ""1|Metal""
-""Iron Maiden в София"" → ""1|Metal""
-""Джаз клуб вечер"" → ""1|Jazz""
-""Ed Sheeran live"" → ""1|Pop""
-""Софийска филхармония - Бетовен"" → ""1|Classical""
-""Техно парти с Армин"" → ""1|Electronic""
-""Народна музика концерт"" → ""1|Folk""
-""Левски - ЦСКА дерби"" → ""4|Football""
-""ATP турнир тенис"" → ""4|Tennis""
-""Баскетбол мач"" → ""4|Basketball""
-""Хамлет в Народния театър"" → ""5|Drama""
-""Комедия в театъра"" → ""5|Comedy""
-""Детски спектакъл"" → ""5|ChildrensTheatre""
-""Изложба картини Пикасо"" → ""2|Painting""
-""Фотоизложба"" → ""2|Photography""
-""Стартъп конференция"" → ""9|StartupConferences""
-""Кулинарна работилница"" → ""10|CookingWorkshops""
-""Програмиране курс"" → ""10|CodingWorkshops""
-""Някакво странно събитие"" → ""11|""
-
-КРИТИЧНО ВАЖНИ ПРАВИЛА - ПРОЧЕТИ ВНИМАТЕЛНО:
-
-1. ПОДКАТЕГОРИЯТА ТРЯБВА ДА Е ОТ СЪЩАТА КАТЕГОРИЯ!
-   - Ако избереш категория 1 (Music), подкатегорията може да е САМО: Rock, Jazz, Metal, Pop, Funk, Punk, Opera, Classical, Electronic, Folk, Blues, Country, Reggae, HipHop, Alternative, Other
-   - Ако избереш категория 5 (Theatre), подкатегорията може да е САМО: Drama, Comedy, MusicalTheatre, Tragedy, ExperimentalTheatre, PuppetTheatre, Improvisation, StreetTheatre, Monodrama, ChildrensTheatre, Other
-   - НЕ използвай подкатегория от друга категория!
-
-2. Примери на ГРЕШКИ (НЕ прави това!):
-   - ""5|Funk"" ❌ ГРЕШКА! Funk е музикална подкатегория, не театрална!
-   - ""5|Metal"" ❌ ГРЕШКА! Metal е музикална подкатегория, не театрална!
-   - ""1|Football"" ❌ ГРЕШКА! Football е спортна подкатегория, не музикална!
-
-3. Правилни примери:
-   - ""5|Drama"" ✅ ПРАВИЛНО! Drama е театрална подкатегория
-   - ""5|ChildrensTheatre"" ✅ ПРАВИЛНО! ChildrensTheatre е театрална подкатегория
-   - ""1|Metal"" ✅ ПРАВИЛНО! Metal е музикална подкатегория
-
-4. Ако не си сигурен за конкретна подкатегория:
-   - Използвай ""Other"" (което съществува във ВСЯКА категория)
-   - Пример: ""5|Other"" вместо да използваш грешна подкатегория
-
-5. Ако не можеш да определиш категория: върни ""11|""
-
-6. Върни САМО ""CATEGORY|SUBCATEGORY"" (нищо друго!)
-
-Return format: ""CATEGORY|SUBCATEGORY"":";
-
-            var requestBody = new
-            {
-                messages = new[]
-                {
-                new { role = "user", content = prompt }
-            },
-                model = "llama-3.1-8b-instant",
-                max_tokens = 20,
-                temperature = 0.1
-            };
-
-            var response = await _http.PostAsJsonAsync("openai/v1/chat/completions", requestBody);
-
-            if (response.IsSuccessStatusCode)
-            {
-                var result = await response.Content.ReadFromJsonAsync<GroqResponse>();
-                var responseText = result?.Choices?.FirstOrDefault()?.Message?.Content?.Trim();
-
-                if (!string.IsNullOrEmpty(responseText))
-                {
-                    _logger.LogInformation("AI raw response for '{EventName}': {Response}", eventName, responseText);
-
-                    var parts = responseText.Split('|');
-                    if (parts.Length >= 1 && int.TryParse(parts[0], out var categoryId))
-                    {
-                        if (categoryId == 11)
-                        {
-                            _logger.LogWarning("AI classified '{EventName}' as Undefined - requires manual categorization", eventName);
-                            return ((EventCategory)11, null);
-                        }
-
-                        if (Enum.IsDefined(typeof(EventCategory), categoryId))
-                        {
-                            var category = (EventCategory)categoryId;
-                            var subcategory = parts.Length > 1 && !string.IsNullOrWhiteSpace(parts[1]) ? parts[1].Trim() : "Other";
-
-                            if (subcategory == "Other")
-                            {
-                                _logger.LogInformation("AI used 'Other' subcategory for '{EventName}' in category {Category}", eventName, category);
-                            }
-
-                            _logger.LogInformation("AI classified '{EventName}' as {Category} | {SubCategory}", eventName, category, subcategory);
-
-                            return (category, subcategory);
-                        }
-                    }
-                }
-            }
-
-            // Fallback to our method for category and subcategory extraction
-            _logger.LogWarning("AI failed to classify '{EventName}', using fallback", eventName);
-            var fallbackCategory = await ClassifyEventAsync(eventName, description);
-            var fallbackSubcategory = fallbackCategory.HasValue
-                ? ExtractSubCategory(eventName, description, fallbackCategory.Value) ?? "Other"
-                : null;
-
-            return (fallbackCategory, fallbackSubcategory);
-        }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error in AI category+subcategory classification for '{EventName}'", eventName);
-
-            // Fallback to keyword-based classification
-            var category = TryClassifyWithKeywords(eventName, description);
-            var subcategory = category.HasValue ? ExtractSubCategory(eventName, description, category.Value) ?? "Other" : null;
-
-            return (category, subcategory);
+            _logger.LogError(ex, "Error in comprehensive AI processing for '{EventName}'", eventName);
+            return GenerateEnhancedFallbackTags(eventName, description, location);
         }
         finally
         {
             _rateLimiter.Release();
         }
+    }
+
+    // strict format validation
+    private static bool IsValidResponseFormat(string response)
+    {
+        // Must match: NUMBER|WORD|word,word,word format
+        var pattern = @"^\d+\|[A-Za-z]*\|[a-zA-Zа-я\s,]*$";
+        return Regex.IsMatch(response, pattern);
     }
 
     private EventCategory? TryClassifyWithKeywords(string eventName, string description)
@@ -339,26 +169,50 @@ Return format: ""CATEGORY|SUBCATEGORY"":";
         if (new[] { "концерт", "concert", "live music", "band", "група" }.Any(keyword => text.Contains(keyword)) ||
             new[] { "slayer", "metallica", "iron maiden", "megadeth", "jazz", "джаз" }.Any(keyword => text.Contains(keyword)))
         {
-            _logger.LogInformation("Keyword classified '{EventName}' as Music (очевидно)", eventName);
+            _logger.LogInformation("Keyword classified '{EventName}' as Music", eventName);
             return EventCategory.Music;
         }
 
         if (new[] { "мач", "дерби", "турнир", "състезание", "футбол", "баскетбол" }.Any(keyword => text.Contains(keyword)))
         {
-            _logger.LogInformation("Keyword classified '{EventName}' as Sports (очевидно)", eventName);
+            _logger.LogInformation("Keyword classified '{EventName}' as Sports", eventName);
             return EventCategory.Sports;
         }
 
         if (new[] { "театър", "пиеса", "спектакъл", "драма", "комедия" }.Any(keyword => text.Contains(keyword)))
         {
-            _logger.LogInformation("Keyword classified '{EventName}' as Theatre (очевидно)", eventName);
+            _logger.LogInformation("Keyword classified '{EventName}' as Theatre", eventName);
             return EventCategory.Theatre;
         }
 
         if (new[] { "премиера", "прожекция", "филм", "кино" }.Any(keyword => text.Contains(keyword)))
         {
-            _logger.LogInformation("Keyword classified '{EventName}' as Cinema (очевидно)", eventName);
+            _logger.LogInformation("Keyword classified '{EventName}' as Cinema", eventName);
             return EventCategory.Cinema;
+        }
+
+        if (new[] { "изложба", "галерия", "експозиция" }.Any(keyword => text.Contains(keyword)))
+        {
+            _logger.LogInformation("Keyword classified '{EventName}' as Exhibitions", eventName);
+            return EventCategory.Exhibitions;
+        }
+
+        if (new[] { "фестивал", "фест", "празник" }.Any(keyword => text.Contains(keyword)))
+        {
+            _logger.LogInformation("Keyword classified '{EventName}' as Festivals", eventName);
+            return EventCategory.Festivals;
+        }
+
+        if (new[] { "конференция", "семинар", "лекция" }.Any(keyword => text.Contains(keyword)))
+        {
+            _logger.LogInformation("Keyword classified '{EventName}' as Conferences", eventName);
+            return EventCategory.Conferences;
+        }
+
+        if (new[] { "работилница", "курс", "обучение", "workshop" }.Any(keyword => text.Contains(keyword)))
+        {
+            _logger.LogInformation("Keyword classified '{EventName}' as Workshops", eventName);
+            return EventCategory.Workshops;
         }
 
         _logger.LogWarning("Could not classify '{EventName}' - needs manual categorization", eventName);
@@ -411,8 +265,12 @@ Return format: ""CATEGORY|SUBCATEGORY"":";
         var tags = new List<string>();
         var text = $"{eventName} {description}".ToLower();
 
-        // Location
-        tags.Add(location?.ToLower() ?? "софия");
+        // Location - normalize common issues
+        var normalizedLocation = NormalizeLocation(location);
+        if (!string.IsNullOrWhiteSpace(normalizedLocation))
+        {
+            tags.Add(normalizedLocation);
+        }
 
         // Category-specific enhanced tags
         switch (category)
@@ -452,8 +310,23 @@ Return format: ""CATEGORY|SUBCATEGORY"":";
                 if (text.Contains("мюзикъл")) tags.Add("мюзикъл");
                 break;
 
+            case EventCategory.Cinema:
+                if (text.Contains("филм")) tags.Add("филм");
+                if (text.Contains("документален")) tags.Add("документален");
+                if (text.Contains("анимация")) tags.Add("анимация");
+                break;
+
+            case EventCategory.Exhibitions:
+                if (text.Contains("изложба")) tags.Add("изложба");
+                if (text.Contains("галерия")) tags.Add("галерия");
+                break;
+
+            case EventCategory.Festivals:
+                if (text.Contains("фестивал")) tags.Add("фестивал");
+                if (text.Contains("празник")) tags.Add("празник");
+                break;
+
             case null:
-                // Някакви общи тагове за некласифицирани събития
                 tags.Add("некласифицирано");
                 break;
         }
@@ -469,7 +342,72 @@ Return format: ""CATEGORY|SUBCATEGORY"":";
         // Ensure minimum tags
         if (tags.Count == 1) tags.Add("събитие");
 
-        return tags.Distinct().Take(6).ToList();
+        return CleanAndValidateTags(tags).Take(6).ToList();
+    }
+
+    private string NormalizeLocation(string? location)
+    {
+        if (string.IsNullOrWhiteSpace(location)) return "софия";
+
+        var normalized = location.ToLower().Trim();
+
+        // Common location normalizations to fix the garbage tags
+        var locationMap = new Dictionary<string, string>
+        {
+            ["sofia"] = "софия",
+            ["bulgaria"] = "българия",
+            ["ндк"] = "ndk",
+            ["национален дворец на културата"] = "ndk",
+            ["зала 1"] = "зала1"
+        };
+
+        foreach (var (key, value) in locationMap)
+        {
+            normalized = normalized.Replace(key, value);
+        }
+
+        // Remove addresses and keep only venue names
+        if (normalized.Contains("ул.") || normalized.Contains("улица") || normalized.Contains("№"))
+        {
+            // Extract venue name before address
+            var parts = normalized.Split(new[] { "ул.", "улица", "№", "(", "," }, StringSplitOptions.RemoveEmptyEntries);
+            normalized = parts.FirstOrDefault()?.Trim() ?? "софия";
+        }
+
+        // Handle the specific garbage case: "софия, ул. "емил берсински" №5, sofia, bulgaria топлоцентрала зала 1"
+        if (normalized.Contains("топлоцентрала"))
+        {
+            return "топлоцентрала";
+        }
+
+        if (normalized.Contains("bunker"))
+        {
+            return "bunker club";
+        }
+
+        return normalized.Length > 20 ? "софия" : normalized;
+    }
+
+    private List<string> CleanAndValidateTags(List<string> tags)
+    {
+        var cleaned = new List<string>();
+
+        foreach (var tag in tags)
+        {
+            if (string.IsNullOrWhiteSpace(tag)) continue;
+
+            var cleanTag = tag.Trim().ToLower();
+
+            // Skip if too long or has invalid characters
+            if (cleanTag.Length > 30 || cleanTag.Contains("№") || cleanTag.Contains("ул.")) continue;
+
+            // Skip if it's just numbers or gibberish
+            if (cleanTag.All(char.IsDigit) || cleanTag.Length < 3) continue;
+
+            cleaned.Add(cleanTag);
+        }
+
+        return cleaned.Distinct().ToList();
     }
 
     private TaggingResult GenerateEnhancedFallbackTags(string eventName, string description, string? location)
@@ -489,7 +427,7 @@ Return format: ""CATEGORY|SUBCATEGORY"":";
         {
             var musicGenres = ExtractMusicGenresWithKeywords(eventName, description);
             tags.AddRange(musicGenres);
-            tags = tags.Distinct().Take(6).ToList();
+            tags = CleanAndValidateTags(tags).Take(6).ToList();
         }
 
         return new TaggingResult
@@ -509,7 +447,10 @@ Return format: ""CATEGORY|SUBCATEGORY"":";
         {
             EventCategory.Music => ExtractMusicSubCategory(text),
             EventCategory.Sports => ExtractSportsSubCategory(text),
-            _ => null // TODO: add other Subcategories
+            EventCategory.Cinema => ExtractCinemaSubCategory(text),
+            EventCategory.Festivals => ExtractFestivalsSubCategory(text),
+            EventCategory.Exhibitions => ExtractExhibitionsSubCategory(text),
+            _ => "Other"
         };
     }
 
@@ -522,7 +463,8 @@ Return format: ""CATEGORY|SUBCATEGORY"":";
         if (new[] { "jazz", "джаз", "coltrane", "miles davis" }.Any(keyword => text.Contains(keyword)))
             return "Jazz";
 
-        if (new[] { "rock", "рок", "led zeppelin", "pink floyd" }.Any(keyword => text.Contains(keyword)))
+        if (new[] { "rock", "рок", "led zeppelin", "pink floyd" }.Any(keyword => text.Contains(keyword))
+            || new[] { "slayer", "metallica", "megadeth" }.Any(keyword => text.Contains(keyword)))
             return "Rock";
 
         if (new[] { "classical", "класическа", "symphony", "симфония", "orchestra", "оркестър" }.Any(keyword => text.Contains(keyword)))
@@ -543,7 +485,7 @@ Return format: ""CATEGORY|SUBCATEGORY"":";
         if (new[] { "hip-hop", "хип-хоп", "rap", "рап" }.Any(keyword => text.Contains(keyword)))
             return "HipHop";
 
-        return null;
+        return "Other";
     }
 
     private string? ExtractSportsSubCategory(string text)
@@ -560,13 +502,46 @@ Return format: ""CATEGORY|SUBCATEGORY"":";
         if (new[] { "волейбол", "volleyball" }.Any(keyword => text.Contains(keyword)))
             return "Volleyball";
 
-        if (new[] { "плуване", "swimming" }.Any(keyword => text.Contains(keyword)))
-            return "Swimming";
+        return "Other";
+    }
 
-        if (new[] { "атлетика", "athletics" }.Any(keyword => text.Contains(keyword)))
-            return "Athletics";
+    private string? ExtractCinemaSubCategory(string text)
+    {
+        if (new[] { "документален", "documentary" }.Any(keyword => text.Contains(keyword)))
+            return "Documentaries";
 
-        return null;
+        if (new[] { "анимация", "animation" }.Any(keyword => text.Contains(keyword)))
+            return "Animation";
+
+        return "FeatureFilms";
+    }
+
+    private string? ExtractFestivalsSubCategory(string text)
+    {
+        if (new[] { "музикален", "music" }.Any(keyword => text.Contains(keyword)))
+            return "MusicFestivals";
+
+        if (new[] { "филм", "кино", "film" }.Any(keyword => text.Contains(keyword)))
+            return "FilmFestivals";
+
+        if (new[] { "храна", "вино", "food", "wine" }.Any(keyword => text.Contains(keyword)))
+            return "FoodAndWineFestivals";
+
+        return "Other";
+    }
+
+    private string? ExtractExhibitionsSubCategory(string text)
+    {
+        if (new[] { "картини", "живопис", "art" }.Any(keyword => text.Contains(keyword)))
+            return "ArtExhibitions";
+
+        if (new[] { "фотография", "photo" }.Any(keyword => text.Contains(keyword)))
+            return "PhotographyExhibitions";
+
+        if (new[] { "история", "исторически", "historical" }.Any(keyword => text.Contains(keyword)))
+            return "HistoricalExhibitions";
+
+        return "Other";
     }
 
     private async Task EnsureRateLimit()
@@ -577,13 +552,13 @@ Return format: ""CATEGORY|SUBCATEGORY"":";
             lock (_lockObject)
             {
                 var timeSinceLastRequest = DateTime.UtcNow - _lastRequest;
-                if (timeSinceLastRequest < TimeSpan.FromMilliseconds(500)) // 500ms delay
+                if (timeSinceLastRequest < TimeSpan.FromMilliseconds(750)) // Increased delay for safety
                 {
-                    var delay = TimeSpan.FromMilliseconds(500) - timeSinceLastRequest;
+                    var delay = TimeSpan.FromMilliseconds(750) - timeSinceLastRequest;
                     if (delay > TimeSpan.Zero)
                     {
                         Task.Delay(delay).Wait();
-                      }
+                    }
                 }
                 _lastRequest = DateTime.UtcNow;
             }
