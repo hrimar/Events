@@ -9,12 +9,18 @@ public class TagService : ITagService
 {
     private readonly ITagRepository _tagRepository;
     private readonly IEventRepository _eventRepository;
+    private readonly IEventTagRepository _eventTagRepository;
     private readonly ILogger<TagService> _logger;
 
-    public TagService(ITagRepository tagRepository, IEventRepository eventRepository, ILogger<TagService> logger)
+    public TagService(
+        ITagRepository tagRepository, 
+        IEventRepository eventRepository,
+        IEventTagRepository eventTagRepository,
+        ILogger<TagService> logger)
     {
         _tagRepository = tagRepository;
         _eventRepository = eventRepository;
+        _eventTagRepository = eventTagRepository;
         _logger = logger;
     }
 
@@ -100,19 +106,14 @@ public class TagService : ITagService
     {
         try
         {
-            var eventEntity = await _eventRepository.GetByIdAsync(eventId);
-            if (eventEntity == null)
-                throw new ArgumentException($"Event with ID {eventId} not found");
-
-            var tag = await _tagRepository.GetByIdAsync(tagId);
-            if (tag == null)
-                throw new ArgumentException($"Tag with ID {tagId} not found");
-
-            if (!eventEntity.EventTags.Any(et => et.TagId == tagId))
+            // Check if already exists to avoid duplicates
+            if (await _eventTagRepository.EventTagExistsAsync(eventId, tagId))
             {
-                eventEntity.EventTags.Add(new EventTag { EventId = eventId, TagId = tagId });
-                await _eventRepository.UpdateAsync(eventEntity);
+                return; // Already exists, no need to add
             }
+
+            var eventTag = new EventTag { EventId = eventId, TagId = tagId };
+            await _eventTagRepository.BulkAddEventTagsAsync(new List<EventTag> { eventTag });
         }
         catch (Exception ex)
         {
@@ -125,20 +126,79 @@ public class TagService : ITagService
     {
         try
         {
-            var eventEntity = await _eventRepository.GetByIdAsync(eventId);
-            if (eventEntity == null)
-                throw new ArgumentException($"Event with ID {eventId} not found");
-
-            var eventTag = eventEntity.EventTags.FirstOrDefault(et => et.TagId == tagId);
-            if (eventTag != null)
+            // Get all event tags and remove the specific one
+            var eventTags = await _eventTagRepository.GetEventTagsByEventIdAsync(eventId);
+            var tagToRemove = eventTags.FirstOrDefault(et => et.TagId == tagId);
+            
+            if (tagToRemove != null)
             {
-                eventEntity.EventTags.Remove(eventTag);
-                await _eventRepository.UpdateAsync(eventEntity);
+                // For single removal, we use direct EF operations
+                var eventEntity = await _eventRepository.GetByIdAsync(eventId);
+                if (eventEntity != null)
+                {
+                    var eventTagToRemove = eventEntity.EventTags.FirstOrDefault(et => et.TagId == tagId);
+                    if (eventTagToRemove != null)
+                    {
+                        eventEntity.EventTags.Remove(eventTagToRemove);
+                        await _eventRepository.UpdateAsync(eventEntity);
+                    }
+                }
             }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error removing tag {TagId} from event {EventId}", tagId, eventId);
+            throw;
+        }
+    }
+
+    // Bulk operations for better performance
+    public async Task BulkAddTagsToEventAsync(int eventId, List<int> tagIds)
+    {
+        try
+        {
+            if (!tagIds.Any()) return;
+
+            var eventTags = tagIds.Select(tagId => new EventTag
+            {
+                EventId = eventId,
+                TagId = tagId
+            }).ToList();
+
+            await _eventTagRepository.BulkAddEventTagsAsync(eventTags);
+            
+            _logger.LogInformation("Bulk added {Count} tags to event {EventId}", tagIds.Count, eventId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error bulk adding tags to event {EventId}", eventId);
+            throw;
+        }
+    }
+
+    public async Task BulkRemoveTagsFromEventAsync(int eventId)
+    {
+        try
+        {
+            await _eventTagRepository.BulkRemoveEventTagsByEventIdAsync(eventId);
+            _logger.LogInformation("Bulk removed all tags from event {EventId}", eventId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error bulk removing tags from event {EventId}", eventId);
+            throw;
+        }
+    }
+
+    public async Task<Dictionary<int, List<string>>> GetEventTagsBulkAsync(List<int> eventIds)
+    {
+        try
+        {
+            return await _eventTagRepository.GetEventTagsBulkAsync(eventIds);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting bulk event tags for {Count} events", eventIds.Count);
             throw;
         }
     }

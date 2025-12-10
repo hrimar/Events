@@ -28,7 +28,6 @@ var host = new HostBuilder()
         }
 
         Console.WriteLine($"Environment: {context.HostingEnvironment.EnvironmentName}");
-        Console.WriteLine("Configuring services with database connection...");
 
         // Configure DbContext
         services.AddDbContext<EventsDbContext>(options =>
@@ -47,6 +46,7 @@ var host = new HostBuilder()
         // Core repositories
         services.AddScoped<IEventRepository, EventRepository>();
         services.AddScoped<ITagRepository, TagRepository>();
+        services.AddScoped<IEventTagRepository, EventTagRepository>(); // Bulk operations repository
         services.AddScoped<ICategoryRepository, CategoryRepository>();
         services.AddScoped<ISubCategoryRepository, SubCategoryRepository>();
 

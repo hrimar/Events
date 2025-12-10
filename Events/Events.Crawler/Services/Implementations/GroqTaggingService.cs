@@ -14,9 +14,10 @@ public class GroqTaggingService : IAiTaggingService
     private readonly HttpClient _http;
     private readonly string _apiKey;
     private readonly ILogger<GroqTaggingService> _logger;
-    private static readonly SemaphoreSlim _rateLimiter = new(2, 2); // Max 2 concurrent requests
+    private static readonly SemaphoreSlim _rateLimiter = new(1, 1); // Reduced Max 1 concurrent request for safety
     private static DateTime _lastRequest = DateTime.MinValue;
     private static readonly object _lockObject = new();
+    private static int _consecutiveFailures = 0; // Track consecutive failures
 
     public GroqTaggingService(HttpClient http, IConfiguration config, ILogger<GroqTaggingService> logger)
     {
@@ -28,9 +29,34 @@ public class GroqTaggingService : IAiTaggingService
         _http.DefaultRequestHeaders.Add("Authorization", $"Bearer {_apiKey}");
     }
 
+    public async Task<EventCategory?> ClassifyEventAsync(string eventName, string description)
+    {
+        // Use the comprehensive method instead
+        var result = await ProcessEventComprehensivelyAsync(eventName, description);
+        return result.SuggestedCategory;
+    }
+
+    public async Task<TaggingResult> GenerateTagsAsync(string eventName, string description, string? location = null)
+    {
+        return await ProcessEventComprehensivelyAsync(eventName, description, location);
+    }
+
+    public async Task<IEnumerable<string>> ExtractMusicGenresAsync(string eventName, string description)
+    {
+        return await Task.FromResult(ExtractMusicGenresWithKeywords(eventName, description));
+    }
+
     // Single comprehensive method - replaces both ClassifyEventAsync + GenerateTagsAsync
     public async Task<TaggingResult> ProcessEventComprehensivelyAsync(string eventName, string description, string? location = null)
     {
+        // Skip AI if we've had too many consecutive failures
+        if (_consecutiveFailures >= 3)
+        {
+            _logger.LogWarning("Skipping AI for '{EventName}' due to {Failures} consecutive failures - using fallback",
+                eventName, _consecutiveFailures);
+            return GenerateEnhancedFallbackTags(eventName, description, location);
+        }
+
         await _rateLimiter.WaitAsync();
         try
         {
@@ -88,6 +114,7 @@ Return:";
                     {
                         _logger.LogWarning("AI returned invalid format for '{EventName}': {Response} - using fallback",
                             eventName, responseText);
+                        _consecutiveFailures++; // Count as failure
                         return GenerateEnhancedFallbackTags(eventName, description, location);
                     }
 
@@ -97,6 +124,7 @@ Return:";
                         if (categoryId == 11)
                         {
                             _logger.LogWarning("AI classified '{EventName}' as Undefined", eventName);
+                            _consecutiveFailures = Math.Max(0, _consecutiveFailures - 1); // Partial success
                             return GenerateEnhancedFallbackTags(eventName, description, location);
                         }
 
@@ -117,6 +145,9 @@ Return:";
                             _logger.LogInformation("AI classified '{EventName}' as {Category}|{SubCategory} with tags: {Tags}",
                                 eventName, category, subcategory, string.Join(", ", allTags));
 
+                            // Reset failure counter
+                            _consecutiveFailures = 0;
+
                             return new TaggingResult
                             {
                                 SuggestedCategory = category,
@@ -129,23 +160,29 @@ Return:";
                 }
 
                 _logger.LogWarning("AI returned invalid response: '{Response}' for event '{EventName}'", responseText, eventName);
+                _consecutiveFailures++;
             }
             else
             {
                 var errorContent = await response.Content.ReadAsStringAsync();
                 _logger.LogWarning("AI API error: {StatusCode} - {Error}", response.StatusCode, errorContent);
+                _consecutiveFailures++;
             }
 
             return GenerateEnhancedFallbackTags(eventName, description, location);
         }
-        catch (HttpRequestException ex) when (ex.Message.Contains("rate_limit_exceeded"))
+        catch (HttpRequestException ex) when (ex.Message.Contains("rate_limit_exceeded") || ex.Message.Contains("TooManyRequests"))
         {
-            _logger.LogWarning("Rate limit exceeded, using fallback classification for '{EventName}'", eventName);
+            _consecutiveFailures++;
+            _logger.LogWarning("Rate limit exceeded (failure #{Failures}), using fallback classification for '{EventName}'",
+                _consecutiveFailures, eventName);
             return GenerateEnhancedFallbackTags(eventName, description, location);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error in comprehensive AI processing for '{EventName}'", eventName);
+            _consecutiveFailures++;
+            _logger.LogError(ex, "Error in comprehensive AI processing for '{EventName}' (failure #{Failures})",
+                eventName, _consecutiveFailures);
             return GenerateEnhancedFallbackTags(eventName, description, location);
         }
         finally
@@ -154,7 +191,7 @@ Return:";
         }
     }
 
-    // strict format validation
+    // Strict format validation
     private static bool IsValidResponseFormat(string response)
     {
         // Must match: NUMBER|WORD|word,word,word format
@@ -552,9 +589,15 @@ Return:";
             lock (_lockObject)
             {
                 var timeSinceLastRequest = DateTime.UtcNow - _lastRequest;
-                if (timeSinceLastRequest < TimeSpan.FromMilliseconds(750)) // Increased delay for safety
+
+                // More aggressive rate limiting based on failure count
+                var requiredDelay = _consecutiveFailures > 0
+                    ? TimeSpan.FromMilliseconds(2000 + (_consecutiveFailures * 1000)) // 2s + 1s per failure
+                    : TimeSpan.FromMilliseconds(1000); // Normal 1s delay
+
+                if (timeSinceLastRequest < requiredDelay)
                 {
-                    var delay = TimeSpan.FromMilliseconds(750) - timeSinceLastRequest;
+                    var delay = requiredDelay - timeSinceLastRequest;
                     if (delay > TimeSpan.Zero)
                     {
                         Task.Delay(delay).Wait();

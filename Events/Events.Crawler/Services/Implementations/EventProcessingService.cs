@@ -61,12 +61,15 @@ public class EventProcessingService : IEventProcessingService
                     var newEvent = await CreateEventEntityComprehensivelyAsync(crawledEvent);
                     var createdEvent = await eventService.CreateEventAsync(newEvent.Event);
                     
-                    // Add tags immediately after creation
+                    // Use bulk tag assignment with proper category setting
                     if (newEvent.Tags.Any())
                     {
                         using var tagScope = _serviceProvider.CreateScope();
                         var tagService = tagScope.ServiceProvider.GetRequiredService<ITagService>();
-                        await AssignTagsToEventAsync(createdEvent.Id, newEvent.Tags, tagService);
+                        
+                        // Pass event category to properly set tag categories
+                        var eventCategory = newEvent.Event.CategoryId != 11 ? (EventCategory)newEvent.Event.CategoryId : (EventCategory?)null;
+                        await BulkAssignTagsToEventAsync(createdEvent.Id, newEvent.Tags, tagService, eventCategory);
                     }
 
                     result.EventsCreated++;
@@ -230,9 +233,13 @@ public class EventProcessingService : IEventProcessingService
         return result.Event;
     }
 
-    // Efficient tag assignment
-    private async Task AssignTagsToEventAsync(int eventId, List<string> tags, ITagService tagService)
+    // Bulk tag assignment with proper category setting
+    private async Task BulkAssignTagsToEventAsync(int eventId, List<string> tags, ITagService tagService, EventCategory? eventCategory)
     {
+        if (!tags.Any()) return;
+
+        var tagIds = new List<int>();
+        
         foreach (var tagName in tags)
         {
             var cleanTagName = CleanAndValidateTagName(tagName);
@@ -243,20 +250,48 @@ public class EventProcessingService : IEventProcessingService
                 var existingTag = await tagService.GetTagByNameAsync(cleanTagName);
                 if (existingTag == null)
                 {
+                    // Properly set the tag category based on event category
                     var newTag = new Tag
                     {
                         Name = cleanTagName,
-                        Category = null, // Will be set based on event category later
+                        Category = eventCategory, // Set based on event category instead of null
                         CreatedAt = DateTime.UtcNow
                     };
                     existingTag = await tagService.CreateTagAsync(newTag);
+                    
+                    _logger.LogInformation("Created new tag '{TagName}' with category {Category}", cleanTagName, eventCategory?.ToString() ?? "None");
+                }
+                else
+                {
+                    // Update existing tag category if it's null but event has category
+                    if (existingTag.Category == null && eventCategory.HasValue)
+                    {
+                        existingTag.Category = eventCategory.Value;
+                        await tagService.UpdateTagAsync(existingTag);
+                        _logger.LogInformation("Updated tag '{TagName}' category to {Category}", cleanTagName, eventCategory);
+                    }
                 }
 
-                await tagService.AddTagToEventAsync(eventId, existingTag.Id);
+                tagIds.Add(existingTag.Id);
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Failed to create/assign tag '{TagName}' to event {EventId}", cleanTagName, eventId);
+                _logger.LogWarning(ex, "Failed to process tag '{TagName}' for event {EventId}", cleanTagName, eventId);
+            }
+        }
+
+        // Bulk insert - a single database operation instead of N operations
+        if (tagIds.Any())
+        {
+            try
+            {
+                await tagService.BulkAddTagsToEventAsync(eventId, tagIds);
+                _logger.LogInformation("Bulk assigned {Count} tags to event {EventId} with category {Category}", 
+                    tagIds.Count, eventId, eventCategory?.ToString() ?? "None");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to bulk assign tags to event {EventId}", eventId);
             }
         }
     }

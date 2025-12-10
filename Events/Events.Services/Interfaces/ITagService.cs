@@ -12,4 +12,9 @@ public interface ITagService
     Task DeleteTagAsync(int id);
     Task AddTagToEventAsync(int eventId, int tagId);
     Task RemoveTagFromEventAsync(int eventId, int tagId);
+    
+    // Bulk operations for better performance
+    Task BulkAddTagsToEventAsync(int eventId, List<int> tagIds);
+    Task BulkRemoveTagsFromEventAsync(int eventId);
+    Task<Dictionary<int, List<string>>> GetEventTagsBulkAsync(List<int> eventIds);
 }
