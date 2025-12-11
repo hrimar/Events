@@ -2,6 +2,9 @@ using Events.Models.Entities;
 using Events.Services.Interfaces;
 using Events.Web.Models;
 using Microsoft.AspNetCore.Mvc;
+using Events.Models.Enums;
+using Events.Web.Extensions;
+using Events.Web.Models.DTOs;
 
 namespace Events.Web.Controllers;
 
@@ -9,20 +12,22 @@ public class EventsController : Controller
 {
     private readonly ILogger<EventsController> _logger;
     private readonly IEventService _eventService;
+    private readonly ITagService _tagService;
 
-    public EventsController(ILogger<EventsController> logger, IEventService eventService)
+    public EventsController(ILogger<EventsController> logger, IEventService eventService, ITagService tagService)
     {
         _logger = logger;
         _eventService = eventService;
+        _tagService = tagService;
     }
 
-    // GET: /Events
     public async Task<IActionResult> Index(
         int page = 1,
         int pageSize = 12,
         string? category = null,
         bool? free = null,
         string? search = null,
+        string? tags = null,
         DateTime? fromDate = null,
         DateTime? toDate = null,
         string? sortBy = null,
@@ -30,44 +35,51 @@ public class EventsController : Controller
     {
         try
         {
+            // Default to showing only future events unless explicitly specified
             fromDate ??= DateTime.Today;
 
-            // Get ALL matching events first (not paginated)
-            IEnumerable<Event> allEvents;
-            int totalCount;
+            IEnumerable<Events.Models.Entities.Event> allEvents;
 
             if (!string.IsNullOrWhiteSpace(search))
             {
-                // If searching, get search results
                 var searchResults = await _eventService.SearchEventsAsync(search);
                 allEvents = searchResults;
             }
             else
             {
-                // Otherwise get all published events
                 var (events, count) = await _eventService.GetPagedEventsAsync(
-                    1, // Get first page to start with
-                    int.MaxValue, // Get all events for sorting
-                    Events.Models.Enums.EventStatus.Published,
+                    1,
+                    int.MaxValue,
+                    EventStatus.Published,
                     category,
                     free,
                     fromDate);
                 allEvents = events;
             }
 
-            // Apply additional filters
+            // Apply tag filtering if specified
+            if (!string.IsNullOrWhiteSpace(tags))
+            {
+                var tagList = tags.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                    .Select(t => t.Trim())
+                    .Where(t => !string.IsNullOrEmpty(t))
+                    .ToList();
+
+                allEvents = allEvents.Where(e =>
+                    e.EventTags != null && e.EventTags.Any(et =>
+                        et.Tag != null && tagList.Any(searchTag =>
+                            string.Equals(et.Tag.Name.Trim(), searchTag.Trim(), StringComparison.OrdinalIgnoreCase))));
+            }
+
+            // Apply additional date filtering if specified
             if (toDate.HasValue)
             {
                 allEvents = allEvents.Where(e => e.Date <= toDate.Value);
             }
 
-            // Apply sorting BEFORE pagination
             allEvents = ApplySorting(allEvents, sortBy, sortOrder);
 
-            // Get total count after all filtering
-            totalCount = allEvents.Count();
-
-            // Apply pagination AFTER sorting
+            var totalCount = allEvents.Count();
             var pagedEvents = allEvents
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
@@ -75,6 +87,7 @@ public class EventsController : Controller
 
             var eventViewModels = EventViewModel.FromEntities(pagedEvents);
             var paginatedEvents = new PaginatedList<EventViewModel>(eventViewModels, totalCount, page, pageSize);
+            var popularTags = await GetPopularTagsAsync();
 
             var viewModel = new EventsPageViewModel
             {
@@ -84,6 +97,11 @@ public class EventsController : Controller
                 FromDate = fromDate,
                 ToDate = toDate,
                 SearchTerm = search,
+                SelectedTags = tags?.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                    .Select(t => t.Trim())
+                    .Where(t => !string.IsNullOrEmpty(t))
+                    .ToList() ?? new List<string>(),
+                PopularTags = popularTags,
                 SortBy = sortBy,
                 SortOrder = sortOrder
             };
@@ -96,20 +114,142 @@ public class EventsController : Controller
 
             var emptyViewModel = new EventsPageViewModel
             {
-                Events = new PaginatedList<EventViewModel>(new List<EventViewModel>(), 0, 1, pageSize)
+                Events = new PaginatedList<EventViewModel>(new List<EventViewModel>(), 0, 1, pageSize),
+                PopularTags = new List<TagViewModel>()
             };
             return View(emptyViewModel);
         }
     }
 
-    // Improved sorting method with better defaults
-    private IEnumerable<Event> ApplySorting(IEnumerable<Event> events, string? sortBy, string? sortOrder)
+    [HttpGet("/Events/Tag/{tagName}")]
+    public IActionResult ByTag(string tagName, int page = 1, int pageSize = 12)
+    {
+        var decodedTagName = Uri.UnescapeDataString(tagName).Trim();
+        _logger.LogInformation("Tag filtering requested for: '{TagName}' (decoded: '{DecodedTagName}')", tagName, decodedTagName);
+        
+        var redirectDto = new TagRedirectDto
+        {
+            Tags = decodedTagName,
+            Page = page,
+            PageSize = pageSize
+        };
+
+        return RedirectToAction(nameof(Index), redirectDto);
+    }
+
+    [HttpGet("/Events/Tags")]
+    public IActionResult ByTags(string tags, int page = 1, int pageSize = 12)
+    {
+        var redirectDto = new TagRedirectDto
+        {
+            Tags = tags,
+            Page = page,
+            PageSize = pageSize
+        };
+
+        return RedirectToAction(nameof(Index), redirectDto);
+    }
+
+    [HttpGet("/Events/Search")]
+    public async Task<IActionResult> Search(string query)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(query) || query.Length < 2)
+            {
+                return Json(Array.Empty<object>());
+            }
+
+            var results = await _eventService.SearchEventsAsync(query);
+            var eventSuggestions = results.Take(8)
+                .Select(e => e.ToSearchSuggestionDto())
+                .ToList();
+
+            var tagResults = await SearchTagsAsync(query);
+            var tagSuggestions = tagResults.Take(5)
+                .Select(t => t.ToSearchSuggestionDto())
+                .ToList();
+
+            var combinedResults = eventSuggestions.Cast<object>()
+                .Concat(tagSuggestions.Cast<object>())
+                .Take(10)
+                .ToList();
+
+            return Json(combinedResults);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in autocomplete search for query {Query}", query);
+            return Json(Array.Empty<object>());
+        }
+    }
+
+    private async Task<List<TagViewModel>> GetPopularTagsAsync()
+    {
+        try
+        {
+            var futureEvents = await _eventService.GetPagedEventsAsync(
+                1, int.MaxValue, EventStatus.Published, null, null, DateTime.Today);
+            
+            var futureEventIds = futureEvents.Events.Select(e => e.Id).ToList();
+            var allTags = await _tagService.GetAllTagsAsync();
+            
+            return allTags
+                .Where(t => t.EventTags?.Any(et => futureEventIds.Contains(et.EventId)) == true)
+                .Select(t => new TagViewModel
+                {
+                    Name = t.Name,
+                    EventCount = t.EventTags?.Count(et => futureEventIds.Contains(et.EventId)) ?? 0,
+                    Category = t.Category
+                })
+                .Where(t => t.EventCount > 0)
+                .OrderByDescending(t => t.EventCount)
+                .Take(20)
+                .ToList();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting popular tags");
+            return new List<TagViewModel>();
+        }
+    }
+
+    private async Task<List<TagViewModel>> SearchTagsAsync(string query)
+    {
+        try
+        {
+            var futureEvents = await _eventService.GetPagedEventsAsync(
+                1, int.MaxValue, EventStatus.Published, null, null, DateTime.Today);
+            
+            var futureEventIds = futureEvents.Events.Select(e => e.Id).ToList();
+            var allTags = await _tagService.GetAllTagsAsync();
+            
+            var matchingTags = allTags
+                .Where(t => t.Name.Contains(query.Trim(), StringComparison.OrdinalIgnoreCase))
+                .Where(t => t.EventTags?.Any(et => futureEventIds.Contains(et.EventId)) == true)
+                .Select(t => new TagViewModel
+                {
+                    Name = t.Name,
+                    EventCount = t.EventTags?.Count(et => futureEventIds.Contains(et.EventId)) ?? 0,
+                    Category = t.Category
+                })
+                .Where(t => t.EventCount > 0)
+                .OrderByDescending(t => t.EventCount)
+                .ToList();
+
+            return matchingTags;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error searching tags for query {Query}", query);
+            return new List<TagViewModel>();
+        }
+    }
+
+    private static IEnumerable<Events.Models.Entities.Event> ApplySorting(IEnumerable<Events.Models.Entities.Event> events, string? sortBy, string? sortOrder)
     {
         var isDescending = sortOrder?.ToLower() == "desc";
         
-        _logger.LogInformation("Applying sort: {SortBy} {SortOrder} (isDescending: {IsDescending})", 
-            sortBy, sortOrder, isDescending);
-
         var sortedEvents = sortBy?.ToLower() switch
         {
             "name" => isDescending
@@ -119,11 +259,11 @@ public class EventsController : Controller
                 ? events.OrderByDescending(e => e.IsFree ? 0 : (e.Price ?? decimal.MaxValue))
                 : events.OrderBy(e => e.IsFree ? 0 : (e.Price ?? decimal.MaxValue)),
             "category" => isDescending
-                ? events.OrderByDescending(e => e.Category?.Name ?? "ZZZ") // Put null categories at end
+                ? events.OrderByDescending(e => e.Category?.Name ?? "ZZZ")
                 : events.OrderBy(e => e.Category?.Name ?? "ZZZ"),
             "date" or _ => isDescending
                 ? events.OrderByDescending(e => e.Date)
-                : events.OrderBy(e => e.Date) // Default sort by date ascending
+                : events.OrderBy(e => e.Date)
         };
 
         return sortedEvents;
@@ -142,16 +282,35 @@ public class EventsController : Controller
             }
 
             var viewModel = EventViewModel.FromEntity(eventEntity);
-
-            // Get related events in same category
             var relatedEvents = new List<EventViewModel>();
-            if (eventEntity.Category != null)
+            
+            // Try to get events with same tags first
+            if (eventEntity.EventTags?.Any() == true)
             {
-                var related = await _eventService.GetPagedEventsAsync(1, 6, null, eventEntity.Category.Name);
-                relatedEvents = EventViewModel.FromEntities(related.Events.Where(e => e.Id != id));
+                var eventTags = eventEntity.EventTags.Select(et => et.Tag?.Name).Where(name => name != null).ToList();
+                var tagBasedResults = await _eventService.GetAllEventsAsync();
+                
+                var relatedByTags = tagBasedResults
+                    .Where(e => e.Id != id && 
+                               e.Date >= DateTime.Today && 
+                               e.Status == EventStatus.Published &&
+                               e.EventTags?.Any(et => et.Tag != null && eventTags.Contains(et.Tag.Name)) == true)
+                    .OrderByDescending(e => e.EventTags?.Count(et => et.Tag != null && eventTags.Contains(et.Tag.Name)) ?? 0)
+                    .Take(6)
+                    .ToList();
+                
+                relatedEvents.AddRange(EventViewModel.FromEntities(relatedByTags));
             }
 
-            ViewBag.RelatedEvents = relatedEvents;
+            // Fill with category-based events if needed
+            if (relatedEvents.Count < 3 && eventEntity.Category != null)
+            {
+                var related = await _eventService.GetPagedEventsAsync(1, 6, EventStatus.Published, eventEntity.Category.Name, null, DateTime.Today);
+                var categoryRelated = EventViewModel.FromEntities(related.Events.Where(e => e.Id != id && !relatedEvents.Any(r => r.Id == e.Id)));
+                relatedEvents.AddRange(categoryRelated);
+            }
+
+            ViewBag.RelatedEvents = relatedEvents.Take(6).ToList();
 
             return View(viewModel);
         }
@@ -163,46 +322,23 @@ public class EventsController : Controller
     }
 
     // GET: /Events/Category/Music
-    public async Task<IActionResult> Category(string category, int page = 1, int pageSize = 12)
+    public IActionResult Category(string category, int page = 1, int pageSize = 12)
     {
         try
         {
-            // Redirect to Index with category filter
-            return RedirectToAction(nameof(Index), new { category = category, page = page, pageSize = pageSize });
+            var redirectDto = new CategoryRedirectDto
+            {
+                Category = category,
+                Page = page,
+                PageSize = pageSize
+            };
+
+            return RedirectToAction(nameof(Index), redirectDto);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error loading category page for {Category}", category);
             return RedirectToAction(nameof(Index));
-        }
-    }
-
-    [HttpGet("/Events/Search")]
-    public async Task<IActionResult> Search(string query)
-    {
-        try
-        {
-            if (string.IsNullOrWhiteSpace(query) || query.Length < 2)
-            {
-                return Json(new object[0]);
-            }
-
-            var results = await _eventService.SearchEventsAsync(query);
-            var suggestions = results.Take(10).Select(e => new
-            {
-                id = e.Id,
-                name = e.Name,
-                category = e.Category?.Name,
-                location = e.Location,
-                date = e.Date.ToString("dd.MM.yyyy")
-            });
-
-            return Json(suggestions);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error in autocomplete search for query {Query}", query);
-            return Json(new object[0]);
         }
     }
 }

@@ -6,4 +6,5 @@ public class HomePageViewModel
     public int TotalEvents { get; set; }
     public int TodayEvents { get; set; }
     public int ThisWeekEvents { get; set; }
+    public List<TagViewModel> PopularTags { get; set; } = new(); // Popular tags for homepage
 }

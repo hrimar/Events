@@ -1,0 +1,44 @@
+@model List<Events.Web.Models.TagViewModel>
+
+@if (Model?.Any() == true)
+{
+    <div class="tag-cloud-component">
+        @foreach (var tag in Model)
+        {
+            <a href="@Url.Action("ByTag", "Events", new { tagName = tag.Name })" 
+               class="btn @tag.BadgeClass me-1 mb-1 tag-cloud-link text-decoration-none @tag.Size"
+               title="@tag.EventCount events with this tag">
+                <i class="@tag.CategoryIcon me-1"></i>@tag.Name
+                <span class="badge bg-light text-dark ms-1">@tag.EventCount</span>
+            </a>
+        }
+    </div>
+}
+
+<style>
+    .tag-cloud-component .tag-cloud-link {
+        transition: all 0.2s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .tag-cloud-component .tag-cloud-link:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+    
+    .tag-cloud-component .tag-cloud-link:before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        transition: left 0.5s;
+    }
+    
+    .tag-cloud-component .tag-cloud-link:hover:before {
+        left: 100%;
+    }
+</style>

@@ -3,6 +3,32 @@
 @{
     ViewData["Title"] = Model.Name;
     var relatedEvents = ViewBag.RelatedEvents as List<Events.Web.Models.EventViewModel> ?? new List<Events.Web.Models.EventViewModel>();
+    var currentUrl = $"{Context.Request.Scheme}://{Context.Request.Host}{Context.Request.Path}";
+    var fullImageUrl = Model.DefaultImage.StartsWith("http") ? Model.DefaultImage : $"{Context.Request.Scheme}://{Context.Request.Host}{Model.DefaultImage}";
+}
+
+@section MetaTags {
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="event" />
+    <meta property="og:title" content="@Model.Name" />
+    <meta property="og:description" content="@(Model.ShortDescription ?? $"Join us for {Model.Name} on {Model.FormattedDate} in {Model.City}")" />
+    <meta property="og:image" content="@fullImageUrl" />
+    <meta property="og:url" content="@currentUrl" />
+    <meta property="og:site_name" content="Sofia Events" />
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="@Model.Name" />
+    <meta name="twitter:description" content="@(Model.ShortDescription ?? $"Join us for {Model.Name} on {Model.FormattedDate} in {Model.City}")" />
+    <meta name="twitter:image" content="@fullImageUrl" />
+    
+    <!-- Event specific -->
+    <meta property="event:start_date" content="@Model.Date.ToString("yyyy-MM-dd")" />
+    <meta property="event:location" content="@Model.City, @Model.Location" />
+    @if(!Model.IsFree && Model.Price.HasValue)
+    {
+        <meta property="event:price" content="@Model.Price.Value" />
+    }
 }
 
 <div class="container py-4">
@@ -44,23 +70,74 @@
                         <div>
                             <h1 class="h2 mb-2">@Model.Name</h1>
                             
-                            @if(!string.IsNullOrEmpty(Model.CategoryName))
-                            {
-                                <div class="mb-2">
+                            <div class="mb-3">
+                                @if(!string.IsNullOrEmpty(Model.CategoryName))
+                                {
                                     <a href="/Events/Category/@Model.CategoryName" class="badge bg-primary text-decoration-none me-2">
-                                        @Model.CategoryName
+                                        <i class="fas fa-layer-group me-1"></i>@Model.CategoryName
                                     </a>
-                                    @if(!string.IsNullOrEmpty(Model.SubCategoryName))
-                                    {
-                                        <span class="badge bg-secondary">@Model.SubCategoryName</span>
-                                    }
+                                }
+                                @if(!string.IsNullOrEmpty(Model.SubCategoryName))
+                                {
+                                    <span class="badge bg-secondary">
+                                        <i class="fas fa-tags me-1"></i>@Model.SubCategoryName
+                                    </span>
+                                }
+                            </div>
+
+                            <!-- Enhanced Tag Display -->
+                            @if(Model.Tags.Any())
+                            {
+                                <div class="mb-3">
+                                    <small class="text-muted d-block mb-2">
+                                        <i class="fas fa-tags me-1"></i>Event Tags
+                                    </small>
+                                    <div class="event-tags-detailed">
+                                        @foreach(var tag in Model.Tags)
+                                        {
+                                            <a href="@Url.Action("ByTag", "Events", new { tagName = tag })" 
+                                               class="badge bg-info text-white text-decoration-none me-2 mb-2 tag-detail-link">
+                                                <i class="fas fa-tag me-1"></i>@tag
+                                            </a>
+                                        }
+                                        @if(Model.Tags.Count >= 3)
+                                        {
+                                            <a href="@Url.Action("Index", "Events", new { tags = string.Join(",", Model.Tags.Take(3)) })" 
+                                               class="btn btn-sm btn-outline-info ms-2">
+                                                <i class="fas fa-search me-1"></i>Find Similar Events
+                                            </a>
+                                        }
+                                    </div>
                                 </div>
                             }
                         </div>
                         
-                        <button class="btn btn-outline-danger" onclick="toggleFavorite(@Model.Id)">
-                            <i class="fas fa-heart"></i> Save
-                        </button>
+                        <div class="text-end">
+                            <button class="btn btn-outline-danger mb-2" onclick="toggleFavorite(@Model.Id)">
+                                <i class="fas fa-heart"></i> Save
+                            </button>
+                            <br>
+                            <div class="dropdown">
+                                <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-share-alt"></i> Share
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#" onclick="shareEvent('facebook')">
+                                        <i class="fab fa-facebook-f text-primary me-2"></i>Facebook
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="shareEvent('twitter')">
+                                        <i class="fab fa-twitter text-info me-2"></i>Twitter
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="shareEvent('whatsapp')">
+                                        <i class="fab fa-whatsapp text-success me-2"></i>WhatsApp
+                                    </a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="#" onclick="copyLink()">
+                                        <i class="fas fa-link me-2"></i>Copy Link
+                                    </a></li>
+                                </ul>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Event Details Grid -->
@@ -98,23 +175,15 @@
                             </div>
                         }
 
-                        @if(Model.Tags.Any())
-                        {
-                            <div class="col-md-6">
-                                <div class="d-flex align-items-start mb-3">
-                                    <i class="fas fa-tags text-primary me-3 mt-1" style="width: 20px;"></i>
-                                    <div>
-                                        <strong>Tags</strong><br>
-                                        <div class="mt-1">
-                                            @foreach(var tag in Model.Tags)
-                                            {
-                                                <span class="badge bg-light text-dark me-1 mb-1">@tag</span>
-                                            }
-                                        </div>
-                                    </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center mb-3">
+                                <i class="fas fa-clock text-primary me-3" style="width: 20px;"></i>
+                                <div>
+                                    <strong>Status</strong><br>
+                                    <span class="badge bg-success">@Model.Status</span>
                                 </div>
                             </div>
-                        }
+                        </div>
                     </div>
 
                     <!-- Description -->
@@ -127,6 +196,25 @@
                             </div>
                         </div>
                     }
+
+                    <!-- Quick Actions -->
+                    <div class="d-flex gap-2 flex-wrap">
+                        @if(!string.IsNullOrEmpty(Model.CategoryName))
+                        {
+                            <a href="@Url.Action("Index", "Events", new { category = Model.CategoryName })" class="btn btn-outline-secondary btn-sm">
+                                <i class="fas fa-layer-group me-1"></i>More @Model.CategoryName Events
+                            </a>
+                        }
+                        <a href="@Url.Action("Index", "Events", new { search = Model.City })" class="btn btn-outline-secondary btn-sm">
+                            <i class="fas fa-map-marker-alt me-1"></i>Events in @Model.City
+                        </a>
+                        @if(Model.IsFree)
+                        {
+                            <a href="@Url.Action("Index", "Events", new { free = true })" class="btn btn-outline-success btn-sm">
+                                <i class="fas fa-gift me-1"></i>More Free Events
+                            </a>
+                        }
+                    </div>
                 </div>
             </div>
         </div>
@@ -153,37 +241,21 @@
                 </div>
             </div>
 
-            <!-- Share Card -->
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-body">
-                    <h6 class="card-title">Share this event</h6>
-                    <div class="d-flex gap-2">
-                        <button class="btn btn-outline-primary btn-sm flex-fill" onclick="shareEvent('facebook')">
-                            <i class="fab fa-facebook-f"></i>
-                        </button>
-                        <button class="btn btn-outline-info btn-sm flex-fill" onclick="shareEvent('twitter')">
-                            <i class="fab fa-twitter"></i>
-                        </button>
-                        <button class="btn btn-outline-success btn-sm flex-fill" onclick="shareEvent('whatsapp')">
-                            <i class="fab fa-whatsapp"></i>
-                        </button>
-                        <button class="btn btn-outline-secondary btn-sm flex-fill" onclick="copyLink()">
-                            <i class="fas fa-link"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
             <!-- Related Events -->
             @if(relatedEvents.Any())
             {
                 <div class="card border-0 shadow-sm">
                     <div class="card-body">
-                        <h6 class="card-title">More @Model.CategoryName Events</h6>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="card-title mb-0">
+                                <i class="fas fa-lightbulb text-warning me-1"></i>
+                                You Might Also Like
+                            </h6>
+                        </div>
                         
-                        @foreach(var relatedEvent in relatedEvents.Take(3))
+                        @foreach(var relatedEvent in relatedEvents.Take(4))
                         {
-                            <div class="d-flex mb-3">
+                            <div class="d-flex mb-3 p-2 rounded border-start border-3 border-info">
                                 <img src="@relatedEvent.DefaultImage" 
                                      alt="@relatedEvent.Name"
                                      class="rounded me-3"
@@ -195,16 +267,31 @@
                                             @relatedEvent.Name
                                         </a>
                                     </h6>
-                                    <small class="text-muted">
+                                    <small class="text-muted d-block">
                                         <i class="fas fa-calendar me-1"></i>@relatedEvent.FormattedDate
                                     </small>
+                                    <small class="text-muted">
+                                        <i class="fas fa-map-marker-alt me-1"></i>@relatedEvent.Location
+                                    </small>
+                                    @if(relatedEvent.Tags.Any())
+                                    {
+                                        <div class="mt-1">
+                                            @foreach(var tag in relatedEvent.Tags.Take(2))
+                                            {
+                                                <span class="badge bg-light text-dark me-1" style="font-size: 0.7rem;">@tag</span>
+                                            }
+                                        </div>
+                                    }
                                 </div>
                             </div>
                         }
                         
-                        <a href="/Events/Category/@Model.CategoryName" class="btn btn-outline-primary btn-sm w-100">
-                            View All @Model.CategoryName Events
-                        </a>
+                        @if(!string.IsNullOrEmpty(Model.CategoryName))
+                        {
+                            <a href="/Events/Category/@Model.CategoryName" class="btn btn-outline-primary btn-sm w-100">
+                                <i class="fas fa-th-list me-1"></i>View All @Model.CategoryName Events
+                            </a>
+                        }
                     </div>
                 </div>
             }
@@ -221,10 +308,13 @@
                     const heartIcon = event.target.closest('button').querySelector('i');
                     heartIcon.classList.toggle('fas');
                     heartIcon.classList.toggle('far');
-                    console.log('Favorite toggled for event:', eventId);
+                    
+                    // Show success message
+                    showToast('Event saved to favorites!', 'success');
                 })
                 .fail(function() {
                     console.log('Error toggling favorite');
+                    showToast('Error saving to favorites', 'error');
                 });
         }
 
@@ -253,23 +343,74 @@
         function copyLink() {
             navigator.clipboard.writeText(window.location.href)
                 .then(() => {
-                    // Show toast notification
-                    const toast = document.createElement('div');
-                    toast.className = 'toast position-fixed top-0 end-0 m-3';
-                    toast.innerHTML = `
-                        <div class="toast-body bg-success text-white">
-                            <i class="fas fa-check me-2"></i>Link copied to clipboard!
-                        </div>
-                    `;
-                    document.body.appendChild(toast);
-                    
-                    setTimeout(() => {
-                        document.body.removeChild(toast);
-                    }, 3000);
+                    showToast('Link copied to clipboard!', 'success');
                 })
                 .catch(() => {
-                    console.log('Failed to copy link');
+                    showToast('Failed to copy link', 'error');
                 });
         }
+        
+        function showToast(message, type = 'info') {
+            const toastClass = type === 'success' ? 'bg-success' : type === 'error' ? 'bg-danger' : 'bg-info';
+            const toast = document.createElement('div');
+            toast.className = 'toast position-fixed top-0 end-0 m-3 show';
+            toast.innerHTML = `
+                <div class="toast-body ${toastClass} text-white">
+                    <i class="fas fa-${type === 'success' ? 'check' : type === 'error' ? 'exclamation-triangle' : 'info'} me-2"></i>
+                    ${message}
+                </div>
+            `;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
     </script>
+    
+    <!-- Custom CSS for enhanced details page -->
+    <style>
+        .tag-detail-link {
+            font-size: 0.9rem;
+            padding: 0.4rem 0.8rem;
+            transition: all 0.2s;
+        }
+        
+        .tag-detail-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .event-tags-detailed .badge {
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .event-detail-image {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .event-price-overlay {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+        
+        .event-free {
+            background: rgba(40, 167, 69, 0.9) !important;
+        }
+        
+        .border-start {
+            border-left: 3px solid var(--bs-info) !important;
+        }
+        
+        .toast {
+            z-index: 9999;
+        }
+    </style>
 }

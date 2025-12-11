@@ -48,6 +48,47 @@
     </div>
 </section>
 
+<!-- Popular Tags Section -->
+@if(Model.PopularTags.Any())
+{
+    <section class="py-4 bg-white border-top border-bottom">
+        <div class="container">
+            <div class="row align-items-center mb-4">
+                <div class="col-md-6">
+                    <h3 class="mb-0">
+                        <i class="fas fa-tags text-info me-2"></i>
+                        Popular Event Tags
+                    </h3>
+                    <p class="text-muted mb-0">Discover events by popular themes and topics</p>
+                </div>
+                <div class="col-md-6 text-end">
+                    <a href="@Url.Action("Index", "Events")" class="btn btn-outline-info">
+                        <i class="fas fa-th-large me-1"></i>View All Events
+                    </a>
+                </div>
+            </div>
+            
+            <div class="tag-cloud-home">
+                @foreach(var tag in Model.PopularTags)
+                {
+                    <a href="@Url.Action("ByTag", "Events", new { tagName = tag.Name })" 
+                       class="btn @tag.BadgeClass me-2 mb-2 tag-home-link @tag.Size text-decoration-none">
+                        <i class="fas fa-tag me-1"></i>@tag.Name
+                        <span class="badge bg-light text-dark ms-1">@tag.EventCount</span>
+                    </a>
+                }
+            </div>
+            
+            <div class="text-center mt-3">
+                <small class="text-muted">
+                    <i class="fas fa-info-circle me-1"></i>
+                    Click on any tag to find events with that theme
+                </small>
+            </div>
+        </div>
+    </section>
+}
+
 <!-- Featured Events (No Pagination) -->
 <section class="py-5">
     <div class="container">
@@ -99,6 +140,24 @@
                                     </a>
                                 </div>
                             }
+                            
+                            <!-- Show some tags on homepage cards -->
+                            @if(eventItem.Tags.Any())
+                            {
+                                <div class="event-tags mb-2">
+                                    @foreach(var tag in eventItem.Tags.Take(2))
+                                    {
+                                        <a href="@Url.Action("ByTag", "Events", new { tagName = tag })" 
+                                           class="badge bg-info text-white text-decoration-none me-1 mb-1">
+                                            <i class="fas fa-tag me-1"></i>@tag
+                                        </a>
+                                    }
+                                    @if(eventItem.Tags.Count > 2)
+                                    {
+                                        <span class="badge bg-light text-dark">+@(eventItem.Tags.Count - 2)</span>
+                                    }
+                                </div>
+                            }
                         </div>
                         
                         <div class="card-footer bg-transparent">
@@ -145,3 +204,62 @@
         </div>
     </div>
 </section>
+
+@section Styles {
+    <style>
+        .tag-cloud-home {
+            text-align: center;
+        }
+        
+        .tag-home-link {
+            transition: all 0.2s;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+        
+        .tag-home-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .event-tags .badge {
+            transition: all 0.2s;
+        }
+        
+        .event-tags .badge:hover {
+            transform: scale(1.05);
+        }
+        
+        .event-image-container {
+            position: relative;
+            overflow: hidden;
+            height: 200px;
+        }
+        
+        .event-image-full {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s;
+        }
+        
+        .event-card:hover .event-image-full {
+            transform: scale(1.05);
+        }
+        
+        .event-price {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        
+        .event-free {
+            background: rgba(40, 167, 69, 0.9) !important;
+        }
+    </style>
+}

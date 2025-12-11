@@ -8,6 +8,8 @@ public class EventsPageViewModel
     public string? CurrentCategory { get; set; }
     public bool? IsFreeFilter { get; set; }
     public string? SearchTerm { get; set; }
+    public List<string> SelectedTags { get; set; } = new(); // Selected tags for filtering
+    public List<TagViewModel> PopularTags { get; set; } = new(); // Popular tags for tag cloud
     public DateTime? FromDate { get; set; }
     public DateTime? ToDate { get; set; }
     public string PageTitle { get; set; } = "All Events";
@@ -19,6 +21,7 @@ public class EventsPageViewModel
     // Available categories for filter dropdown
     public static List<CategoryDisplayItem> AvailableCategories =>
         Enum.GetValues<EventCategory>()
+            .Where(c => c != EventCategory.Undefined) // Don't show Undefined in filter
             .Select(category => new CategoryDisplayItem
             {
                 Value = category.ToString(),
@@ -40,6 +43,7 @@ public class EventsPageViewModel
     public bool HasActiveFilters => !string.IsNullOrEmpty(CurrentCategory) ||
                                    IsFreeFilter.HasValue ||
                                    !string.IsNullOrEmpty(SearchTerm) ||
+                                   SelectedTags.Any() || // Include tag filtering
                                    FromDate.HasValue ||
                                    ToDate.HasValue ||
                                    !string.IsNullOrEmpty(SortBy);
@@ -59,6 +63,10 @@ public class EventsPageViewModel
             if (!string.IsNullOrEmpty(SearchTerm))
                 filters.Add($"search={Uri.EscapeDataString(SearchTerm)}");
 
+            // Add tags to query string
+            if (SelectedTags.Any())
+                filters.Add($"tags={Uri.EscapeDataString(string.Join(",", SelectedTags))}");
+
             if (FromDate.HasValue)
                 filters.Add($"fromDate={FromDate.Value:yyyy-MM-dd}");
 
@@ -74,6 +82,19 @@ public class EventsPageViewModel
             return filters.Count > 0 ? string.Join("&", filters) : "";
         }
     }
+
+    // Get popular tags grouped by category
+    public Dictionary<EventCategory, List<TagViewModel>> PopularTagsByCategory =>
+        PopularTags
+            .Where(t => t.Category.HasValue)
+            .GroupBy(t => t.Category!.Value)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
+    // Get most popular tags (for quick access)
+    public List<TagViewModel> TopTags => PopularTags
+        .OrderByDescending(t => t.EventCount)
+        .Take(10)
+        .ToList();
 
     private static string GetCategoryDisplayName(EventCategory category) => category switch
     {

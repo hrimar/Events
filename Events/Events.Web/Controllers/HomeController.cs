@@ -9,11 +9,13 @@ namespace Events.Web.Controllers
     {
         private readonly ILogger<HomeController> _logger;
         private readonly IEventService _eventService;
+        private readonly ITagService _tagService;
 
-        public HomeController(ILogger<HomeController> logger, IEventService eventService)
+        public HomeController(ILogger<HomeController> logger, IEventService eventService, ITagService tagService)
         {
             _logger = logger;
             _eventService = eventService;
+            _tagService = tagService;
         }
 
         public async Task<IActionResult> Index()
@@ -35,12 +37,16 @@ namespace Events.Web.Controllers
 
                 var eventViewModels = EventViewModel.FromEntities(featuredEvents);
 
+                // Get popular tags for homepage
+                var popularTags = await GetPopularTagsAsync();
+
                 var viewModel = new HomePageViewModel
                 {
                     FeaturedEvents = eventViewModels,
                     TotalEvents = totalEvents,
                     TodayEvents = todayEvents.Events.Count(),
-                    ThisWeekEvents = weekEvents.Count()
+                    ThisWeekEvents = weekEvents.Count(),
+                    PopularTags = popularTags.Take(15).ToList() // Top 15 for homepage
                 };
 
                 return View(viewModel);
@@ -49,8 +55,36 @@ namespace Events.Web.Controllers
             {
                 _logger.LogError(ex, "Error loading home page");
 
-                var emptyViewModel = new HomePageViewModel();
+                var emptyViewModel = new HomePageViewModel
+                {
+                    PopularTags = new List<TagViewModel>()
+                };
                 return View(emptyViewModel);
+            }
+        }
+
+        // Get popular tags for homepage display
+        private async Task<List<TagViewModel>> GetPopularTagsAsync()
+        {
+            try
+            {
+                var tags = await _tagService.GetAllTagsAsync();
+                
+                return tags
+                    .Where(t => t.EventTags.Any()) // Only tags with events
+                    .Select(t => new TagViewModel
+                    {
+                        Name = t.Name,
+                        EventCount = t.EventTags.Count,
+                        Category = t.Category
+                    })
+                    .OrderByDescending(t => t.EventCount)
+                    .ToList();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting popular tags for homepage");
+                return new List<TagViewModel>();
             }
         }
 
