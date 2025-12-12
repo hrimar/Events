@@ -339,11 +339,25 @@ public class TicketStationCrawler : IWebScrapingCrawler
                                             }
                                         }
 
-                                        // Extract date from description (set to MinValue if not found)
+                                        // Extract date from description
                                         if (!string.IsNullOrEmpty(eventDto.Description))
                                         {
-                                            // TODO: Try to parse date from description "на 15 май 2026 г" but for now set to MinValue
-                                            eventDto.Date = DateTime.MinValue.ToString("yyyy-MM-dd");
+                                            var extractedDate = ExtractDateFromDescription(eventDto.Description);
+                                            if (extractedDate.HasValue)
+                                            {
+                                                eventDto.Date = extractedDate.Value.ToString("yyyy-MM-dd");
+                                                _logger.LogDebug("Successfully parsed date: {Date} for event: {EventName}", eventDto.Date, eventDto.Name);
+                                            }
+                                            else
+                                            {
+                                                // Fallback: Set to null if no date found
+                                                eventDto.Date = null;
+                                                _logger.LogWarning("Could not extract date from description for event: {EventName}", eventDto.Name);
+                                            }
+                                        }
+                                        else
+                                        {
+                                            eventDto.Date = null;
                                         }
                                     }
                                     else
@@ -502,6 +516,327 @@ public class TicketStationCrawler : IWebScrapingCrawler
         return null;
     }
 
+    /// <summary>
+    /// Extracts the lowest price in EUR from text that may contain multiple prices.
+    /// Example: "30 BGN - 50 BGN\n15.34 EUR - 25.56 EUR" → 15.34
+    /// </summary>
+    private decimal? ExtractLowestPriceInEur(string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return null;
+        }
+
+        try
+        {
+            // Regex pattern to match decimal numbers before "EUR"
+            // Matches: "15.34 EUR", "15,34 EUR", "15 EUR", "25.56EUR"
+            // Pattern: optional whitespace, number (with optional . or , decimal separator), optional whitespace, "EUR"
+            var pattern = @"(\d+[.,]?\d*)\s*EUR";
+            var matches = System.Text.RegularExpressions.Regex.Matches(text, pattern, System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+            if (matches.Count == 0)
+            {
+                _logger.LogDebug("No EUR prices found in text: {Text}", text);
+                return null;
+            }
+
+            var prices = new List<decimal>();
+
+            foreach (System.Text.RegularExpressions.Match match in matches)
+            {
+                var priceStr = match.Groups[1].Value;
+
+                // Replace comma with dot for decimal parsing (European format)
+                priceStr = priceStr.Replace(',', '.');
+
+                if (decimal.TryParse(priceStr, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal price))
+                {
+                    prices.Add(price);
+                }
+            }
+
+            if (prices.Count == 0)
+            {
+                _logger.LogDebug("No valid EUR prices could be parsed from text");
+                return null;
+            }
+
+            // Return the lowest price
+            var lowestPrice = prices.Min();
+            _logger.LogDebug("Extracted lowest price: {LowestPrice} EUR from {TotalPrices} prices found", lowestPrice, prices.Count);
+
+            return lowestPrice;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Error extracting EUR price from text: {Text}", text);
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Extracts date from Bulgarian description text.
+    /// Patterns: "на 11 декември 2025 г.", "на 27 юни 2026", "31-ви декември", "20.12", "20 ДЕК 2025", "26 и 27 февруари", итс.
+    /// </summary>
+    private DateTime? ExtractDateFromDescription(string? description)
+    {
+        if (string.IsNullOrWhiteSpace(description))
+        {
+            return null;
+        }
+
+        try
+        {
+            var currentDate = DateTime.Today;
+            
+            // Dictionary of Bulgarian months -> month number
+            var bulgarianMonths = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["януари"] = 1, ["ян"] = 1, ["яну"] = 1,
+                ["февруари"] = 2, ["фев"] = 2, ["феб"] = 2,
+                ["март"] = 3, ["мар"] = 3,
+                ["април"] = 4, ["апр"] = 4,
+                ["май"] = 5,
+                ["юни"] = 6, ["юн"] = 6,
+                ["юли"] = 7, ["юл"] = 7,
+                ["август"] = 8, ["авг"] = 8,
+                ["септември"] = 9, ["сеп"] = 9,
+                ["октомври"] = 10, ["окт"] = 10,
+                ["ноември"] = 11, ["ное"] = 11,
+                ["декември"] = 12, ["дек"] = 12
+            };
+
+            // Pattern 1: "на 11 декември 2025 г." or "на 27 юни 2026"
+            var pattern1 = @"на\s+(\d{1,2})\s+([а-яА-Я]+)\s+(\d{4})(?:\s*г\.?)?";
+            var match1 = System.Text.RegularExpressions.Regex.Match(description, pattern1, System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+            if (match1.Success)
+            {
+                if (TryParseBulgarianDate(match1.Groups[1].Value, match1.Groups[2].Value, match1.Groups[3].Value, bulgarianMonths, out var date1))
+                {
+                    _logger.LogDebug("Extracted date (pattern 1): {Date} from '{MatchedText}'", date1.ToString("yyyy-MM-dd"), match1.Value);
+                    return date1;
+                }
+            }
+
+            // Pattern 2: "на 23 юли" (without year)
+            var pattern2 = @"на\s+(\d{1,2})\s+([а-яА-Я]+)(?!\s+\d{4})";
+            var match2 = System.Text.RegularExpressions.Regex.Match(description, pattern2, System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+            if (match2.Success)
+            {
+                if (TryParseBulgarianDateWithoutYear(match2.Groups[1].Value, match2.Groups[2].Value, bulgarianMonths, currentDate, out var date2))
+                {
+                    _logger.LogDebug("Extracted date (pattern 2 - no year): {Date} from '{MatchedText}'", date2.ToString("yyyy-MM-dd"), match2.Value);
+                    return date2;
+                }
+            }
+
+            // Pattern 3: "31-ви декември" (ordinal numbers)
+            var pattern3 = @"(\d{1,2})-[а-яА-Я]{1,3}\s+([а-яА-Я]+)(?:\s+(\d{4}))?";
+            var match3 = System.Text.RegularExpressions.Regex.Match(description, pattern3, System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+            if (match3.Success)
+            {
+                var dayStr = match3.Groups[1].Value;
+                var monthStr = match3.Groups[2].Value;
+                var yearStr = match3.Groups[3].Value;
+
+                if (string.IsNullOrEmpty(yearStr))
+                {
+                    if (TryParseBulgarianDateWithoutYear(dayStr, monthStr, bulgarianMonths, currentDate, out var date3))
+                    {
+                        _logger.LogDebug("Extracted date (pattern 3 - ordinal, no year): {Date} from '{MatchedText}'", date3.ToString("yyyy-MM-dd"), match3.Value);
+                        return date3;
+                    }
+                }
+                else
+                {
+                    if (TryParseBulgarianDate(dayStr, monthStr, yearStr, bulgarianMonths, out var date3))
+                    {
+                        _logger.LogDebug("Extracted date (pattern 3 - ordinal): {Date} from '{MatchedText}'", date3.ToString("yyyy-MM-dd"), match3.Value);
+                        return date3;
+                    }
+                }
+            }
+
+            // Pattern 4: "20.12" (DD.MM format) - FIXED: Ensure day <= 31 and month <= 12
+            var pattern4 = @"(\d{1,2})\.(\d{1,2})(?!\d)";
+            var matches4 = System.Text.RegularExpressions.Regex.Matches(description, pattern4);
+
+            foreach (System.Text.RegularExpressions.Match match in matches4)
+            {
+                if (int.TryParse(match.Groups[1].Value, out int firstNum) &&
+                    int.TryParse(match.Groups[2].Value, out int secondNum))
+                {
+                    // Determine which is day and which is month
+                    int day, month;
+                    
+                    // If first number > 12, it must be day, second must be month
+                    if (firstNum > 12 && secondNum <= 12)
+                    {
+                        day = firstNum;
+                        month = secondNum;
+                    }
+                    // If second number > 12, first must be month, second must be day - but this is unusual for DD.MM
+                    else if (secondNum > 12 && firstNum <= 12)
+                    {
+                        // Skip this case as DD.MM format expects day first
+                        continue;
+                    }
+                    // Both numbers <= 12, assume DD.MM format (day first, month second)
+                    else if (firstNum <= 31 && secondNum <= 12 && firstNum >= 1 && secondNum >= 1)
+                    {
+                        day = firstNum;
+                        month = secondNum;
+                    }
+                    else
+                    {
+                        continue; // Invalid numbers
+                    }
+
+                    var year = DetermineYearForDate(currentDate, month);
+                    if (IsValidDate(year, month, day))
+                    {
+                        var date4 = new DateTime(year, month, day);
+                        _logger.LogDebug("Extracted date (pattern 4 - DD.MM): {Date} from '{MatchedText}'", date4.ToString("yyyy-MM-dd"), match.Value);
+                        return date4;
+                    }
+                }
+            }
+
+            // Pattern 5: "20 ДЕК 2025" (uppercase short month)
+            var pattern5 = @"(\d{1,2})\s+([А-Я]{3,})\s+(\d{4})";
+            var match5 = System.Text.RegularExpressions.Regex.Match(description, pattern5, System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+            if (match5.Success)
+            {
+                if (TryParseBulgarianDate(match5.Groups[1].Value, match5.Groups[2].Value, match5.Groups[3].Value, bulgarianMonths, out var date5))
+                {
+                    _logger.LogDebug("Extracted date (pattern 5 - short month): {Date} from '{MatchedText}'", date5.ToString("yyyy-MM-dd"), match5.Value);
+                    return date5;
+                }
+            }
+
+            // Pattern 6: Alternative pattern - try without "на"
+            // "11 декември 2025 г." or "27 юни 2026"
+            var pattern6 = @"(\d{1,2})\s+([а-яА-Я]+)\s+(\d{4})(?:\s*г\.?)?";
+            var matches6 = System.Text.RegularExpressions.Regex.Matches(description, pattern6, System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+            foreach (System.Text.RegularExpressions.Match match in matches6)
+            {
+                if (TryParseBulgarianDate(match.Groups[1].Value, match.Groups[2].Value, match.Groups[3].Value, bulgarianMonths, out var date6))
+                {
+                    _logger.LogDebug("Extracted date (pattern 6 - without 'на'): {Date} from '{MatchedText}'", date6.ToString("yyyy-MM-dd"), match.Value);
+                    return date6;
+                }
+            }
+
+            // Pattern 7: "26 и 27 февруари" or "26 и 27 февруари 2026" (take first date)
+            var pattern7 = @"(\d{1,2})\s+и\s+\d{1,2}\s+([а-яА-Я]+)(?:\s+(\d{4}))?";
+            var match7 = System.Text.RegularExpressions.Regex.Match(description, pattern7, System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+            if (match7.Success)
+            {
+                var dayStr = match7.Groups[1].Value;
+                var monthStr = match7.Groups[2].Value;
+                var yearStr = match7.Groups[3].Value;
+
+                if (string.IsNullOrEmpty(yearStr))
+                {
+                    if (TryParseBulgarianDateWithoutYear(dayStr, monthStr, bulgarianMonths, currentDate, out var date7))
+                    {
+                        _logger.LogDebug("Extracted date (pattern 7 - DD и DD месец, no year): {Date} from '{MatchedText}'", date7.ToString("yyyy-MM-dd"), match7.Value);
+                        return date7;
+                    }
+                }
+                else
+                {
+                    if (TryParseBulgarianDate(dayStr, monthStr, yearStr, bulgarianMonths, out var date7))
+                    {
+                        _logger.LogDebug("Extracted date (pattern 7 - DD и DD месец): {Date} from '{MatchedText}'", date7.ToString("yyyy-MM-dd"), match7.Value);
+                        return date7;
+                    }
+                }
+            }
+
+            _logger.LogDebug("No valid date found in description: {Description}", description.Substring(0, Math.Min(100, description.Length)));
+            return null;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Error extracting date from description: {Description}", description?.Substring(0, Math.Min(50, description?.Length ?? 0)));
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Helper method to parse Bulgarian date with year
+    /// </summary>
+    private bool TryParseBulgarianDate(string dayStr, string monthStr, string yearStr, Dictionary<string, int> bulgarianMonths, out DateTime date)
+    {
+        date = default;
+
+        if (int.TryParse(dayStr, out int day) &&
+            int.TryParse(yearStr, out int year) &&
+            bulgarianMonths.TryGetValue(monthStr.ToLowerInvariant(), out int month))
+        {
+            if (IsValidDate(year, month, day))
+            {
+                date = new DateTime(year, month, day);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Helper method to parse Bulgarian date without year (determines year automatically)
+    /// </summary>
+    private bool TryParseBulgarianDateWithoutYear(string dayStr, string monthStr, Dictionary<string, int> bulgarianMonths, DateTime currentDate, out DateTime date)
+    {
+        date = default;
+
+        if (int.TryParse(dayStr, out int day) &&
+            bulgarianMonths.TryGetValue(monthStr.ToLowerInvariant(), out int month))
+        {
+            var year = DetermineYearForDate(currentDate, month);
+            
+            if (IsValidDate(year, month, day))
+            {
+                date = new DateTime(year, month, day);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Determines appropriate year for a given month (current year or next year)
+    /// </summary>
+    private int DetermineYearForDate(DateTime currentDate, int month)
+    {
+        // If the month has already passed this year, use next year
+        // Otherwise use current year
+        if (month < currentDate.Month)
+        {
+            return currentDate.Year + 1;
+        }
+        else if (month == currentDate.Month)
+        {
+            // If it's the same month, we could be more sophisticated here,
+            // but for simplicity, assume next year if it's the same month
+            return currentDate.Year + 1;
+        }
+        else
+        {
+            return currentDate.Year;
+        }
+    }
+
     private void EnsureBrowsersInstalled()
     {
         if (_browsersInstalled) return;
@@ -593,63 +928,21 @@ public class TicketStationCrawler : IWebScrapingCrawler
         return sofiaCities.Any(sc => city.Contains(sc));
     }
 
-    /// <summary>
-    /// Extracts the lowest price in EUR from text that may contain multiple prices.
-    /// Example: "30 BGN - 50 BGN\n15.34 EUR - 25.56 EUR" → 15.34
-    /// </summary>
-    private decimal? ExtractLowestPriceInEur(string? text)
+    private static bool IsValidDate(int year, int month, int day)
     {
-        if (string.IsNullOrWhiteSpace(text))
+        if (year < 2000 || year > 2100 || month < 1 || month > 12 || day < 1 || day > 31)
         {
-            return null;
+            return false;
         }
 
         try
         {
-            // Regex pattern to match decimal numbers before "EUR"
-            // Matches: "15.34 EUR", "15,34 EUR", "15 EUR", "25.56EUR"
-            // Pattern: optional whitespace, number (with optional . or , decimal separator), optional whitespace, "EUR"
-            var pattern = @"(\d+[.,]?\d*)\s*EUR";
-            var matches = System.Text.RegularExpressions.Regex.Matches(text, pattern, System.Text.RegularExpressions.RegexOptions.IgnoreCase);
-
-            if (matches.Count == 0)
-            {
-                _logger.LogDebug("No EUR prices found in text: {Text}", text);
-                return null;
-            }
-
-            var prices = new List<decimal>();
-
-            foreach (System.Text.RegularExpressions.Match match in matches)
-            {
-                var priceStr = match.Groups[1].Value;
-
-                // Replace comma with dot for decimal parsing (European format)
-                priceStr = priceStr.Replace(',', '.');
-
-                if (decimal.TryParse(priceStr, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal price))
-                {
-                    prices.Add(price);
-                    _logger.LogDebug("Found EUR price: {Price}", price);
-                }
-            }
-
-            if (prices.Count == 0)
-            {
-                _logger.LogDebug("No valid EUR prices could be parsed from text");
-                return null;
-            }
-
-            // Return the lowest price
-            var lowestPrice = prices.Min();
-            _logger.LogDebug("Extracted lowest price: {LowestPrice} EUR from {TotalPrices} prices found", lowestPrice, prices.Count);
-
-            return lowestPrice;
+            var _ = new DateTime(year, month, day);
+            return true;
         }
-        catch (Exception ex)
+        catch
         {
-            _logger.LogWarning(ex, "Error extracting EUR price from text: {Text}", text);
-            return null;
+            return false;
         }
     }
 }

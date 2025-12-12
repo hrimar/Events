@@ -145,9 +145,7 @@ public class BiletBgCrawler : IHttpApiCrawler
             StartDate = TryParseDate(biletEvent.StartDate),
             EndDate = TryParseDate(biletEvent.EndDate),
             ImageUrl = biletEvent.Image,
-            SourceUrl = !string.IsNullOrEmpty(biletEvent.Slug)
-                ? $"https://bilet.bg/event/{biletEvent.Slug}"
-                : null,
+            SourceUrl = "https://bilet.bg/event/",
             TicketUrl = !string.IsNullOrEmpty(biletEvent.Slug)
                 ? $"https://bilet.bg/bg/cart/{biletEvent.Slug}"
                 : null,
