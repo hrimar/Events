@@ -12,8 +12,6 @@ namespace Events.Crawler.Services.Implementations;
 public class EpaygoCrawler : IWebScrapingCrawler
 {
     private readonly ILogger<EpaygoCrawler> _logger;
-    private readonly int _maxRetries = 3;
-    private readonly int _delayBetweenRequests = 2000;
     private static bool _browsersInstalled = false;
     private static readonly object _installLock = new();
 
@@ -69,7 +67,8 @@ public class EpaygoCrawler : IWebScrapingCrawler
             result.EventsProcessed = sofiaEvents.Count;
             result.Success = true;
 
-            _logger.LogInformation("Crawled {TotalEvents} events from Epaygo, {SofiaEvents} in Sofia", epaygoEvents.Count, sofiaEvents.Count);
+            _logger.LogInformation("Crawled {TotalEvents} events from Epaygo, {SofiaEvents} in Sofia", 
+                epaygoEvents.Count, sofiaEvents.Count);
         }
         catch (Exception ex)
         {
@@ -185,285 +184,376 @@ public class EpaygoCrawler : IWebScrapingCrawler
 
     private async Task<List<EpaygoEventDto>> GetEpaygoEventsAsync(string url)
     {
-        var retryCount = 0;
-
-        while (retryCount < _maxRetries)
+        // Remove nested retry - let CrawlerService handle retries at higher level
+        using var playwright = await Playwright.CreateAsync();
+        await using var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
         {
+            Headless = true,
+            Args = new[] { "--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage" }
+        });
+        var page = await browser.NewPageAsync();
+
+        try
+        {
+            await page.GotoAsync(url, new PageGotoOptions
+            {
+                WaitUntil = WaitUntilState.DOMContentLoaded, // Faster than NetworkIdle
+                Timeout = 60000
+            });
+
+            // Wait for the event content boxes to load
             try
             {
-                using var playwright = await Playwright.CreateAsync();
-                await using var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
-                {
-                    Headless = true,
-                    Args = new[] { "--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage" }
-                });
-                var page = await browser.NewPageAsync();
+                await page.WaitForSelectorAsync(".event_content_box", new PageWaitForSelectorOptions { Timeout = 15000 });
+            }
+            catch (TimeoutException)
+            {
+                _logger.LogWarning("Timeout waiting for .event_content_box elements");
+                await Task.Delay(3000); // Reduced from 5000
+            }
 
-                try
-                {
-                    await page.GotoAsync(url, new PageGotoOptions
-                    {
-                        WaitUntil = WaitUntilState.NetworkIdle,
-                        Timeout = 60000
-                    });
+            await Task.Delay(2000); // Reduced from 3000
 
-                    // Wait for the event content boxes to load
+            // Process elements in smaller batch size
+            var totalElements = await page.EvaluateAsync<int>("document.querySelectorAll('.event_content_box').length");
+            _logger.LogInformation("Found {EventCount} event content boxes", totalElements);
+
+            var events = new List<EpaygoEventDto>();
+            const int batchSize = 30; // Increased from 20 for better balance
+
+            for (int batchStart = 0; batchStart < totalElements; batchStart += batchSize)
+            {
+                var batchEnd = Math.Min(batchStart + batchSize, totalElements);
+                _logger.LogDebug("Processing batch {Start}-{End} of {Total}", batchStart + 1, batchEnd, totalElements);
+
+                // Get fresh elements for each batch
+                var batchElements = await page.QuerySelectorAllAsync($".event_content_box:nth-child(n+{batchStart + 1}):nth-child(-n+{batchEnd})");
+
+                foreach (var element in batchElements.Take(batchEnd - batchStart))
+                {
                     try
                     {
-                        await page.WaitForSelectorAsync(".event_content_box", new PageWaitForSelectorOptions { Timeout = 15000 });
-                    }
-                    catch (TimeoutException)
-                    {
-                        _logger.LogWarning("Timeout waiting for .event_content_box elements");
-                        await Task.Delay(5000);
-                    }
+                        var eventDto = new EpaygoEventDto();
 
-                    await Task.Delay(3000);
+                        // Navigate to the col_all_box div within each event_content_box
+                        var colAllBox = await element.QuerySelectorAsync(".col_all_box");
+                        if (colAllBox == null) continue;
 
-                    // process elements in smaller batch size
-                    var totalElements = await page.EvaluateAsync<int>("document.querySelectorAll('.event_content_box').length");
-                    _logger.LogInformation("Found {EventCount} event content boxes", totalElements);
-
-                    var events = new List<EpaygoEventDto>();
-                    const int batchSize = 50;
-
-                    for (int batchStart = 0; batchStart < totalElements; batchStart += batchSize)
-                    {
-                        var batchEnd = Math.Min(batchStart + batchSize, totalElements);
-                        _logger.LogDebug("Processing batch {Start}-{End} of {Total}", batchStart + 1, batchEnd, totalElements);
-
-                        // get fresh elements for each batch
-                        var batchElements = await page.QuerySelectorAllAsync($".event_content_box:nth-child(n+{batchStart + 1}):nth-child(-n+{batchEnd})");
-
-                        foreach (var element in batchElements.Take(batchEnd - batchStart))
+                        // Extract image URL from .h_all element's style attribute
+                        var imageElement = await colAllBox.QuerySelectorAsync(".h_all");
+                        if (imageElement != null)
                         {
                             try
                             {
-                                // element validation
-                                bool isValid;
-                                try
+                                var styleAttribute = await imageElement.GetAttributeAsync("style");
+                                if (!string.IsNullOrEmpty(styleAttribute))
                                 {
-                                    isValid = await element.IsVisibleAsync();
-                                }
-                                catch
-                                {
-                                    continue; // Skip garbage collected elements
-                                }
-
-                                if (!isValid) continue;
-
-                                var eventDto = new EpaygoEventDto();
-
-                                // Navigate to the col_all_box div within each event_content_box
-                                var colAllBox = await element.QuerySelectorAsync(".col_all_box");
-                                if (colAllBox == null)
-                                {
-                                    continue;
-                                }
-
-                                // Extract image URL from .h_all element's style attribute
-                                var imageElement = await colAllBox.QuerySelectorAsync(".h_all");
-                                if (imageElement != null)
-                                {
-                                    try
+                                    var match = Regex.Match(styleAttribute, @"background-image:\s*url\(['""]?([^'""]+)['""]?\)");
+                                    if (match.Success)
                                     {
-                                        var styleAttribute = await imageElement.GetAttributeAsync("style");
-                                        if (!string.IsNullOrEmpty(styleAttribute))
+                                        eventDto.ImageUrl = match.Groups[1].Value;
+                                        if (!string.IsNullOrEmpty(eventDto.ImageUrl) && eventDto.ImageUrl.StartsWith("/"))
                                         {
-                                            var match = Regex.Match(styleAttribute, @"background-image:\s*url\(['""]?([^'""]+)['""]?\)");
-                                            if (match.Success)
-                                            {
-                                                eventDto.ImageUrl = match.Groups[1].Value;
-                                                if (!string.IsNullOrEmpty(eventDto.ImageUrl) && eventDto.ImageUrl.StartsWith("/"))
-                                                {
-                                                    var baseUri = new Uri(url);
-                                                    eventDto.ImageUrl = $"{baseUri.Scheme}://{baseUri.Host}{eventDto.ImageUrl}";
-                                                }
-                                            }
-                                        }
-
-                                        var orderBtnElement = await imageElement.QuerySelectorAsync(".event_order_btn a[href]");
-                                        if (orderBtnElement != null)
-                                        {
-                                            eventDto.TicketUrl = await orderBtnElement.GetAttributeAsync("href");
-                                            if (!string.IsNullOrEmpty(eventDto.TicketUrl) && eventDto.TicketUrl.StartsWith("/"))
-                                            {
-                                                var baseUri = new Uri(url);
-                                                eventDto.TicketUrl = $"{baseUri.Scheme}://{baseUri.Host}{eventDto.TicketUrl}";
-                                            }
-                                        }
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        _logger.LogDebug("Error extracting image/ticket URL: {Error}", ex.Message);
-                                    }
-                                }
-
-                                // Extract date(s) from .headline_date_t_all element(s)
-                                try
-                                {
-                                    var dateElements = await colAllBox.QuerySelectorAllAsync(".headline_date_t_all");
-                                    if (dateElements.Count > 0)
-                                    {
-                                        var dateTexts = new List<string>();
-                                        foreach (var dateEl in dateElements)
-                                        {
-                                            try
-                                            {
-                                                var dateText = await dateEl.InnerTextAsync();
-                                                if (!string.IsNullOrWhiteSpace(dateText))
-                                                {
-                                                    dateTexts.Add(dateText.Trim());
-                                                }
-                                            }
-                                            catch
-                                            {
-                                                // Skip problematic date elements
-                                            }
-                                        }
-
-                                        if (dateTexts.Count > 1)
-                                        {
-                                            eventDto.Date = string.Join(" - ", dateTexts); // incoming format: "от 06\nфевруари - до 06\nянуари"
-                                        }
-                                        else if (dateTexts.Count == 1)
-                                        {
-                                            eventDto.Date = dateTexts[0]; // incoming format: "29\nноември"
+                                            var baseUri = new Uri(url);
+                                            eventDto.ImageUrl = $"{baseUri.Scheme}://{baseUri.Host}{eventDto.ImageUrl}";
                                         }
                                     }
                                 }
-                                catch (Exception ex)
-                                {
-                                    _logger.LogDebug("Error extracting dates: {Error}", ex.Message);
-                                }
 
-                                // Extract name from .headline_text_t_all element
-                                try
+                                var orderBtnElement = await imageElement.QuerySelectorAsync(".event_order_btn a[href]");
+                                if (orderBtnElement != null)
                                 {
-                                    var nameElement = await colAllBox.QuerySelectorAsync(".headline_text_t_all");
-                                    if (nameElement != null)
+                                    eventDto.TicketUrl = await orderBtnElement.GetAttributeAsync("href");
+                                    if (!string.IsNullOrEmpty(eventDto.TicketUrl) && eventDto.TicketUrl.StartsWith("/"))
                                     {
-                                        eventDto.Name = await nameElement.InnerTextAsync();
+                                        var baseUri = new Uri(url);
+                                        eventDto.TicketUrl = $"{baseUri.Scheme}://{baseUri.Host}{eventDto.TicketUrl}";
                                     }
-                                }
-                                catch (Exception ex)
-                                {
-                                    _logger.LogDebug("Error extracting name: {Error}", ex.Message);
-                                }
-
-                                // Fallback URL extraction if not found in order button
-                                if (string.IsNullOrEmpty(eventDto.TicketUrl))
-                                {
-                                    try
-                                    {
-                                        var linkElement = await element.QuerySelectorAsync("a[href]");
-                                        if (linkElement != null)
-                                        {
-                                            var href = await linkElement.GetAttributeAsync("href");
-                                            if (!string.IsNullOrEmpty(href))
-                                            {
-                                                if (href.StartsWith("/"))
-                                                {
-                                                    var baseUri = new Uri(url);
-                                                    eventDto.TicketUrl = $"{baseUri.Scheme}://{baseUri.Host}{href}";
-                                                }
-                                                else
-                                                {
-                                                    eventDto.TicketUrl = href;
-                                                }
-                                            }
-                                        }
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        _logger.LogDebug("Error extracting fallback URL: {Error}", ex.Message);
-                                    }
-                                }
-
-                                // Set description as the full text content for now
-                                try
-                                {
-                                    var textContent = await element.InnerTextAsync();
-                                    eventDto.Description = textContent.Replace("Купи билет", "");
-                                }
-                                catch (Exception ex)
-                                {
-                                    _logger.LogDebug("Error extracting description: {Error}", ex.Message);
-                                    eventDto.Description = eventDto.Name; // Fallback
-                                }
-
-                                // TODO: The price id not available in the description. Try to find another way!
-                                var fullText = eventDto.Description;
-                                if (!string.IsNullOrEmpty(fullText))
-                                {
-                                    var priceMatch = Regex.Match(fullText, @"(\d+(?:\.\d{2})?)\s*(?:лв|BGN|EUR)", RegexOptions.IgnoreCase);
-                                    if (priceMatch.Success && decimal.TryParse(priceMatch.Groups[1].Value, out decimal price))
-                                    {
-                                        eventDto.Price = price;
-                                        eventDto.IsFree = price == 0;
-                                    }
-                                }
-
-                                eventDto.SourceUrl = url;
-
-                                // Only add events that have at least a name
-                                if (!string.IsNullOrEmpty(eventDto.Name))
-                                {
-                                    events.Add(eventDto);
-                                    _logger.LogDebug("Extracted event: {EventName} on {EventDate}", eventDto.Name, eventDto.Date);
                                 }
                             }
                             catch (Exception ex)
                             {
-                                _logger.LogDebug(ex, "Error extracting event data from element");
+                                _logger.LogDebug("Error extracting image/ticket URL: {Error}", ex.Message);
                             }
                         }
 
-                        // Memory cleanup between batchs
-                        if (batchStart > 0 && batchStart % 100 == 0)
+                        // Extract date(s) from .headline_date_t_all element(s)
+                        try
                         {
-                            GC.Collect();
-                            GC.WaitForPendingFinalizers();
-                            await Task.Delay(500); // Brief pause
-                            _logger.LogDebug("Memory cleanup after processing {ProcessedCount} elements", batchStart);
+                            var dateElements = await colAllBox.QuerySelectorAllAsync(".headline_date_t_all");
+                            if (dateElements.Count > 0)
+                            {
+                                var dateTexts = new List<string>();
+                                foreach (var dateEl in dateElements)
+                                {
+                                    try
+                                    {
+                                        var dateText = await dateEl.InnerTextAsync();
+                                        if (!string.IsNullOrWhiteSpace(dateText))
+                                        {
+                                            dateTexts.Add(dateText.Trim());
+                                        }
+                                    }
+                                    catch
+                                    {
+                                        // Skip problematic date elements
+                                    }
+                                }
+
+                                if (dateTexts.Count > 1)
+                                {
+                                    eventDto.Date = string.Join(" - ", dateTexts); // incoming format: "от 06\nфевруари - до 06\nянуари"
+                                }
+                                else if (dateTexts.Count == 1)
+                                {
+                                    eventDto.Date = dateTexts[0]; // incoming format: "29\nноември"
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogDebug("Error extracting dates: {Error}", ex.Message);
+                        }
+
+                        // Extract name from .headline_text_t_all element
+                        try
+                        {
+                            var nameElement = await colAllBox.QuerySelectorAsync(".headline_text_t_all");
+                            if (nameElement != null)
+                            {
+                                eventDto.Name = await nameElement.InnerTextAsync();
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogDebug("Error extracting name: {Error}", ex.Message);
+                        }
+
+                        // Fallback URL extraction if not found in order button
+                        if (string.IsNullOrEmpty(eventDto.TicketUrl))
+                        {
+                            try
+                            {
+                                var linkElement = await element.QuerySelectorAsync("a[href]");
+                                if (linkElement != null)
+                                {
+                                    var href = await linkElement.GetAttributeAsync("href");
+                                    if (!string.IsNullOrEmpty(href))
+                                    {
+                                        if (href.StartsWith("/"))
+                                        {
+                                            var baseUri = new Uri(url);
+                                            eventDto.TicketUrl = $"{baseUri.Scheme}://{baseUri.Host}{href}";
+                                        }
+                                        else
+                                        {
+                                            eventDto.TicketUrl = href;
+                                        }
+                                    }
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogDebug("Error extracting fallback URL: {Error}", ex.Message);
+                            }
+                        }
+
+                        // Set description as the full text content for now
+                        try
+                        {
+                            var textContent = await element.InnerTextAsync();
+                            eventDto.Description = textContent.Replace("Купи билет", "");
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogDebug("Error extracting description: {Error}", ex.Message);
+                            eventDto.Description = eventDto.Name; // Fallback
+                        }
+
+                        // TODO: The price is not available in the description. Try to find another way!
+                        var fullText = eventDto.Description;
+                        if (!string.IsNullOrEmpty(fullText))
+                        {
+                            var priceMatch = Regex.Match(fullText, @"(\d+(?:\.\d{2})?)\s*(?:лв|BGN|EUR)", RegexOptions.IgnoreCase);
+                            if (priceMatch.Success && decimal.TryParse(priceMatch.Groups[1].Value, out decimal price))
+                            {
+                                eventDto.Price = price;
+                                eventDto.IsFree = price == 0;
+                            }
+                        }
+
+                        eventDto.SourceUrl = url;
+
+                        // Only add events that have at least a name
+                        if (!string.IsNullOrEmpty(eventDto.Name))
+                        {
+                            events.Add(eventDto);
+                            _logger.LogDebug("Extracted event: {EventName} on {EventDate}", eventDto.Name, eventDto.Date);
                         }
                     }
-
-                    _logger.LogInformation("Successfully processed {EventCount} events from Epaygo", events.Count);
-                    return events;
+                    catch (Exception ex)
+                    {
+                        _logger.LogDebug(ex, "Error extracting event data from element");
+                    }
                 }
-                finally
+
+                // Brief pause between batches - reduced
+                if (batchStart + batchSize < totalElements)
                 {
-                    await page.CloseAsync();
+                    await Task.Delay(100); // Reduced from longer delays
+                }
+
+                // Memory cleanup between batches
+                if (batchStart > 0 && batchStart % 100 == 0)
+                {
+                    GC.Collect();
+                    GC.WaitForPendingFinalizers();
+                    await Task.Delay(200); // Brief pause
+                    _logger.LogDebug("Memory cleanup after processing {ProcessedCount} elements", batchStart);
                 }
             }
-            catch (Exception ex)
+
+            _logger.LogInformation("Phase 1 complete: Found {EventCount} events with basic data", events.Count);
+
+            // Phase 2: Extract city and location info - with name-based pre-filtering
+            var eventsNeedingDetails = events.Where(e => !string.IsNullOrEmpty(e.TicketUrl)).ToList();
+            _logger.LogInformation("Phase 2: Pre-filtering {EventCount} events before city/location extraction", eventsNeedingDetails.Count);
+
+            // Smart name-based pre-filtering: Skip events with other city names in the title
+            var likelySofiaEvents = eventsNeedingDetails.Where(e => !IsObviouslyNonSofiaEvent(e)).ToList();
+            var skippedNonSofiaCount = eventsNeedingDetails.Count - likelySofiaEvents.Count;
+            
+            if (skippedNonSofiaCount > 0)
             {
-                retryCount++;
-                _logger.LogWarning(ex, "Attempt {Retry} failed for Epaygo crawl", retryCount);
-
-                if (retryCount >= _maxRetries)
-                    throw;
-
-                await Task.Delay(_delayBetweenRequests * retryCount);
+                _logger.LogInformation("Pre-filtered out {SkippedCount} events based on city names in titles", skippedNonSofiaCount);
             }
-        }
 
-        return new List<EpaygoEventDto>();
+            _logger.LogInformation("Phase 2: Processing {EventCount} events for city/location data", likelySofiaEvents.Count);
+
+            const int detailBatchSize = 20; // Increased batch size for efficiency
+            var processedDetailCount = 0;
+
+            for (int batchStart = 0; batchStart < likelySofiaEvents.Count; batchStart += detailBatchSize)
+            {
+                var batchEnd = Math.Min(batchStart + detailBatchSize, likelySofiaEvents.Count);
+                _logger.LogDebug("Processing detail batch {Start}-{End} of {Total}", batchStart + 1, batchEnd, likelySofiaEvents.Count);
+
+                for (int i = batchStart; i < batchEnd; i++)
+                {
+                    var eventDto = likelySofiaEvents[i];
+
+                    try
+                    {
+                        // Fix null reference warning
+                        if (string.IsNullOrEmpty(eventDto.TicketUrl))
+                        {
+                            _logger.LogWarning("Event {EventName} has null/empty TicketUrl, skipping detail extraction", eventDto.Name);
+                            continue;
+                        }
+
+                        await page.GotoAsync(eventDto.TicketUrl, new PageGotoOptions
+                        {
+                            WaitUntil = WaitUntilState.DOMContentLoaded,
+                            Timeout = 10000 // Further reduced timeout for speed
+                        });
+
+                        await Task.Delay(400); // Minimal delay
+
+                        // Extract city from #address element
+                        var addressElement = await page.QuerySelectorAsync("#address");
+                        if (addressElement != null)
+                        {
+                            var addressText = await addressElement.InnerTextAsync();
+                            if (!string.IsNullOrWhiteSpace(addressText))
+                            {
+                                // Check if address contains Sofia
+                                if (addressText.ToLowerInvariant().Contains("софия") || addressText.ToLowerInvariant().Contains("sofia"))
+                                {
+                                    eventDto.City = "София";
+                                }
+                                else
+                                {
+                                    eventDto.City = null;
+                                    _logger.LogDebug("Non-Sofia event: {EventName} at {Address}", eventDto.Name, addressText);
+                                }
+                            }
+                        }
+
+                        // Extract location from #address_t element
+                        var locationElement = await page.QuerySelectorAsync("#address_t");
+                        if (locationElement != null)
+                        {
+                            var locationText = await locationElement.InnerTextAsync();
+                            if (!string.IsNullOrWhiteSpace(locationText))
+                            {
+                                eventDto.Location = locationText.Trim();
+                            }
+                        }
+
+                        processedDetailCount++;
+                        _logger.LogDebug("Processed event {Count}/{Total}: {EventName} in {City}", 
+                            processedDetailCount, likelySofiaEvents.Count, eventDto.Name, eventDto.City ?? "Unknown");
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Error extracting details for event: {EventName} at {TicketUrl}", eventDto.Name, eventDto.TicketUrl);
+                        // Still keep the event - will be filtered later if needed
+                        processedDetailCount++;
+                    }
+                }
+
+                // Minimal pause between detail batches
+                if (batchStart + detailBatchSize < likelySofiaEvents.Count)
+                {
+                    await Task.Delay(200); // Minimal pause for server kindness
+                }
+
+                // Memory cleanup every 60 events
+                if (processedDetailCount > 0 && processedDetailCount % 60 == 0)
+                {
+                    GC.Collect();
+                    GC.WaitForPendingFinalizers();
+                    _logger.LogDebug("Memory cleanup after processing {ProcessedCount} detail events", processedDetailCount);
+                }
+            }
+
+            // Set remaining events that weren't processed as non-Sofia (they were pre-filtered)
+            var nonProcessedEvents = eventsNeedingDetails.Except(likelySofiaEvents).ToList();
+            foreach (var eventDto in nonProcessedEvents)
+            {
+                eventDto.City = null; // Will be filtered out in MapEpaygoToStandardDto
+            }
+
+            _logger.LogInformation("Successfully processed {EventCount} events from Epaygo ({ProcessedDetails} with full details, {PreFiltered} pre-filtered)", 
+                events.Count, processedDetailCount, nonProcessedEvents.Count);
+            return events;
+        }
+        finally
+        {
+            await page.CloseAsync();
+        }
     }
 
     private CrawledEventDto? MapEpaygoToStandardDto(EpaygoEventDto epaygoEvent)
     {
-        // Since all events from Epaygo are Sofia events, no filtering needed
+        // Filter only Sofia events - early return if not Sofia
+        if (string.IsNullOrEmpty(epaygoEvent.City) || 
+            (!epaygoEvent.City.ToLowerInvariant().Contains("софия") && 
+             !epaygoEvent.City.ToLowerInvariant().Contains("sofia")))
+        {
+            _logger.LogDebug("Filtering out non-Sofia event: {EventName} in {City}", epaygoEvent.Name, epaygoEvent.City ?? "Unknown");
+            return null; // Skip non-Sofia events
+        }
+
         return new CrawledEventDto
         {
             ExternalId = GenerateEventId(epaygoEvent.Name, epaygoEvent.TicketUrl),
             Source = SourceName,
-            Name = CleanText(epaygoEvent.Name) ?? "Unknown Event",
+            Name = CleanText(epaygoEvent.Name) ?? "",
             Description = CleanText(epaygoEvent.Description),
             StartDate = TryParseEventDate(epaygoEvent.Date),
             City = CleanText(epaygoEvent.City) ?? "",
-            Location = "", // TODO:
+            Location = CleanText(epaygoEvent.Location) ?? "",
             ImageUrl = epaygoEvent.ImageUrl,
             SourceUrl = epaygoEvent.SourceUrl,
             TicketUrl = epaygoEvent.TicketUrl,
@@ -473,7 +563,8 @@ public class EpaygoCrawler : IWebScrapingCrawler
             {
                 ["original_date_text"] = epaygoEvent.Date ?? "",
                 ["city"] = epaygoEvent.City ?? "",
-                ["extraction_method"] = "Playwright_Epaygo",
+                ["location"] = epaygoEvent.Location ?? "",
+                ["extraction_method"] = "Playwright_Epaygo_OptimizedTiming",
                 ["crawled_from"] = "https://epaygo.bg/events/all"
             }
         };
@@ -758,5 +849,49 @@ public class EpaygoCrawler : IWebScrapingCrawler
         var chromePath = Path.Combine(latestChromiumDir, "chrome-win", "chrome.exe");
 
         return File.Exists(chromePath) ? chromePath : null;
+    }
+
+    private bool IsObviouslyNonSofiaEvent(EpaygoEventDto eventDto)
+    {
+        // Name-based filtering using city names that actually appear in event titles
+        if (string.IsNullOrEmpty(eventDto.Name))
+        {
+            return false; // Can't determine, let it pass to detailed check
+        }
+
+        var name = eventDto.Name.ToLowerInvariant();
+
+        // Check for specific city names that commonly appear in event titles
+        var nonSofiaCities = new[]
+        {
+            "велико търново", "veliko tarnovo", "v.turnovo", "в.търново",
+            "бургас", "burgas", "летен театър бургас",
+            "варна", "varna", 
+            "пловдив", "plovdiv",
+            "стара загора", "stara zagora",
+            "русе", "ruse",
+            "плевен", "pleven",
+            "каварна", "kavarna",
+            "габрово", "gabrovo",
+            "видин", "vidin",
+            "шумен", "shumen",
+            "перник", "pernik",
+            "кюстендил", "kyustendil",
+            "враца", "vratsa",
+            "монтана", "montana",
+            "силистра", "silistra"
+        };
+
+        foreach (var city in nonSofiaCities)
+        {
+            if (name.Contains(city))
+            {
+                _logger.LogDebug("Pre-filtered out non-Sofia event based on city in name: {EventName}", eventDto.Name);
+                return true; // This is obviously a non-Sofia event
+            }
+        }
+
+        // Not obviously non-Sofia, let it pass to detailed check
+        return false;
     }
 }

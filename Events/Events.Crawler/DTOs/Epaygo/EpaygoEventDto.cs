@@ -7,7 +7,8 @@ public class EpaygoEventDto
     public string? ImageUrl { get; set; }
     public string? Date { get; set; }
     public decimal? Price { get; set; }
-    public string? City { get; set; } = "София";
+    public string? City { get; set; }
+    public string? Location { get; set; }
     public string? Url { get; set; }
     public string? TicketUrl { get; set; }
     public string? SourceUrl { get; set; } = "https://epaygo.bg/";
