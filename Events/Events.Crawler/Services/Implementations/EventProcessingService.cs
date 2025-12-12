@@ -44,16 +44,18 @@ public class EventProcessingService : IEventProcessingService
 
                 if (existingEvent != null)
                 {
-                    var updatedEvent = await UpdateEventFromCrawledDataAsync(existingEvent, crawledEvent, eventService);
-                    if (updatedEvent != null)
-                    {
-                        result.EventsUpdated++;
-                        result.ProcessedEventIds.Add(updatedEvent.Id);
-                    }
-                    else
-                    {
-                        result.EventsSkipped++;
-                    }
+                    // TODO: Do not update existing events or update only existing events not older than today by Date or other!!!
+                    result.EventsSkipped++;
+                    //var updatedEvent = await UpdateEventFromCrawledDataAsync(existingEvent, crawledEvent, eventService);
+                    //if (updatedEvent != null)
+                    //{
+                    //    result.EventsUpdated++;
+                    //    result.ProcessedEventIds.Add(updatedEvent.Id);
+                    //}
+                    //else
+                    //{
+                    //    result.EventsSkipped++;
+                    //}
                 }
                 else
                 {

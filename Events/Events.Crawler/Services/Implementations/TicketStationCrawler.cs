@@ -577,7 +577,7 @@ public class TicketStationCrawler : IWebScrapingCrawler
 
     /// <summary>
     /// Extracts date from Bulgarian description text.
-    /// Patterns: "на 11 декември 2025 г.", "на 27 юни 2026", "31-ви декември", "20.12", "20 ДЕК 2025", "26 и 27 февруари", итс.
+    /// Patterns ordered by priority: specific formats first, general formats last
     /// </summary>
     private DateTime? ExtractDateFromDescription(string? description)
     {
@@ -607,85 +607,132 @@ public class TicketStationCrawler : IWebScrapingCrawler
                 ["декември"] = 12, ["дек"] = 12
             };
 
-            // Pattern 1: "на 11 декември 2025 г." or "на 27 юни 2026"
-            var pattern1 = @"на\s+(\d{1,2})\s+([а-яА-Я]+)\s+(\d{4})(?:\s*г\.?)?";
+            // HIGH PRIORITY PATTERNS (specific date formats for events)
+            // Pattern 1: "📅 20 ДЕК 2025" (calendar emoji + uppercase short month - very specific for events)
+            var pattern1 = @"📅\s*(\d{1,2})\s+([А-Я]{3,})\s+(\d{4})";
             var match1 = System.Text.RegularExpressions.Regex.Match(description, pattern1, System.Text.RegularExpressions.RegexOptions.IgnoreCase);
 
             if (match1.Success)
             {
-                if (TryParseBulgarianDate(match1.Groups[1].Value, match1.Groups[2].Value, match1.Groups[3].Value, bulgarianMonths, out var date1))
+                if (TryParseBulgarianDate(match1.Groups[1].Value, match1.Groups[2].Value, match1.Groups[3].Value, bulgarianMonths, currentDate, out var date1))
                 {
-                    _logger.LogDebug("Extracted date (pattern 1): {Date} from '{MatchedText}'", date1.ToString("yyyy-MM-dd"), match1.Value);
+                    _logger.LogDebug("Extracted date (pattern 1 - calendar emoji): {Date} from '{MatchedText}'", date1.ToString("yyyy-MM-dd"), match1.Value);
                     return date1;
                 }
             }
 
-            // Pattern 2: "на 23 юли" (without year)
-            var pattern2 = @"на\s+(\d{1,2})\s+([а-яА-Я]+)(?!\s+\d{4})";
+            // Pattern 2: "20 ДЕК 2025" (uppercase short month - specific for events)
+            var pattern2 = @"(\d{1,2})\s+([А-Я]{3,})\s+(\d{4})";
             var match2 = System.Text.RegularExpressions.Regex.Match(description, pattern2, System.Text.RegularExpressions.RegexOptions.IgnoreCase);
 
             if (match2.Success)
             {
-                if (TryParseBulgarianDateWithoutYear(match2.Groups[1].Value, match2.Groups[2].Value, bulgarianMonths, currentDate, out var date2))
+                if (TryParseBulgarianDate(match2.Groups[1].Value, match2.Groups[2].Value, match2.Groups[3].Value, bulgarianMonths, currentDate, out var date2))
                 {
-                    _logger.LogDebug("Extracted date (pattern 2 - no year): {Date} from '{MatchedText}'", date2.ToString("yyyy-MM-dd"), match2.Value);
+                    _logger.LogDebug("Extracted date (pattern 2 - short month): {Date} from '{MatchedText}'", date2.ToString("yyyy-MM-dd"), match2.Value);
                     return date2;
                 }
             }
 
-            // Pattern 3: "31-ви декември" (ordinal numbers)
-            var pattern3 = @"(\d{1,2})-[а-яА-Я]{1,3}\s+([а-яА-Я]+)(?:\s+(\d{4}))?";
+            // Pattern 3: "на 11 декември 2025 г." or "на 27 юни 2026"
+            var pattern3 = @"на\s+(\d{1,2})\s+([а-яА-Я]+)\s+(\d{4})(?:\s*г\.?)?";
             var match3 = System.Text.RegularExpressions.Regex.Match(description, pattern3, System.Text.RegularExpressions.RegexOptions.IgnoreCase);
 
             if (match3.Success)
             {
-                var dayStr = match3.Groups[1].Value;
-                var monthStr = match3.Groups[2].Value;
-                var yearStr = match3.Groups[3].Value;
+                if (TryParseBulgarianDate(match3.Groups[1].Value, match3.Groups[2].Value, match3.Groups[3].Value, bulgarianMonths, currentDate, out var date3))
+                {
+                    _logger.LogDebug("Extracted date (pattern 3 - на DD месец YYYY): {Date} from '{MatchedText}'", date3.ToString("yyyy-MM-dd"), match3.Value);
+                    return date3;
+                }
+            }
+
+            // Pattern 4: "26 и 27 февруари" or "26 и 27 февруари 2026" (take first date)
+            var pattern4 = @"(\d{1,2})\s+и\s+\d{1,2}\s+([а-яА-Я]+)(?:\s+(\d{4}))?";
+            var match4 = System.Text.RegularExpressions.Regex.Match(description, pattern4, System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+            if (match4.Success)
+            {
+                var dayStr = match4.Groups[1].Value;
+                var monthStr = match4.Groups[2].Value;
+                var yearStr = match4.Groups[3].Value;
 
                 if (string.IsNullOrEmpty(yearStr))
                 {
-                    if (TryParseBulgarianDateWithoutYear(dayStr, monthStr, bulgarianMonths, currentDate, out var date3))
+                    if (TryParseBulgarianDateWithoutYear(dayStr, monthStr, bulgarianMonths, currentDate, out var date4))
                     {
-                        _logger.LogDebug("Extracted date (pattern 3 - ordinal, no year): {Date} from '{MatchedText}'", date3.ToString("yyyy-MM-dd"), match3.Value);
-                        return date3;
+                        _logger.LogDebug("Extracted date (pattern 4 - DD и DD месец, no year): {Date} from '{MatchedText}'", date4.ToString("yyyy-MM-dd"), match4.Value);
+                        return date4;
                     }
                 }
                 else
                 {
-                    if (TryParseBulgarianDate(dayStr, monthStr, yearStr, bulgarianMonths, out var date3))
+                    if (TryParseBulgarianDate(dayStr, monthStr, yearStr, bulgarianMonths, currentDate, out var date4))
                     {
-                        _logger.LogDebug("Extracted date (pattern 3 - ordinal): {Date} from '{MatchedText}'", date3.ToString("yyyy-MM-dd"), match3.Value);
-                        return date3;
+                        _logger.LogDebug("Extracted date (pattern 4 - DD и DD месец): {Date} from '{MatchedText}'", date4.ToString("yyyy-MM-dd"), match4.Value);
+                        return date4;
                     }
                 }
             }
 
-            // Pattern 4: "20.12" (DD.MM format) - FIXED: Ensure day <= 31 and month <= 12
-            var pattern4 = @"(\d{1,2})\.(\d{1,2})(?!\d)";
-            var matches4 = System.Text.RegularExpressions.Regex.Matches(description, pattern4);
+            // MEDIUM PRIORITY PATTERNS
+            // Pattern 5: "на 23 юли" (without year)
+            var pattern5 = @"на\s+(\d{1,2})\s+([а-яА-Я]+)(?!\s+\d{4})";
+            var match5 = System.Text.RegularExpressions.Regex.Match(description, pattern5, System.Text.RegularExpressions.RegexOptions.IgnoreCase);
 
-            foreach (System.Text.RegularExpressions.Match match in matches4)
+            if (match5.Success)
+            {
+                if (TryParseBulgarianDateWithoutYear(match5.Groups[1].Value, match5.Groups[2].Value, bulgarianMonths, currentDate, out var date5))
+                {
+                    _logger.LogDebug("Extracted date (pattern 5 - no year): {Date} from '{MatchedText}'", date5.ToString("yyyy-MM-dd"), match5.Value);
+                    return date5;
+                }
+            }
+
+            // Pattern 6: "31-ви декември" (ordinal numbers)
+            var pattern6 = @"(\d{1,2})-[а-яА-Я]{1,3}\s+([а-яА-Я]+)(?:\s+(\d{4}))?";
+            var match6 = System.Text.RegularExpressions.Regex.Match(description, pattern6, System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+            if (match6.Success)
+            {
+                var dayStr = match6.Groups[1].Value;
+                var monthStr = match6.Groups[2].Value;
+                var yearStr = match6.Groups[3].Value;
+
+                if (string.IsNullOrEmpty(yearStr))
+                {
+                    if (TryParseBulgarianDateWithoutYear(dayStr, monthStr, bulgarianMonths, currentDate, out var date6))
+                    {
+                        _logger.LogDebug("Extracted date (pattern 6 - ordinal, no year): {Date} from '{MatchedText}'", date6.ToString("yyyy-MM-dd"), match6.Value);
+                        return date6;
+                    }
+                }
+                else
+                {
+                    if (TryParseBulgarianDate(dayStr, monthStr, yearStr, bulgarianMonths, currentDate, out var date6))
+                    {
+                        _logger.LogDebug("Extracted date (pattern 6 - ordinal): {Date} from '{MatchedText}'", date6.ToString("yyyy-MM-dd"), match6.Value);
+                        return date6;
+                    }
+                }
+            }
+
+            // Pattern 7: "20.12" (DD.MM format)
+            var pattern7 = @"(\d{1,2})\.(\d{1,2})(?!\d)";
+            var matches7 = System.Text.RegularExpressions.Regex.Matches(description, pattern7);
+
+            foreach (System.Text.RegularExpressions.Match match in matches7)
             {
                 if (int.TryParse(match.Groups[1].Value, out int firstNum) &&
                     int.TryParse(match.Groups[2].Value, out int secondNum))
                 {
-                    // Determine which is day and which is month
                     int day, month;
                     
-                    // If first number > 12, it must be day, second must be month
                     if (firstNum > 12 && secondNum <= 12)
                     {
                         day = firstNum;
                         month = secondNum;
                     }
-                    // If second number > 12, first must be month, second must be day - but this is unusual for DD.MM
-                    else if (secondNum > 12 && firstNum <= 12)
-                    {
-                        // Skip this case as DD.MM format expects day first
-                        continue;
-                    }
-                    // Both numbers <= 12, assume DD.MM format (day first, month second)
                     else if (firstNum <= 31 && secondNum <= 12 && firstNum >= 1 && secondNum >= 1)
                     {
                         day = firstNum;
@@ -693,71 +740,30 @@ public class TicketStationCrawler : IWebScrapingCrawler
                     }
                     else
                     {
-                        continue; // Invalid numbers
+                        continue;
                     }
 
                     var year = DetermineYearForDate(currentDate, month);
                     if (IsValidDate(year, month, day))
                     {
-                        var date4 = new DateTime(year, month, day);
-                        _logger.LogDebug("Extracted date (pattern 4 - DD.MM): {Date} from '{MatchedText}'", date4.ToString("yyyy-MM-dd"), match.Value);
-                        return date4;
-                    }
-                }
-            }
-
-            // Pattern 5: "20 ДЕК 2025" (uppercase short month)
-            var pattern5 = @"(\d{1,2})\s+([А-Я]{3,})\s+(\d{4})";
-            var match5 = System.Text.RegularExpressions.Regex.Match(description, pattern5, System.Text.RegularExpressions.RegexOptions.IgnoreCase);
-
-            if (match5.Success)
-            {
-                if (TryParseBulgarianDate(match5.Groups[1].Value, match5.Groups[2].Value, match5.Groups[3].Value, bulgarianMonths, out var date5))
-                {
-                    _logger.LogDebug("Extracted date (pattern 5 - short month): {Date} from '{MatchedText}'", date5.ToString("yyyy-MM-dd"), match5.Value);
-                    return date5;
-                }
-            }
-
-            // Pattern 6: Alternative pattern - try without "на"
-            // "11 декември 2025 г." or "27 юни 2026"
-            var pattern6 = @"(\d{1,2})\s+([а-яА-Я]+)\s+(\d{4})(?:\s*г\.?)?";
-            var matches6 = System.Text.RegularExpressions.Regex.Matches(description, pattern6, System.Text.RegularExpressions.RegexOptions.IgnoreCase);
-
-            foreach (System.Text.RegularExpressions.Match match in matches6)
-            {
-                if (TryParseBulgarianDate(match.Groups[1].Value, match.Groups[2].Value, match.Groups[3].Value, bulgarianMonths, out var date6))
-                {
-                    _logger.LogDebug("Extracted date (pattern 6 - without 'на'): {Date} from '{MatchedText}'", date6.ToString("yyyy-MM-dd"), match.Value);
-                    return date6;
-                }
-            }
-
-            // Pattern 7: "26 и 27 февруари" or "26 и 27 февруари 2026" (take first date)
-            var pattern7 = @"(\d{1,2})\s+и\s+\d{1,2}\s+([а-яА-Я]+)(?:\s+(\d{4}))?";
-            var match7 = System.Text.RegularExpressions.Regex.Match(description, pattern7, System.Text.RegularExpressions.RegexOptions.IgnoreCase);
-
-            if (match7.Success)
-            {
-                var dayStr = match7.Groups[1].Value;
-                var monthStr = match7.Groups[2].Value;
-                var yearStr = match7.Groups[3].Value;
-
-                if (string.IsNullOrEmpty(yearStr))
-                {
-                    if (TryParseBulgarianDateWithoutYear(dayStr, monthStr, bulgarianMonths, currentDate, out var date7))
-                    {
-                        _logger.LogDebug("Extracted date (pattern 7 - DD и DD месец, no year): {Date} from '{MatchedText}'", date7.ToString("yyyy-MM-dd"), match7.Value);
+                        var date7 = new DateTime(year, month, day);
+                        _logger.LogDebug("Extracted date (pattern 7 - DD.MM): {Date} from '{MatchedText}'", date7.ToString("yyyy-MM-dd"), match.Value);
                         return date7;
                     }
                 }
-                else
+            }
+
+            // LOW PRIORITY PATTERNS (general formats - might catch historical dates)
+            // Pattern 8: General "DD месец YYYY" - LAST because it catches historical dates
+            var pattern8 = @"(\d{1,2})\s+([а-яА-Я]+)\s+(\d{4})(?:\s*г\.?)?";
+            var matches8 = System.Text.RegularExpressions.Regex.Matches(description, pattern8, System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+            foreach (System.Text.RegularExpressions.Match match in matches8)
+            {
+                if (TryParseBulgarianDate(match.Groups[1].Value, match.Groups[2].Value, match.Groups[3].Value, bulgarianMonths, currentDate, out var date8))
                 {
-                    if (TryParseBulgarianDate(dayStr, monthStr, yearStr, bulgarianMonths, out var date7))
-                    {
-                        _logger.LogDebug("Extracted date (pattern 7 - DD и DD месец): {Date} from '{MatchedText}'", date7.ToString("yyyy-MM-dd"), match7.Value);
-                        return date7;
-                    }
+                    _logger.LogDebug("Extracted date (pattern 8 - general format): {Date} from '{MatchedText}'", date8.ToString("yyyy-MM-dd"), match.Value);
+                    return date8;
                 }
             }
 
@@ -772,9 +778,9 @@ public class TicketStationCrawler : IWebScrapingCrawler
     }
 
     /// <summary>
-    /// Helper method to parse Bulgarian date with year
+    /// Helper method to parse Bulgarian date with year and validation against historical dates
     /// </summary>
-    private bool TryParseBulgarianDate(string dayStr, string monthStr, string yearStr, Dictionary<string, int> bulgarianMonths, out DateTime date)
+    private bool TryParseBulgarianDate(string dayStr, string monthStr, string yearStr, Dictionary<string, int> bulgarianMonths, DateTime currentDate, out DateTime date)
     {
         date = default;
 
@@ -784,7 +790,16 @@ public class TicketStationCrawler : IWebScrapingCrawler
         {
             if (IsValidDate(year, month, day))
             {
-                date = new DateTime(year, month, day);
+                var parsedDate = new DateTime(year, month, day);
+                
+                // Ignore dates more than 3 years in the past (likely historical references)
+                if (parsedDate < currentDate.AddYears(-3))
+                {
+                    _logger.LogDebug("Ignoring historical date (older than 3 years): {Date}", parsedDate.ToString("yyyy-MM-dd"));
+                    return false;
+                }
+                
+                date = parsedDate;
                 return true;
             }
         }
@@ -799,8 +814,7 @@ public class TicketStationCrawler : IWebScrapingCrawler
     {
         date = default;
 
-        if (int.TryParse(dayStr, out int day) &&
-            bulgarianMonths.TryGetValue(monthStr.ToLowerInvariant(), out int month))
+        if (int.TryParse(dayStr, out int day) && bulgarianMonths.TryGetValue(monthStr.ToLowerInvariant(), out int month))
         {
             var year = DetermineYearForDate(currentDate, month);
             
@@ -862,8 +876,7 @@ public class TicketStationCrawler : IWebScrapingCrawler
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to ensure Playwright browsers are installed");
-                throw new InvalidOperationException(
-                    "Playwright browsers are not installed. Please run 'npx playwright install chromium' manually.", ex);
+                throw new InvalidOperationException("Playwright browsers are not installed. Please run 'npx playwright install chromium' manually.", ex);
             }
         }
     }
