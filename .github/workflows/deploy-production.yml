@@ -40,6 +40,8 @@ jobs:
 
     - name: Generate migration scripts
       run: dotnet ef migrations script --project Events/Events.Data --startup-project Events/Events.Web --output migration.sql --idempotent
+      env:
+        DESIGN_TIME_CONNECTION_STRING: ${{ secrets.AZURE_SQL_CONNECTION_STRING }}
 
     - name: Azure Login
       uses: azure/login@v1
