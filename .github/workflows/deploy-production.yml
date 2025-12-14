@@ -61,19 +61,11 @@ jobs:
           --start-ip-address "$RUNNER_IP" \
           --end-ip-address "$RUNNER_IP" || echo "Firewall rule creation failed, continuing..."
 
-    - name: Apply database migrations via Azure CLI
-      run: |
-        # Check if migration file has content and apply
-        if [ -s migration.sql ]; then
-          echo "Applying database migrations via Azure CLI..."
-          az sql db execute \
-            --resource-group gosofia-prod-we-rg \
-            --server gosofia-prod-we-sql-1 \
-            --database gosofia-prod-we-db-1 \
-            --file-path migration.sql
-        else
-          echo "No migrations to apply"
-        fi
+    - name: Apply database migrations
+      uses: azure/sql-action@v2.2
+      with:
+        connection-string: ${{ secrets.AZURE_SQL_CONNECTION_STRING }}
+        path: './migration.sql'
 
     - name: Remove firewall rule
       if: always()
@@ -87,7 +79,6 @@ jobs:
       uses: azure/webapps-deploy@v2
       with:
         app-name: ${{ env.AZURE_WEBAPP_NAME }}
-        slot-name: 'production'
         package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
 
     - name: Logout from Azure
