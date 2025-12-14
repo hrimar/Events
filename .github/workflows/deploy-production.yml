@@ -24,21 +24,21 @@ jobs:
         dotnet-version: ${{ env.DOTNET_VERSION }}
 
     - name: Restore dependencies
-      run: dotnet restore
+      run: dotnet restore Events/Events.Web.sln
 
     - name: Build application
-      run: dotnet build --configuration Release --no-restore
+      run: dotnet build Events/Events.Web.sln --configuration Release --no-restore
 
     - name: Run tests
-      run: dotnet test --no-build --verbosity normal
+      run: dotnet test Events/Events.Web.sln --no-build --verbosity normal
 
     - name: Publish application
-      run: dotnet publish Events.Web/Events.Web.csproj --configuration Release --no-build --output ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+      run: dotnet publish Events/Events.Web/Events.Web.csproj --configuration Release --no-build --output ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
 
     - name: Generate migration scripts
       run: |
         dotnet tool install --global dotnet-ef
-        dotnet ef migrations script --project Events.Data --startup-project Events.Web --output migration.sql --idempotent
+        dotnet ef migrations script --project Events/Events.Data --startup-project Events/Events.Web --output migration.sql --idempotent
 
     - name: Azure Login
       uses: azure/login@v1
