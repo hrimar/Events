@@ -48,11 +48,35 @@ jobs:
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
 
+    - name: Get runner public IP
+      id: ip
+      run: |
+        RUNNER_IP=$(curl -s https://api.ipify.org)
+        echo "RUNNER_IP=$RUNNER_IP" >> $GITHUB_OUTPUT
+        echo "Runner IP: $RUNNER_IP"
+
+    - name: Add firewall rule for runner IP
+      run: |
+        az sql server firewall-rule create \
+          --resource-group gosofia-prod-we-rg \
+          --server gosofia-prod-we-sql-1 \
+          --name "GitHubActions-${{ github.run_id }}" \
+          --start-ip-address ${{ steps.ip.outputs.RUNNER_IP }} \
+          --end-ip-address ${{ steps.ip.outputs.RUNNER_IP }}
+
     - name: Apply database migrations
       uses: azure/sql-action@v2.2
       with:
         connection-string: ${{ secrets.AZURE_SQL_CONNECTION_STRING }}
         path: './migration.sql'
+
+    - name: Remove firewall rule
+      if: always()
+      run: |
+        az sql server firewall-rule delete \
+          --resource-group gosofia-prod-we-rg \
+          --server gosofia-prod-we-sql-1 \
+          --name "GitHubActions-${{ github.run_id }}" || true
 
     - name: Deploy to Azure Web App
       uses: azure/webapps-deploy@v2
