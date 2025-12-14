@@ -52,14 +52,12 @@ jobs:
       run: |
         RUNNER_IP=$(curl -s https://api.ipify.org)
         echo "Runner IP: $RUNNER_IP"
-        
-        # Add firewall rule with proper error handling
         az sql server firewall-rule create \
           --resource-group gosofia-prod-we-rg \
           --server gosofia-prod-we-sql-1 \
           --name "GitHubActions-${{ github.run_id }}" \
           --start-ip-address "$RUNNER_IP" \
-          --end-ip-address "$RUNNER_IP" || echo "Firewall rule creation failed, continuing..."
+          --end-ip-address "$RUNNER_IP"
 
     - name: Apply database migrations
       uses: azure/sql-action@v2.2
