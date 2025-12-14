@@ -79,4 +79,4 @@ jobs:
         package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
 
     - name: Logout from Azure
-      run: az logout      run: az logout
+      run: az logout
