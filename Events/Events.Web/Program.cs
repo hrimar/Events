@@ -28,8 +28,10 @@ app.Run();
 
 static void ConfigureDatabase(WebApplicationBuilder builder)
 {
-    var connectionString = builder.Configuration.GetConnectionString("EventsConnection") ??
-        throw new InvalidOperationException("Connection string 'EventsConnection' not found.");
+    // Support for design-time operations with environment variable fallback
+    var connectionString = builder.Configuration.GetConnectionString("EventsConnection") 
+        ?? Environment.GetEnvironmentVariable("DESIGN_TIME_CONNECTION_STRING")
+        ?? throw new InvalidOperationException("Connection string 'EventsConnection' not found.");
 
     builder.Services.AddDbContext<EventsDbContext>(options =>
     {
