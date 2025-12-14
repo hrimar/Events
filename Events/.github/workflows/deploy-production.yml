@@ -1,0 +1,62 @@
+name: Deploy to Azure Production
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  AZURE_WEBAPP_NAME: 'gosofia-prod-we-app'
+  AZURE_WEBAPP_PACKAGE_PATH: './publish'
+  DOTNET_VERSION: '8.0.x'
+  
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build application
+      run: dotnet build --configuration Release --no-restore
+
+    - name: Run tests
+      run: dotnet test --no-build --verbosity normal
+
+    - name: Publish application
+      run: dotnet publish Events.Web/Events.Web.csproj --configuration Release --no-build --output ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+
+    - name: Generate migration scripts
+      run: |
+        dotnet tool install --global dotnet-ef
+        dotnet ef migrations script --project Events.Data --startup-project Events.Web --output migration.sql --idempotent
+
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Apply database migrations
+      uses: azure/sql-action@v2.2
+      with:
+        connection-string: ${{ secrets.AZURE_SQL_CONNECTION_STRING }}
+        path: './migration.sql'
+
+    - name: Deploy to Azure Web App
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: ${{ env.AZURE_WEBAPP_NAME }}
+        slot-name: 'production'
+        package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+
+    - name: Logout from Azure
+      run: az logout

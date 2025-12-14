@@ -16,9 +16,8 @@ public static class DbSeederService
         await SeedUsersAsync(userManager, logger);
     }
 
-    private static async Task SeedRolesAsync(RoleManager<IdentityRole> roleManager, ILogger logger)
+    public static async Task SeedRolesAsync(RoleManager<IdentityRole> roleManager, ILogger logger)
     {
-        // Define the roles
         string[] roles = { "Administrator", "EventManager", "User" };
 
         foreach (var roleName in roles)
@@ -34,15 +33,20 @@ public static class DbSeederService
                 }
                 else
                 {
-                    logger.LogError("Failed to create role '{RoleName}': {Errors}", 
-                        roleName, string.Join(", ", result.Errors.Select(e => e.Description)));
+                    logger.LogError("Failed to create role '{RoleName}': {Errors}", roleName, string.Join(", ", result.Errors.Select(e => e.Description)));
                 }
+            }
+            else
+            {
+                logger.LogDebug("Role '{RoleName}' already exists", roleName);
             }
         }
     }
 
-    private static async Task SeedUsersAsync(UserManager<IdentityUser> userManager, ILogger logger)
+    public static async Task SeedUsersAsync(UserManager<IdentityUser> userManager, ILogger logger)
     {
+        logger.LogWarning("Seeding development users with hardcoded passwords - NOT FOR PRODUCTION!");
+        
         // Seed Administrator user
         await SeedUserAsync(userManager, logger, 
             email: "admin@events.local", 
@@ -85,8 +89,16 @@ public static class DbSeederService
                 // Add user to roles
                 foreach (var role in roles)
                 {
-                    await userManager.AddToRoleAsync(user, role);
-                    logger.LogInformation("User '{Email}' added to role '{Role}'", email, role);
+                    var roleResult = await userManager.AddToRoleAsync(user, role);
+                    if (roleResult.Succeeded)
+                    {
+                        logger.LogInformation("User '{Email}' added to role '{Role}'", email, role);
+                    }
+                    else
+                    {
+                        logger.LogError("Failed to add user '{Email}' to role '{Role}': {Errors}", 
+                            email, role, string.Join(", ", roleResult.Errors.Select(e => e.Description)));
+                    }
                 }
             }
             else
@@ -97,7 +109,7 @@ public static class DbSeederService
         }
         else
         {
-            logger.LogInformation("User '{Email}' already exists", email);
+            logger.LogDebug("User '{Email}' already exists", email);
         }
     }
 }
