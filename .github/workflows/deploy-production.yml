@@ -48,29 +48,30 @@ jobs:
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-    - name: Add temporary firewall rule for GitHub Actions
+    - name: Set Service Principal as SQL Server Azure AD Admin
       run: |
-        # Add broad firewall rule for GitHub Actions (temporary for deployment testing)
+        # Add Service Principal as Azure AD admin for SQL Server
+        az sql server ad-admin create \
+          --resource-group gosofia-prod-we-rg \
+          --server gosofia-prod-we-sql-1 \
+          --display-name "GitHubActions-SP" \
+          --object-id "27db46f0-4909-4f93-8da6-e118a268cf2f" || echo "AD admin already exists"
+
+    - name: Add firewall rule for GitHub Actions
+      run: |
+        # Add broad firewall rule for GitHub Actions
         az sql server firewall-rule create \
           --resource-group gosofia-prod-we-rg \
           --server gosofia-prod-we-sql-1 \
-          --name "GitHubActions-Temp-${{ github.run_id }}" \
+          --name "GitHubActions-All" \
           --start-ip-address "0.0.0.0" \
-          --end-ip-address "255.255.255.255"
+          --end-ip-address "255.255.255.255" || echo "Firewall rule already exists"
 
     - name: Apply database migrations
       uses: azure/sql-action@v2.2
       with:
         connection-string: ${{ secrets.AZURE_SQL_CONNECTION_STRING }}
         path: './migration.sql'
-
-    - name: Remove temporary firewall rule
-      if: always()
-      run: |
-        az sql server firewall-rule delete \
-          --resource-group gosofia-prod-we-rg \
-          --server gosofia-prod-we-sql-1 \
-          --name "GitHubActions-Temp-${{ github.run_id }}" || echo "Firewall rule cleanup completed"
 
     - name: Deploy to Azure Web App
       uses: azure/webapps-deploy@v2
