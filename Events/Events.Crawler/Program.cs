@@ -36,12 +36,12 @@ var host = new HostBuilder()
             {
                 dbOptions.MigrationsAssembly("Events.Data");
                 dbOptions.EnableRetryOnFailure(
-                    maxRetryCount: 3, 
-                    maxRetryDelay: TimeSpan.FromSeconds(10), 
+                    maxRetryCount: 2,  // reduced retries
+                    maxRetryDelay: TimeSpan.FromSeconds(5),  // reduced delay
                     errorNumbersToAdd: null);
-                dbOptions.CommandTimeout(60);
+                dbOptions.CommandTimeout(30);  // reduced timeout
             });
-        });
+        }, ServiceLifetime.Scoped);  // Explicit scoped lifetime
 
         // Core repositories
         services.AddScoped<IEventRepository, EventRepository>();
