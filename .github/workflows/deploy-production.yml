@@ -3,6 +3,9 @@ name: Deploy to Azure Production
 on:
   push:
     branches: [ main ]
+    paths:
+      - 'Events/Events.Web/**'
+      - '.github/workflows/deploy-production.yml'
   workflow_dispatch:
 
 env:

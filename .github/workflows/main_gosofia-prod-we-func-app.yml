@@ -2,8 +2,10 @@ name: Build and deploy dotnet core app to Azure Function App - gosofia-prod-we-f
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
+    paths:
+      - 'Events/Events.Crawler/**'
+      - '.github/workflows/main_gosofia-prod-we-func-app.yml'
   workflow_dispatch:
 
 env:
@@ -49,7 +51,7 @@ jobs:
             dotnet restore Events/Events.Data/Events.Data.csproj
             dotnet restore Events/Events.Services/Events.Services.csproj
             dotnet restore Events/Events.Crawler/Events.Crawler.csproj
-            
+
             dotnet build Events/Events.Models/Events.Models.csproj --configuration Release --no-restore
             dotnet build Events/Events.Data/Events.Data.csproj --configuration Release --no-restore
             dotnet build Events/Events.Services/Events.Services.csproj --configuration Release --no-restore
