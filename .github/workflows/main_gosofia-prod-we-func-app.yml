@@ -69,16 +69,10 @@ jobs:
           cd $GITHUB_WORKSPACE/output
           npx playwright install chromium --with-deps
 
-      - name: Login to Azure
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_0144735B704F47E39850FC5E141C33E1 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_2BFAD533C4BA4F18ACF8926718A6B376 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_DB0C4D734B7A411DB2AFA96E8D671734 }}
-
       - name: 'Deploy to Azure Functions'
         uses: Azure/functions-action@v1
         with:
           app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
           slot-name: 'Production'
           package: '${{ github.workspace }}/output'
+          publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}

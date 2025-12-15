@@ -1,9 +1,9 @@
 name: Build and deploy dotnet core app to Azure Function App - events-prod-ne-func
 
 on:
-  push:
-    branches:
-      - main
+  # push:
+  #   branches:
+  #     - main
   workflow_dispatch:
 
 env:
