@@ -5,7 +5,6 @@ on:
     branches: [ main ]
     paths:
       - 'Events/Events.Web/**'
-      - '.github/workflows/deploy-production.yml'
   workflow_dispatch:
 
 env:
