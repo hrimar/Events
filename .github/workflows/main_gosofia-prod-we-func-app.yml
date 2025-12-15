@@ -7,8 +7,6 @@ on:
   workflow_dispatch:
 
 env:
-  SOLUTION_PATH: 'Events'
-  FUNCTION_PROJECT_PATH: 'Events/Events.Crawler'
   DOTNET_VERSION: '8.0.x'
   AZURE_FUNCTIONAPP_NAME: 'gosofia-prod-we-func-app'
 
@@ -41,33 +39,35 @@ jobs:
       - name: 'Restore and Build Solution'
         shell: bash
         run: |
-          cd ${{ env.SOLUTION_PATH }}
-          if ls *.sln 1> /dev/null 2>&1; then
+          # Вече сме в Events/ папката (repo root), където е .sln файлът
+          if ls Events/*.sln 1> /dev/null 2>&1; then
             echo "Building from solution file..."
-            dotnet restore *.sln
-            dotnet build *.sln --configuration Release --no-restore
+            dotnet restore Events/*.sln
+            dotnet build Events/*.sln --configuration Release --no-restore
           else
             echo "Building individual projects..."
-            dotnet restore Events.Models/Events.Models.csproj
-            dotnet restore Events.Data/Events.Data.csproj
-            dotnet restore Events.Services/Events.Services.csproj
-            dotnet restore Events.Crawler/Events.Crawler.csproj
+            dotnet restore Events/Events.Models/Events.Models.csproj
+            dotnet restore Events/Events.Data/Events.Data.csproj
+            dotnet restore Events/Events.Services/Events.Services.csproj
+            dotnet restore Events/Events.Crawler/Events.Crawler.csproj
             
-            dotnet build Events.Models/Events.Models.csproj --configuration Release --no-restore
-            dotnet build Events.Data/Events.Data.csproj --configuration Release --no-restore
-            dotnet build Events.Services/Events.Services.csproj --configuration Release --no-restore
-            dotnet build Events.Crawler/Events.Crawler.csproj --configuration Release --no-restore
+            dotnet build Events/Events.Models/Events.Models.csproj --configuration Release --no-restore
+            dotnet build Events/Events.Data/Events.Data.csproj --configuration Release --no-restore
+            dotnet build Events/Events.Services/Events.Services.csproj --configuration Release --no-restore
+            dotnet build Events/Events.Crawler/Events.Crawler.csproj --configuration Release --no-restore
           fi
 
       - name: 'Publish Function App'
         shell: bash
         run: |
-          cd ${{ env.FUNCTION_PROJECT_PATH }}
-          dotnet publish --configuration Release --output ../../output --no-build
+          dotnet publish Events/Events.Crawler/Events.Crawler.csproj \
+            --configuration Release \
+            --output $GITHUB_WORKSPACE/output \
+            --no-build
 
       - name: Install Playwright Browsers
         run: |
-          cd output
+          cd $GITHUB_WORKSPACE/output
           npx playwright install chromium --with-deps
 
       - name: Login to Azure
@@ -82,4 +82,4 @@ jobs:
         with:
           app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
           slot-name: 'Production'
-          package: './output'
+          package: '${{ github.workspace }}/output'
