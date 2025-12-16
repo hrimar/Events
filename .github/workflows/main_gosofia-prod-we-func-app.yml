@@ -63,7 +63,7 @@ jobs:
           dotnet publish Events/Events.Crawler/Events.Crawler.csproj \
             --configuration Release \
             --output $GITHUB_WORKSPACE/output \
-            --no-build
+            --self-contained false
 
       - name: Install Playwright Browsers
         run: |
