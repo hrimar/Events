@@ -22,14 +22,10 @@ public class TicketStationCrawler : IWebScrapingCrawler
     public TicketStationCrawler(ILogger<TicketStationCrawler> logger)
     {
         _logger = logger;
-        _logger.LogInformation("TicketStationCrawler constructor called");
-        Console.WriteLine("TicketStationCrawler constructor called");
     }
 
     public async Task<CrawlResult> CrawlAsync(DateTime? targetDate = null)
     {
-        _logger.LogInformation("CrawlAsync started");
-        Console.WriteLine("CrawlAsync started");
         var result = new CrawlResult
         {
             Source = SourceName,
@@ -40,12 +36,7 @@ public class TicketStationCrawler : IWebScrapingCrawler
 
         try
         {
-            _logger.LogInformation("Calling EnsureBrowsersInstalled");
-            Console.WriteLine("Calling EnsureBrowsersInstalled");
             EnsureBrowsersInstalled();
-
-            _logger.LogInformation("Calling GetTicketStationEventsAsync");
-            Console.WriteLine("Calling GetTicketStationEventsAsync");
             var ticketStationEvents = await GetTicketStationEventsAsync("https://ticketstation.bg/bg/top-events");
 
             var sofiaEvents = ticketStationEvents
@@ -58,15 +49,10 @@ public class TicketStationCrawler : IWebScrapingCrawler
             result.Events = sofiaEvents; // Only Sofia events
             result.EventsProcessed = sofiaEvents.Count;
             result.Success = true;
-
-            _logger.LogInformation("Crawled {TotalEvents} events from TicketStation, {SofiaEvents} in Sofia",
-                ticketStationEvents.Count, sofiaEvents.Count);
-            Console.WriteLine($"Crawled {ticketStationEvents.Count} events from TicketStation, {sofiaEvents.Count} in Sofia");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error crawling TicketStation.bg");
-            Console.WriteLine($"Error crawling TicketStation.bg: {ex}");
             result.Success = false;
             result.ErrorMessage = ex.Message;
         }
@@ -80,45 +66,25 @@ public class TicketStationCrawler : IWebScrapingCrawler
 
     private void EnsureBrowsersInstalled()
     {
-        _logger.LogInformation("EnsureBrowsersInstalled called");
-        Console.WriteLine("EnsureBrowsersInstalled called");
-        if (_browsersInstalled) {
-            _logger.LogInformation("Browsers already installed");
-            Console.WriteLine("Browsers already installed");
-            return;
-        }
+        if (_browsersInstalled) return;
 
         lock (_installLock)
         {
-            if (_browsersInstalled) {
-                _logger.LogInformation("Browsers already installed (inside lock)");
-                Console.WriteLine("Browsers already installed (inside lock)");
-                return;
-            }
+            if (_browsersInstalled) return;
 
             try
             {
-                _logger.LogInformation("Checking Playwright browser installation...");
-                Console.WriteLine("Checking Playwright browser installation...");
-
                 var chromiumPath = GetChromiumPath();
-                _logger.LogInformation($"Chromium path: {chromiumPath}");
-                Console.WriteLine($"Chromium path: {chromiumPath}");
                 if (string.IsNullOrEmpty(chromiumPath) || !File.Exists(chromiumPath))
                 {
-                    _logger.LogWarning("Playwright browsers not found. Attempting to install...");
-                    Console.WriteLine("Playwright browsers not found. Attempting to install...");
                     InstallPlaywrightBrowsers();
                 }
 
                 _browsersInstalled = true;
-                _logger.LogInformation("Playwright browsers are ready");
-                Console.WriteLine("Playwright browsers are ready");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to ensure Playwright browsers are installed");
-                Console.WriteLine($"Failed to ensure Playwright browsers are installed: {ex}");
                 throw new InvalidOperationException("Playwright browsers are not installed. Please run 'npx playwright install chromium' manually.", ex);
             }
         }
@@ -126,8 +92,6 @@ public class TicketStationCrawler : IWebScrapingCrawler
 
     private void InstallPlaywrightBrowsers()
     {
-        _logger.LogInformation("InstallPlaywrightBrowsers called");
-        Console.WriteLine("InstallPlaywrightBrowsers called");
         try
         {
             var processInfo = new ProcessStartInfo
@@ -149,7 +113,6 @@ public class TicketStationCrawler : IWebScrapingCrawler
                 {
                     var error = process.StandardError.ReadToEnd();
                     _logger.LogError($"Failed to install Playwright browsers: {error}");
-                    Console.WriteLine($"Failed to install Playwright browsers: {error}");
                     throw new InvalidOperationException($"Failed to install Playwright browsers: {error}");
                 }
             }
@@ -157,15 +120,12 @@ public class TicketStationCrawler : IWebScrapingCrawler
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error installing Playwright browsers");
-            Console.WriteLine($"Error installing Playwright browsers: {ex}");
             throw;
         }
     }
 
     private string? GetChromiumPath()
     {
-        _logger.LogInformation("GetChromiumPath called");
-        Console.WriteLine("GetChromiumPath called");
         var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
         var playwrightDir = Path.Combine(localAppData, "ms-playwright");
 
@@ -177,8 +137,6 @@ public class TicketStationCrawler : IWebScrapingCrawler
         var latestChromiumDir = chromiumDirs.OrderByDescending(d => d).First();
         var chromePath = Path.Combine(latestChromiumDir, "chrome-win", "chrome.exe");
 
-        _logger.LogInformation($"Resolved Chromium path: {chromePath}");
-        Console.WriteLine($"Resolved Chromium path: {chromePath}");
         return File.Exists(chromePath) ? chromePath : null;
     }
 
@@ -271,11 +229,9 @@ public class TicketStationCrawler : IWebScrapingCrawler
     {
         try
         {
-            //// Check if Playwright browsers are installed
-            //var chromiumPath = GetChromiumPath();
-            //return !string.IsNullOrEmpty(chromiumPath) && File.Exists(chromiumPath);
-            _logger.LogWarning("TicketStationCrawler.IsHealthy() called - FORCED TRUE FOR DEBUG");
-            return true;
+            // Check if Playwright browsers are installed
+            var chromiumPath = GetChromiumPath();
+            return !string.IsNullOrEmpty(chromiumPath) && File.Exists(chromiumPath);
         }
         catch
         {
@@ -322,8 +278,6 @@ public class TicketStationCrawler : IWebScrapingCrawler
                     // Get all item cards
                     var itemCards = await page.QuerySelectorAllAsync(".item");
                     var events = new List<TicketStationEventDto>();
-
-                    _logger.LogInformation("Found {ItemCount} item cards", itemCards.Count);
 
                     // Process cards one by one to avoid stale element references
                     int cardIndex = 0;
@@ -732,7 +686,6 @@ public class TicketStationCrawler : IWebScrapingCrawler
             {
                 if (TryParseBulgarianDate(match1.Groups[1].Value, match1.Groups[2].Value, match1.Groups[3].Value, bulgarianMonths, currentDate, out var date1))
                 {
-                    _logger.LogDebug("Extracted date (pattern 1 - calendar emoji): {Date} from '{MatchedText}'", date1.ToString("yyyy-MM-dd"), match1.Value);
                     return date1;
                 }
             }
@@ -745,7 +698,6 @@ public class TicketStationCrawler : IWebScrapingCrawler
             {
                 if (TryParseBulgarianDate(match2.Groups[1].Value, match2.Groups[2].Value, match2.Groups[3].Value, bulgarianMonths, currentDate, out var date2))
                 {
-                    _logger.LogDebug("Extracted date (pattern 2 - short month): {Date} from '{MatchedText}'", date2.ToString("yyyy-MM-dd"), match2.Value);
                     return date2;
                 }
             }
@@ -758,7 +710,6 @@ public class TicketStationCrawler : IWebScrapingCrawler
             {
                 if (TryParseBulgarianDate(match3.Groups[1].Value, match3.Groups[2].Value, match3.Groups[3].Value, bulgarianMonths, currentDate, out var date3))
                 {
-                    _logger.LogDebug("Extracted date (pattern 3 - на DD месец YYYY): {Date} from '{MatchedText}'", date3.ToString("yyyy-MM-dd"), match3.Value);
                     return date3;
                 }
             }
@@ -777,7 +728,6 @@ public class TicketStationCrawler : IWebScrapingCrawler
                 {
                     if (TryParseBulgarianDateWithoutYear(dayStr, monthStr, bulgarianMonths, currentDate, out var date4))
                     {
-                        _logger.LogDebug("Extracted date (pattern 4 - DD и DD месец, no year): {Date} from '{MatchedText}'", date4.ToString("yyyy-MM-dd"), match4.Value);
                         return date4;
                     }
                 }
@@ -785,7 +735,6 @@ public class TicketStationCrawler : IWebScrapingCrawler
                 {
                     if (TryParseBulgarianDate(dayStr, monthStr, yearStr, bulgarianMonths, currentDate, out var date4))
                     {
-                        _logger.LogDebug("Extracted date (pattern 4 - DD и DD месец): {Date} from '{MatchedText}'", date4.ToString("yyyy-MM-dd"), match4.Value);
                         return date4;
                     }
                 }
@@ -800,7 +749,6 @@ public class TicketStationCrawler : IWebScrapingCrawler
             {
                 if (TryParseBulgarianDateWithoutYear(match5.Groups[1].Value, match5.Groups[2].Value, bulgarianMonths, currentDate, out var date5))
                 {
-                    _logger.LogDebug("Extracted date (pattern 5 - no year): {Date} from '{MatchedText}'", date5.ToString("yyyy-MM-dd"), match5.Value);
                     return date5;
                 }
             }
@@ -819,7 +767,6 @@ public class TicketStationCrawler : IWebScrapingCrawler
                 {
                     if (TryParseBulgarianDateWithoutYear(dayStr, monthStr, bulgarianMonths, currentDate, out var date6))
                     {
-                        _logger.LogDebug("Extracted date (pattern 6 - ordinal, no year): {Date} from '{MatchedText}'", date6.ToString("yyyy-MM-dd"), match6.Value);
                         return date6;
                     }
                 }
@@ -827,7 +774,6 @@ public class TicketStationCrawler : IWebScrapingCrawler
                 {
                     if (TryParseBulgarianDate(dayStr, monthStr, yearStr, bulgarianMonths, currentDate, out var date6))
                     {
-                        _logger.LogDebug("Extracted date (pattern 6 - ordinal): {Date} from '{MatchedText}'", date6.ToString("yyyy-MM-dd"), match6.Value);
                         return date6;
                     }
                 }
@@ -863,7 +809,6 @@ public class TicketStationCrawler : IWebScrapingCrawler
                     if (IsValidDate(year, month, day))
                     {
                         var date7 = new DateTime(year, month, day);
-                        _logger.LogDebug("Extracted date (pattern 7 - DD.MM): {Date} from '{MatchedText}'", date7.ToString("yyyy-MM-dd"), match.Value);
                         return date7;
                     }
                 }
@@ -878,12 +823,10 @@ public class TicketStationCrawler : IWebScrapingCrawler
             {
                 if (TryParseBulgarianDate(match.Groups[1].Value, match.Groups[2].Value, match.Groups[3].Value, bulgarianMonths, currentDate, out var date8))
                 {
-                    _logger.LogDebug("Extracted date (pattern 8 - general format): {Date} from '{MatchedText}'", date8.ToString("yyyy-MM-dd"), match.Value);
                     return date8;
                 }
             }
 
-            _logger.LogDebug("No valid date found in description: {Description}", description.Substring(0, Math.Min(100, description.Length)));
             return null;
         }
         catch (Exception ex)
