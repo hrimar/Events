@@ -13,17 +13,20 @@
 
 {
   "version": "2.0",
-  "functionTimeout": "00:10:00",
+  "functionTimeout": "00:50:00", // "00:10:00",
   "extensions": {
     "http": {
-      "maxConcurrentRequests": 100,
-      "maxOutstandingRequests": 200
+      "maxConcurrentRequests": 200,
+      "maxOutstandingRequests": 400,
+      "routePrefix": "api"
     }
   },
   "logging": {
-    //"logLevel": {
-    //  "default": "Information"
-    //},
+    "logLevel": {
+      "default": "Information",
+      "Microsoft": "Warning",
+      "Microsoft.EntityFrameworkCore": "Warning"
+    },
     "applicationInsights": {
       "samplingSettings": {
         "isEnabled": true,

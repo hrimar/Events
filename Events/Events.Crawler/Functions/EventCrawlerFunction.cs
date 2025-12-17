@@ -29,7 +29,7 @@ public class EventCrawlerFunction
     public async Task CrawlEventsTimerFunction([TimerTrigger("0 0 4 * * *")] TimerInfo myTimer)
     //public async Task CrawlEventsTimerFunction([TimerTrigger("0 27 19 * * *")] TimerInfo myTimer)
     {
-        using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(50)); // TimeSpan.FromMinutes(9)
+        using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(8));
 
         _logger.LogInformation("Event crawler function started at: {Time}", DateTime.UtcNow);
 
