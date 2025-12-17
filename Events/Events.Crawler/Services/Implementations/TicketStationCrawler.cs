@@ -22,10 +22,14 @@ public class TicketStationCrawler : IWebScrapingCrawler
     public TicketStationCrawler(ILogger<TicketStationCrawler> logger)
     {
         _logger = logger;
+        _logger.LogInformation("TicketStationCrawler constructor called");
+        Console.WriteLine("TicketStationCrawler constructor called");
     }
 
     public async Task<CrawlResult> CrawlAsync(DateTime? targetDate = null)
     {
+        _logger.LogInformation("CrawlAsync started");
+        Console.WriteLine("CrawlAsync started");
         var result = new CrawlResult
         {
             Source = SourceName,
@@ -36,8 +40,12 @@ public class TicketStationCrawler : IWebScrapingCrawler
 
         try
         {
+            _logger.LogInformation("Calling EnsureBrowsersInstalled");
+            Console.WriteLine("Calling EnsureBrowsersInstalled");
             EnsureBrowsersInstalled();
 
+            _logger.LogInformation("Calling GetTicketStationEventsAsync");
+            Console.WriteLine("Calling GetTicketStationEventsAsync");
             var ticketStationEvents = await GetTicketStationEventsAsync("https://ticketstation.bg/bg/top-events");
 
             var sofiaEvents = ticketStationEvents
@@ -53,10 +61,12 @@ public class TicketStationCrawler : IWebScrapingCrawler
 
             _logger.LogInformation("Crawled {TotalEvents} events from TicketStation, {SofiaEvents} in Sofia",
                 ticketStationEvents.Count, sofiaEvents.Count);
+            Console.WriteLine($"Crawled {ticketStationEvents.Count} events from TicketStation, {sofiaEvents.Count} in Sofia");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error crawling TicketStation.bg");
+            Console.WriteLine($"Error crawling TicketStation.bg: {ex}");
             result.Success = false;
             result.ErrorMessage = ex.Message;
         }
@@ -66,6 +76,110 @@ public class TicketStationCrawler : IWebScrapingCrawler
         }
 
         return result;
+    }
+
+    private void EnsureBrowsersInstalled()
+    {
+        _logger.LogInformation("EnsureBrowsersInstalled called");
+        Console.WriteLine("EnsureBrowsersInstalled called");
+        if (_browsersInstalled) {
+            _logger.LogInformation("Browsers already installed");
+            Console.WriteLine("Browsers already installed");
+            return;
+        }
+
+        lock (_installLock)
+        {
+            if (_browsersInstalled) {
+                _logger.LogInformation("Browsers already installed (inside lock)");
+                Console.WriteLine("Browsers already installed (inside lock)");
+                return;
+            }
+
+            try
+            {
+                _logger.LogInformation("Checking Playwright browser installation...");
+                Console.WriteLine("Checking Playwright browser installation...");
+
+                var chromiumPath = GetChromiumPath();
+                _logger.LogInformation($"Chromium path: {chromiumPath}");
+                Console.WriteLine($"Chromium path: {chromiumPath}");
+                if (string.IsNullOrEmpty(chromiumPath) || !File.Exists(chromiumPath))
+                {
+                    _logger.LogWarning("Playwright browsers not found. Attempting to install...");
+                    Console.WriteLine("Playwright browsers not found. Attempting to install...");
+                    InstallPlaywrightBrowsers();
+                }
+
+                _browsersInstalled = true;
+                _logger.LogInformation("Playwright browsers are ready");
+                Console.WriteLine("Playwright browsers are ready");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to ensure Playwright browsers are installed");
+                Console.WriteLine($"Failed to ensure Playwright browsers are installed: {ex}");
+                throw new InvalidOperationException("Playwright browsers are not installed. Please run 'npx playwright install chromium' manually.", ex);
+            }
+        }
+    }
+
+    private void InstallPlaywrightBrowsers()
+    {
+        _logger.LogInformation("InstallPlaywrightBrowsers called");
+        Console.WriteLine("InstallPlaywrightBrowsers called");
+        try
+        {
+            var processInfo = new ProcessStartInfo
+            {
+                FileName = "npx",
+                Arguments = "playwright install chromium",
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                CreateNoWindow = true
+            };
+
+            using var process = Process.Start(processInfo);
+            if (process != null)
+            {
+                process.WaitForExit(TimeSpan.FromMinutes(5)); // 5 minute timeout
+
+                if (process.ExitCode != 0)
+                {
+                    var error = process.StandardError.ReadToEnd();
+                    _logger.LogError($"Failed to install Playwright browsers: {error}");
+                    Console.WriteLine($"Failed to install Playwright browsers: {error}");
+                    throw new InvalidOperationException($"Failed to install Playwright browsers: {error}");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error installing Playwright browsers");
+            Console.WriteLine($"Error installing Playwright browsers: {ex}");
+            throw;
+        }
+    }
+
+    private string? GetChromiumPath()
+    {
+        _logger.LogInformation("GetChromiumPath called");
+        Console.WriteLine("GetChromiumPath called");
+        var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        var playwrightDir = Path.Combine(localAppData, "ms-playwright");
+
+        if (!Directory.Exists(playwrightDir)) return null;
+
+        var chromiumDirs = Directory.GetDirectories(playwrightDir, "chromium-*");
+        if (!chromiumDirs.Any()) return null;
+
+        var latestChromiumDir = chromiumDirs.OrderByDescending(d => d).First();
+        var chromePath = Path.Combine(latestChromiumDir, "chrome-win", "chrome.exe");
+
+        _logger.LogInformation($"Resolved Chromium path: {chromePath}");
+        Console.WriteLine($"Resolved Chromium path: {chromePath}");
+        return File.Exists(chromePath) ? chromePath : null;
     }
 
     public async Task<IEnumerable<string>> ExtractElementsAsync(string url, string selector)
@@ -849,85 +963,6 @@ public class TicketStationCrawler : IWebScrapingCrawler
         {
             return currentDate.Year;
         }
-    }
-
-    private void EnsureBrowsersInstalled()
-    {
-        if (_browsersInstalled) return;
-
-        lock (_installLock)
-        {
-            if (_browsersInstalled) return;
-
-            try
-            {
-                _logger.LogInformation("Checking Playwright browser installation...");
-
-                var chromiumPath = GetChromiumPath();
-                if (string.IsNullOrEmpty(chromiumPath) || !File.Exists(chromiumPath))
-                {
-                    _logger.LogWarning("Playwright browsers not found. Attempting to install...");
-                    InstallPlaywrightBrowsers();
-                }
-
-                _browsersInstalled = true;
-                _logger.LogInformation("Playwright browsers are ready");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to ensure Playwright browsers are installed");
-                throw new InvalidOperationException("Playwright browsers are not installed. Please run 'npx playwright install chromium' manually.", ex);
-            }
-        }
-    }
-
-    private void InstallPlaywrightBrowsers()
-    {
-        try
-        {
-            var processInfo = new ProcessStartInfo
-            {
-                FileName = "npx",
-                Arguments = "playwright install chromium",
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                CreateNoWindow = true
-            };
-
-            using var process = Process.Start(processInfo);
-            if (process != null)
-            {
-                process.WaitForExit(TimeSpan.FromMinutes(5)); // 5 minute timeout
-
-                if (process.ExitCode != 0)
-                {
-                    var error = process.StandardError.ReadToEnd();
-                    throw new InvalidOperationException($"Failed to install Playwright browsers: {error}");
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error installing Playwright browsers");
-            throw;
-        }
-    }
-
-    private string? GetChromiumPath()
-    {
-        var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        var playwrightDir = Path.Combine(localAppData, "ms-playwright");
-
-        if (!Directory.Exists(playwrightDir)) return null;
-
-        var chromiumDirs = Directory.GetDirectories(playwrightDir, "chromium-*");
-        if (!chromiumDirs.Any()) return null;
-
-        var latestChromiumDir = chromiumDirs.OrderByDescending(d => d).First();
-        var chromePath = Path.Combine(latestChromiumDir, "chrome-win", "chrome.exe");
-
-        return File.Exists(chromePath) ? chromePath : null;
     }
 
     private static bool IsSofiaCity(string city)

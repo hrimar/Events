@@ -27,17 +27,16 @@ public class EventCrawlerFunction
 
     [Function("CrawlEventsFunction")]
     public async Task CrawlEventsTimerFunction([TimerTrigger("0 0 4 * * *")] TimerInfo myTimer)
-    //public async Task CrawlEventsTimerFunction([TimerTrigger("0 56 14 * * *")] TimerInfo myTimer) // for debugging
+    //public async Task CrawlEventsTimerFunction([TimerTrigger("0 27 19 * * *")] TimerInfo myTimer)
     {
-        using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(8));
+        using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(50)); // TimeSpan.FromMinutes(9)
 
         _logger.LogInformation("Event crawler function started at: {Time}", DateTime.UtcNow);
 
         try
         {
             var crawlResult = await _crawlerService.CrawlAllSourcesAsync();
-            _logger.LogInformation("Parallel crawling completed in {Duration}. Found {EventCount} events",
-                crawlResult.Duration, crawlResult.EventsFound);
+            _logger.LogInformation("Parallel crawling completed in {Duration}. Found {EventCount} events", crawlResult.Duration, crawlResult.EventsFound);
 
             if (crawlResult.Success && crawlResult.Events.Any())
             {
@@ -268,6 +267,14 @@ public class EventCrawlerFunction
             });
         }
 
+        return response;
+    }
+
+    [Function("PingFunction")]
+    public async Task<HttpResponseData> Ping([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "ping")] HttpRequestData req)
+    {
+        var response = req.CreateResponse(HttpStatusCode.OK);
+        await response.WriteStringAsync("OK");
         return response;
     }
 }
