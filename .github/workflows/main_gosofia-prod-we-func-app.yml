@@ -75,15 +75,13 @@ jobs:
           export PLAYWRIGHT_BROWSERS_PATH=$GITHUB_WORKSPACE/output/.playwright
           export PLAYWRIGHT_CHROMIUM_REVISION=1091
           mkdir -p "$PLAYWRIGHT_BROWSERS_PATH"
-          npx playwright install chromium --with-deps
+          # Download the exact Chromium 1091 build so the runtime finds the expected path
+          curl -L https://playwright.azureedge.net/builds/chromium/1091/chromium-linux.zip -o chromium-1091.zip
+          unzip -q chromium-1091.zip -d "$PLAYWRIGHT_BROWSERS_PATH/chromium-1091"
+          rm chromium-1091.zip
           # Verify installation inside the publish package
-          ls -la "$PLAYWRIGHT_BROWSERS_PATH" || echo "Playwright download folder missing"
-          # Align directory name with the runtime expectation even if Playwright installs a newer revision
-          installed_dir=$(ls "$PLAYWRIGHT_BROWSERS_PATH" | grep chromium- | head -n1)
-          if [[ "$installed_dir" != "chromium-1091" && -d "$PLAYWRIGHT_BROWSERS_PATH/$installed_dir" ]]; then
-            mv "$PLAYWRIGHT_BROWSERS_PATH/$installed_dir" "$PLAYWRIGHT_BROWSERS_PATH/chromium-1091"
-          fi
-          tree "$PLAYWRIGHT_BROWSERS_PATH" || true
+          ls -la "$PLAYWRIGHT_BROWSERS_PATH"
+          tree "$PLAYWRIGHT_BROWSERS_PATH"
           # Archive package so hidden folders like .playwright are preserved
           cd $GITHUB_WORKSPACE/output
           zip -r $GITHUB_WORKSPACE/output.zip .
