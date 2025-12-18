@@ -78,6 +78,11 @@ jobs:
           npx playwright install chromium --with-deps
           # Verify installation inside the publish package
           ls -la "$PLAYWRIGHT_BROWSERS_PATH" || echo "Playwright download folder missing"
+          # Align directory name with the runtime expectation even if Playwright installs a newer revision
+          installed_dir=$(ls "$PLAYWRIGHT_BROWSERS_PATH" | grep chromium- | head -n1)
+          if [[ "$installed_dir" != "chromium-1091" && -d "$PLAYWRIGHT_BROWSERS_PATH/$installed_dir" ]]; then
+            mv "$PLAYWRIGHT_BROWSERS_PATH/$installed_dir" "$PLAYWRIGHT_BROWSERS_PATH/chromium-1091"
+          fi
           tree "$PLAYWRIGHT_BROWSERS_PATH" || true
           # Archive package so hidden folders like .playwright are preserved
           cd $GITHUB_WORKSPACE/output
