@@ -65,10 +65,16 @@ jobs:
             --output $GITHUB_WORKSPACE/output \
             --self-contained false
 
-      - name: Install Playwright Browsers
+      - name: Install Playwright and Browsers in Output
+        shell: bash
         run: |
           cd $GITHUB_WORKSPACE/output
+          # Install Playwright CLI globally in output folder
+          npm install playwright
+          # Install Chromium browser with system dependencies
           npx playwright install chromium --with-deps
+          # Verify installation
+          ls -la ~/.cache/ms-playwright/ || echo "Playwright cache location may differ"
 
       - name: 'Deploy to Azure Functions'
         uses: Azure/functions-action@v1

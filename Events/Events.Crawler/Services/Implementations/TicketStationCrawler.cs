@@ -4,7 +4,6 @@ using Events.Crawler.Enums;
 using Events.Crawler.Services.Interfaces;
 using Microsoft.Extensions.Logging;
 using Microsoft.Playwright;
-using System.Diagnostics;
 
 namespace Events.Crawler.Services.Implementations;
 
@@ -13,8 +12,6 @@ public class TicketStationCrawler : IWebScrapingCrawler
     private readonly ILogger<TicketStationCrawler> _logger;
     private readonly int _maxRetries = 3;
     private readonly int _delayBetweenRequests = 2000;
-    private static bool _browsersInstalled = false;
-    private static readonly object _installLock = new();
 
     public string SourceName => "ticketstation.bg";
     public CrawlerType CrawlerType => CrawlerType.WebScraping;
@@ -64,80 +61,12 @@ public class TicketStationCrawler : IWebScrapingCrawler
         return result;
     }
 
+    // Browsers are pre-installed during GitHub Actions deployment
+    // No runtime installation needed - Playwright will use pre-installed browsers
     private void EnsureBrowsersInstalled()
     {
-        if (_browsersInstalled) return;
-
-        lock (_installLock)
-        {
-            if (_browsersInstalled) return;
-
-            try
-            {
-                var chromiumPath = GetChromiumPath();
-                if (string.IsNullOrEmpty(chromiumPath) || !File.Exists(chromiumPath))
-                {
-                    InstallPlaywrightBrowsers();
-                }
-
-                _browsersInstalled = true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to ensure Playwright browsers are installed");
-                throw new InvalidOperationException("Playwright browsers are not installed. Please run 'npx playwright install chromium' manually.", ex);
-            }
-        }
-    }
-
-    private void InstallPlaywrightBrowsers()
-    {
-        try
-        {
-            var processInfo = new ProcessStartInfo
-            {
-                FileName = "npx",
-                Arguments = "playwright install chromium",
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                CreateNoWindow = true
-            };
-
-            using var process = Process.Start(processInfo);
-            if (process != null)
-            {
-                process.WaitForExit(TimeSpan.FromMinutes(5)); // 5 minute timeout
-
-                if (process.ExitCode != 0)
-                {
-                    var error = process.StandardError.ReadToEnd();
-                    _logger.LogError($"Failed to install Playwright browsers: {error}");
-                    throw new InvalidOperationException($"Failed to install Playwright browsers: {error}");
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error installing Playwright browsers");
-            throw;
-        }
-    }
-
-    private string? GetChromiumPath()
-    {
-        var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        var playwrightDir = Path.Combine(localAppData, "ms-playwright");
-
-        if (!Directory.Exists(playwrightDir)) return null;
-
-        var chromiumDirs = Directory.GetDirectories(playwrightDir, "chromium-*");
-        if (!chromiumDirs.Any()) return null;
-
-        var latestChromiumDir = chromiumDirs.OrderByDescending(d => d).First();
-        var chromePath = Path.Combine(latestChromiumDir, "chrome-win", "chrome.exe");
-
-        return File.Exists(chromePath) ? chromePath : null;
+        // Skip runtime check - browsers are installed at build time via GitHub Actions
+        // Playwright will automatically find them in the deployment package
     }
 
     public async Task<IEnumerable<string>> ExtractElementsAsync(string url, string selector)
@@ -227,18 +156,9 @@ public class TicketStationCrawler : IWebScrapingCrawler
 
     public bool IsHealthy()
     {
-        try
-        {
-            // Check if Playwright browsers are installed
-            var chromiumPath = GetChromiumPath();
-            _logger.LogDebug("Chromium path for health check: {ChromiumPath}", chromiumPath);
-            return true;
-            //return !string.IsNullOrEmpty(chromiumPath) && File.Exists(chromiumPath);
-        }
-        catch
-        {
-            return false;
-        }
+        // Browsers are pre-installed at deployment time
+        // Always return true - actual browser functionality is tested during crawl
+        return true;
     }
 
 
