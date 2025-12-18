@@ -71,13 +71,12 @@ jobs:
           cd $GITHUB_WORKSPACE/output
           # Install Playwright CLI globally in output folder
           npm install playwright
-          # Install Chromium browser with system dependencies
+          # Install Chromium browser with system dependencies directly into the output package
+          export PLAYWRIGHT_BROWSERS_PATH=$GITHUB_WORKSPACE/output/.playwright
+          mkdir -p "$PLAYWRIGHT_BROWSERS_PATH"
           npx playwright install chromium --with-deps
-          # Verify installation
-          ls -la ~/.cache/ms-playwright/ || echo "Playwright cache location may differ"
-          # Copy browsers into the deployment package so they're available at runtime
-          mkdir -p $GITHUB_WORKSPACE/output/.playwright
-          cp -R ~/.cache/ms-playwright/* $GITHUB_WORKSPACE/output/.playwright/
+          # Verify installation inside the publish package
+          ls -la "$PLAYWRIGHT_BROWSERS_PATH" || echo "Playwright download folder missing"
           # Archive package so hidden folders like .playwright are preserved
           cd $GITHUB_WORKSPACE/output
           zip -r $GITHUB_WORKSPACE/output.zip .
