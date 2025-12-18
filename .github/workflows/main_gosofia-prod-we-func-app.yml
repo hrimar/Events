@@ -73,10 +73,12 @@ jobs:
           npm install playwright
           # Install Chromium browser with system dependencies directly into the output package
           export PLAYWRIGHT_BROWSERS_PATH=$GITHUB_WORKSPACE/output/.playwright
+          export PLAYWRIGHT_CHROMIUM_REVISION=1091
           mkdir -p "$PLAYWRIGHT_BROWSERS_PATH"
           npx playwright install chromium --with-deps
           # Verify installation inside the publish package
           ls -la "$PLAYWRIGHT_BROWSERS_PATH" || echo "Playwright download folder missing"
+          tree "$PLAYWRIGHT_BROWSERS_PATH" || true
           # Archive package so hidden folders like .playwright are preserved
           cd $GITHUB_WORKSPACE/output
           zip -r $GITHUB_WORKSPACE/output.zip .
