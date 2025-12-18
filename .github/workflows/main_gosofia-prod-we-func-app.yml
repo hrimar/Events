@@ -65,19 +65,17 @@ jobs:
             --output $GITHUB_WORKSPACE/output \
             --self-contained false
 
-      - name: Install Playwright and Browsers in Output
+      - name: Install Playwright Browsers in Output
         shell: bash
         run: |
           cd $GITHUB_WORKSPACE/output
-          # Install Playwright CLI globally in output folder
-          npm install playwright
-          # Download Chromium 1091 directly into the published package
           export PLAYWRIGHT_BROWSERS_PATH=$GITHUB_WORKSPACE/output/.playwright
           mkdir -p "$PLAYWRIGHT_BROWSERS_PATH/chromium-1091"
           curl -L https://playwright.azureedge.net/builds/chromium/1091/chromium-linux.zip -o chromium-1091.zip
           unzip -q chromium-1091.zip -d "$PLAYWRIGHT_BROWSERS_PATH/chromium-1091"
           rm chromium-1091.zip
           find "$PLAYWRIGHT_BROWSERS_PATH" -maxdepth 4 -type f | grep "chrome-linux/chrome" || true
+          tree "$PLAYWRIGHT_BROWSERS_PATH"
           cd $GITHUB_WORKSPACE/output
           zip -r $GITHUB_WORKSPACE/output.zip .
 
