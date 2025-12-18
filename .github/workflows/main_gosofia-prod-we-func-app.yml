@@ -75,6 +75,9 @@ jobs:
           npx playwright install chromium --with-deps
           # Verify installation
           ls -la ~/.cache/ms-playwright/ || echo "Playwright cache location may differ"
+          # Copy browsers into the deployment package so they're available at runtime
+          mkdir -p $GITHUB_WORKSPACE/output/.playwright
+          cp -R ~/.cache/ms-playwright/* $GITHUB_WORKSPACE/output/.playwright/
 
       - name: 'Deploy to Azure Functions'
         uses: Azure/functions-action@v1
