@@ -215,8 +215,7 @@ public class EventCrawlerFunction
     }
 
     [Function("HealthCheckFunction")]
-    public async Task<HttpResponseData> HealthCheck(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "health")] HttpRequestData req)
+    public async Task<HttpResponseData> HealthCheck([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "health")] HttpRequestData req)
     {
         var response = req.CreateResponse(HttpStatusCode.OK);
         await response.WriteAsJsonAsync(new
@@ -229,8 +228,7 @@ public class EventCrawlerFunction
     }
 
     [Function("DiagnosticFunction")]
-    public async Task<HttpResponseData> DiagnosticCheck(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "diagnostic")] HttpRequestData req)
+    public async Task<HttpResponseData> DiagnosticCheck([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "diagnostic")] HttpRequestData req)
     {
         var response = req.CreateResponse(HttpStatusCode.OK);
 
