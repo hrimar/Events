@@ -65,25 +65,12 @@ jobs:
             --output $GITHUB_WORKSPACE/output \
             --self-contained false
 
-      - name: Install Playwright Browsers in Output
+      - name: Install Playwright Browsers (.NET)
         shell: bash
         run: |
-          echo "==> Start Playwright browser install"
           cd $GITHUB_WORKSPACE/output
-          export PLAYWRIGHT_BROWSERS_PATH=$GITHUB_WORKSPACE/output/playwright_browsers
-          mkdir -p "$PLAYWRIGHT_BROWSERS_PATH/chromium-1200"
-          curl -L https://playwright.azureedge.net/builds/chromium/1200/chromium-linux.zip -o chromium-1200.zip
-          unzip -q chromium-1200.zip -d "$PLAYWRIGHT_BROWSERS_PATH/chromium-1200"
-          rm chromium-1200.zip
-          find "$PLAYWRIGHT_BROWSERS_PATH" -maxdepth 5 -type f | grep "chrome-linux64/chrome" || true
-          tree "$PLAYWRIGHT_BROWSERS_PATH"
-          echo "==> End Playwright browser install"
-
-      - name: Generate browsers.json with Playwright CLI
-        run: |
-          cd "$GITHUB_WORKSPACE/output/.playwright/package"
-          npx playwright install chromium
-        shell: bash
+          dotnet tool restore || true
+          dotnet tool run playwright install
 
       - name: Archive output folder
         run: |
