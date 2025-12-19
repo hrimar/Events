@@ -79,9 +79,9 @@ jobs:
           tree "$PLAYWRIGHT_BROWSERS_PATH"
           echo "==> End Playwright browser install"
 
-      - name: Remove old Playwright cache from output
+      - name: Remove old browsers.json from Playwright cache in output
         run: |
-          rm -rf $GITHUB_WORKSPACE/output/.playwright
+          rm -f $GITHUB_WORKSPACE/output/.playwright/package/browsers.json
 
       - name: Archive output folder
         run: |
