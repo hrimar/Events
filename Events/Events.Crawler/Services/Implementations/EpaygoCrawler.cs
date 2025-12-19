@@ -67,8 +67,7 @@ public class EpaygoCrawler : IWebScrapingCrawler
             result.EventsProcessed = sofiaEvents.Count;
             result.Success = true;
 
-            _logger.LogInformation("Crawled {TotalEvents} events from Epaygo, {SofiaEvents} in Sofia", 
-                epaygoEvents.Count, sofiaEvents.Count);
+            _logger.LogInformation("Crawled {TotalEvents} events from Epaygo, {SofiaEvents} in Sofia", epaygoEvents.Count, sofiaEvents.Count);
         }
         catch (Exception ex)
         {

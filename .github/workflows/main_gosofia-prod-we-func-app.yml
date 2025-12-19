@@ -75,7 +75,7 @@ jobs:
           curl -L https://playwright.azureedge.net/builds/chromium/1200/chromium-linux.zip -o chromium-1200.zip
           unzip -q chromium-1200.zip -d "$PLAYWRIGHT_BROWSERS_PATH/chromium-1200"
           rm chromium-1200.zip
-          find "$PLAYWRIGHT_BROWSERS_PATH" -maxdepth 4 -type f | grep "chrome-linux/chrome" || true
+          find "$PLAYWRIGHT_BROWSERS_PATH" -maxdepth 5 -type f | grep "chrome-linux64/chrome" || true
           tree "$PLAYWRIGHT_BROWSERS_PATH"
           echo "==> End Playwright browser install"
 
