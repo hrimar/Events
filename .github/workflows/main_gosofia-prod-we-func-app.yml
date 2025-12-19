@@ -69,8 +69,7 @@ jobs:
         shell: bash
         run: |
           cd $GITHUB_WORKSPACE/output
-          dotnet tool restore || true
-          dotnet tool run playwright install
+          bash ./playwright.sh install || pwsh ./playwright.ps1 install
 
       - name: Archive output folder
         run: |
