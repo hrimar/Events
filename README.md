@@ -1,2 +1,2 @@
 # Events
-All events in one place - an events crawler and presenter.
+All Sofia events in one place - an events crawler and presenter.
