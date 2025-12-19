@@ -69,7 +69,7 @@ jobs:
         shell: bash
         run: |
           cd $GITHUB_WORKSPACE/output
-          export PLAYWRIGHT_BROWSERS_PATH=$GITHUB_WORKSPACE/output/.playwright
+          export PLAYWRIGHT_BROWSERS_PATH=$GITHUB_WORKSPACE/output/playwright_browsers
           mkdir -p "$PLAYWRIGHT_BROWSERS_PATH/chromium-1200"
           curl -L https://playwright.azureedge.net/builds/chromium/1200/chromium-linux.zip -o chromium-1200.zip
           unzip -q chromium-1200.zip -d "$PLAYWRIGHT_BROWSERS_PATH/chromium-1200"
@@ -81,7 +81,7 @@ jobs:
 
       - name: Inspect zipped artifact
         run: |
-          unzip -l $GITHUB_WORKSPACE/output.zip | grep -E "\.playwright|chromium" || true
+          unzip -l $GITHUB_WORKSPACE/output.zip | grep -E "playwright_browsers|chromium" || true
 
       - name: 'Deploy to Azure Functions'
         uses: Azure/functions-action@v1
