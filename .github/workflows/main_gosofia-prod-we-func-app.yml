@@ -68,6 +68,7 @@ jobs:
       - name: Install Playwright Browsers in Output
         shell: bash
         run: |
+          echo "==> Start Playwright browser install"
           cd $GITHUB_WORKSPACE/output
           export PLAYWRIGHT_BROWSERS_PATH=$GITHUB_WORKSPACE/output/playwright_browsers
           mkdir -p "$PLAYWRIGHT_BROWSERS_PATH/chromium-1200"
@@ -76,16 +77,25 @@ jobs:
           rm chromium-1200.zip
           find "$PLAYWRIGHT_BROWSERS_PATH" -maxdepth 4 -type f | grep "chrome-linux/chrome" || true
           tree "$PLAYWRIGHT_BROWSERS_PATH"
+          echo "==> End Playwright browser install"
       - name: Log output directory contents before zip
         run: |
-          echo "Listing output directory before zipping:"
+          echo "==> Listing output directory before zipping:"
           ls -lR $GITHUB_WORKSPACE/output
+          echo "==> Zipping output folder"
           cd $GITHUB_WORKSPACE
           zip -r output.zip output
+          echo "==> Done zipping"
 
-      - name: Inspect zipped artifact
+      - name: Inspect zipped artifact (filtered)
         run: |
+          echo "==> Inspecting zipped artifact (filtered)"
           unzip -l $GITHUB_WORKSPACE/output.zip | grep -E "playwright_browsers|chromium" || true
+
+      - name: Show full zip contents
+        run: |
+          echo "==> Full zip listing:"
+          unzip -l $GITHUB_WORKSPACE/output.zip
 
       - name: 'Deploy to Azure Functions'
         uses: Azure/functions-action@v1
