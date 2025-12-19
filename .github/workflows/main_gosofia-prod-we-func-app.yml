@@ -65,11 +65,22 @@ jobs:
             --output $GITHUB_WORKSPACE/output \
             --self-contained false
 
+      - name: Clean old Playwright browsers
+        shell: bash
+        run: |
+          rm -rf $GITHUB_WORKSPACE/output/playwright_browsers || true
+
       - name: Install Playwright Browsers (.NET)
         shell: bash
         run: |
           cd $GITHUB_WORKSPACE/output
           bash ./playwright.sh install || pwsh ./playwright.ps1 install
+
+      - name: Log Playwright browsers after install
+        shell: bash
+        run: |
+          echo "==> Contents of output/playwright_browsers after install:"
+          find $GITHUB_WORKSPACE/output/playwright_browsers || echo "No browsers directory found"
 
       - name: Archive output folder
         run: |
