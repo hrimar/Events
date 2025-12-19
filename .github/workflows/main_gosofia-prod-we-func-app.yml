@@ -78,14 +78,6 @@ jobs:
           find "$PLAYWRIGHT_BROWSERS_PATH" -maxdepth 4 -type f | grep "chrome-linux/chrome" || true
           tree "$PLAYWRIGHT_BROWSERS_PATH"
           echo "==> End Playwright browser install"
-      - name: Log output directory contents before zip
-        run: |
-          echo "==> Listing output directory before zipping:"
-          ls -lR $GITHUB_WORKSPACE/output
-          echo "==> Zipping output folder"
-          cd $GITHUB_WORKSPACE
-          zip -r output.zip output
-          echo "==> Done zipping"
 
       - name: Inspect zipped artifact (filtered)
         run: |
