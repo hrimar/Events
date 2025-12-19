@@ -52,8 +52,7 @@ public class GroqTaggingService : IAiTaggingService
         // Skip AI if we've had too many consecutive failures
         if (_consecutiveFailures >= 3)
         {
-            _logger.LogWarning("Skipping AI for '{EventName}' due to {Failures} consecutive failures - using fallback",
-                eventName, _consecutiveFailures);
+            _logger.LogWarning("Skipping AI for '{EventName}' due to {Failures} consecutive failures - using fallback", eventName, _consecutiveFailures);
             return GenerateEnhancedFallbackTags(eventName, description, location);
         }
 

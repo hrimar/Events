@@ -2,14 +2,14 @@ name: Build and deploy dotnet core app to Azure Function App - gosofia-prod-we-f
 
 on:
   push:
-    branches: [ main ]
-    paths:
-      - 'Events/Events.Crawler/**'
+    branches: [main]
+    # paths:
+    #   - "Events/Events.Crawler/**"
   workflow_dispatch:
 
 env:
-  DOTNET_VERSION: '8.0.x'
-  AZURE_FUNCTIONAPP_NAME: 'gosofia-prod-we-func-app'
+  DOTNET_VERSION: "8.0.x"
+  AZURE_FUNCTIONAPP_NAME: "gosofia-prod-we-func-app"
 
 jobs:
   build-and-deploy:
@@ -19,7 +19,7 @@ jobs:
       contents: read
 
     steps:
-      - name: 'Checkout GitHub Action'
+      - name: "Checkout GitHub Action"
         uses: actions/checkout@v4
 
       - name: Setup DotNet ${{ env.DOTNET_VERSION }} Environment
@@ -30,14 +30,14 @@ jobs:
       - name: Setup Node.js (for Playwright)
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: "18"
 
       - name: Install System Dependencies for Playwright
         run: |
           sudo apt-get update
           sudo apt-get install -y libnss3-dev libatk-bridge2.0-dev libdrm2 libxkbcommon0 libgtk-3-0
 
-      - name: 'Restore and Build Solution'
+      - name: "Restore and Build Solution"
         shell: bash
         run: |
           if ls Events/*.sln 1> /dev/null 2>&1; then
@@ -57,7 +57,7 @@ jobs:
             dotnet build Events/Events.Crawler/Events.Crawler.csproj --configuration Release --no-restore
           fi
 
-      - name: 'Publish Function App'
+      - name: "Publish Function App"
         shell: bash
         run: |
           dotnet publish Events/Events.Crawler/Events.Crawler.csproj \
@@ -79,9 +79,19 @@ jobs:
           tree "$PLAYWRIGHT_BROWSERS_PATH"
           echo "==> End Playwright browser install"
 
-      - name: Remove old browsers.json from Playwright cache in output
+      - name: Overwrite browsers.json in Playwright cache in output
         run: |
-          rm -f $GITHUB_WORKSPACE/output/.playwright/package/browsers.json
+          cat > $GITHUB_WORKSPACE/output/.playwright/package/browsers.json <<EOL
+          {
+            "browsers": [
+              {
+                "name": "chromium",
+                "revision": "1200",
+                "installByDefault": true
+              }
+            ]
+          }
+          EOL
 
       - name: Archive output folder
         run: |
@@ -98,10 +108,10 @@ jobs:
           echo "==> Full zip listing:"
           unzip -l $GITHUB_WORKSPACE/output.zip
 
-      - name: 'Deploy to Azure Functions'
+      - name: "Deploy to Azure Functions"
         uses: Azure/functions-action@v1
         with:
           app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
-          slot-name: 'Production'
-          package: '${{ github.workspace }}/output.zip'
+          slot-name: "Production"
+          package: "${{ github.workspace }}/output.zip"
           publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}
