@@ -444,7 +444,7 @@ public class TicketStationCrawler : IWebScrapingCrawler
         {
             ExternalId = GenerateEventId(ticketStationEvent.Name, ticketStationEvent.Url),
             Source = SourceName,
-            Name = CleanText(ticketStationEvent.Name) ?? "Unknown Event",
+            Name = CleanText(ticketStationEvent.Name) ?? "",
             Description = CleanText(ticketStationEvent.Description),
             StartDate = TryParseEventDate(ticketStationEvent.Date),
             City = CleanText(ticketStationEvent.City) ?? "",

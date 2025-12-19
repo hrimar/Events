@@ -81,8 +81,8 @@ jobs:
 
       - name: Archive output folder
         run: |
-          cd $GITHUB_WORKSPACE
-          zip -r output.zip output
+          cd $GITHUB_WORKSPACE/output
+          zip -r $GITHUB_WORKSPACE/output.zip .
 
       - name: Inspect zipped artifact (filtered)
         run: |
