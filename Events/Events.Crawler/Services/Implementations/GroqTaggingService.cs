@@ -180,8 +180,7 @@ Return:";
         catch (Exception ex)
         {
             _consecutiveFailures++;
-            _logger.LogError(ex, "Error in comprehensive AI processing for '{EventName}' (failure #{Failures})",
-                eventName, _consecutiveFailures);
+            _logger.LogError(ex, "Error in comprehensive AI processing for '{EventName}' (failure #{Failures})", eventName, _consecutiveFailures);
             return GenerateEnhancedFallbackTags(eventName, description, location);
         }
         finally
