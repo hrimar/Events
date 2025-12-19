@@ -79,6 +79,11 @@ jobs:
           tree "$PLAYWRIGHT_BROWSERS_PATH"
           echo "==> End Playwright browser install"
 
+      - name: Archive output folder
+        run: |
+          cd $GITHUB_WORKSPACE
+          zip -r output.zip output
+
       - name: Inspect zipped artifact (filtered)
         run: |
           echo "==> Inspecting zipped artifact (filtered)"

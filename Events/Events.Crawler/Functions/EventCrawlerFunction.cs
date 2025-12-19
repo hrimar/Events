@@ -176,8 +176,7 @@ public class EventCrawlerFunction
             if (result.Success && result.Events.Any())
             {
                 var processingResult = await _eventProcessingService.ProcessAndTagEventsAsync(result.Events);
-                _logger.LogInformation("Manual crawl completed for {Source}. Processed {Count} events",
-                    source, processingResult.EventsProcessed);
+                _logger.LogInformation("Manual crawl completed for {Source}. Processed {Count} events", source, processingResult.EventsProcessed);
 
                 var response = req.CreateResponse(HttpStatusCode.OK);
                 await response.WriteAsJsonAsync(new
