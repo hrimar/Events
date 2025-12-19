@@ -76,8 +76,8 @@ jobs:
           rm chromium-1200.zip
           find "$PLAYWRIGHT_BROWSERS_PATH" -maxdepth 4 -type f | grep "chrome-linux/chrome" || true
           tree "$PLAYWRIGHT_BROWSERS_PATH"
-          cd $GITHUB_WORKSPACE/output
-          zip -r $GITHUB_WORKSPACE/output.zip .
+          cd $GITHUB_WORKSPACE
+          zip -r output.zip output/* output/playwright_browsers
 
       - name: Inspect zipped artifact
         run: |
