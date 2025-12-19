@@ -79,19 +79,11 @@ jobs:
           tree "$PLAYWRIGHT_BROWSERS_PATH"
           echo "==> End Playwright browser install"
 
-      - name: Overwrite browsers.json in Playwright cache in output
+      - name: Generate browsers.json with Playwright CLI
         run: |
-          cat > $GITHUB_WORKSPACE/output/.playwright/package/browsers.json <<EOL
-          {
-            "browsers": [
-              {
-                "name": "chromium",
-                "revision": "1200",
-                "installByDefault": true
-              }
-            ]
-          }
-          EOL
+          cd "$GITHUB_WORKSPACE/output/.playwright/package"
+          npx playwright install chromium
+        shell: bash
 
       - name: Archive output folder
         run: |
