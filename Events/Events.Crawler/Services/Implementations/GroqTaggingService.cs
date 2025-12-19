@@ -112,8 +112,7 @@ Return:";
                     // Strict validation: Check if response follows format
                     if (!IsValidResponseFormat(responseText))
                     {
-                        _logger.LogWarning("AI returned invalid format for '{EventName}': {Response} - using fallback",
-                            eventName, responseText);
+                        _logger.LogWarning("AI returned invalid format for '{EventName}': {Response} - using fallback", eventName, responseText);
                         _consecutiveFailures++; // Count as failure
                         return GenerateEnhancedFallbackTags(eventName, description, location);
                     }
