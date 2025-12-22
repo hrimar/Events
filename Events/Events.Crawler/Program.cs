@@ -61,13 +61,13 @@ var host = new HostBuilder()
         services.AddScoped<IAiTaggingService, GroqTaggingService>();
 
         // HTTP clients
-        services.AddHttpClient<BiletBgCrawler>(client =>
+        services.AddHttpClient<BiletBgApiCrawler>(client =>
         {
             client.Timeout = TimeSpan.FromSeconds(30);
         });
 
         // Crawler strategies
-        services.AddScoped<IEventCrawlerStrategy, BiletBgCrawler>(); // via HttpClient
+        services.AddScoped<IEventCrawlerStrategy, BiletBgApiCrawler>(); // via HttpClient
         services.AddScoped<IEventCrawlerStrategy, TicketStationCrawler>(); // via Playwright
         //services.AddScoped<IEventCrawlerStrategy, EpaygoCrawler>(); // via Playwright
         //services.AddScoped<IEventCrawlerStrategy, EventimCrawler>(); // via Playwright & AJAX

@@ -1,4 +1,5 @@
-﻿using Events.Crawler.Services.Interfaces;
+﻿using HtmlAgilityPack;
+using Events.Crawler.Services.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
@@ -8,16 +9,16 @@ using Events.Crawler.DTOs.Common;
 
 namespace Events.Crawler.Services.Implementations;
 
-public class BiletBgCrawler : IHttpApiCrawler
+public class BiletBgApiCrawler : IHttpApiCrawler
 {
     private readonly HttpClient _httpClient;
     private readonly IConfiguration _configuration;
-    private readonly ILogger<BiletBgCrawler> _logger;
+    private readonly ILogger<BiletBgApiCrawler> _logger;
 
     public string SourceName => "bilet.bg";
     public CrawlerType CrawlerType => CrawlerType.HttpApi;
 
-    public BiletBgCrawler(HttpClient httpClient, IConfiguration configuration, ILogger<BiletBgCrawler> logger)
+    public BiletBgApiCrawler(HttpClient httpClient, IConfiguration configuration, ILogger<BiletBgApiCrawler> logger)
     {
         _httpClient = httpClient;
         _configuration = configuration;
@@ -128,7 +129,14 @@ public class BiletBgCrawler : IHttpApiCrawler
     {
         // Early filtration for Events because we are interested in Events from Sofia only
         var city = biletEvent.Place?.City?.Trim().ToLowerInvariant();
-        if (string.IsNullOrEmpty(city) || !IsSofiaCity(city))
+
+        // If city is missing, assume Sofia by default (many events omit the city for Sofia)
+        if (string.IsNullOrEmpty(city))
+        {
+            city = "софия"; // Default to Sofia if city is missing (for now)
+        }
+
+        if (!IsSofiaCity(city))
         {
             _logger.LogDebug("Filtering out non-Sofia event: {EventName} in {City}", biletEvent.Name, biletEvent.Place?.City);
             return null; // Skip non-Sofia events
@@ -139,7 +147,7 @@ public class BiletBgCrawler : IHttpApiCrawler
             ExternalId = biletEvent.Id.ToString(),
             Source = SourceName,
             Name = biletEvent.Name ?? "",
-            Description = biletEvent.Description,
+            Description = !string.IsNullOrEmpty(biletEvent.Description) ? SanitizeHtmlToText(biletEvent.Description) : null,
             City = city,
             Location = $"{biletEvent.Place?.Address} {biletEvent.Place?.Name}".Trim(),
             StartDate = TryParseDate(biletEvent.StartDate),
@@ -161,12 +169,7 @@ public class BiletBgCrawler : IHttpApiCrawler
 
     private static bool IsSofiaCity(string city)
     {
-        var sofiaCities = new[]
-        {
-        "софия", "sofia", "софија", "sofija",
-        "гр. софия", "гр.София", "sofia city"
-    };
-
+        var sofiaCities = new[] { "софия", "sofia", "софија", "sofija", "гр. софия", "гр.София", "sofia city" };
         return sofiaCities.Any(sc => city.Contains(sc));
     }
 
@@ -174,5 +177,38 @@ public class BiletBgCrawler : IHttpApiCrawler
     {
         if (string.IsNullOrEmpty(dateString)) return null;
         return DateTime.TryParse(dateString, out var date) ? date : null;
+    }
+
+    private static string SanitizeHtmlToText(string html)
+    {
+        if (string.IsNullOrWhiteSpace(html))
+            return string.Empty;
+
+        var doc = new HtmlDocument();
+        doc.LoadHtml(html);
+
+        // Tale all <p>, <li>, <br> elements and add new lines accordingly
+        var sb = new System.Text.StringBuilder();
+        foreach (var node in doc.DocumentNode.DescendantsAndSelf())
+        {
+            if (node.Name is "p" or "li")
+            {
+                if (sb.Length > 0) sb.AppendLine();
+                sb.Append(HtmlEntity.DeEntitize(node.InnerText.Trim()));
+            }
+            else if (node.Name == "br")
+            {
+                sb.AppendLine();
+            }
+        }
+
+        // If there are no <p> or <li>, take the entire plain text
+        var result = sb.Length > 0 ? sb.ToString() : HtmlEntity.DeEntitize(doc.DocumentNode.InnerText);
+
+        // Remove excess empty lines
+        return string.Join(Environment.NewLine, result
+            .Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
+            .Select(line => line.Trim())
+            .Where(line => !string.IsNullOrWhiteSpace(line)));
     }
 }
