@@ -154,9 +154,8 @@ public class BiletBgApiCrawler : IHttpApiCrawler
             EndDate = TryParseDate(biletEvent.EndDate),
             ImageUrl = biletEvent.Image,
             SourceUrl = "https://bilet.bg/event/",
-            TicketUrl = !string.IsNullOrEmpty(biletEvent.Slug)
-                ? $"https://bilet.bg/bg/cart/{biletEvent.Slug}"
-                : null,
+            TicketUrl = !string.IsNullOrEmpty(biletEvent.Slug) ? $"https://bilet.bg/bg/cart/{biletEvent.Slug}" : null,
+            IsFree = false, // by default all events are considered paid. The admin will adjust if needed the free ones
             RawData = new Dictionary<string, object>
             {
                 ["bilet_id"] = biletEvent.Id,

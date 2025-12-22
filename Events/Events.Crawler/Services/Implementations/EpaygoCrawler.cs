@@ -369,17 +369,17 @@ public class EpaygoCrawler : IWebScrapingCrawler
                             eventDto.Description = eventDto.Name; // Fallback
                         }
 
-                        // TODO: The price is not available in the description. Try to find another way!
-                        var fullText = eventDto.Description;
-                        if (!string.IsNullOrEmpty(fullText))
-                        {
-                            var priceMatch = Regex.Match(fullText, @"(\d+(?:\.\d{2})?)\s*(?:лв|BGN|EUR)", RegexOptions.IgnoreCase);
-                            if (priceMatch.Success && decimal.TryParse(priceMatch.Groups[1].Value, out decimal price))
-                            {
-                                eventDto.Price = price;
-                                eventDto.IsFree = price == 0;
-                            }
-                        }
+                        //// TODO: The price is not available in the description. Ignore the price for now
+                        //var fullText = eventDto.Description;
+                        //if (!string.IsNullOrEmpty(fullText))
+                        //{
+                        //    var priceMatch = Regex.Match(fullText, @"(\d+(?:\.\d{2})?)\s*(?:лв|BGN|EUR)", RegexOptions.IgnoreCase);
+                        //    if (priceMatch.Success && decimal.TryParse(priceMatch.Groups[1].Value, out decimal price))
+                        //    {
+                        //        eventDto.Price = price;
+                        //        eventDto.IsFree = price == 0;
+                        //    }
+                        //}
 
                         eventDto.SourceUrl = url;
 
@@ -556,8 +556,9 @@ public class EpaygoCrawler : IWebScrapingCrawler
             ImageUrl = epaygoEvent.ImageUrl,
             SourceUrl = epaygoEvent.SourceUrl,
             TicketUrl = epaygoEvent.TicketUrl,
-            Price = epaygoEvent.Price,
-            IsFree = epaygoEvent.IsFree || epaygoEvent.Price == null || epaygoEvent.Price == 0,
+            //Price = epaygoEvent.Price,
+            //IsFree = epaygoEvent.IsFree || epaygoEvent.Price == null || epaygoEvent.Price == 0,
+            IsFree = false, // by default all events are considered paid. The admin will adjust if needed the free ones
             RawData = new Dictionary<string, object>
             {
                 ["original_date_text"] = epaygoEvent.Date ?? "",

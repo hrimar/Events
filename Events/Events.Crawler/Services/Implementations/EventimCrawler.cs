@@ -414,17 +414,13 @@ public class EventimCrawler : IWebScrapingCrawler
                     {
                         Name = eventimEvent.Title,
                         Description = null, // Not provided by API
-                        ImageUrl = !string.IsNullOrEmpty(eventimEvent.Image)
-                            ? $"https://www.eventim.bg{eventimEvent.Image}"
-                            : null,
+                        ImageUrl = !string.IsNullOrEmpty(eventimEvent.Image) ? $"https://www.eventim.bg{eventimEvent.Image}" : null,
                         Date = eventInstance.DateStart?.DateTime,
-                        Price = null, // Not provided by API
+                        Price = null, // Ignore the price for now
+                        IsFree = false, // by default all events are considered paid. The admin will adjust if needed the free ones
                         City = eventInstance.City,
-                        TicketUrl = !string.IsNullOrEmpty(eventimEvent.Url)
-                            ? $"https://www.eventim.bg{eventimEvent.Url}"
-                            : null,
+                        TicketUrl = !string.IsNullOrEmpty(eventimEvent.Url) ? $"https://www.eventim.bg{eventimEvent.Url}" : null,
                         SourceUrl = "https://www.eventim.bg",
-                        IsFree = false, // Cannot determine from API
                         Venue = eventInstance.Venue
                     };
 

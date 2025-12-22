@@ -263,7 +263,7 @@ public class TicketStationCrawler : IWebScrapingCrawler
 
                             eventDto.Url = "https://ticketstation.bg";
 
-                            // Step 2: Navigate to detail page to extract price
+                            // Step 2: Navigate to detail page to extract price and location
                             try
                             {
                                 await page.GotoAsync(detailUrl, new PageGotoOptions
@@ -274,13 +274,13 @@ public class TicketStationCrawler : IWebScrapingCrawler
 
                                 await Task.Delay(2000); // Wait for content to load
 
-                                // Extract price from .item-price
-                                var priceElement = await page.QuerySelectorAsync(".item-price");
-                                if (priceElement != null)
-                                {
-                                    var priceText = await priceElement.InnerTextAsync();
-                                    eventDto.Price = ExtractLowestPriceInEur(priceText);
-                                }
+                                //// Extract price from .item-price - Ignore the price for now
+                                //var priceElement = await page.QuerySelectorAsync(".item-price");
+                                //if (priceElement != null)
+                                //{
+                                //    var priceText = await priceElement.InnerTextAsync();
+                                //    eventDto.Price = ExtractLowestPriceInEur(priceText);
+                                //}
 
                                 // Find .item element to get href for Step 3 (location/booking page)
                                 var itemElement = await page.QuerySelectorAsync(".item");
@@ -452,8 +452,9 @@ public class TicketStationCrawler : IWebScrapingCrawler
             ImageUrl = ticketStationEvent.ImageUrl,
             SourceUrl = ticketStationEvent.Url,
             TicketUrl = ticketStationEvent.TicketUrl,
-            Price = ticketStationEvent.Price,
-            IsFree = ticketStationEvent.Price == null || ticketStationEvent.Price == 0,
+            //Price = ticketStationEvent.Price,
+            //IsFree = ticketStationEvent.Price == null || ticketStationEvent.Price == 0,
+            IsFree = false, // by default all events are considered paid. The admin will adjust if needed the free ones
             RawData = new Dictionary<string, object>
             {
                 ["original_date_text"] = ticketStationEvent.Date ?? "",

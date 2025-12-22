@@ -25,10 +25,7 @@
     <!-- Event specific -->
     <meta property="event:start_date" content="@Model.Date.ToString("yyyy-MM-dd")" />
     <meta property="event:location" content="@Model.City, @Model.Location" />
-    @if(!Model.IsFree && Model.Price.HasValue)
-    {
-        <meta property="event:price" content="@Model.Price.Value" />
-    }
+    @* No price meta at all *@
 }
 
 <div class="container py-4">
@@ -58,10 +55,11 @@
                          class="w-100"
                          style="height: 400px; object-fit: contain; background: #f8f9fa;"
                          onerror="this.src='/images/default-event.jpg'">
-                    
-                    <div class="event-price-overlay @(Model.IsFree ? "event-free" : "")">
-                        @Model.PriceDisplay
-                    </div>
+                    @* Show 'Free' badge only for free events *@
+                    @if (Model.IsFree)
+                    {
+                    <div class="event-price-overlay event-free">@Model.PriceDisplay</div>
+                    }
                 </div>
 
                 <div class="card-body">
@@ -111,7 +109,6 @@
                                 </div>
                             }
                         </div>
-                        
                         <div class="text-end">
                             <button class="btn btn-outline-danger mb-2" onclick="toggleFavorite(@Model.Id)">
                                 <i class="fas fa-heart"></i> Save
@@ -162,19 +159,8 @@
                             </div>
                         </div>
 
-                        @if(!Model.IsFree && Model.Price.HasValue)
-                        {
-                            <div class="col-md-6">
-                                <div class="d-flex align-items-center mb-3">
-                                    <i class="fas fa-tag text-primary me-3" style="width: 20px;"></i>
-                                    <div>
-                                        <strong>Price</strong><br>
-                                        <span class="text-success fs-5">@Model.Price.Value.ToString("F0") BGN</span>
-                                    </div>
-                                </div>
-                            </div>
-                        }
-
+                        @* No price display at all *@
+                        
                         <div class="col-md-6">
                             <div class="d-flex align-items-center mb-3">
                                 <i class="fas fa-clock text-primary me-3" style="width: 20px;"></i>

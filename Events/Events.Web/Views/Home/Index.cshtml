@@ -111,9 +111,10 @@
                                      alt="@eventItem.Name" 
                                      class="event-image-full"
                                      onerror="this.src='/images/default-event.jpg'">
-                                <div class="event-price @(eventItem.IsFree ? "event-free" : "")">
-                                    @eventItem.PriceDisplay
-                                </div>
+                                @if (eventItem.IsFree)
+                                {
+                                <div class="event-price event-free">@Model.PriceDisplay</div>
+                                }
                             </div>
                         </a>
                         
