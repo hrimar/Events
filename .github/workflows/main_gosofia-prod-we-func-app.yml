@@ -3,8 +3,8 @@ name: Build and deploy dotnet core app to Azure Function App - gosofia-prod-we-f
 on:
   push:
     branches: [main]
-    # paths:
-    #   - "Events/Events.Crawler/**"
+    paths:
+      - "Events/Events.Crawler/**"
   workflow_dispatch:
 
 env:

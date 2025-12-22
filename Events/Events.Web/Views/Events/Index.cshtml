@@ -285,9 +285,10 @@
                                          alt="@eventItem.Name" 
                                          class="event-image-full"
                                          onerror="this.src='/images/default-event.jpg'">
+                                    @* Show 'Free' badge only for free events *@
                                     @if (eventItem.IsFree)
                                     {
-                                    <div class="event-price event-free">@Model.PriceDisplay</div>
+                                    <div class="event-price event-free">Free</div>
                                     }
                                 </div>
                             </a>
