@@ -2,6 +2,7 @@ using System.Diagnostics;
 using Events.Web.Models;
 using Events.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using Events.Models.Enums;
 
 namespace Events.Web.Controllers
 {
@@ -24,11 +25,10 @@ namespace Events.Web.Controllers
             {
                 // Get only featured events for homepage - no pagination needed
                 var featuredEvents = await _eventService.GetFeaturedEventsAsync(6);
-                var totalEvents = await _eventService.GetTotalEventsCountAsync(Events.Models.Enums.EventStatus.Published);
+                var totalEvents = await _eventService.GetTotalEventsCountAsync(EventStatus.Published);
 
                 // Get today's events count
-                var todayEvents = await _eventService.GetPagedEventsAsync(1, 100,
-                    Events.Models.Enums.EventStatus.Published, null, null, DateTime.Today);
+                var todayEvents = await _eventService.GetPagedEventsAsync(1, 100, EventStatus.Published, null, null, DateTime.Today);
 
                 // Get this week's events count
                 var weekStart = DateTime.Today.AddDays(-(int)DateTime.Today.DayOfWeek);
@@ -44,7 +44,7 @@ namespace Events.Web.Controllers
                 {
                     FeaturedEvents = eventViewModels,
                     TotalEvents = totalEvents,
-                    TodayEvents = todayEvents.Events.Count(),
+                    TodayEvents = todayEvents.TotalCount,
                     ThisWeekEvents = weekEvents.Count(),
                     PopularTags = popularTags.Take(15).ToList() // Top 15 for homepage
                 };

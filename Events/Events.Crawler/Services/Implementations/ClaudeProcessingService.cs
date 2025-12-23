@@ -65,18 +65,18 @@ public class ClaudeProcessingService : IAiTaggingService
             // Use Claude 3 Sonnet model
             var prompt = $@"You are an expert in cultural life in Sofia, Bulgaria. Your task is to categorize events based on your knowledge of the local cultural scene.
 
-Here is the list of available categories and subcategories to choose from:
+Below is the list of available categories and subcategories. Each subcategory includes example events in parentheses to help you choose the most appropriate one:
 
-1=Music → Rock,Jazz,Metal,Pop,Classical,Electronic,Folk,Blues,HipHop,Other
-2=Art → Painting,Sculpture,Photography,DigitalArt,Other
-3=Business → NetworkingEvents,Startups,Marketing,Other
-4=Sports → Football,Basketball,Tennis,Volleyball,Other
-5=Theatre → Drama,Comedy,MusicalTheatre,Other
-6=Cinema → FeatureFilms,Documentaries,Animation,Other
-7=Festivals → MusicFestivals,FilmFestivals,ArtFestivals,FoodAndWineFestivals,Other
-8=Exhibitions → ArtExhibitions,PhotographyExhibitions,HistoricalExhibitions,Other
-9=Conferences → TechConferences,BusinessConferences,AcademicConferences,Other
-10=Workshops → ArtWorkshops,CookingWorkshops,CodingWorkshops,Other
+1=Music → Pop(Concerts of DARA, Mihaela Marinova), Rock(Midalidare Rock, B.T.R. concerts), Hip-Hop / Rap(100 Kila, Krisko, Fyre shows), Jazz(A to Jazz Festival, Plovdiv Jazz Fest), Blues(Sofia Blues Meeting), Classical(Sofia Philharmonic, Opera Open Plovdiv), Folk(Pirin Folk, traditional folklore events), Traditional Bulgarian(National Folklore Festivals), EDM(YALTA Club, Solar Events), Techno(Metropolis Events), House(EXE Club House Nights), Drum & Bass(HMSU events), Trance(Solar Trance Nights), Reggae(One Love Tour), R&B(Soul Sundays at Studio 5), Metal(Hills of Rock, Varna Mega Rock), Indie(Sofia Indie Nights), Acoustic(Acoustic Sessions Sofia), Alternative(Alarma Punk Jazz), Punk(Punk gigs at Mixtape 5), Soul(Smaller club concerts), Chillout(—), Experimental(—), Choir(Sofia Boys Choir), World Music(Ethno Jazz Fest), Other
+2=Art → Painting(National Art Gallery exhibitions), Sculpture(—), Photography(PhotoSynthesis exhibitions), Digital Art(DA Fest), Street Art(Urban Creatures), Graffiti(Sofia Graffiti Tour), Illustration(—), Performance Art(Water Tower Art Fest), Installation Art(Contemporary gallery installations), Contemporary Art(Structura Gallery), Visual Arts(Sofia Art Week), Mixed Media(—), Conceptual Art(—), Other
+3=Business → Networking Events(Founders Live), Startups(Startup Conference Bulgaria), Entrepreneurship(CEO Angels Club), Marketing(Digital4Sofia), Sales(—), Leadership(Leadership Talks), Finance(Investor Finance Forum), Real Estate(Expo Real Bulgaria), Investment(Money Motion), E-commerce(eCommerce Academy), Innovation(Innovation Explorer), Technology(Webit), HR & Management(HR Industry Expo), Business Strategy(—), Product Development(—), Other
+4=Sports → Football(CSKA–Levski Derby), Basketball(NBL Games), Volleyball(National League), Tennis(Sofia Open), Athletics(—), Swimming(—), Running(Sofia Marathon), Cycling(Tour of Bulgaria), Boxing(MaxFight), MMA(Bulgarian Fighting Championship), Wrestling(—), Weightlifting(—), CrossFit(CrossFit Bulgarian Throwdowns), Yoga(Yoga in the Park), Fitness(FitFest), Hiking(Vitosha hikes), Climbing(Climb.bg events), Skiing(Bansko Ski Cup), Snowboarding(Pamporovo Freestyle), Motocross(Bulgarian Motocross Championship), eSports(A1 Gaming League), Table Tennis(—), Badminton(—), Golf(Pirin Golf Tournaments), Dance Sport(Dance Sport Championships), Other
+5=Theatre → Drama(National Theatre performances), Comedy(Theatre Sofia), Musical Theatre(Musical productions at Opera Houses), Tragedy(—), Experimental Theatre(ACT Festival), Puppet Theatre(Puppet Theatre Sofia), Improvisation(HaHaHa Impro Theatre), Street Theatre(Street performances during festivals), Monodrama(One-man shows), Children's Theatre(Theatre “Pan”), Stand-up Comedy(Comedy Club Sofia, Inside Joke), Other
+6=Cinema → Feature Films(SIFF), Short Films(In The Palace Film Fest), Documentaries(Master of Art Festival), Animation(Golden Kuker Sofia), Independent Cinema(Screenings at Dom na Kinoto), Bulgarian Cinema(Premiers at Odeon, Lumière Lidl), International Cinema(—), Film Premieres(Weekly premieres in cinemas), Student Films(NATFIZ screenings), Film Festivals(SIFF), Other
+7=Festivals → Music Festivals(Hills of Rock, A to Jazz), Film Festivals(SIFF), Art Festivals(KvARTal Festival), Food & Wine Festivals(DiVino Taste), Cultural Festivals(Gabrovo Carnival), Folklore Festivals(Koprivshtitsa Fest), Street Festivals(Kapana Fest), Summer Festivals(Various coastal festivals), Light Festivals(LUNAR), Craft Beer Festivals(Sofia Brew Fest), Eco Festivals(Uzana Polyana Fest), Dance Festivals(Salsa Fest Bulgaria), Tech Festivals(Webit Expo), Other
+8=Exhibitions → Art Exhibitions(National Gallery), Photography Exhibitions(PhotoSynthesis), Historical Exhibitions(National Museum), Science Exhibitions(Inter Expo Center), Technology Exhibitions(Tech Expo Sofia), Automotive Exhibitions(Sofia Motor Show), Design Exhibitions(Design Week), Cultural Heritage Exhibitions(Regional museum exhibitions), Educational Exhibitions(Book Fair Sofia), Craft Exhibitions(Handmade Fest), Other
+9=Conferences → Tech Conferences(DEV.BG All In One, HackConf), Business Conferences(Webit), Startup Conferences(StartUP Conference), Academic Conferences(Sofia Science Festival), Marketing Conferences(DigitalK), Science Conferences(—), Health & Medicine Conferences(Medical Expo), AI & Innovation Conferences(AI Bulgaria Summit), IT Security Conferences(CyberSec Conferences), Environmental Conferences(Green Week), Other
+10=Workshops → Art Workshops(Paint & Wine), Music Workshops(DJ Academy), Dance Workshops(Salsa workshops), Photography Workshops(PhotoSynthesis trainings), Cooking Workshops(Culinary Workshop Bulgaria), Craft Workshops(Handmade Workshops), Startup Workshops(Lean Startup Workshops), Personal Development Workshops(Public Speaking Bootcamps), Coding Workshops(CodeWeek), Language Workshops(English Bootcamps), Theatre Workshops(Acting masterclasses), Yoga Workshops(Yoga Retreats), Wellness Workshops(Breathwork sessions), Marketing Workshops(Social Media Workshops), Other
 11=Undefined
 
 Here is the event you need to categorize:
@@ -90,6 +90,7 @@ Your task is to:
 Important rules for TAGS:
 - Tags should provide additional useful classification information beyond what the category/subcategory already convey
 - Tags should NOT repeat or closely match the event name, venue name, category, or subcategory
+- Do NOT use tags related to the city name (e.g. Sofia), as all events are already in Sofia
 - Good tag examples include: Kids, Family, Outdoors, Pet-friendly, Shopping, Networking, Educational, Free, Evening, Weekend, etc.
 - Tags should be general descriptors that help users filter and discover events
 - If no suitable tags can be identified, set tag None rather than forcing inappropriate ones
@@ -104,12 +105,13 @@ CRITICAL: Return your answer ONLY in the format CATEGORY|SUBCATEGORY|tag1,tag2,t
 NO explanations! NO descriptions! ONLY the format!
 
 Examples:
-Slayer концерт → 1|Metal|thrash metal,концерт
-Левски-ЦСКА → 4|Football|футбол,спорт
-Пикасо изложба → 8|ArtExhibitions|изкуство,живопис
-София филм фест → 7|FilmFestivals|филми,фестивал
+Slayer концерт → 1|Metal|thrash metal,софия,концерт
+Левски-ЦСКА → 4|Football|футбол,софия,спорт
+Пикасо изложба → 8|ArtExhibitions|изкуство,софия,живопис
+София филм фест → 7|FilmFestivals|филми,софия,фестивал
+Пиеса за възрастни → 5|Drama|None
 Детски уикенд в парка → 1|Pop|Kids,Family,Outdoors
-Бизнес закуска за предприемачи → 3|NetworkingEvents|Networking,Educational,Morning
+Бизнес закуска за предприемачи → 3|Networking Events|Networking,Educational,Morning
 
 Return:";
 
@@ -394,7 +396,7 @@ Return:";
 
         // General enhanced tags
         if (text.Contains("безплатно") || text.Contains("free")) tags.Add("безплатно");
-        if (text.Contains("вечер") || text.Contains("evening") || text.Contains("нощ")) tags.Add("вечерно");
+        if (text.Contains("вечер") || text.Contains("нощ")) tags.Add("вечерно");
         if (text.Contains("сутрин") || text.Contains("утро") || text.Contains("morning")) tags.Add("сутрешно");
         if (text.Contains("семейство") || text.Contains("family") || text.Contains("деца")) tags.Add("семейно");
         if (text.Contains("открито") || text.Contains("outdoor") || text.Contains("парк")) tags.Add("на открито");

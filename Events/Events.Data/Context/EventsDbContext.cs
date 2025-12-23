@@ -235,15 +235,32 @@ public class EventsDbContext : IdentityDbContext
     {
         return category switch
         {
+            MusicSubCategory.Pop => "Pop music events and concerts",
             MusicSubCategory.Rock => "Rock music events and concerts",
+            MusicSubCategory.HipHop => "Hip-hop music events and concerts",
+            MusicSubCategory.Rap => "Rap music events and concerts",
             MusicSubCategory.Jazz => "Jazz performances and sessions",
-            MusicSubCategory.Metal => "Heavy metal and metal subgenres",
-            MusicSubCategory.Pop => "Pop music events",
-            MusicSubCategory.Classical => "Classical music concerts",
-            MusicSubCategory.Electronic => "Electronic music and DJ sets",
-            MusicSubCategory.Folk => "Folk and traditional music",
             MusicSubCategory.Blues => "Blues music performances",
-            MusicSubCategory.HipHop => "Hip-hop and rap events",
+            MusicSubCategory.Classical => "Classical music concerts",
+            MusicSubCategory.Folk => "Folk and traditional music",
+            MusicSubCategory.TraditionalBulgarian => "Traditional Bulgarian folklore music",
+            MusicSubCategory.EDM => "Electronic Dance Music events",
+            MusicSubCategory.Techno => "Techno music events",
+            MusicSubCategory.House => "House music events",
+            MusicSubCategory.DrumBass => "Drum & Bass music events",
+            MusicSubCategory.Trance => "Trance music events",
+            MusicSubCategory.Reggae => "Reggae music events",
+            MusicSubCategory.RB => "R&B music events",
+            MusicSubCategory.Metal => "Metal music events and concerts",
+            MusicSubCategory.Indie => "Indie music events",
+            MusicSubCategory.Acoustic => "Acoustic music events",
+            MusicSubCategory.Alternative => "Alternative music events",
+            MusicSubCategory.Punk => "Punk music events",
+            MusicSubCategory.Soul => "Soul music events",
+            MusicSubCategory.Chillout => "Chillout music events",
+            MusicSubCategory.Experimental => "Experimental music events",
+            MusicSubCategory.Choir => "Choir performances",
+            MusicSubCategory.WorldMusic => "World music events",
             MusicSubCategory.Other => "Other music events",
             _ => $"{category} music events"
         };
@@ -292,40 +309,6 @@ public class EventsDbContext : IdentityDbContext
             BusinessSubCategory.ProductDevelopment => "Product development events",
             BusinessSubCategory.Other => "Other business events",
             _ => $"{category} business events"
-        };
-    }
-
-    private static string GetSportsSubCategoryDescription(SportsSubCategory category)
-    {
-        return category switch
-        {
-            SportsSubCategory.Football => "Football matches and events",
-            SportsSubCategory.Basketball => "Basketball games and tournaments",
-            SportsSubCategory.Tennis => "Tennis matches and tournaments",
-            SportsSubCategory.Volleyball => "Volleyball games",
-            SportsSubCategory.Swimming => "Swimming competitions",
-            SportsSubCategory.Athletics => "Track and field events",
-            SportsSubCategory.Other => "Other sports events and competitions",
-            _ => $"{category} events and competitions"
-        };
-    }
-
-    private static string GetTheatreSubCategoryDescription(TheatreSubCategory category)
-    {
-        return category switch
-        {
-            TheatreSubCategory.Drama => "Drama theatre performances",
-            TheatreSubCategory.Comedy => "Comedy theatre shows",
-            TheatreSubCategory.MusicalTheatre => "Musical theatre productions",
-            TheatreSubCategory.Tragedy => "Tragedy theatre performances",
-            TheatreSubCategory.ExperimentalTheatre => "Experimental theatre",
-            TheatreSubCategory.PuppetTheatre => "Puppet theatre shows",
-            TheatreSubCategory.Improvisation => "Improvisation theatre",
-            TheatreSubCategory.StreetTheatre => "Street theatre performances",
-            TheatreSubCategory.Monodrama => "Monodrama performances",
-            TheatreSubCategory.ChildrensTheatre => "Children's theatre shows",
-            TheatreSubCategory.Other => "Other theatre performances",
-            _ => $"{category} theatre events"
         };
     }
 
@@ -428,6 +411,60 @@ public class EventsDbContext : IdentityDbContext
             WorkshopsSubCategory.MarketingWorkshops => "Marketing workshops",
             WorkshopsSubCategory.Other => "Other workshops",
             _ => $"{category} workshops"
+        };
+    }
+
+    private static string GetSportsSubCategoryDescription(SportsSubCategory category)
+    {
+        return category switch
+        {
+            SportsSubCategory.Football => "Football matches and events",
+            SportsSubCategory.Basketball => "Basketball games and tournaments",
+            SportsSubCategory.Volleyball => "Volleyball games and tournaments",
+            SportsSubCategory.Tennis => "Tennis matches and tournaments",
+            SportsSubCategory.Athletics => "Athletics and track & field events",
+            SportsSubCategory.Swimming => "Swimming competitions",
+            SportsSubCategory.Running => "Running events and marathons",
+            SportsSubCategory.Cycling => "Cycling races and events",
+            SportsSubCategory.Boxing => "Boxing matches",
+            SportsSubCategory.MMA => "Mixed Martial Arts events",
+            SportsSubCategory.Wrestling => "Wrestling competitions",
+            SportsSubCategory.Weightlifting => "Weightlifting competitions",
+            SportsSubCategory.CrossFit => "CrossFit competitions",
+            SportsSubCategory.Yoga => "Yoga events and classes",
+            SportsSubCategory.Fitness => "Fitness events",
+            SportsSubCategory.Hiking => "Hiking and trekking events",
+            SportsSubCategory.Climbing => "Climbing competitions and events",
+            SportsSubCategory.Skiing => "Skiing competitions",
+            SportsSubCategory.Snowboarding => "Snowboarding competitions",
+            SportsSubCategory.Motocross => "Motocross races",
+            SportsSubCategory.eSports => "eSports tournaments",
+            SportsSubCategory.TableTennis => "Table tennis tournaments",
+            SportsSubCategory.Badminton => "Badminton tournaments",
+            SportsSubCategory.Golf => "Golf tournaments",
+            SportsSubCategory.DanceSport => "Dance sport competitions",
+            SportsSubCategory.Other => "Other sports events and competitions",
+            _ => $"{category} sports events"
+        };
+    }
+
+    private static string GetTheatreSubCategoryDescription(TheatreSubCategory category)
+    {
+        return category switch
+        {
+            TheatreSubCategory.Drama => "Drama theatre performances",
+            TheatreSubCategory.Comedy => "Comedy theatre shows",
+            TheatreSubCategory.MusicalTheatre => "Musical theatre productions",
+            TheatreSubCategory.Tragedy => "Tragedy theatre performances",
+            TheatreSubCategory.ExperimentalTheatre => "Experimental theatre",
+            TheatreSubCategory.PuppetTheatre => "Puppet theatre shows",
+            TheatreSubCategory.Improvisation => "Improvisation theatre",
+            TheatreSubCategory.StreetTheatre => "Street theatre performances",
+            TheatreSubCategory.Monodrama => "Monodrama performances",
+            TheatreSubCategory.ChildrensTheatre => "Children's theatre shows",
+            TheatreSubCategory.StandupComedy => "Stand-up comedy shows",
+            TheatreSubCategory.Other => "Other theatre performances",
+            _ => $"{category} theatre events"
         };
     }
 

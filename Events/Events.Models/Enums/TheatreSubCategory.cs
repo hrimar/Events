@@ -12,5 +12,6 @@ public enum TheatreSubCategory
     StreetTheatre = 8,
     Monodrama = 9,
     ChildrensTheatre = 10,
+    StandupComedy = 11,
     Other = 99
 }
