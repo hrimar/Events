@@ -58,7 +58,7 @@ var host = new HostBuilder()
         // Crawler services
         services.AddScoped<ICrawlerService, CrawlerService>();
         services.AddScoped<IEventProcessingService, EventProcessingService>();
-        services.AddScoped<IAiTaggingService, GroqTaggingService>();
+        services.AddScoped<IAiTaggingService, ClaudeProcessingService>();
 
         // HTTP clients
         services.AddHttpClient<BiletBgApiCrawler>(client =>
