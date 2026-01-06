@@ -133,7 +133,7 @@ public class EventRepository : IEventRepository
             .Include(e => e.Category)
             .Include(e => e.EventTags)
             .ThenInclude(et => et.Tag)
-            .Where(e => e.Date >= startDate && e.Date <= endDate && e.Status == EventStatus.Published)
+            .Where(e => e.Date >= startDate && e.Date <= endDate)
             .OrderBy(e => e.Date)
             .ToListAsync();
     }

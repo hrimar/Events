@@ -62,7 +62,6 @@ public class ClaudeProcessingService : IAiTaggingService
         {
             await EnsureRateLimit();
 
-            // Use Claude 3 Sonnet model
             var prompt = $@"You are an expert in cultural life in Sofia, Bulgaria. Your task is to categorize events based on your knowledge of the local cultural scene.
 
 Below is the list of available categories and subcategories. Each subcategory includes example events in parentheses to help you choose the most appropriate one:
@@ -82,6 +81,7 @@ Below is the list of available categories and subcategories. Each subcategory in
 Here is the event you need to categorize:
 Event: {eventName}
 Desc: {description}
+Location: {location}
 
 Your task is to:
 1. Select ONE category and ONE subcategory from the provided list that best fits this event
@@ -91,7 +91,7 @@ Important rules for TAGS:
 - Tags should provide additional useful classification information beyond what the category/subcategory already convey
 - Tags should NOT repeat or closely match the event name, venue name, category, or subcategory
 - Do NOT use tags related to the city name (e.g. Sofia), as all events are already in Sofia
-- Good tag examples include: Kids, Family, Outdoors, Pet-friendly, Shopping, Networking, Educational, Free, Evening, Weekend, etc.
+- Good tag examples include: Kids, Family, Outdoors, Pet-friendly, Shopping, Networking, Educational, Evening, Weekend, etc.
 - Tags should be general descriptors that help users filter and discover events
 - If no suitable tags can be identified, set tag None rather than forcing inappropriate ones
 
@@ -105,10 +105,10 @@ CRITICAL: Return your answer ONLY in the format CATEGORY|SUBCATEGORY|tag1,tag2,t
 NO explanations! NO descriptions! ONLY the format!
 
 Examples:
-Slayer концерт → 1|Metal|thrash metal,софия,концерт
-Левски-ЦСКА → 4|Football|футбол,софия,спорт
-Пикасо изложба → 8|ArtExhibitions|изкуство,софия,живопис
-София филм фест → 7|FilmFestivals|филми,софия,фестивал
+Slayer концерт → 1|Metal|thrash metal,концерт
+Левски-ЦСКА → 4|Football|футбол,спорт
+Пикасо изложба → 8|ArtExhibitions|изкуство,живопис
+София филм фест → 7|FilmFestivals|филми,фестивал
 Пиеса за възрастни → 5|Drama|None
 Детски уикенд в парка → 1|Pop|Kids,Family,Outdoors
 Бизнес закуска за предприемачи → 3|Networking Events|Networking,Educational,Morning
@@ -117,7 +117,7 @@ Return:";
 
             var requestBody = new ClaudeRequest
             {
-                Model = "claude-3-sonnet-20240229",
+                Model = "claude-3-haiku-20240307",
                 MaxTokens = 120, // Increased for more robust output
                 Temperature = 0.1,
                 Messages = new[]
