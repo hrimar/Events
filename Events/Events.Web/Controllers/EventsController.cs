@@ -47,13 +47,7 @@ public class EventsController : Controller
             }
             else
             {
-                var (events, count) = await _eventService.GetPagedEventsAsync(
-                    1,
-                    int.MaxValue,
-                    EventStatus.Published,
-                    category,
-                    free,
-                    fromDate);
+                var (events, count) = await _eventService.GetPagedEventsAsync(1, int.MaxValue, EventStatus.Published, category, free, fromDate);
                 allEvents = events;
             }
 
@@ -218,8 +212,7 @@ public class EventsController : Controller
     {
         try
         {
-            var futureEvents = await _eventService.GetPagedEventsAsync(
-                1, int.MaxValue, EventStatus.Published, null, null, DateTime.Today);
+            var futureEvents = await _eventService.GetPagedEventsAsync(1, int.MaxValue, EventStatus.Published, null, null, DateTime.Today);
             
             var futureEventIds = futureEvents.Events.Select(e => e.Id).ToList();
             var allTags = await _tagService.GetAllTagsAsync();

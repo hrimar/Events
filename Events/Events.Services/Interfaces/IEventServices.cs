@@ -7,6 +7,7 @@ public interface IEventService
 {
     Task<Event?> GetEventByIdAsync(int id);
     Task<IEnumerable<Event>> GetAllEventsAsync();
+    Task<int> GetEventsCountInRangeAsync(DateTime fromDate, DateTime toDate, EventStatus? status = null);
     Task<Event> CreateEventAsync(Event eventEntity);
     Task<Event> UpdateEventAsync(Event eventEntity);
     Task DeleteEventAsync(int id);

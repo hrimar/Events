@@ -34,6 +34,17 @@ public class EventRepository : IEventRepository
             .ToListAsync();
     }
 
+    public async Task<int> GetEventsCountInRangeAsync(DateTime fromDate, DateTime toDate, EventStatus? status = null)
+    {
+        var query = _context.Events.AsQueryable();
+        if (status.HasValue)
+        {
+            query = query.Where(e => e.Status == status.Value);
+        }
+        query = query.Where(e => e.Date >= fromDate && e.Date <= toDate);
+        return await query.CountAsync();
+    }
+
     public async Task<(IEnumerable<Event> Events, int TotalCount)> GetPagedEventsAsync(
         int page,
         int pageSize,
@@ -122,7 +133,7 @@ public class EventRepository : IEventRepository
             .Include(e => e.Category)
             .Include(e => e.EventTags)
             .ThenInclude(et => et.Tag)
-            .Where(e => e.Date >= startDate && e.Date <= endDate)
+            .Where(e => e.Date >= startDate && e.Date <= endDate && e.Status == EventStatus.Published)
             .OrderBy(e => e.Date)
             .ToListAsync();
     }

@@ -25,15 +25,15 @@ namespace Events.Web.Controllers
             {
                 // Get only featured events for homepage - no pagination needed
                 var featuredEvents = await _eventService.GetFeaturedEventsAsync(6);
-                var totalEvents = await _eventService.GetTotalEventsCountAsync(EventStatus.Published);
 
-                // Get today's events count
-                var todayEvents = await _eventService.GetPagedEventsAsync(1, 100, EventStatus.Published, null, null, DateTime.Today);
+                // TotalEvents: all published events from today onwards
+                var totalEvents = await _eventService.GetEventsCountInRangeAsync(DateTime.Today, DateTime.MaxValue, EventStatus.Published);
 
-                // Get this week's events count
-                var weekStart = DateTime.Today.AddDays(-(int)DateTime.Today.DayOfWeek);
-                var weekEnd = weekStart.AddDays(7);
-                var weekEvents = await _eventService.GetEventsByDateRangeAsync(weekStart, weekEnd);
+                // TodayEvents: all published events for today only
+                var todayEvents = await _eventService.GetEventsCountInRangeAsync(DateTime.Today, DateTime.Today, EventStatus.Published);
+
+                // Next 7 days: all published events from today to today+6 (inclusive)
+                var next7DaysEvents = await _eventService.GetEventsCountInRangeAsync(DateTime.Today, DateTime.Today.AddDays(6), EventStatus.Published);
 
                 var eventViewModels = EventViewModel.FromEntities(featuredEvents);
 
@@ -44,8 +44,8 @@ namespace Events.Web.Controllers
                 {
                     FeaturedEvents = eventViewModels,
                     TotalEvents = totalEvents,
-                    TodayEvents = todayEvents.TotalCount,
-                    ThisWeekEvents = weekEvents.Count(),
+                    TodayEvents = todayEvents,
+                    Next7DaysEvents = next7DaysEvents,
                     PopularTags = popularTags.Take(15).ToList() // Top 15 for homepage
                 };
 

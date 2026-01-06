@@ -7,6 +7,7 @@ public interface IEventRepository
 {
     Task<Event?> GetByIdAsync(int id);
     Task<IEnumerable<Event>> GetAllAsync();
+    Task<int> GetEventsCountInRangeAsync(DateTime fromDate, DateTime toDate, EventStatus? status = null);
     Task<IEnumerable<Event>> GetByDateRangeAsync(DateTime startDate, DateTime endDate);
     Task<IEnumerable<Event>> GetByCategoryAsync(EventCategory category);
     Task<IEnumerable<Event>> GetByCategoryIdAsync(int categoryId);

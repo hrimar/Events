@@ -43,6 +43,19 @@ public class EventService : IEventService
         }
     }
 
+    public async Task<int> GetEventsCountInRangeAsync(DateTime fromDate, DateTime toDate, EventStatus? status = null)
+    {
+        try
+        {
+            return await _eventRepository.GetEventsCountInRangeAsync(fromDate, toDate, status);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting events count in range {FromDate} - {ToDate}", fromDate, toDate);
+            throw new ApplicationException($"Failed to get events count in range {fromDate:yyyy-MM-dd} to {toDate:yyyy-MM-dd}", ex);
+        }
+    }
+
     public async Task<(IEnumerable<Event> Events, int TotalCount)> GetPagedEventsAsync(
         int page,
         int pageSize,

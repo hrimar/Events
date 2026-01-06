@@ -195,8 +195,8 @@
                 <p class="text-muted">Today's Events</p>
             </div>
             <div class="col-md-3">
-                <h3 class="text-info">@Model.ThisWeekEvents</h3>
-                <p class="text-muted">This Week</p>
+                <h3 class="text-info">@Model.Next7DaysEvents</h3>
+                <p class="text-muted">Next 7 Days</p>
             </div>
             <div class="col-md-3">
                 <a href="@Url.Action("Index", "Events", new { free = true })" class="btn btn-success">
