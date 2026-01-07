@@ -37,12 +37,12 @@ public class EventsController : Controller
         int pageSize = 20,
         string? search = null,
         string? category = null,
-        string sortField = "date",
+        string sortBy = "date",
         string sortOrder = "asc")
     {
         try
         {
-            var normalizedSortField = string.IsNullOrWhiteSpace(sortField) ? "date" : sortField.ToLowerInvariant();
+            var normalizedSortBy = string.IsNullOrWhiteSpace(sortBy) ? "date" : sortBy.ToLowerInvariant();
             var normalizedSortOrder = string.Equals(sortOrder, "desc", StringComparison.OrdinalIgnoreCase) ? "desc" : "asc";
 
             IEnumerable<Event> events;
@@ -58,7 +58,7 @@ public class EventsController : Controller
                     events = events.Where(e => e.Category != null && e.Category.Name == category);
                 }
 
-                events = ApplySorting(events, normalizedSortField, normalizedSortOrder);
+                events = ApplySorting(events, normalizedSortBy, normalizedSortOrder);
 
                 totalCount = events.Count();
                 events = events.Skip((page - 1) * pageSize).Take(pageSize).ToList();
@@ -72,7 +72,7 @@ public class EventsController : Controller
                     category,
                     null,
                     null,
-                    normalizedSortField,
+                    normalizedSortBy,
                     normalizedSortOrder);
 
                 events = result.Events;
@@ -84,7 +84,7 @@ public class EventsController : Controller
 
             ViewBag.SearchTerm = search;
             ViewBag.Category = category;
-            ViewBag.SortField = normalizedSortField;
+            ViewBag.SortBy = normalizedSortBy;
             ViewBag.SortOrder = normalizedSortOrder;
 
             return View(paginatedEvents);

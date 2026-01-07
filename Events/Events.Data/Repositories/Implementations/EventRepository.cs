@@ -110,12 +110,24 @@ public class EventRepository : IEventRepository
             "time" => isDescending
                 ? query.OrderByDescending(e => e.StartTime.HasValue ? e.StartTime.Value : TimeSpan.Zero)
                 : query.OrderBy(e => e.StartTime.HasValue ? e.StartTime.Value : TimeSpan.Zero),
+            "category" => isDescending
+                ? query.OrderByDescending(e => e.Category != null ? e.Category.Name : string.Empty)
+                : query.OrderBy(e => e.Category != null ? e.Category.Name : string.Empty),
+            "subcategory" => isDescending
+                ? query.OrderByDescending(e => e.SubCategory != null ? e.SubCategory.Name : string.Empty)
+                : query.OrderBy(e => e.SubCategory != null ? e.SubCategory.Name : string.Empty),
+            "location" => isDescending
+                ? query.OrderByDescending(e => e.Location)
+                : query.OrderBy(e => e.Location),
             "status" => isDescending
                 ? query.OrderByDescending(e => e.Status)
                 : query.OrderBy(e => e.Status),
             "price" => isDescending
                 ? query.OrderByDescending(e => e.IsFree ? 0m : (e.Price.HasValue ? e.Price.Value : decimal.MaxValue))
                 : query.OrderBy(e => e.IsFree ? 0m : (e.Price.HasValue ? e.Price.Value : decimal.MaxValue)),
+            "featured" => isDescending
+                ? query.OrderByDescending(e => e.IsFeatured)
+                : query.OrderBy(e => e.IsFeatured),
             _ => isDescending
                 ? query.OrderByDescending(e => e.Date)
                     .ThenByDescending(e => e.StartTime.HasValue ? e.StartTime.Value : TimeSpan.Zero)
