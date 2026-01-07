@@ -1,3 +1,4 @@
+using System;
 using Events.Models.Entities;
 using Events.Models.Enums;
 using Events.Services.Interfaces;
@@ -31,41 +32,49 @@ public class EventsController : Controller
     }
 
     // GET: Admin/Events
-    public async Task<IActionResult> Index(int page = 1, int pageSize = 20, string? search = null, string? category = null)
+    public async Task<IActionResult> Index(
+        int page = 1,
+        int pageSize = 20,
+        string? search = null,
+        string? category = null,
+        string sortField = "date",
+        string sortOrder = "asc")
     {
         try
         {
+            var normalizedSortField = string.IsNullOrWhiteSpace(sortField) ? "date" : sortField.ToLowerInvariant();
+            var normalizedSortOrder = string.Equals(sortOrder, "desc", StringComparison.OrdinalIgnoreCase) ? "desc" : "asc";
+
             IEnumerable<Event> events;
             int totalCount;
 
             if (!string.IsNullOrWhiteSpace(search))
             {
-                // Search with category filter if provided
                 var searchResults = await _eventService.SearchEventsAsync(search);
                 events = searchResults;
-                
-                // Apply category filter to search results if category is specified
+
                 if (!string.IsNullOrWhiteSpace(category))
                 {
                     events = events.Where(e => e.Category != null && e.Category.Name == category);
                 }
-                
+
+                events = ApplySorting(events, normalizedSortField, normalizedSortOrder);
+
                 totalCount = events.Count();
-                
-                // Apply pagination manually for search results
                 events = events.Skip((page - 1) * pageSize).Take(pageSize).ToList();
-            }
-            else if (!string.IsNullOrWhiteSpace(category))
-            {
-                // Category filter only (no search)
-                var result = await _eventService.GetPagedEventsAsync(page, pageSize, null, category, null, null);
-                events = result.Events;
-                totalCount = result.TotalCount;
             }
             else
             {
-                // No filters - get all events
-                var result = await _eventService.GetPagedEventsAsync(page, pageSize, null, null, null, null);
+                var result = await _eventService.GetPagedEventsAsync(
+                    page,
+                    pageSize,
+                    null,
+                    category,
+                    null,
+                    null,
+                    normalizedSortField,
+                    normalizedSortOrder);
+
                 events = result.Events;
                 totalCount = result.TotalCount;
             }
@@ -75,6 +84,8 @@ public class EventsController : Controller
 
             ViewBag.SearchTerm = search;
             ViewBag.Category = category;
+            ViewBag.SortField = normalizedSortField;
+            ViewBag.SortOrder = normalizedSortOrder;
 
             return View(paginatedEvents);
         }
@@ -449,5 +460,26 @@ public class EventsController : Controller
             TempData["ErrorMessage"] = "An error occurred while deleting the event.";
             return RedirectToAction(nameof(Index));
         }
+    }
+
+    private static IEnumerable<Event> ApplySorting(IEnumerable<Event> events, string sortField, string sortOrder)
+    {
+        var normalizedSort = string.IsNullOrWhiteSpace(sortField) ? "date" : sortField.ToLowerInvariant();
+        var isDescending = string.Equals(sortOrder, "desc", StringComparison.OrdinalIgnoreCase);
+
+        return normalizedSort switch
+        {
+            "name" => isDescending ? events.OrderByDescending(e => e.Name) : events.OrderBy(e => e.Name),
+            "time" => isDescending ? events.OrderByDescending(e => e.StartTime ?? TimeSpan.Zero) : events.OrderBy(e => e.StartTime ?? TimeSpan.Zero),
+            "category" => isDescending ? events.OrderByDescending(e => e.Category?.Name) : events.OrderBy(e => e.Category?.Name),
+            "subcategory" => isDescending ? events.OrderByDescending(e => e.SubCategory?.Name) : events.OrderBy(e => e.SubCategory?.Name),
+            "location" => isDescending ? events.OrderByDescending(e => e.Location) : events.OrderBy(e => e.Location),
+            "status" => isDescending ? events.OrderByDescending(e => e.Status) : events.OrderBy(e => e.Status),
+            "price" => isDescending ? events.OrderByDescending(e => e.IsFree ? 0m : (e.Price ?? decimal.MaxValue)) : events.OrderBy(e => e.IsFree ? 0m : (e.Price ?? decimal.MaxValue)),
+            "featured" => isDescending ? events.OrderByDescending(e => e.IsFeatured) : events.OrderBy(e => e.IsFeatured),
+            _ => isDescending
+                ? events.OrderByDescending(e => e.Date).ThenByDescending(e => e.StartTime ?? TimeSpan.Zero)
+                : events.OrderBy(e => e.Date).ThenBy(e => e.StartTime ?? TimeSpan.Zero)
+        };
     }
 }

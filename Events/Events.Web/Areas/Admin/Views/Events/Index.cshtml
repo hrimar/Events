@@ -4,6 +4,25 @@
     ViewData["Title"] = "All Events";
     var search = ViewBag.SearchTerm as string;
     var category = ViewBag.Category as string;
+    var sortField = ViewBag.SortField as string ?? "date";
+    var sortOrder = ViewBag.SortOrder as string ?? "asc";
+    var pageSize = Model.PageSize;
+    Func<string, string> buildSortUrl = column =>
+    {
+        var normalizedColumn = column.ToLowerInvariant();
+        var isCurrent = string.Equals(sortField, normalizedColumn, StringComparison.OrdinalIgnoreCase);
+        var nextOrder = isCurrent && sortOrder == "asc" ? "desc" : "asc";
+        return Url.Action("Index", new
+        {
+            page = 1,
+            pageSize,
+            search,
+            category,
+            sortField = normalizedColumn,
+            sortOrder = nextOrder
+        });
+    };
+    Func<string, bool> isCurrentSort = column => string.Equals(sortField, column.ToLowerInvariant(), StringComparison.OrdinalIgnoreCase);
 }
 
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -79,15 +98,87 @@
                 <thead class="table-light">
                     <tr>
                         <th style="width: 60px;">Image</th>
-                        <th>Event Name</th>
-                        <th style="width: 120px;">Date</th>
-                        <th style="width: 100px;">Time</th>
-                        <th>Category</th>
-                        <th>Subcategory</th>
-                        <th>Location</th>
-                        <th style="width: 100px;">Status</th>
-                        <th style="width: 80px;">Price</th>
-                        <th style="width: 80px;">Featured</th>
+                        <th>
+                            <a href="@buildSortUrl("name")" class="text-decoration-none text-dark d-flex align-items-center gap-1">
+                                Event Name
+                                @if(isCurrentSort("name"))
+                                {
+                                    <i class="fas fa-chevron-@(sortOrder == "asc" ? "up" : "down") ms-1"></i>
+                                }
+                            </a>
+                        </th>
+                        <th style="width: 120px;">
+                            <a href="@buildSortUrl("date")" class="text-decoration-none text-dark d-flex align-items-center gap-1">
+                                Date
+                                @if(isCurrentSort("date"))
+                                {
+                                    <i class="fas fa-chevron-@(sortOrder == "asc" ? "up" : "down") ms-1"></i>
+                                }
+                            </a>
+                        </th>
+                        <th style="width: 100px;">
+                            <a href="@buildSortUrl("time")" class="text-decoration-none text-dark d-flex align-items-center gap-1">
+                                Time
+                                @if(isCurrentSort("time"))
+                                {
+                                    <i class="fas fa-chevron-@(sortOrder == "asc" ? "up" : "down") ms-1"></i>
+                                }
+                            </a>
+                        </th>
+                        <th>
+                            <a href="@buildSortUrl("category")" class="text-decoration-none text-dark d-flex align-items-center gap-1">
+                                Category
+                                @if(isCurrentSort("category"))
+                                {
+                                    <i class="fas fa-chevron-@(sortOrder == "asc" ? "up" : "down") ms-1"></i>
+                                }
+                            </a>
+                        </th>
+                        <th>
+                            <a href="@buildSortUrl("subcategory")" class="text-decoration-none text-dark d-flex align-items-center gap-1">
+                                Subcategory
+                                @if(isCurrentSort("subcategory"))
+                                {
+                                    <i class="fas fa-chevron-@(sortOrder == "asc" ? "up" : "down") ms-1"></i>
+                                }
+                            </a>
+                        </th>
+                        <th>
+                            <a href="@buildSortUrl("location")" class="text-decoration-none text-dark d-flex align-items-center gap-1">
+                                Location
+                                @if(isCurrentSort("location"))
+                                {
+                                    <i class="fas fa-chevron-@(sortOrder == "asc" ? "up" : "down") ms-1"></i>
+                                }
+                            </a>
+                        </th>
+                        <th style="width: 100px;">
+                            <a href="@buildSortUrl("status")" class="text-decoration-none text-dark d-flex align-items-center gap-1">
+                                Status
+                                @if(isCurrentSort("status"))
+                                {
+                                    <i class="fas fa-chevron-@(sortOrder == "asc" ? "up" : "down") ms-1"></i>
+                                }
+                            </a>
+                        </th>
+                        <th style="width: 80px;">
+                            <a href="@buildSortUrl("price")" class="text-decoration-none text-dark d-flex align-items-center gap-1">
+                                Price
+                                @if(isCurrentSort("price"))
+                                {
+                                    <i class="fas fa-chevron-@(sortOrder == "asc" ? "up" : "down") ms-1"></i>
+                                }
+                            </a>
+                        </th>
+                        <th style="width: 80px;">
+                            <a href="@buildSortUrl("featured")" class="text-decoration-none text-dark d-flex align-items-center gap-1">
+                                Featured
+                                @if(isCurrentSort("featured"))
+                                {
+                                    <i class="fas fa-chevron-@(sortOrder == "asc" ? "up" : "down") ms-1"></i>
+                                }
+                            </a>
+                        </th>
                         <th style="width: 150px;">Actions</th>
                     </tr>
                 </thead>
