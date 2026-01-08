@@ -49,6 +49,17 @@ public class CreateEventViewModel
 
     public EventStatus Status { get; set; } = EventStatus.Published;
 
+    // Tags - maximum 3
+    [MaxLength(3, ErrorMessage = "You can select a maximum of 3 tags")]
+    public List<int> SelectedTagIds { get; set; } = new();
+
     public List<CategoryOption> AvailableCategories { get; set; } = new();
     public List<SubCategoryOption> AvailableSubCategories { get; set; } = new();
+    public List<TagOption> AvailableTags { get; set; } = new();
+}
+
+public class TagOption
+{
+    public int Id { get; set; }
+    public string Name { get; set; } = string.Empty;
 }

@@ -21,6 +21,10 @@ public class EditEventViewModel
     public EventStatus Status { get; set; }
     public string? SourceUrl { get; set; }
 
+    // Tags - maximum 3
+    public List<int> SelectedTagIds { get; set; } = new();
+
     public List<CategoryOption> AvailableCategories { get; set; } = new();
     public List<SubCategoryOption> AvailableSubCategories { get; set; } = new();
+    public List<TagOption> AvailableTags { get; set; } = new();
 }

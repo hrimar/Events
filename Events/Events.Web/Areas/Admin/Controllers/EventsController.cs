@@ -18,17 +18,20 @@ public class EventsController : Controller
     private readonly IEventService _eventService;
     private readonly ICategoryRepository _categoryRepository;
     private readonly ISubCategoryRepository _subCategoryRepository;
+    private readonly ITagService _tagService;
 
     public EventsController(
         ILogger<EventsController> logger, 
         IEventService eventService,
         ICategoryRepository categoryRepository,
-        ISubCategoryRepository subCategoryRepository)
+        ISubCategoryRepository subCategoryRepository,
+        ITagService tagService)
     {
         _logger = logger;
         _eventService = eventService;
         _categoryRepository = categoryRepository;
         _subCategoryRepository = subCategoryRepository;
+        _tagService = tagService;
     }
 
     // GET: Admin/Events
@@ -316,7 +319,9 @@ public class EventsController : Controller
                 CategoryId = eventEntity.CategoryId,
                 SubCategoryId = eventEntity.SubCategoryId,
                 Status = eventEntity.Status,
-                SourceUrl = eventEntity.SourceUrl
+                SourceUrl = eventEntity.SourceUrl,
+                // Load currently selected tags
+                SelectedTagIds = eventEntity.EventTags?.Select(et => et.TagId).ToList() ?? new List<int>()
             };
 
             // Load available categories
@@ -335,6 +340,17 @@ public class EventsController : Controller
                 Name = sc.Name,
                 CategoryId = sc.CategoryId
             }).OrderBy(sc => sc.Name).ToList();
+
+            // Load available tags
+            var allTags = await _tagService.GetAllTagsAsync();
+            viewModel.AvailableTags = allTags
+                .Select(t => new TagOption
+                {
+                    Id = t.Id,
+                    Name = t.Name
+                })
+                .OrderBy(t => t.Name)
+                .ToList();
 
             return View(viewModel);
         }
@@ -375,6 +391,12 @@ public class EventsController : Controller
                     CategoryId = sc.CategoryId
                 }).OrderBy(sc => sc.Name).ToList();
 
+                var allTags = await _tagService.GetAllTagsAsync();
+                model.AvailableTags = allTags
+                    .Select(t => new TagOption { Id = t.Id, Name = t.Name })
+                    .OrderBy(t => t.Name)
+                    .ToList();
+
                 return View(model);
             }
 
@@ -402,7 +424,40 @@ public class EventsController : Controller
 
             await _eventService.UpdateEventAsync(eventEntity);
 
-            _logger.LogInformation("Event {EventId} updated successfully", id);
+            // Update tags - remove old and assign new ones
+            if (model.SelectedTagIds.Any())
+            {
+                // Get current tag IDs
+                var currentTagIds = eventEntity.EventTags?.Select(et => et.TagId).ToList() ?? new List<int>();
+                
+                // Remove tags that are no longer selected
+                var tagsToRemove = currentTagIds.Except(model.SelectedTagIds).ToList();
+                if (tagsToRemove.Any())
+                {
+                    foreach (var tagId in tagsToRemove)
+                    {
+                        await _tagService.RemoveTagFromEventAsync(eventEntity.Id, tagId);
+                    }
+                }
+
+                // Add new tags
+                var tagsToAdd = model.SelectedTagIds.Except(currentTagIds).ToList();
+                if (tagsToAdd.Any())
+                {
+                    await _tagService.BulkAddTagsToEventAsync(eventEntity.Id, tagsToAdd);
+                }
+            }
+            else
+            {
+                // Remove all tags if none selected
+                var currentTagIds = eventEntity.EventTags?.Select(et => et.TagId).ToList() ?? new List<int>();
+                foreach (var tagId in currentTagIds)
+                {
+                    await _tagService.RemoveTagFromEventAsync(eventEntity.Id, tagId);
+                }
+            }
+
+            _logger.LogInformation("Event {EventId} updated successfully with tags", id);
 
             TempData["SuccessMessage"] = $"Event '{eventEntity.Name}' has been updated successfully.";
 
@@ -412,7 +467,7 @@ public class EventsController : Controller
         {
             _logger.LogError(ex, "Error updating event {EventId}", id);
             TempData["ErrorMessage"] = "An error occurred while updating the event.";
-            
+
             // Repopulate dropdowns on error
             var categories = await _categoryRepository.GetAllAsync();
             model.AvailableCategories = categories.Select(c => new CategoryOption
@@ -428,6 +483,12 @@ public class EventsController : Controller
                 Name = sc.Name,
                 CategoryId = sc.CategoryId
             }).OrderBy(sc => sc.Name).ToList();
+
+            var allTags = await _tagService.GetAllTagsAsync();
+            model.AvailableTags = allTags
+                .Select(t => new TagOption { Id = t.Id, Name = t.Name })
+                .OrderBy(t => t.Name)
+                .ToList();
 
             return View(model);
         }
@@ -490,6 +551,17 @@ public class EventsController : Controller
                 CategoryId = sc.CategoryId
             }).OrderBy(sc => sc.Name).ToList();
 
+            // Load available tags
+            var allTags = await _tagService.GetAllTagsAsync();
+            viewModel.AvailableTags = allTags
+                .Select(t => new TagOption
+                {
+                    Id = t.Id,
+                    Name = t.Name
+                })
+                .OrderBy(t => t.Name)
+                .ToList();
+
             return View(viewModel);
         }
         catch (Exception ex)
@@ -513,11 +585,7 @@ public class EventsController : Controller
                 var categories = await _categoryRepository.GetAllAsync();
                 model.AvailableCategories = categories
                     .Where(c => c.Id != 11) // Exclude Undefined category
-                    .Select(c => new CategoryOption
-                    {
-                        Id = c.Id,
-                        Name = c.Name
-                    })
+                    .Select(c => new CategoryOption { Id = c.Id, Name = c.Name })
                     .OrderBy(c => c.Name)
                     .ToList();
 
@@ -528,6 +596,12 @@ public class EventsController : Controller
                     Name = sc.Name,
                     CategoryId = sc.CategoryId
                 }).OrderBy(sc => sc.Name).ToList();
+
+                var allTags = await _tagService.GetAllTagsAsync();
+                model.AvailableTags = allTags
+                    .Select(t => new TagOption { Id = t.Id, Name = t.Name })
+                    .OrderBy(t => t.Name)
+                    .ToList();
 
                 return View(model);
             }
@@ -555,6 +629,14 @@ public class EventsController : Controller
 
             var createdEvent = await _eventService.CreateEventAsync(eventEntity);
 
+            // Assign selected tags to the event
+            if (model.SelectedTagIds.Any())
+            {
+                await _tagService.BulkAddTagsToEventAsync(createdEvent.Id, model.SelectedTagIds);
+                _logger.LogInformation("Assigned {TagCount} tags to event {EventId}", 
+                    model.SelectedTagIds.Count, createdEvent.Id);
+            }
+
             _logger.LogInformation("Event {EventId} created successfully by admin", createdEvent.Id);
 
             TempData["SuccessMessage"] = $"Event '{createdEvent.Name}' has been created successfully.";
@@ -571,11 +653,7 @@ public class EventsController : Controller
             var categories = await _categoryRepository.GetAllAsync();
             model.AvailableCategories = categories
                 .Where(c => c.Id != 11) // Exclude Undefined category
-                .Select(c => new CategoryOption
-                {
-                    Id = c.Id,
-                    Name = c.Name
-                })
+                .Select(c => new CategoryOption { Id = c.Id, Name = c.Name })
                 .OrderBy(c => c.Name)
                 .ToList();
 
@@ -586,6 +664,12 @@ public class EventsController : Controller
                 Name = sc.Name,
                 CategoryId = sc.CategoryId
             }).OrderBy(sc => sc.Name).ToList();
+
+            var allTags = await _tagService.GetAllTagsAsync();
+            model.AvailableTags = allTags
+                .Select(t => new TagOption { Id = t.Id, Name = t.Name })
+                .OrderBy(t => t.Name)
+                .ToList();
 
             return View(model);
         }
