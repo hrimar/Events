@@ -462,6 +462,135 @@ public class EventsController : Controller
         }
     }
 
+    // GET: Admin/Events/Create
+    public async Task<IActionResult> Create()
+    {
+        try
+        {
+            var viewModel = new CreateEventViewModel();
+
+            // Load available categories (exclude Undefined - CategoryId = 11)
+            var categories = await _categoryRepository.GetAllAsync();
+            viewModel.AvailableCategories = categories
+                .Where(c => c.Id != 11) // Exclude Undefined category
+                .Select(c => new CategoryOption
+                {
+                    Id = c.Id,
+                    Name = c.Name
+                })
+                .OrderBy(c => c.Name)
+                .ToList();
+
+            // Load all subcategories (will be filtered by JavaScript)
+            var allSubCategories = await _subCategoryRepository.GetAllAsync();
+            viewModel.AvailableSubCategories = allSubCategories.Select(sc => new SubCategoryOption
+            {
+                Id = sc.Id,
+                Name = sc.Name,
+                CategoryId = sc.CategoryId
+            }).OrderBy(sc => sc.Name).ToList();
+
+            return View(viewModel);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error loading create event page");
+            TempData["ErrorMessage"] = "An error occurred while loading the create event page.";
+            return RedirectToAction(nameof(Index));
+        }
+    }
+
+    // POST: Admin/Events/Create
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Create(CreateEventViewModel model)
+    {
+        try
+        {
+            if (!ModelState.IsValid)
+            {
+                // Repopulate available categories and subcategories (exclude Undefined)
+                var categories = await _categoryRepository.GetAllAsync();
+                model.AvailableCategories = categories
+                    .Where(c => c.Id != 11) // Exclude Undefined category
+                    .Select(c => new CategoryOption
+                    {
+                        Id = c.Id,
+                        Name = c.Name
+                    })
+                    .OrderBy(c => c.Name)
+                    .ToList();
+
+                var allSubCategories = await _subCategoryRepository.GetAllAsync();
+                model.AvailableSubCategories = allSubCategories.Select(sc => new SubCategoryOption
+                {
+                    Id = sc.Id,
+                    Name = sc.Name,
+                    CategoryId = sc.CategoryId
+                }).OrderBy(sc => sc.Name).ToList();
+
+                return View(model);
+            }
+
+            // Create event entity
+            var eventEntity = new Event
+            {
+                Name = model.Name,
+                Date = model.Date,
+                StartTime = model.StartTime,
+                City = model.City,
+                Location = model.Location,
+                Description = model.Description,
+                ImageUrl = model.ImageUrl,
+                TicketUrl = model.TicketUrl,
+                IsFree = model.IsFree,
+                Price = model.Price,
+                IsFeatured = model.IsFeatured,
+                CategoryId = model.CategoryId,
+                SubCategoryId = model.SubCategoryId,
+                Status = model.Status,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            var createdEvent = await _eventService.CreateEventAsync(eventEntity);
+
+            _logger.LogInformation("Event {EventId} created successfully by admin", createdEvent.Id);
+
+            TempData["SuccessMessage"] = $"Event '{createdEvent.Name}' has been created successfully.";
+
+            // Redirect to edit page for preview and further modifications
+            return RedirectToAction(nameof(Edit), new { id = createdEvent.Id });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating event");
+            TempData["ErrorMessage"] = "An error occurred while creating the event.";
+
+            // Repopulate dropdowns on error (exclude Undefined)
+            var categories = await _categoryRepository.GetAllAsync();
+            model.AvailableCategories = categories
+                .Where(c => c.Id != 11) // Exclude Undefined category
+                .Select(c => new CategoryOption
+                {
+                    Id = c.Id,
+                    Name = c.Name
+                })
+                .OrderBy(c => c.Name)
+                .ToList();
+
+            var allSubCategories = await _subCategoryRepository.GetAllAsync();
+            model.AvailableSubCategories = allSubCategories.Select(sc => new SubCategoryOption
+            {
+                Id = sc.Id,
+                Name = sc.Name,
+                CategoryId = sc.CategoryId
+            }).OrderBy(sc => sc.Name).ToList();
+
+            return View(model);
+        }
+    }
+
     private static IEnumerable<Event> ApplySorting(IEnumerable<Event> events, string sortField, string sortOrder)
     {
         var normalizedSort = string.IsNullOrWhiteSpace(sortField) ? "date" : sortField.ToLowerInvariant();
