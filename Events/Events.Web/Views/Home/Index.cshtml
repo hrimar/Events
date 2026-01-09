@@ -140,6 +140,12 @@
                                     <a href="@Url.Action("Index", "Events", new { category = eventItem.CategoryName })" class="badge bg-secondary text-decoration-none">
                                         @eventItem.CategoryName
                                     </a>
+                                    @if(!string.IsNullOrEmpty(eventItem.SubCategoryName))
+                                    {
+                                        <span class="badge bg-dark text-decoration-none ms-1">
+                                            @eventItem.SubCategoryName
+                                        </span>
+                                    }
                                 </div>
                             }
                             

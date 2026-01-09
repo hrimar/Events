@@ -1,4 +1,5 @@
 using Events.Models.Enums;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace Events.Web.Models;
 
@@ -6,6 +7,7 @@ public class EventsPageViewModel
 {
     public PaginatedList<EventViewModel> Events { get; set; } = new(new List<EventViewModel>(), 0, 1, 12);
     public string? CurrentCategory { get; set; }
+    public string? SelectedSubCategory { get; set; }
     public bool? IsFreeFilter { get; set; }
     public string? SearchTerm { get; set; }
     public List<string> SelectedTags { get; set; } = new(); // Selected tags for filtering
@@ -13,6 +15,8 @@ public class EventsPageViewModel
     public DateTime? FromDate { get; set; }
     public DateTime? ToDate { get; set; }
     public string PageTitle { get; set; } = "All Events";
+
+    public List<SelectListItem> AvailableSubCategories { get; set; } = new();
 
     // Sorting functionality
     public string? SortBy { get; set; }
@@ -41,6 +45,7 @@ public class EventsPageViewModel
 
     // Helper properties for UI
     public bool HasActiveFilters => !string.IsNullOrEmpty(CurrentCategory) ||
+                                   !string.IsNullOrEmpty(SelectedSubCategory) ||
                                    IsFreeFilter.HasValue ||
                                    !string.IsNullOrEmpty(SearchTerm) ||
                                    SelectedTags.Any() || // Include tag filtering
@@ -56,6 +61,9 @@ public class EventsPageViewModel
 
             if (!string.IsNullOrEmpty(CurrentCategory))
                 filters.Add($"category={CurrentCategory}");
+
+            if (!string.IsNullOrEmpty(SelectedSubCategory))
+                filters.Add($"subCategory={SelectedSubCategory}");
 
             if (IsFreeFilter.HasValue)
                 filters.Add($"free={IsFreeFilter.Value.ToString().ToLower()}");

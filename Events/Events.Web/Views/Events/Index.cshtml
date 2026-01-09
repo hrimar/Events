@@ -8,16 +8,6 @@
 <section class="filters-section bg-light py-4">
     <div class="container">
         <form method="get" class="row g-3" id="search-form">
-            <!-- Search with autocomplete -->
-            <div class="col-md-3">
-                <label for="search" class="form-label">Search Events</label>
-                <div class="position-relative">
-                    <input type="text" class="form-control" id="search" name="search" 
-                           value="@Model.SearchTerm" placeholder="Search by name, tags, location...">
-                    <i class="fas fa-search position-absolute top-50 end-0 translate-middle-y pe-3 text-muted"></i>
-                </div>
-            </div>
-            
             <!-- Category -->
             <div class="col-md-2">
                 <label for="category" class="form-label">Category</label>
@@ -31,7 +21,29 @@
                     }
                 </select>
             </div>
-            
+
+            <div class="col-md-3">
+                <label for="subCategory" class="form-label">Subcategory</label>
+                <select class="form-select" id="subCategory" name="subCategory">
+                    @if(Model.AvailableSubCategories.Any())
+                    {
+                        <option value="" selected="@(string.IsNullOrEmpty(Model.SelectedSubCategory))">
+                            All Subcategories
+                        </option>
+                        @foreach(var option in Model.AvailableSubCategories)
+                        {
+                            <option value="@option.Value" selected="@(option.Selected)">
+                                @option.Text
+                            </option>
+                        }
+                    }
+                    else
+                    {
+                        <option value="" selected>Select a category first</option>
+                    }
+                </select>
+            </div>
+
             <!-- Price Filter -->
             <div class="col-md-2">
                 <label for="free" class="form-label">Price</label>
@@ -41,21 +53,21 @@
                     <option value="false" selected="@(Model.IsFreeFilter == false)">Paid Only</option>
                 </select>
             </div>
-            
+
             <!-- Date From -->
             <div class="col-md-2">
                 <label for="fromDate" class="form-label">From Date</label>
                 <input type="date" class="form-control" id="fromDate" name="fromDate" 
                        value="@Model.FromDate?.ToString("yyyy-MM-dd")">
             </div>
-            
+
             <!-- Date To -->
             <div class="col-md-2">
                 <label for="toDate" class="form-label">To Date</label>
                 <input type="date" class="form-control" id="toDate" name="toDate" 
                        value="@Model.ToDate?.ToString("yyyy-MM-dd")">
             </div>
-            
+
             <!-- Actions -->
             <div class="col-md-1 d-flex align-items-end">
                 <button type="submit" class="btn btn-primary w-100">
@@ -151,6 +163,12 @@
                     {
                         <span class="badge bg-primary">
                             <i class="fas fa-layer-group me-1"></i>Category: @Model.CurrentCategory
+                        </span>
+                    }
+                    @if(!string.IsNullOrEmpty(Model.SelectedSubCategory))
+                    {
+                        <span class="badge bg-dark">
+                            <i class="fas fa-chevron-right me-1"></i>@Model.SelectedSubCategory
                         </span>
                     }
                     @if(Model.IsFreeFilter == true)
@@ -316,7 +334,9 @@
                                         </a>
                                         @if(!string.IsNullOrEmpty(eventItem.SubCategoryName))
                                         {
-                                            <span class="badge bg-light text-dark ms-1">@eventItem.SubCategoryName</span>
+                                            <span class="badge bg-dark text-decoration-none ms-1">
+                                                @eventItem.SubCategoryName
+                                            </span>
                                         }
                                     </div>
                                 }
@@ -467,64 +487,98 @@
         
         // Initialize search functionality when document is ready
         $(document).ready(function() {
-            $('#search').autocomplete({
-                source: function(request, response) {
-                    $.ajax({
-                        url: '/Events/Search',
-                        data: { query: request.term },
-                        success: function(data) {
-                            response($.map(data, function(item) {
-                                if (item.isTag) {
-                                    return {
-                                        label: item.name + ' (' + item.location + ')',
-                                        value: item.name,
-                                        isTag: true,
-                                        tagName: item.tagName
-                                    };
-                                } else {
-                                    return {
-                                        label: item.name + (item.category ? ' (' + item.category + ')' : ''),
-                                        value: item.name,
-                                        id: item.id,
-                                        category: item.category,
-                                        isTag: false
-                                    };
-                                }
-                            }));
+            const $searchInput = $('#search');
+            if ($searchInput.length) {
+                $searchInput.autocomplete({
+                    source: function(request, response) {
+                        $.ajax({
+                            url: '/Events/Search',
+                            data: { query: request.term },
+                            success: function(data) {
+                                response($.map(data, function(item) {
+                                    if (item.isTag) {
+                                        return {
+                                            label: item.name + ' (' + item.location + ')',
+                                            value: item.name,
+                                            isTag: true,
+                                            tagName: item.tagName
+                                        };
+                                    } else {
+                                        return {
+                                            label: item.name + (item.category ? ' (' + item.category + ')' : ''),
+                                            value: item.name,
+                                            id: item.id,
+                                            category: item.category,
+                                            isTag: false
+                                        };
+                                    }
+                                }));
+                            }
+                        });
+                    },
+                    minLength: 2,
+                    select: function(event, ui) {
+                        if (ui.item.isTag) {
+                            addTag(ui.item.tagName);
+                            $searchInput.val('');
+                            $('#search-form').submit();
+                        } else {
+                            window.location.href = '/Events/Details/' + ui.item.id;
                         }
-                    });
-                },
-                minLength: 2,
-                select: function(event, ui) {
-                    if (ui.item.isTag) {
-                        // Add tag to selection
-                        addTag(ui.item.tagName);
-                        $('#search').val(''); // Clear search
-                        $('#search-form').submit(); // Submit form
-                    } else {
-                        // Navigate to event details
-                        window.location.href = '/Events/Details/' + ui.item.id;
+                        return false;
+                    },
+                    focus: function(event, ui) {
+                        $searchInput.val(ui.item.value);
+                        return false;
                     }
-                    return false;
-                },
-                focus: function(event, ui) {
-                    $('#search').val(ui.item.value);
-                    return false;
-                }
-            }).autocomplete("instance")._renderItem = function(ul, item) {
-                const iconClass = item.isTag ? 'fas fa-tag text-info' : 'fas fa-calendar text-primary';
-                return $("<li>")
-                    .append("<div class='autocomplete-item'><i class='" + iconClass + " me-2'></i><strong>" + item.label + "</strong></div>")
-                    .appendTo(ul);
-            };
+                }).autocomplete('instance')._renderItem = function(ul, item) {
+                    const iconClass = item.isTag ? 'fas fa-tag text-info' : 'fas fa-calendar text-primary';
+                    return $('<li>')
+                        .append("<div class='autocomplete-item'><i class='" + iconClass + " me-2'></i><strong>" + item.label + "</strong></div>")
+                        .appendTo(ul);
+                };
+            }
             
-            // Auto-submit form when major filters change
-            $('#category, #free, #fromDate, #toDate').change(function() {
+            // AJAX handler for category change - populate subcategories dynamically
+            $('#category').change(function() {
+                const selectedCategory = $(this).val();
+                const $subCategorySelect = $('#subCategory');
+                
+                if (!selectedCategory) {
+                    $subCategorySelect.html('<option value="" selected>Select a category first</option>');
+                    return;
+                }
+                
+                $.ajax({
+                    url: '/api/categories/subcategories',
+                    data: { category: selectedCategory },
+                    success: function(data) {
+                        let html = '<option value="" selected>All Subcategories</option>';
+                        
+                        if (data && data.length > 0) {
+                            $.each(data, function(index, item) {
+                                html += '<option value="' + item.id + '">' + item.name + '</option>';
+                            });
+                        } else {
+                            html = '<option value="" selected>No subcategories available</option>';
+                        }
+                        
+                        $subCategorySelect.html(html);
+                    },
+                    error: function(err) {
+                        console.error('Error loading subcategories:', err);
+                        $subCategorySelect.html('<option value="" selected>Error loading subcategories</option>');
+                    }
+                });
+                
+                // Auto-submit form when category changes
                 $('#search-form').submit();
             });
             
-            // Initialize tag buttons state
-            updateTagButtons();
+            // Auto-submit form when major filters change (instant feedback for better UX)
+            $('#subCategory, #free, #fromDate, #toDate').change(function() {
+                $('#search-form').submit();
+            });
         });
     </script>
     

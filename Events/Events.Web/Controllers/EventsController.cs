@@ -1,3 +1,4 @@
+using Events.Data.Repositories.Interfaces;
 using Events.Models.Entities;
 using Events.Services.Interfaces;
 using Events.Web.Models;
@@ -5,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Events.Models.Enums;
 using Events.Web.Extensions;
 using Events.Web.Models.DTOs;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace Events.Web.Controllers;
 
@@ -13,18 +15,21 @@ public class EventsController : Controller
     private readonly ILogger<EventsController> _logger;
     private readonly IEventService _eventService;
     private readonly ITagService _tagService;
+    private readonly ISubCategoryRepository _subCategoryRepository;
 
-    public EventsController(ILogger<EventsController> logger, IEventService eventService, ITagService tagService)
+    public EventsController(ILogger<EventsController> logger, IEventService eventService, ITagService tagService, ISubCategoryRepository subCategoryRepository)
     {
         _logger = logger;
         _eventService = eventService;
         _tagService = tagService;
+        _subCategoryRepository = subCategoryRepository;
     }
 
     public async Task<IActionResult> Index(
         int page = 1,
         int pageSize = 12,
         string? category = null,
+        string? subCategory = null,
         bool? free = null,
         string? search = null,
         string? tags = null,
@@ -71,6 +76,12 @@ public class EventsController : Controller
                 allEvents = allEvents.Where(e => e.Date <= toDate.Value);
             }
 
+            // Apply subcategory filtering if specified
+            if (!string.IsNullOrWhiteSpace(subCategory))
+            {
+                allEvents = allEvents.Where(e => string.Equals(e.SubCategory?.Name, subCategory, StringComparison.OrdinalIgnoreCase));
+            }
+
             allEvents = ApplySorting(allEvents, sortBy, sortOrder);
 
             var totalCount = allEvents.Count();
@@ -87,6 +98,7 @@ public class EventsController : Controller
             {
                 Events = paginatedEvents,
                 CurrentCategory = category,
+                SelectedSubCategory = subCategory,
                 IsFreeFilter = free,
                 FromDate = fromDate,
                 ToDate = toDate,
@@ -99,6 +111,8 @@ public class EventsController : Controller
                 SortBy = sortBy,
                 SortOrder = sortOrder
             };
+
+            viewModel.AvailableSubCategories = await BuildSubCategoryOptionsAsync(category, subCategory);
 
             return View(viewModel);
         }
@@ -333,5 +347,23 @@ public class EventsController : Controller
             _logger.LogError(ex, "Error loading category page for {Category}", category);
             return RedirectToAction(nameof(Index));
         }
+    }
+
+    private async Task<List<SelectListItem>> BuildSubCategoryOptionsAsync(string? category, string? selectedSubCategory)
+    {
+        if (string.IsNullOrWhiteSpace(category) || !Enum.TryParse<EventCategory>(category, true, out var parsedCategory))
+        {
+            return new List<SelectListItem>();
+        }
+
+        var subCategories = await _subCategoryRepository.GetByCategoryAsync(parsedCategory);
+        return subCategories
+            .Select(subCategory => new SelectListItem
+            {
+                Value = subCategory.Name,
+                Text = subCategory.Name,
+                Selected = string.Equals(subCategory.Name, selectedSubCategory, StringComparison.OrdinalIgnoreCase)
+            })
+            .ToList();
     }
 }
