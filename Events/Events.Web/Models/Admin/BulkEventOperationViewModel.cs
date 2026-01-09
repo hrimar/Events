@@ -16,6 +16,9 @@ public class BulkEventOperationViewModel
     // Start Time operation
     public TimeSpan? BulkStartTime { get; set; }
     
+    // IsFree operation (null = don't apply, true = free, false = paid)
+    public bool? BulkIsFree { get; set; }
+    
     // Which operations to apply
     public List<string> OperationsToApply { get; set; } = new();
 }

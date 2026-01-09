@@ -752,6 +752,12 @@ public class EventsController : Controller
                         eventChanged = true;
                     }
 
+                    if (model.OperationsToApply.Contains("isfree") && model.BulkIsFree.HasValue)
+                    {
+                        eventEntity.IsFree = model.BulkIsFree.Value;
+                        eventChanged = true;
+                    }
+
                     if (eventChanged)
                     {
                         eventEntity.UpdatedAt = DateTime.UtcNow;

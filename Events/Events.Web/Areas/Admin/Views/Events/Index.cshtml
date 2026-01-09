@@ -457,6 +457,32 @@ else
                             <small class="text-muted d-block mt-2">Will only apply to events on the same date</small>
                         </div>
                     </div>
+
+                    <!-- IsFree Operation -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <div class="form-check">
+                                <input class="form-check-input bulk-operation-check" type="checkbox" id="applyIsFree" value="isfree" />
+                                <label class="form-check-label" for="applyIsFree">
+                                    Set Free/Paid Status
+                                </label>
+                            </div>
+                        </div>
+                        <div class="card-body" id="isFreeOperation" style="display: none;">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="bulkIsFree" id="bulkIsFreeTrue" value="true" />
+                                <label class="form-check-label" for="bulkIsFreeTrue">
+                                    <i class="fas fa-check text-success me-1"></i>Free Event
+                                </label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="bulkIsFree" id="bulkIsFreeFalse" value="false" />
+                                <label class="form-check-label" for="bulkIsFreeFalse">
+                                    <i class="fas fa-dollar-sign text-warning me-1"></i>Paid Event
+                                </label>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
@@ -513,6 +539,9 @@ else
                 } else if (operationType === 'starttime') {
                     const startTimeDiv = $('#startTimeOperation');
                     $(this).is(':checked') ? startTimeDiv.show() : startTimeDiv.hide();
+                } else if (operationType === 'isfree') {
+                    const isFreeDiv = $('#isFreeOperation');
+                    $(this).is(':checked') ? isFreeDiv.show() : isFreeDiv.hide();
                 }
             });
 
@@ -554,9 +583,7 @@ else
                 
                 // Add SelectedEventIds array
                 selectedIds.forEach(id => {
-                    selectedEventsInput.append(
-                        `<input type="hidden" name="SelectedEventIds" value="${id}" />`
-                    );
+                    selectedEventsInput.append(`<input type="hidden" name="SelectedEventIds" value="${id}" />`);
                 });
 
                 // Collect selected operations
@@ -573,42 +600,38 @@ else
 
                 // Add OperationsToApply array
                 operationsToApply.forEach(op => {
-                    selectedEventsInput.append(
-                        `<input type="hidden" name="OperationsToApply" value="${op}" />`
-                    );
+                    selectedEventsInput.append(`<input type="hidden" name="OperationsToApply" value="${op}" />`);
                 });
 
                 // Add BulkCategoryId if category operation selected
                 const categoryId = $('#bulkCategorySelect').val();
                 if (categoryId) {
-                    selectedEventsInput.append(
-                        `<input type="hidden" name="BulkCategoryId" value="${categoryId}" />`
-                    );
+                    selectedEventsInput.append(`<input type="hidden" name="BulkCategoryId" value="${categoryId}" />`);
                 }
 
                 // Add BulkSubCategoryId if subcategory operation selected
                 const subCategoryId = $('#bulkSubCategorySelect').val();
                 if (subCategoryId) {
-                    selectedEventsInput.append(
-                        `<input type="hidden" name="BulkSubCategoryId" value="${subCategoryId}" />`
-                    );
+                    selectedEventsInput.append(`<input type="hidden" name="BulkSubCategoryId" value="${subCategoryId}" />`);
                 }
 
                 // Add BulkStartTime if start time operation selected
                 const startTime = $('#bulkStartTimeInput').val();
                 if (startTime) {
-                    selectedEventsInput.append(
-                        `<input type="hidden" name="BulkStartTime" value="${startTime}" />`
-                    );
+                    selectedEventsInput.append(`<input type="hidden" name="BulkStartTime" value="${startTime}" />`);
                 }
 
                 // Add BulkTagIds array
                 const selectedTagIds = getSelectedBulkTagIds();
                 selectedTagIds.forEach(tagId => {
-                    selectedEventsInput.append(
-                        `<input type="hidden" name="BulkTagIds" value="${tagId}" />`
-                    );
+                    selectedEventsInput.append(`<input type="hidden" name="BulkTagIds" value="${tagId}" />`);
                 });
+
+                // Add BulkIsFree if is free operation selected
+                const isFreeValue = $('input[name="bulkIsFree"]:checked').val();
+                if (isFreeValue) {
+                    selectedEventsInput.append(`<input type="hidden" name="BulkIsFree" value="${isFreeValue}" />`);
+                }
             });
 
             // Reset selection when page navigation occurs (before page unload)
