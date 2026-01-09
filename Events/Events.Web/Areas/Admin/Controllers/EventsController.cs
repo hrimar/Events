@@ -1,3 +1,4 @@
+using System;
 using Events.Models.Entities;
 using Events.Models.Enums;
 using Events.Services.Interfaces;
@@ -6,6 +7,8 @@ using Events.Web.Models;
 using Events.Web.Models.Admin;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Newtonsoft.Json;
 
 namespace Events.Web.Areas.Admin.Controllers;
 
@@ -17,55 +20,66 @@ public class EventsController : Controller
     private readonly IEventService _eventService;
     private readonly ICategoryRepository _categoryRepository;
     private readonly ISubCategoryRepository _subCategoryRepository;
+    private readonly ITagService _tagService;
 
     public EventsController(
         ILogger<EventsController> logger, 
         IEventService eventService,
         ICategoryRepository categoryRepository,
-        ISubCategoryRepository subCategoryRepository)
+        ISubCategoryRepository subCategoryRepository,
+        ITagService tagService)
     {
         _logger = logger;
         _eventService = eventService;
         _categoryRepository = categoryRepository;
         _subCategoryRepository = subCategoryRepository;
+        _tagService = tagService;
     }
 
     // GET: Admin/Events
-    public async Task<IActionResult> Index(int page = 1, int pageSize = 20, string? search = null, string? category = null)
+    public async Task<IActionResult> Index(
+        int page = 1,
+        int pageSize = 20,
+        string? search = null,
+        string? category = null,
+        string sortBy = "date",
+        string sortOrder = "asc")
     {
         try
         {
+            var normalizedSortBy = string.IsNullOrWhiteSpace(sortBy) ? "date" : sortBy.ToLowerInvariant();
+            var normalizedSortOrder = string.Equals(sortOrder, "desc", StringComparison.OrdinalIgnoreCase) ? "desc" : "asc";
+
             IEnumerable<Event> events;
             int totalCount;
 
             if (!string.IsNullOrWhiteSpace(search))
             {
-                // Search with category filter if provided
                 var searchResults = await _eventService.SearchEventsAsync(search);
                 events = searchResults;
-                
-                // Apply category filter to search results if category is specified
+
                 if (!string.IsNullOrWhiteSpace(category))
                 {
                     events = events.Where(e => e.Category != null && e.Category.Name == category);
                 }
-                
+
+                events = ApplySorting(events, normalizedSortBy, normalizedSortOrder);
+
                 totalCount = events.Count();
-                
-                // Apply pagination manually for search results
                 events = events.Skip((page - 1) * pageSize).Take(pageSize).ToList();
-            }
-            else if (!string.IsNullOrWhiteSpace(category))
-            {
-                // Category filter only (no search)
-                var result = await _eventService.GetPagedEventsAsync(page, pageSize, null, category, null, null);
-                events = result.Events;
-                totalCount = result.TotalCount;
             }
             else
             {
-                // No filters - get all events
-                var result = await _eventService.GetPagedEventsAsync(page, pageSize, null, null, null, null);
+                var result = await _eventService.GetPagedEventsAsync(
+                    page,
+                    pageSize,
+                    null,
+                    category,
+                    null,
+                    null,
+                    normalizedSortBy,
+                    normalizedSortOrder);
+
                 events = result.Events;
                 totalCount = result.TotalCount;
             }
@@ -73,8 +87,28 @@ public class EventsController : Controller
             var eventViewModels = AdminEventViewModel.FromEntities(events);
             var paginatedEvents = new PaginatedList<AdminEventViewModel>(eventViewModels, totalCount, page, pageSize);
 
+            // Load categories from database for filter dropdown
+            var categories = await _categoryRepository.GetAllAsync();
+            ViewBag.AvailableCategories = categories
+                .Select(c => new SelectListItem 
+                { 
+                    Value = c.Name,
+                    Text = c.Name,
+                    Selected = c.Name == category
+                })
+                .OrderBy(c => c.Text)
+                .ToList();
+
             ViewBag.SearchTerm = search;
             ViewBag.Category = category;
+            ViewBag.SortBy = normalizedSortBy;
+            ViewBag.SortOrder = normalizedSortOrder;
+
+            // Also expose categories as JSON for bulk operations modal
+            var categoriesJson = JsonConvert.SerializeObject(
+                categories.Select(c => new { id = c.Id, name = c.Name }).ToList()
+            );
+            ViewBag.CategoriesJson = categoriesJson;
 
             return View(paginatedEvents);
         }
@@ -305,7 +339,9 @@ public class EventsController : Controller
                 CategoryId = eventEntity.CategoryId,
                 SubCategoryId = eventEntity.SubCategoryId,
                 Status = eventEntity.Status,
-                SourceUrl = eventEntity.SourceUrl
+                SourceUrl = eventEntity.SourceUrl,
+                // Load currently selected tags
+                SelectedTagIds = eventEntity.EventTags?.Select(et => et.TagId).ToList() ?? new List<int>()
             };
 
             // Load available categories
@@ -324,6 +360,17 @@ public class EventsController : Controller
                 Name = sc.Name,
                 CategoryId = sc.CategoryId
             }).OrderBy(sc => sc.Name).ToList();
+
+            // Load available tags
+            var allTags = await _tagService.GetAllTagsAsync();
+            viewModel.AvailableTags = allTags
+                .Select(t => new TagOption
+                {
+                    Id = t.Id,
+                    Name = t.Name
+                })
+                .OrderBy(t => t.Name)
+                .ToList();
 
             return View(viewModel);
         }
@@ -364,6 +411,12 @@ public class EventsController : Controller
                     CategoryId = sc.CategoryId
                 }).OrderBy(sc => sc.Name).ToList();
 
+                var allTags = await _tagService.GetAllTagsAsync();
+                model.AvailableTags = allTags
+                    .Select(t => new TagOption { Id = t.Id, Name = t.Name })
+                    .OrderBy(t => t.Name)
+                    .ToList();
+
                 return View(model);
             }
 
@@ -391,7 +444,40 @@ public class EventsController : Controller
 
             await _eventService.UpdateEventAsync(eventEntity);
 
-            _logger.LogInformation("Event {EventId} updated successfully", id);
+            // Update tags - remove old and assign new ones
+            if (model.SelectedTagIds.Any())
+            {
+                // Get current tag IDs
+                var currentTagIds = eventEntity.EventTags?.Select(et => et.TagId).ToList() ?? new List<int>();
+                
+                // Remove tags that are no longer selected
+                var tagsToRemove = currentTagIds.Except(model.SelectedTagIds).ToList();
+                if (tagsToRemove.Any())
+                {
+                    foreach (var tagId in tagsToRemove)
+                    {
+                        await _tagService.RemoveTagFromEventAsync(eventEntity.Id, tagId);
+                    }
+                }
+
+                // Add new tags
+                var tagsToAdd = model.SelectedTagIds.Except(currentTagIds).ToList();
+                if (tagsToAdd.Any())
+                {
+                    await _tagService.BulkAddTagsToEventAsync(eventEntity.Id, tagsToAdd);
+                }
+            }
+            else
+            {
+                // Remove all tags if none selected
+                var currentTagIds = eventEntity.EventTags?.Select(et => et.TagId).ToList() ?? new List<int>();
+                foreach (var tagId in currentTagIds)
+                {
+                    await _tagService.RemoveTagFromEventAsync(eventEntity.Id, tagId);
+                }
+            }
+
+            _logger.LogInformation("Event {EventId} updated successfully with tags", id);
 
             TempData["SuccessMessage"] = $"Event '{eventEntity.Name}' has been updated successfully.";
 
@@ -401,7 +487,7 @@ public class EventsController : Controller
         {
             _logger.LogError(ex, "Error updating event {EventId}", id);
             TempData["ErrorMessage"] = "An error occurred while updating the event.";
-            
+
             // Repopulate dropdowns on error
             var categories = await _categoryRepository.GetAllAsync();
             model.AvailableCategories = categories.Select(c => new CategoryOption
@@ -417,6 +503,12 @@ public class EventsController : Controller
                 Name = sc.Name,
                 CategoryId = sc.CategoryId
             }).OrderBy(sc => sc.Name).ToList();
+
+            var allTags = await _tagService.GetAllTagsAsync();
+            model.AvailableTags = allTags
+                .Select(t => new TagOption { Id = t.Id, Name = t.Name })
+                .OrderBy(t => t.Name)
+                .ToList();
 
             return View(model);
         }
@@ -449,5 +541,290 @@ public class EventsController : Controller
             TempData["ErrorMessage"] = "An error occurred while deleting the event.";
             return RedirectToAction(nameof(Index));
         }
+    }
+
+    // GET: Admin/Events/Create
+    public async Task<IActionResult> Create()
+    {
+        try
+        {
+            var viewModel = new CreateEventViewModel();
+
+            // Load available categories (exclude Undefined - CategoryId = 11)
+            var categories = await _categoryRepository.GetAllAsync();
+            viewModel.AvailableCategories = categories
+                .Where(c => c.Id != 11) // Exclude Undefined category
+                .Select(c => new CategoryOption
+                {
+                    Id = c.Id,
+                    Name = c.Name
+                })
+                .OrderBy(c => c.Name)
+                .ToList();
+
+            // Load all subcategories (will be filtered by JavaScript)
+            var allSubCategories = await _subCategoryRepository.GetAllAsync();
+            viewModel.AvailableSubCategories = allSubCategories.Select(sc => new SubCategoryOption
+            {
+                Id = sc.Id,
+                Name = sc.Name,
+                CategoryId = sc.CategoryId
+            }).OrderBy(sc => sc.Name).ToList();
+
+            // Load available tags
+            var allTags = await _tagService.GetAllTagsAsync();
+            viewModel.AvailableTags = allTags
+                .Select(t => new TagOption
+                {
+                    Id = t.Id,
+                    Name = t.Name
+                })
+                .OrderBy(t => t.Name)
+                .ToList();
+
+            return View(viewModel);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error loading create event page");
+            TempData["ErrorMessage"] = "An error occurred while loading the create event page.";
+            return RedirectToAction(nameof(Index));
+        }
+    }
+
+    // POST: Admin/Events/Create
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Create(CreateEventViewModel model)
+    {
+        try
+        {
+            if (!ModelState.IsValid)
+            {
+                // Repopulate available categories and subcategories (exclude Undefined)
+                var categories = await _categoryRepository.GetAllAsync();
+                model.AvailableCategories = categories
+                    .Where(c => c.Id != 11) // Exclude Undefined category
+                    .Select(c => new CategoryOption { Id = c.Id, Name = c.Name })
+                    .OrderBy(c => c.Name)
+                    .ToList();
+
+                var allSubCategories = await _subCategoryRepository.GetAllAsync();
+                model.AvailableSubCategories = allSubCategories.Select(sc => new SubCategoryOption
+                {
+                    Id = sc.Id,
+                    Name = sc.Name,
+                    CategoryId = sc.CategoryId
+                }).OrderBy(sc => sc.Name).ToList();
+
+                var allTags = await _tagService.GetAllTagsAsync();
+                model.AvailableTags = allTags
+                    .Select(t => new TagOption { Id = t.Id, Name = t.Name })
+                    .OrderBy(t => t.Name)
+                    .ToList();
+
+                return View(model);
+            }
+
+            // Create event entity
+            var eventEntity = new Event
+            {
+                Name = model.Name,
+                Date = model.Date,
+                StartTime = model.StartTime,
+                City = model.City,
+                Location = model.Location,
+                Description = model.Description,
+                ImageUrl = model.ImageUrl,
+                TicketUrl = model.TicketUrl,
+                IsFree = model.IsFree,
+                Price = model.Price,
+                IsFeatured = model.IsFeatured,
+                CategoryId = model.CategoryId,
+                SubCategoryId = model.SubCategoryId,
+                Status = model.Status,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            var createdEvent = await _eventService.CreateEventAsync(eventEntity);
+
+            // Assign selected tags to the event
+            if (model.SelectedTagIds.Any())
+            {
+                await _tagService.BulkAddTagsToEventAsync(createdEvent.Id, model.SelectedTagIds);
+                _logger.LogInformation("Assigned {TagCount} tags to event {EventId}", 
+                    model.SelectedTagIds.Count, createdEvent.Id);
+            }
+
+            _logger.LogInformation("Event {EventId} created successfully by admin", createdEvent.Id);
+
+            TempData["SuccessMessage"] = $"Event '{createdEvent.Name}' has been created successfully.";
+
+            // Redirect to edit page for preview and further modifications
+            return RedirectToAction(nameof(Edit), new { id = createdEvent.Id });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating event");
+            TempData["ErrorMessage"] = "An error occurred while creating the event.";
+
+            // Repopulate dropdowns on error (exclude Undefined)
+            var categories = await _categoryRepository.GetAllAsync();
+            model.AvailableCategories = categories
+                .Where(c => c.Id != 11) // Exclude Undefined category
+                .Select(c => new CategoryOption { Id = c.Id, Name = c.Name })
+                .OrderBy(c => c.Name)
+                .ToList();
+
+            var allSubCategories = await _subCategoryRepository.GetAllAsync();
+            model.AvailableSubCategories = allSubCategories.Select(sc => new SubCategoryOption
+            {
+                Id = sc.Id,
+                Name = sc.Name,
+                CategoryId = sc.CategoryId
+            }).OrderBy(sc => sc.Name).ToList();
+
+            var allTags = await _tagService.GetAllTagsAsync();
+            model.AvailableTags = allTags
+                .Select(t => new TagOption { Id = t.Id, Name = t.Name })
+                .OrderBy(t => t.Name)
+                .ToList();
+
+            return View(model);
+        }
+    }
+
+    // POST: Admin/Events/BulkApplyChanges
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> BulkApplyChanges(BulkEventOperationViewModel model)
+    {
+        try
+        {
+            if (model?.SelectedEventIds == null || model.SelectedEventIds.Count == 0)
+            {
+                TempData["ErrorMessage"] = "No events selected.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            if (model.OperationsToApply == null || model.OperationsToApply.Count == 0)
+            {
+                TempData["ErrorMessage"] = "No operations selected.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            // Batch operation strategy: load all events, modify in memory, update in batch
+            // Benefits: Single database transaction, minimal round-trips, better performance
+            // Trade-off: Slightly more memory usage (negligible for typical admin operations)
+
+            int changedCount = 0;
+
+            // Phase 1: Load all events and apply structural changes in memory
+            var eventsToUpdate = new List<Event>();
+
+            foreach (var eventId in model.SelectedEventIds)
+            {
+                try
+                {
+                    var eventEntity = await _eventService.GetEventByIdAsync(eventId);
+                    if (eventEntity == null)
+                    {
+                        continue;
+                    }
+
+                    bool eventChanged = false;
+                    if (model.OperationsToApply.Contains("category") && model.BulkCategoryId.HasValue)
+                    {
+                        eventEntity.CategoryId = model.BulkCategoryId.Value;
+                        eventChanged = true;
+                    }
+
+                    if (model.OperationsToApply.Contains("subcategory") && model.BulkSubCategoryId.HasValue)
+                    {
+                        eventEntity.SubCategoryId = model.BulkSubCategoryId.Value;
+                        eventChanged = true;
+                    }
+
+                    if (model.OperationsToApply.Contains("starttime") && model.BulkStartTime.HasValue)
+                    {
+                        eventEntity.StartTime = model.BulkStartTime.Value;
+                        eventChanged = true;
+                    }
+
+                    if (model.OperationsToApply.Contains("isfree") && model.BulkIsFree.HasValue)
+                    {
+                        eventEntity.IsFree = model.BulkIsFree.Value;
+                        eventChanged = true;
+                    }
+
+                    if (eventChanged)
+                    {
+                        eventEntity.UpdatedAt = DateTime.UtcNow;
+                        eventsToUpdate.Add(eventEntity);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Error loading event {EventId} for bulk update", eventId);
+                    continue;
+                }
+            }
+
+            // Phase 2: Batch update all modified events in single transaction
+            if (eventsToUpdate.Any())
+            {
+                changedCount = await _eventService.BulkUpdateEventsAsync(eventsToUpdate);
+            }
+
+            // Phase 3: Batch assign tags (separate operation for better separation of concerns)
+            if (model.OperationsToApply.Contains("tags") && model.BulkTagIds.Any())
+            {
+                // Add selected tags to all events (existing tags are preserved)
+                await _tagService.BulkAssignTagsToMultipleEventsAsync(model.SelectedEventIds, model.BulkTagIds);
+            }
+
+            _logger.LogInformation("Bulk operations completed: {ChangedCount} events updated, " + "Tags assigned: {HasTags}, Operations: {Operations}",
+                changedCount, model.OperationsToApply.Contains("tags"),string.Join(", ", model.OperationsToApply));
+
+            var successMessages = new List<string>();
+            if (changedCount > 0)
+                successMessages.Add($"{changedCount} event(s) updated");
+            if (model.OperationsToApply.Contains("tags") && model.BulkTagIds.Any())
+                successMessages.Add($"tags assigned to {model.SelectedEventIds.Count} event(s)");
+
+            TempData["SuccessMessage"] = successMessages.Any()
+                ? $"Bulk operations completed successfully: {string.Join(", ", successMessages)}."
+                : "Bulk operations completed.";
+
+            return RedirectToAction(nameof(Index));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error applying bulk operations");
+            TempData["ErrorMessage"] = "An error occurred while applying bulk operations.";
+            return RedirectToAction(nameof(Index));
+        }
+    }
+
+    private static IEnumerable<Event> ApplySorting(IEnumerable<Event> events, string sortField, string sortOrder)
+    {
+        var normalizedSort = string.IsNullOrWhiteSpace(sortField) ? "date" : sortField.ToLowerInvariant();
+        var isDescending = string.Equals(sortOrder, "desc", StringComparison.OrdinalIgnoreCase);
+
+        return normalizedSort switch
+        {
+            "name" => isDescending ? events.OrderByDescending(e => e.Name) : events.OrderBy(e => e.Name),
+            "time" => isDescending ? events.OrderByDescending(e => e.StartTime ?? TimeSpan.Zero) : events.OrderBy(e => e.StartTime ?? TimeSpan.Zero),
+            "category" => isDescending ? events.OrderByDescending(e => e.Category?.Name) : events.OrderBy(e => e.Category?.Name),
+            "subcategory" => isDescending ? events.OrderByDescending(e => e.SubCategory?.Name) : events.OrderBy(e => e.SubCategory?.Name),
+            "location" => isDescending ? events.OrderByDescending(e => e.Location) : events.OrderBy(e => e.Location),
+            "status" => isDescending ? events.OrderByDescending(e => e.Status) : events.OrderBy(e => e.Status),
+            "price" => isDescending ? events.OrderByDescending(e => e.IsFree ? 0m : (e.Price ?? decimal.MaxValue)) : events.OrderBy(e => e.IsFree ? 0m : (e.Price ?? decimal.MaxValue)),
+            "featured" => isDescending ? events.OrderByDescending(e => e.IsFeatured) : events.OrderBy(e => e.IsFeatured),
+            _ => isDescending
+                ? events.OrderByDescending(e => e.Date).ThenByDescending(e => e.StartTime ?? TimeSpan.Zero)
+                : events.OrderBy(e => e.Date).ThenBy(e => e.StartTime ?? TimeSpan.Zero)
+        };
     }
 }

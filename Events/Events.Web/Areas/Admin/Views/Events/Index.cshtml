@@ -4,13 +4,37 @@
     ViewData["Title"] = "All Events";
     var search = ViewBag.SearchTerm as string;
     var category = ViewBag.Category as string;
+    var sortBy = ViewBag.SortBy as string ?? "date";
+    var sortOrder = ViewBag.SortOrder as string ?? "asc";
+    var pageSize = Model.PageSize;
+    Func<string, string> buildSortUrl = column =>
+    {
+        var normalizedColumn = column.ToLowerInvariant();
+        var isCurrent = string.Equals(sortBy, normalizedColumn, StringComparison.OrdinalIgnoreCase);
+        var nextOrder = isCurrent && sortOrder == "asc" ? "desc" : "asc";
+        return Url.Action("Index", new
+        {
+            page = 1,
+            pageSize,
+            search,
+            category,
+            sortBy = normalizedColumn,
+            sortOrder = nextOrder
+        });
+    };
+    Func<string, bool> isCurrentSort = column => string.Equals(sortBy, column.ToLowerInvariant(), StringComparison.OrdinalIgnoreCase);
 }
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1><i class="fas fa-calendar me-2"></i>All Events</h1>
-    <a asp-area="Admin" asp-controller="Dashboard" asp-action="Index" class="btn btn-outline-secondary">
-        <i class="fas fa-tachometer-alt me-2"></i>Dashboard
-    </a>
+    <div class="d-flex gap-2">
+        <a asp-action="Create" class="btn btn-success">
+            <i class="fas fa-plus me-2"></i>Create Event
+        </a>
+        <a asp-area="Admin" asp-controller="Dashboard" asp-action="Index" class="btn btn-outline-secondary">
+            <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+        </a>
+    </div>
 </div>
 
 <!-- Search and Filter -->
@@ -21,19 +45,8 @@
                 <input type="text" class="form-control" name="search" value="@search" placeholder="Search events by name, location...">
             </div>
             <div class="col-md-4">
-                <select class="form-select" name="category">
+                <select class="form-select" name="category" asp-items="ViewBag.AvailableCategories">
                     <option value="">All Categories</option>
-                    <option value="Music" selected="@(category == "Music")">Music</option>
-                    <option value="Art" selected="@(category == "Art")">Art</option>
-                    <option value="Business" selected="@(category == "Business")">Business</option>
-                    <option value="Sports" selected="@(category == "Sports")">Sports</option>
-                    <option value="Theatre" selected="@(category == "Theatre")">Theatre</option>
-                    <option value="Cinema" selected="@(category == "Cinema")">Cinema</option>
-                    <option value="Festivals" selected="@(category == "Festivals")">Festivals</option>
-                    <option value="Exhibitions" selected="@(category == "Exhibitions")">Exhibitions</option>
-                    <option value="Conferences" selected="@(category == "Conferences")">Conferences</option>
-                    <option value="Workshops" selected="@(category == "Workshops")">Workshops</option>
-                    <option value="Undefined" selected="@(category == "Undefined")">Undefined</option>
                 </select>
             </div>
             <div class="col-md-2">
@@ -57,6 +70,8 @@
                     }
                 </div>
             }
+            <input type="hidden" name="sortBy" value="@sortBy" />
+            <input type="hidden" name="sortOrder" value="@sortOrder" />
         </form>
     </div>
 </div>
@@ -73,39 +88,145 @@
 <!-- Events Table -->
 @if(Model.Items.Any())
 {
+    <!-- Bulk Operations Toolbar (Hidden by default) -->
+    <div id="bulkOperationsBar" class="card mb-4" style="display: none;">
+        <div class="card-body bg-light">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <span class="me-3">
+                        <strong id="selectedCount">0</strong> event(s) selected
+                    </span>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#bulkOperationsModal">
+                        <i class="fas fa-cog me-1"></i>Bulk Operations
+                    </button>
+                    <button type="button" class="btn btn-sm btn-secondary" onclick="clearSelection()">
+                        <i class="fas fa-times me-1"></i>Clear Selection
+                    </button>
+                </div>
+            </div>
+            <small class="text-muted">
+                Note: You can only select items from the current page. Selection will be cleared when 
+                navigating to another page.
+            </small>
+        </div>
+    </div>
+
     <div class="card">
         <div class="table-responsive">
             <table class="table table-hover mb-0">
                 <thead class="table-light">
                     <tr>
+                        <th style="width: 40px;">
+                            <input type="checkbox" id="selectAllCheckbox" class="form-check-input" />
+                        </th>
                         <th style="width: 60px;">Image</th>
-                        <th>Event Name</th>
-                        <th style="width: 120px;">Date</th>
-                        <th>Category</th>
-                        <th style="width: 100px;">Status</th>
-                        <th style="width: 80px;">Price</th>
-                        <th style="width: 80px;">Featured</th>
+                        <th>
+                            <a href="@buildSortUrl("name")" class="text-decoration-none text-dark d-flex align-items-center gap-1">
+                                Event Name
+                                @if(isCurrentSort("name"))
+                                {
+                                    <i class="fas fa-chevron-@(sortOrder == "asc" ? "up" : "down") ms-1"></i>
+                                }
+                            </a>
+                        </th>
+                        <th style="width: 120px;">
+                            <a href="@buildSortUrl("date")" class="text-decoration-none text-dark d-flex align-items-center gap-1">
+                                Date
+                                @if(isCurrentSort("date"))
+                                {
+                                    <i class="fas fa-chevron-@(sortOrder == "asc" ? "up" : "down") ms-1"></i>
+                                }
+                            </a>
+                        </th>
+                        <th style="width: 100px;">
+                            <a href="@buildSortUrl("time")" class="text-decoration-none text-dark d-flex align-items-center gap-1">
+                                Time
+                                @if(isCurrentSort("time"))
+                                {
+                                    <i class="fas fa-chevron-@(sortOrder == "asc" ? "up" : "down") ms-1"></i>
+                                }
+                            </a>
+                        </th>
+                        <th>
+                            <a href="@buildSortUrl("category")" class="text-decoration-none text-dark d-flex align-items-center gap-1">
+                                Category
+                                @if(isCurrentSort("category"))
+                                {
+                                    <i class="fas fa-chevron-@(sortOrder == "asc" ? "up" : "down") ms-1"></i>
+                                }
+                            </a>
+                        </th>
+                        <th>
+                            <a href="@buildSortUrl("subcategory")" class="text-decoration-none text-dark d-flex align-items-center gap-1">
+                                Subcategory
+                                @if(isCurrentSort("subcategory"))
+                                {
+                                    <i class="fas fa-chevron-@(sortOrder == "asc" ? "up" : "down") ms-1"></i>
+                                }
+                            </a>
+                        </th>
+                        <th>
+                            <a href="@buildSortUrl("location")" class="text-decoration-none text-dark d-flex align-items-center gap-1">
+                                Location
+                                @if(isCurrentSort("location"))
+                                {
+                                    <i class="fas fa-chevron-@(sortOrder == "asc" ? "up" : "down") ms-1"></i>
+                                }
+                            </a>
+                        </th>
+                        <th style="width: 100px;">
+                            <a href="@buildSortUrl("status")" class="text-decoration-none text-dark d-flex align-items-center gap-1">
+                                Status
+                                @if(isCurrentSort("status"))
+                                {
+                                    <i class="fas fa-chevron-@(sortOrder == "asc" ? "up" : "down") ms-1"></i>
+                                }
+                            </a>
+                        </th>
+                        <th style="width: 80px;">
+                            <a href="@buildSortUrl("price")" class="text-decoration-none text-dark d-flex align-items-center gap-1">
+                                Price
+                                @if(isCurrentSort("price"))
+                                {
+                                    <i class="fas fa-chevron-@(sortOrder == "asc" ? "up" : "down") ms-1"></i>
+                                }
+                            </a>
+                        </th>
+                        <th style="width: 80px;">
+                            <a href="@buildSortUrl("featured")" class="text-decoration-none text-dark d-flex align-items-center gap-1">
+                                Featured
+                                @if(isCurrentSort("featured"))
+                                {
+                                    <i class="fas fa-chevron-@(sortOrder == "asc" ? "up" : "down") ms-1"></i>
+                                }
+                            </a>
+                        </th>
                         <th style="width: 150px;">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach(var evt in Model.Items)
                     {
-                        <tr>
+                        <tr class="event-row">
+                            <td>
+                                <input type="checkbox" class="form-check-input event-checkbox" value="@evt.Id" />
+                            </td>
                             <td>
                                 <img src="@evt.DefaultImage" alt="@evt.Name" class="img-thumbnail" style="width: 50px; height: 50px; object-fit: cover;">
                             </td>
                             <td>
                                 <strong>@evt.Name</strong><br/>
                                 <small class="text-muted">
-                                    <i class="fas fa-map-marker-alt me-1"></i>@evt.Location
+                                    <i class="fas fa-city me-1"></i>@evt.City
                                 </small>
                             </td>
                             <td>
-                                <small>
-                                    @evt.FormattedDate<br/>
-                                    @evt.FormattedTime
-                                </small>
+                                <strong>@evt.FormattedDate</strong>
+                            </td>
+                            <td>
+                                <small>@evt.FormattedTime</small>
                             </td>
                             <td>
                                 @if(evt.IsUncategorized)
@@ -116,10 +237,19 @@
                                 {
                                     <span class="badge bg-secondary">@evt.CategoryName</span>
                                 }
+                            </td>
+                            <td>
                                 @if(!string.IsNullOrEmpty(evt.SubCategoryName))
                                 {
-                                    <br/><small class="text-muted">@evt.SubCategoryName</small>
+                                    <span>@evt.SubCategoryName</span>
                                 }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </td>
+                            <td>
+                                <span>@evt.Location</span>
                             </td>
                             <td>
                                 @switch(evt.Status)
@@ -188,7 +318,7 @@
                 @if(Model.HasPreviousPage)
                 {
                     <li class="page-item">
-                        <a class="page-link" href="?page=@(Model.CurrentPage - 1)@(!string.IsNullOrEmpty(search) ? "&search=" + search : "")@(!string.IsNullOrEmpty(category) ? "&category=" + category : "")">
+                        <a class="page-link" href="?page=@(Model.CurrentPage - 1)@(!string.IsNullOrEmpty(search) ? "&search=" + search : "")@(!string.IsNullOrEmpty(category) ? "&category=" + category : "")&sortBy=@sortBy&sortOrder=@sortOrder">
                             <i class="fas fa-chevron-left"></i> Previous
                         </a>
                     </li>
@@ -197,14 +327,14 @@
                 @for(var i = Math.Max(1, Model.CurrentPage - 2); i <= Math.Min(Model.TotalPages, Model.CurrentPage + 2); i++)
                 {
                     <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
-                        <a class="page-link" href="?page=@i@(!string.IsNullOrEmpty(search) ? "&search=" + search : "")@(!string.IsNullOrEmpty(category) ? "&category=" + category : "")">@i</a>
+                        <a class="page-link" href="?page=@i@(!string.IsNullOrEmpty(search) ? "&search=" + search : "")@(!string.IsNullOrEmpty(category) ? "&category=" + category : "")&sortBy=@sortBy&sortOrder=@sortOrder">@i</a>
                     </li>
                 }
                 
                 @if(Model.HasNextPage)
                 {
                     <li class="page-item">
-                        <a class="page-link" href="?page=@(Model.CurrentPage + 1)@(!string.IsNullOrEmpty(search) ? "&search=" + search : "")@(!string.IsNullOrEmpty(category) ? "&category=" + category : "")">
+                        <a class="page-link" href="?page=@(Model.CurrentPage + 1)@(!string.IsNullOrEmpty(search) ? "&search=" + search : "")@(!string.IsNullOrEmpty(category) ? "&category=" + category : "")&sortBy=@sortBy&sortOrder=@sortOrder">
                             Next <i class="fas fa-chevron-right"></i>
                         </a>
                     </li>
@@ -239,10 +369,396 @@ else
     <input type="hidden" id="deleteId" name="id" value="" />
 </form>
 
+<!-- Bulk Operations Modal -->
+<div class="modal fade" id="bulkOperationsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-cog me-2"></i>Bulk Operations
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="bulkOperationsForm" method="post" asp-action="BulkApplyChanges">
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <div id="selectedEventsInput"></div>
+
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Select Operations to Apply:</strong></label>
+                    </div>
+
+                    <!-- Category Operation -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <div class="form-check">
+                                <input class="form-check-input bulk-operation-check" type="checkbox" id="applyCategory" value="category" />
+                                <label class="form-check-label" for="applyCategory">
+                                    Change Category
+                                </label>
+                            </div>
+                        </div>
+                        <div class="card-body" id="categoryOperation" style="display: none;">
+                            <select class="form-select" name="bulkCategoryId" id="bulkCategorySelect">
+                                <option value="">Select Category...</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- SubCategory Operation -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <div class="form-check">
+                                <input class="form-check-input bulk-operation-check" type="checkbox" id="applySubCategory" value="subcategory" />
+                                <label class="form-check-label" for="applySubCategory">
+                                    Change SubCategory
+                                </label>
+                            </div>
+                        </div>
+                        <div class="card-body" id="subCategoryOperation" style="display: none;">
+                            <select class="form-select" name="bulkSubCategoryId" id="bulkSubCategorySelect">
+                                <option value="">Select SubCategory...</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Tags Operation -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <div class="form-check">
+                                <input class="form-check-input bulk-operation-check" type="checkbox" id="applyTags" value="tags" />
+                                <label class="form-check-label" for="applyTags">
+                                    Add Tags (up to 3)
+                                </label>
+                            </div>
+                        </div>
+                        <div class="card-body" id="tagsOperation" style="display: none;">
+                            <div id="bulkTagsContainer" class="d-flex flex-wrap gap-2">
+                                <!-- Tags will be loaded here -->
+                            </div>
+                            <small class="text-muted">
+                                Selected: <span id="bulkTagCount">0</span>/3
+                            </small>
+                        </div>
+                    </div>
+
+                    <!-- Start Time Operation -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <div class="form-check">
+                                <input class="form-check-input bulk-operation-check" type="checkbox" id="applyStartTime" value="starttime" />
+                                <label class="form-check-label" for="applyStartTime">
+                                    Set Start Time
+                                </label>
+                            </div>
+                        </div>
+                        <div class="card-body" id="startTimeOperation" style="display: none;">
+                            <input type="time" class="form-control" name="bulkStartTime" id="bulkStartTimeInput" />
+                            <small class="text-muted d-block mt-2">Will only apply to events on the same date</small>
+                        </div>
+                    </div>
+
+                    <!-- IsFree Operation -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <div class="form-check">
+                                <input class="form-check-input bulk-operation-check" type="checkbox" id="applyIsFree" value="isfree" />
+                                <label class="form-check-label" for="applyIsFree">
+                                    Set Free/Paid Status
+                                </label>
+                            </div>
+                        </div>
+                        <div class="card-body" id="isFreeOperation" style="display: none;">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="bulkIsFree" id="bulkIsFreeTrue" value="true" />
+                                <label class="form-check-label" for="bulkIsFreeTrue">
+                                    <i class="fas fa-check text-success me-1"></i>Free Event
+                                </label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="bulkIsFree" id="bulkIsFreeFalse" value="false" />
+                                <label class="form-check-label" for="bulkIsFreeFalse">
+                                    <i class="fas fa-dollar-sign text-warning me-1"></i>Paid Event
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-check me-1"></i>Apply Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script>
+        let allTags = []; // Will be populated from server
+        let allCategories = @Html.Raw(ViewBag.CategoriesJson ?? "[]"); // Categories from server
+        const MAX_BULK_TAGS = 3;
+
+        $(document).ready(function() {
+            // Load all tags when page loads
+            loadAllTags();
+            
+            // Populate bulk category select
+            populateBulkCategories();
+
+            // Select All checkbox
+            $('#selectAllCheckbox').on('change', function() {
+                const isChecked = $(this).is(':checked');
+                $('.event-checkbox').prop('checked', isChecked);
+                updateBulkBar();
+            });
+
+            // Individual event checkboxes
+            $('.event-checkbox').on('change', function() {
+                updateSelectAllCheckbox();
+                updateBulkBar();
+            });
+
+            // Bulk operation checkboxes - toggle visibility
+            $('.bulk-operation-check').on('change', function() {
+                const operationType = $(this).val();
+                
+                if (operationType === 'category') {
+                    const categoryDiv = $('#categoryOperation');
+                    $(this).is(':checked') ? categoryDiv.show() : categoryDiv.hide();
+                } else if (operationType === 'subcategory') {
+                    const subCategoryDiv = $('#subCategoryOperation');
+                    $(this).is(':checked') ? subCategoryDiv.show() : subCategoryDiv.hide();
+                } else if (operationType === 'tags') {
+                    const tagsDiv = $('#tagsOperation');
+                    $(this).is(':checked') ? tagsDiv.show() : tagsDiv.hide();
+                } else if (operationType === 'starttime') {
+                    const startTimeDiv = $('#startTimeOperation');
+                    $(this).is(':checked') ? startTimeDiv.show() : startTimeDiv.hide();
+                } else if (operationType === 'isfree') {
+                    const isFreeDiv = $('#isFreeOperation');
+                    $(this).is(':checked') ? isFreeDiv.show() : isFreeDiv.hide();
+                }
+            });
+
+            // Category change - update subcategories dynamically
+            $('#bulkCategorySelect').on('change', function() {
+                const categoryId = $(this).val();
+                if (categoryId) {
+                    updateBulkSubCategories(categoryId);
+                } else {
+                    $('#bulkSubCategorySelect').html('<option value="">Select SubCategory...</option>');
+                }
+            });
+
+            // Bulk tags selection
+            $(document).on('change', '.bulk-tag-checkbox', function() {
+                const checkedCount = $('.bulk-tag-checkbox:checked').length;
+                
+                if (checkedCount > MAX_BULK_TAGS) {
+                    $(this).prop('checked', false);
+                    alert('You can select a maximum of ' + MAX_BULK_TAGS + ' tags');
+                    return;
+                }
+                
+                updateBulkTagCount();
+            });
+
+            // Form submit - collect selected events
+            $('#bulkOperationsForm').on('submit', function(e) {
+                const selectedIds = getSelectedEventIds();
+                if (selectedIds.length === 0) {
+                    e.preventDefault();
+                    alert('Please select at least one event');
+                    return false;
+                }
+
+                // Add hidden inputs for selected event IDs
+                const selectedEventsInput = $('#selectedEventsInput');
+                selectedEventsInput.empty();
+                
+                // Add SelectedEventIds array
+                selectedIds.forEach(id => {
+                    selectedEventsInput.append(`<input type="hidden" name="SelectedEventIds" value="${id}" />`);
+                });
+
+                // Collect selected operations
+                const operationsToApply = [];
+                $('.bulk-operation-check:checked').each(function() {
+                    operationsToApply.push($(this).val());
+                });
+
+                if (operationsToApply.length === 0) {
+                    e.preventDefault();
+                    alert('Please select at least one operation to apply');
+                    return false;
+                }
+
+                // Add OperationsToApply array
+                operationsToApply.forEach(op => {
+                    selectedEventsInput.append(`<input type="hidden" name="OperationsToApply" value="${op}" />`);
+                });
+
+                // Add BulkCategoryId if category operation selected
+                const categoryId = $('#bulkCategorySelect').val();
+                if (categoryId) {
+                    selectedEventsInput.append(`<input type="hidden" name="BulkCategoryId" value="${categoryId}" />`);
+                }
+
+                // Add BulkSubCategoryId if subcategory operation selected
+                const subCategoryId = $('#bulkSubCategorySelect').val();
+                if (subCategoryId) {
+                    selectedEventsInput.append(`<input type="hidden" name="BulkSubCategoryId" value="${subCategoryId}" />`);
+                }
+
+                // Add BulkStartTime if start time operation selected
+                const startTime = $('#bulkStartTimeInput').val();
+                if (startTime) {
+                    selectedEventsInput.append(`<input type="hidden" name="BulkStartTime" value="${startTime}" />`);
+                }
+
+                // Add BulkTagIds array
+                const selectedTagIds = getSelectedBulkTagIds();
+                selectedTagIds.forEach(tagId => {
+                    selectedEventsInput.append(`<input type="hidden" name="BulkTagIds" value="${tagId}" />`);
+                });
+
+                // Add BulkIsFree if is free operation selected
+                const isFreeValue = $('input[name="bulkIsFree"]:checked').val();
+                if (isFreeValue) {
+                    selectedEventsInput.append(`<input type="hidden" name="BulkIsFree" value="${isFreeValue}" />`);
+                }
+            });
+
+            // Reset selection when page navigation occurs (before page unload)
+            $(window).on('beforeunload', function() {
+                clearSelection();
+            });
+        });
+
+        // HELPER FUNCTIONS
+
+        function populateBulkCategories() {
+            const select = $('#bulkCategorySelect');
+            select.empty();
+            select.append('<option value="">Select Category...</option>');
+            
+            if (allCategories && allCategories.length > 0) {
+                allCategories.forEach(cat => {
+                    select.append(`<option value="${cat.id}">${cat.name}</option>`);
+                });
+            }
+        }
+
+        function loadAllTags() {
+            $.ajax({
+                url: '/api/tags/all',
+                method: 'GET',
+                dataType: 'json',
+                success: function(data) {
+                    allTags = data;
+                    renderBulkTags();
+                },
+                error: function(err) {
+                    console.error('Error loading tags:', err);
+                }
+            });
+        }
+
+        function renderBulkTags() {
+            const container = $('#bulkTagsContainer');
+            container.empty();
+
+            if (allTags.length === 0) {
+                container.html('<p class="text-muted">No tags available</p>');
+                return;
+            }
+
+            allTags.forEach(tag => {
+                const checkbox = `
+                    <div class="form-check">
+                        <input class="form-check-input bulk-tag-checkbox" type="checkbox" 
+                               id="bulkTag_${tag.id}" value="${tag.id}" />
+                        <label class="form-check-label" for="bulkTag_${tag.id}">
+                            ${tag.name}
+                        </label>
+                    </div>
+                `;
+                container.append(checkbox);
+            });
+        }
+
+        function updateBulkSubCategories(categoryId) {
+            $.ajax({
+                url: '/api/categories/subcategories/' + categoryId,
+                method: 'GET',
+                dataType: 'json',
+                success: function(data) {
+                    const select = $('#bulkSubCategorySelect');
+                    select.empty();
+                    select.append('<option value="">Select SubCategory...</option>');
+                    
+                    data.forEach(sc => {
+                        select.append(`<option value="${sc.id}">${sc.name}</option>`);
+                    });
+                },
+                error: function(err) {
+                    console.error('Error loading subcategories:', err);
+                }
+            });
+        }
+
+        function updateBulkTagCount() {
+            const checkedCount = $('.bulk-tag-checkbox:checked').length;
+            $('#bulkTagCount').text(checkedCount);
+        }
+
+        function getSelectedBulkTagIds() {
+            const ids = [];
+            $('.bulk-tag-checkbox:checked').each(function() {
+                ids.push($(this).val());
+            });
+            return ids;
+        }
+
+        function updateBulkBar() {
+            const selectedCount = $('.event-checkbox:checked').length;
+            $('#selectedCount').text(selectedCount);
+            
+            if (selectedCount > 0) {
+                $('#bulkOperationsBar').show();
+            } else {
+                $('#bulkOperationsBar').hide();
+            }
+        }
+
+        function updateSelectAllCheckbox() {
+            const total = $('.event-checkbox').length;
+            const checked = $('.event-checkbox:checked').length;
+            $('#selectAllCheckbox').prop('checked', total > 0 && total === checked);
+        }
+
+        function getSelectedEventIds() {
+            const ids = [];
+            $('.event-checkbox:checked').each(function() {
+                ids.push($(this).val());
+            });
+            return ids;
+        }
+
+        function clearSelection() {
+            $('.event-checkbox').prop('checked', false);
+            $('#selectAllCheckbox').prop('checked', false);
+            updateBulkBar();
+        }
+
         function confirmDelete(id, name) {
-            if (confirm('Are you sure you want to delete event "' + name + '"?\n\nThis action cannot be undone.')) {
+            if (confirm('Are you sure you want to delete event "' + name + 
+                        '"?\n\nThis action cannot be undone.')) {
                 document.getElementById('deleteId').value = id;
                 document.getElementById('deleteForm').submit();
             }

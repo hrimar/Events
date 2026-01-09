@@ -62,7 +62,9 @@ public class EventService : IEventService
         EventStatus? status = null,
         string? categoryName = null,
         bool? isFree = null,
-        DateTime? fromDate = null)
+        DateTime? fromDate = null,
+        string? sortBy = null,
+        string sortOrder = "asc")
     {
         try
         {
@@ -72,10 +74,10 @@ public class EventService : IEventService
             if (pageSize < 1) pageSize = 12;
             if (pageSize > 50000) pageSize = 50000; // Safety limit to prevent memory issues
 
-            _logger.LogInformation("Getting paged events: Page {Page}, PageSize {PageSize}, Status {Status}, Category {Category}, FromDate {FromDate}",
-                page, pageSize, status, categoryName, fromDate);
+            _logger.LogInformation("Getting paged events: Page {Page}, PageSize {PageSize}, Status {Status}, Category {Category}, FromDate {FromDate}, SortBy {SortBy}, SortOrder {SortOrder}",
+                page, pageSize, status, categoryName, fromDate, sortBy, sortOrder);
 
-            return await _eventRepository.GetPagedEventsAsync(page, pageSize, status, categoryName, isFree, fromDate);
+            return await _eventRepository.GetPagedEventsAsync(page, pageSize, status, categoryName, isFree, fromDate, sortBy, sortOrder);
         }
         catch (Exception ex)
         {
@@ -240,6 +242,31 @@ public class EventService : IEventService
         {
             _logger.LogError(ex, "Error checking if event exists {EventId}", id);
             return false;
+        }
+    }
+
+    public async Task<int> BulkUpdateEventsAsync(IEnumerable<Event> events)
+    {
+        try
+        {
+            if (events == null || !events.Any())
+            {
+                return 0;
+            }
+
+            // Batch update with single transaction:
+            // Mark all events for update and call SaveChanges once.
+            // This is significantly faster than sequential individual updates.
+            int updatedCount = await _eventRepository.BulkUpdateAsync(events);
+
+            _logger.LogInformation("Bulk update completed: {UpdatedCount} events updated in single transaction", updatedCount);
+
+            return updatedCount;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error during bulk update of events");
+            throw new ApplicationException("Failed to bulk update events", ex);
         }
     }
 }

@@ -25,9 +25,16 @@ public interface IEventRepository
     EventStatus? status = null,
     string? categoryName = null,
     bool? isFree = null,
-    DateTime? fromDate = null);
+    DateTime? fromDate = null,
+    string? sortBy = null,
+    string sortOrder = "asc");
 
     Task<IEnumerable<Event>> GetFeaturedEventsAsync(int count = 10);
     Task<IEnumerable<Event>> GetUpcomingEventsAsync(int count = 10);
     Task<int> GetTotalEventsCountAsync(EventStatus? status = null);
+
+    /// <summary>
+    /// Batch update multiple events with a single SaveChanges call for optimal performance.
+    /// </summary>
+    Task<int> BulkUpdateAsync(IEnumerable<Event> events);
 }

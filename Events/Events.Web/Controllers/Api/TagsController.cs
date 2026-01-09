@@ -25,8 +25,7 @@ public class TagsController : ControllerBase
     {
         try
         {
-            var futureEvents = await _eventService.GetPagedEventsAsync(
-                1, int.MaxValue, EventStatus.Published, null, null, DateTime.Today);
+            var futureEvents = await _eventService.GetPagedEventsAsync(1, int.MaxValue, EventStatus.Published, null, null, DateTime.Today);
             
             var futureEventIds = futureEvents.Events.Select(e => e.Id).ToList();
             var allTags = await _tagService.GetAllTagsAsync();
@@ -63,8 +62,7 @@ public class TagsController : ControllerBase
                 return Ok(new List<TagViewModel>());
             }
 
-            var futureEvents = await _eventService.GetPagedEventsAsync(
-                1, int.MaxValue, EventStatus.Published, null, null, DateTime.Today);
+            var futureEvents = await _eventService.GetPagedEventsAsync(1, int.MaxValue, EventStatus.Published, null, null, DateTime.Today);
             
             var futureEventIds = futureEvents.Events.Select(e => e.Id).ToList();
             var allTags = await _tagService.GetAllTagsAsync();
@@ -102,8 +100,7 @@ public class TagsController : ControllerBase
                 return BadRequest("Invalid category");
             }
 
-            var futureEvents = await _eventService.GetPagedEventsAsync(
-                1, int.MaxValue, EventStatus.Published, null, null, DateTime.Today);
+            var futureEvents = await _eventService.GetPagedEventsAsync(1, int.MaxValue, EventStatus.Published, null, null, DateTime.Today);
             
             var futureEventIds = futureEvents.Events.Select(e => e.Id).ToList();
             var allTags = await _tagService.GetAllTagsAsync();
@@ -128,6 +125,26 @@ public class TagsController : ControllerBase
         {
             _logger.LogError(ex, "Error getting tags for category: {Category}", category);
             return StatusCode(500, "Error getting category tags");
+        }
+    }
+
+    [HttpGet("all")]
+    public async Task<ActionResult<List<object>>> GetAllTags()
+    {
+        try
+        {
+            var allTags = await _tagService.GetAllTagsAsync();
+            var tags = allTags
+                .Select(t => new { id = t.Id, name = t.Name })
+                .OrderBy(t => t.name)
+                .ToList();
+
+            return Ok(tags);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting all tags");
+            return StatusCode(500, "Error getting all tags");
         }
     }
 }

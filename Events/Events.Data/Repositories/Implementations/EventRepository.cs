@@ -1,4 +1,5 @@
-﻿using Events.Data.Context;
+﻿using System;
+using Events.Data.Context;
 using Events.Data.Repositories.Interfaces;
 using Events.Models.Entities;
 using Events.Models.Enums;
@@ -19,6 +20,7 @@ public class EventRepository : IEventRepository
     {
         return await _context.Events
             .Include(e => e.Category)
+            .Include(e => e.SubCategory)
             .Include(e => e.EventTags)
             .ThenInclude(et => et.Tag)
             .FirstOrDefaultAsync(e => e.Id == id);
@@ -28,6 +30,7 @@ public class EventRepository : IEventRepository
     {
         return await _context.Events
             .Include(e => e.Category)
+            .Include(e => e.SubCategory)
             .Include(e => e.EventTags)
             .ThenInclude(et => et.Tag)
             .OrderBy(e => e.Date)
@@ -51,10 +54,13 @@ public class EventRepository : IEventRepository
         EventStatus? status = null,
         string? categoryName = null,
         bool? isFree = null,
-        DateTime? fromDate = null)
+        DateTime? fromDate = null,
+        string? sortBy = null,
+        string sortOrder = "asc")
     {
         var query = _context.Events
             .Include(e => e.Category)
+            .Include(e => e.SubCategory)
             .Include(e => e.EventTags)
             .ThenInclude(et => et.Tag)
             .AsQueryable();
@@ -81,13 +87,53 @@ public class EventRepository : IEventRepository
 
         var totalCount = await query.CountAsync();
 
-        var events = await query
-            .OrderBy(e => e.Date)
+        var orderedQuery = ApplySorting(query, sortBy, sortOrder);
+
+        var events = await orderedQuery
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
 
         return (events, totalCount);
+    }
+
+    private static IQueryable<Event> ApplySorting(IQueryable<Event> query, string? sortBy, string sortOrder)
+    {
+        var normalizedSort = (sortBy ?? "date").ToLowerInvariant();
+        var isDescending = string.Equals(sortOrder, "desc", StringComparison.OrdinalIgnoreCase);
+
+        return normalizedSort switch
+        {
+            "name" => isDescending
+                ? query.OrderByDescending(e => e.Name)
+                : query.OrderBy(e => e.Name),
+            "time" => isDescending
+                ? query.OrderByDescending(e => e.StartTime.HasValue ? e.StartTime.Value : TimeSpan.Zero)
+                : query.OrderBy(e => e.StartTime.HasValue ? e.StartTime.Value : TimeSpan.Zero),
+            "category" => isDescending
+                ? query.OrderByDescending(e => e.Category != null ? e.Category.Name : string.Empty)
+                : query.OrderBy(e => e.Category != null ? e.Category.Name : string.Empty),
+            "subcategory" => isDescending
+                ? query.OrderByDescending(e => e.SubCategory != null ? e.SubCategory.Name : string.Empty)
+                : query.OrderBy(e => e.SubCategory != null ? e.SubCategory.Name : string.Empty),
+            "location" => isDescending
+                ? query.OrderByDescending(e => e.Location)
+                : query.OrderBy(e => e.Location),
+            "status" => isDescending
+                ? query.OrderByDescending(e => e.Status)
+                : query.OrderBy(e => e.Status),
+            "price" => isDescending
+                ? query.OrderByDescending(e => e.IsFree ? 0m : (e.Price.HasValue ? e.Price.Value : decimal.MaxValue))
+                : query.OrderBy(e => e.IsFree ? 0m : (e.Price.HasValue ? e.Price.Value : decimal.MaxValue)),
+            "featured" => isDescending
+                ? query.OrderByDescending(e => e.IsFeatured)
+                : query.OrderBy(e => e.IsFeatured),
+            _ => isDescending
+                ? query.OrderByDescending(e => e.Date)
+                    .ThenByDescending(e => e.StartTime.HasValue ? e.StartTime.Value : TimeSpan.Zero)
+                : query.OrderBy(e => e.Date)
+                    .ThenBy(e => e.StartTime.HasValue ? e.StartTime.Value : TimeSpan.Zero)
+        };
     }
 
     public async Task<IEnumerable<Event>> GetFeaturedEventsAsync(int count = 10)
@@ -131,6 +177,7 @@ public class EventRepository : IEventRepository
     {
         return await _context.Events
             .Include(e => e.Category)
+            .Include(e => e.SubCategory)
             .Include(e => e.EventTags)
             .ThenInclude(et => et.Tag)
             .Where(e => e.Date >= startDate && e.Date <= endDate)
@@ -144,6 +191,7 @@ public class EventRepository : IEventRepository
 
         return await _context.Events
             .Include(e => e.Category)
+            .Include(e => e.SubCategory)
             .Include(e => e.EventTags)
             .ThenInclude(et => et.Tag)
             .Where(e => e.CategoryId == categoryId)
@@ -155,6 +203,7 @@ public class EventRepository : IEventRepository
     {
         return await _context.Events
             .Include(e => e.Category)
+            .Include(e => e.SubCategory)
             .Include(e => e.EventTags)
             .ThenInclude(et => et.Tag)
             .Where(e => e.Location.Contains(location))
@@ -166,6 +215,7 @@ public class EventRepository : IEventRepository
     {
         return await _context.Events
             .Include(e => e.Category)
+            .Include(e => e.SubCategory)
             .Include(e => e.EventTags)
             .ThenInclude(et => et.Tag)
             .Where(e => e.Name.Contains(searchTerm) ||
@@ -203,6 +253,7 @@ public class EventRepository : IEventRepository
     {
         return await _context.Events
             .Include(e => e.Category)
+            .Include(e => e.SubCategory)
             .Include(e => e.EventTags)
             .ThenInclude(et => et.Tag)
             .Where(e => e.CategoryId == categoryId)
@@ -217,6 +268,45 @@ public class EventRepository : IEventRepository
         {
             _context.Events.Remove(eventEntity);
             await _context.SaveChangesAsync();
+        }
+    }
+
+    /// <summary>
+    /// Batch update multiple events with a single database transaction.
+    /// All events are marked for update, then SaveChanges is called ONCE for all of them.
+    /// 
+    /// Performance benefits:
+    /// - Single SaveChanges call (not N calls)
+    /// - Single database transaction (all or nothing)
+    /// - Significantly faster than sequential updates
+    /// - Optimal for bulk admin operations
+    /// </summary>
+    public async Task<int> BulkUpdateAsync(IEnumerable<Event> events)
+    {
+        try
+        {
+            if (events == null || !events.Any())
+            {
+                return 0;
+            }
+
+            var eventList = events.ToList();
+
+            // Mark all events for update (doesn't hit database yet)
+            foreach (var eventEntity in eventList)
+            {
+                eventEntity.UpdatedAt = DateTime.UtcNow;
+                _context.Events.Update(eventEntity);
+            }
+
+            // Single efficient SaveChanges call for ALL events
+            await _context.SaveChangesAsync();
+
+            return eventList.Count;
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException("Error during bulk update of events", ex);
         }
     }
 }
