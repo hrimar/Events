@@ -99,11 +99,39 @@
 <!-- Events Table -->
 @if(Model.Items.Any())
 {
+    <!-- Bulk Operations Toolbar (Hidden by default) -->
+    <div id="bulkOperationsBar" class="card mb-4" style="display: none;">
+        <div class="card-body bg-light">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <span class="me-3">
+                        <strong id="selectedCount">0</strong> event(s) selected
+                    </span>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#bulkOperationsModal">
+                        <i class="fas fa-cog me-1"></i>Bulk Operations
+                    </button>
+                    <button type="button" class="btn btn-sm btn-secondary" onclick="clearSelection()">
+                        <i class="fas fa-times me-1"></i>Clear Selection
+                    </button>
+                </div>
+            </div>
+            <small class="text-muted">
+                Note: You can only select items from the current page. Selection will be cleared when 
+                navigating to another page.
+            </small>
+        </div>
+    </div>
+
     <div class="card">
         <div class="table-responsive">
             <table class="table table-hover mb-0">
                 <thead class="table-light">
                     <tr>
+                        <th style="width: 40px;">
+                            <input type="checkbox" id="selectAllCheckbox" class="form-check-input" />
+                        </th>
                         <th style="width: 60px;">Image</th>
                         <th>
                             <a href="@buildSortUrl("name")" class="text-decoration-none text-dark d-flex align-items-center gap-1">
@@ -192,7 +220,10 @@
                 <tbody>
                     @foreach(var evt in Model.Items)
                     {
-                        <tr>
+                        <tr class="event-row">
+                            <td>
+                                <input type="checkbox" class="form-check-input event-checkbox" value="@evt.Id" />
+                            </td>
                             <td>
                                 <img src="@evt.DefaultImage" alt="@evt.Name" class="img-thumbnail" style="width: 50px; height: 50px; object-fit: cover;">
                             </td>
@@ -349,10 +380,367 @@ else
     <input type="hidden" id="deleteId" name="id" value="" />
 </form>
 
+<!-- Bulk Operations Modal -->
+<div class="modal fade" id="bulkOperationsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-cog me-2"></i>Bulk Operations
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="bulkOperationsForm" method="post" asp-action="BulkApplyChanges">
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <div id="selectedEventsInput"></div>
+
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Select Operations to Apply:</strong></label>
+                    </div>
+
+                    <!-- Category Operation -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <div class="form-check">
+                                <input class="form-check-input bulk-operation-check" type="checkbox" id="applyCategory" value="category" />
+                                <label class="form-check-label" for="applyCategory">
+                                    Change Category
+                                </label>
+                            </div>
+                        </div>
+                        <div class="card-body" id="categoryOperation" style="display: none;">
+                            <select class="form-select" name="bulkCategoryId" id="bulkCategorySelect">
+                                <option value="">Select Category...</option>
+                                <option value="2">Art</option>
+                                <option value="3">Business</option>
+                                <option value="4">Cinema</option>
+                                <option value="5">Conferences</option>
+                                <option value="6">Exhibitions</option>
+                                <option value="7">Festivals</option>
+                                <option value="1">Music</option>
+                                <option value="8">Sports</option>
+                                <option value="9">Theatre</option>
+                                <option value="10">Workshops</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- SubCategory Operation -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <div class="form-check">
+                                <input class="form-check-input bulk-operation-check" type="checkbox" id="applySubCategory" value="subcategory" />
+                                <label class="form-check-label" for="applySubCategory">
+                                    Change SubCategory
+                                </label>
+                            </div>
+                        </div>
+                        <div class="card-body" id="subCategoryOperation" style="display: none;">
+                            <select class="form-select" name="bulkSubCategoryId" id="bulkSubCategorySelect">
+                                <option value="">Select SubCategory...</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Tags Operation -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <div class="form-check">
+                                <input class="form-check-input bulk-operation-check" type="checkbox" id="applyTags" value="tags" />
+                                <label class="form-check-label" for="applyTags">
+                                    Add Tags (up to 3)
+                                </label>
+                            </div>
+                        </div>
+                        <div class="card-body" id="tagsOperation" style="display: none;">
+                            <div id="bulkTagsContainer" class="d-flex flex-wrap gap-2">
+                                <!-- Tags will be loaded here -->
+                            </div>
+                            <small class="text-muted">
+                                Selected: <span id="bulkTagCount">0</span>/3
+                            </small>
+                        </div>
+                    </div>
+
+                    <!-- Start Time Operation -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <div class="form-check">
+                                <input class="form-check-input bulk-operation-check" type="checkbox" id="applyStartTime" value="starttime" />
+                                <label class="form-check-label" for="applyStartTime">
+                                    Set Start Time
+                                </label>
+                            </div>
+                        </div>
+                        <div class="card-body" id="startTimeOperation" style="display: none;">
+                            <input type="time" class="form-control" name="bulkStartTime" id="bulkStartTimeInput" />
+                            <small class="text-muted d-block mt-2">Will only apply to events on the same date</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-check me-1"></i>Apply Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script>
+        let allTags = []; // Will be populated from server
+        const MAX_BULK_TAGS = 3;
+
+        $(document).ready(function() {
+            // Load all tags when page loads
+            loadAllTags();
+
+            // Select All checkbox
+            $('#selectAllCheckbox').on('change', function() {
+                const isChecked = $(this).is(':checked');
+                $('.event-checkbox').prop('checked', isChecked);
+                updateBulkBar();
+            });
+
+            // Individual event checkboxes
+            $('.event-checkbox').on('change', function() {
+                updateSelectAllCheckbox();
+                updateBulkBar();
+            });
+
+            // Bulk operation checkboxes - toggle visibility
+            $('.bulk-operation-check').on('change', function() {
+                const operationType = $(this).val();
+                
+                if (operationType === 'category') {
+                    const categoryDiv = $('#categoryOperation');
+                    $(this).is(':checked') ? categoryDiv.show() : categoryDiv.hide();
+                } else if (operationType === 'subcategory') {
+                    const subCategoryDiv = $('#subCategoryOperation');
+                    $(this).is(':checked') ? subCategoryDiv.show() : subCategoryDiv.hide();
+                } else if (operationType === 'tags') {
+                    const tagsDiv = $('#tagsOperation');
+                    $(this).is(':checked') ? tagsDiv.show() : tagsDiv.hide();
+                } else if (operationType === 'starttime') {
+                    const startTimeDiv = $('#startTimeOperation');
+                    $(this).is(':checked') ? startTimeDiv.show() : startTimeDiv.hide();
+                }
+            });
+
+            // Category change - update subcategories dynamically
+            $('#bulkCategorySelect').on('change', function() {
+                const categoryId = $(this).val();
+                if (categoryId) {
+                    updateBulkSubCategories(categoryId);
+                } else {
+                    $('#bulkSubCategorySelect').html('<option value="">Select SubCategory...</option>');
+                }
+            });
+
+            // Bulk tags selection
+            $(document).on('change', '.bulk-tag-checkbox', function() {
+                const checkedCount = $('.bulk-tag-checkbox:checked').length;
+                
+                if (checkedCount > MAX_BULK_TAGS) {
+                    $(this).prop('checked', false);
+                    alert('You can select a maximum of ' + MAX_BULK_TAGS + ' tags');
+                    return;
+                }
+                
+                updateBulkTagCount();
+            });
+
+            // Form submit - collect selected events
+            $('#bulkOperationsForm').on('submit', function(e) {
+                const selectedIds = getSelectedEventIds();
+                if (selectedIds.length === 0) {
+                    e.preventDefault();
+                    alert('Please select at least one event');
+                    return false;
+                }
+
+                // Add hidden inputs for selected event IDs
+                const selectedEventsInput = $('#selectedEventsInput');
+                selectedEventsInput.empty();
+                
+                // Add SelectedEventIds array
+                selectedIds.forEach(id => {
+                    selectedEventsInput.append(
+                        `<input type="hidden" name="SelectedEventIds" value="${id}" />`
+                    );
+                });
+
+                // Collect selected operations
+                const operationsToApply = [];
+                $('.bulk-operation-check:checked').each(function() {
+                    operationsToApply.push($(this).val());
+                });
+
+                if (operationsToApply.length === 0) {
+                    e.preventDefault();
+                    alert('Please select at least one operation to apply');
+                    return false;
+                }
+
+                // Add OperationsToApply array
+                operationsToApply.forEach(op => {
+                    selectedEventsInput.append(
+                        `<input type="hidden" name="OperationsToApply" value="${op}" />`
+                    );
+                });
+
+                // Add BulkCategoryId if category operation selected
+                const categoryId = $('#bulkCategorySelect').val();
+                if (categoryId) {
+                    selectedEventsInput.append(
+                        `<input type="hidden" name="BulkCategoryId" value="${categoryId}" />`
+                    );
+                }
+
+                // Add BulkSubCategoryId if subcategory operation selected
+                const subCategoryId = $('#bulkSubCategorySelect').val();
+                if (subCategoryId) {
+                    selectedEventsInput.append(
+                        `<input type="hidden" name="BulkSubCategoryId" value="${subCategoryId}" />`
+                    );
+                }
+
+                // Add BulkStartTime if start time operation selected
+                const startTime = $('#bulkStartTimeInput').val();
+                if (startTime) {
+                    selectedEventsInput.append(
+                        `<input type="hidden" name="BulkStartTime" value="${startTime}" />`
+                    );
+                }
+
+                // Add BulkTagIds array
+                const selectedTagIds = getSelectedBulkTagIds();
+                selectedTagIds.forEach(tagId => {
+                    selectedEventsInput.append(
+                        `<input type="hidden" name="BulkTagIds" value="${tagId}" />`
+                    );
+                });
+            });
+
+            // Reset selection when page navigation occurs (before page unload)
+            $(window).on('beforeunload', function() {
+                clearSelection();
+            });
+        });
+
+        // HELPER FUNCTIONS
+
+        function loadAllTags() {
+            $.ajax({
+                url: '/api/tags/all',
+                method: 'GET',
+                dataType: 'json',
+                success: function(data) {
+                    allTags = data;
+                    renderBulkTags();
+                },
+                error: function(err) {
+                    console.error('Error loading tags:', err);
+                }
+            });
+        }
+
+        function renderBulkTags() {
+            const container = $('#bulkTagsContainer');
+            container.empty();
+
+            if (allTags.length === 0) {
+                container.html('<p class="text-muted">No tags available</p>');
+                return;
+            }
+
+            allTags.forEach(tag => {
+                const checkbox = `
+                    <div class="form-check">
+                        <input class="form-check-input bulk-tag-checkbox" type="checkbox" 
+                               id="bulkTag_${tag.id}" value="${tag.id}" />
+                        <label class="form-check-label" for="bulkTag_${tag.id}">
+                            ${tag.name}
+                        </label>
+                    </div>
+                `;
+                container.append(checkbox);
+            });
+        }
+
+        function updateBulkSubCategories(categoryId) {
+            $.ajax({
+                url: '/api/categories/subcategories/' + categoryId,
+                method: 'GET',
+                dataType: 'json',
+                success: function(data) {
+                    const select = $('#bulkSubCategorySelect');
+                    select.empty();
+                    select.append('<option value="">Select SubCategory...</option>');
+                    
+                    data.forEach(sc => {
+                        select.append(`<option value="${sc.id}">${sc.name}</option>`);
+                    });
+                },
+                error: function(err) {
+                    console.error('Error loading subcategories:', err);
+                }
+            });
+        }
+
+        function updateBulkTagCount() {
+            const checkedCount = $('.bulk-tag-checkbox:checked').length;
+            $('#bulkTagCount').text(checkedCount);
+        }
+
+        function getSelectedBulkTagIds() {
+            const ids = [];
+            $('.bulk-tag-checkbox:checked').each(function() {
+                ids.push($(this).val());
+            });
+            return ids;
+        }
+
+        function updateBulkBar() {
+            const selectedCount = $('.event-checkbox:checked').length;
+            $('#selectedCount').text(selectedCount);
+            
+            if (selectedCount > 0) {
+                $('#bulkOperationsBar').show();
+            } else {
+                $('#bulkOperationsBar').hide();
+            }
+        }
+
+        function updateSelectAllCheckbox() {
+            const total = $('.event-checkbox').length;
+            const checked = $('.event-checkbox:checked').length;
+            $('#selectAllCheckbox').prop('checked', total > 0 && total === checked);
+        }
+
+        function getSelectedEventIds() {
+            const ids = [];
+            $('.event-checkbox:checked').each(function() {
+                ids.push($(this).val());
+            });
+            return ids;
+        }
+
+        function clearSelection() {
+            $('.event-checkbox').prop('checked', false);
+            $('#selectAllCheckbox').prop('checked', false);
+            updateBulkBar();
+        }
+
         function confirmDelete(id, name) {
-            if (confirm('Are you sure you want to delete event "' + name + '"?\n\nThis action cannot be undone.')) {
+            if (confirm('Are you sure you want to delete event "' + name + 
+                        '"?\n\nThis action cannot be undone.')) {
                 document.getElementById('deleteId').value = id;
                 document.getElementById('deleteForm').submit();
             }

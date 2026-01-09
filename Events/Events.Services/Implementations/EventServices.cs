@@ -244,4 +244,29 @@ public class EventService : IEventService
             return false;
         }
     }
+
+    public async Task<int> BulkUpdateEventsAsync(IEnumerable<Event> events)
+    {
+        try
+        {
+            if (events == null || !events.Any())
+            {
+                return 0;
+            }
+
+            // Batch update with single transaction:
+            // Mark all events for update and call SaveChanges once.
+            // This is significantly faster than sequential individual updates.
+            int updatedCount = await _eventRepository.BulkUpdateAsync(events);
+
+            _logger.LogInformation("Bulk update completed: {UpdatedCount} events updated in single transaction", updatedCount);
+
+            return updatedCount;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error during bulk update of events");
+            throw new ApplicationException("Failed to bulk update events", ex);
+        }
+    }
 }

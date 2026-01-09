@@ -32,4 +32,9 @@ public interface IEventRepository
     Task<IEnumerable<Event>> GetFeaturedEventsAsync(int count = 10);
     Task<IEnumerable<Event>> GetUpcomingEventsAsync(int count = 10);
     Task<int> GetTotalEventsCountAsync(EventStatus? status = null);
+
+    /// <summary>
+    /// Batch update multiple events with a single SaveChanges call for optimal performance.
+    /// </summary>
+    Task<int> BulkUpdateAsync(IEnumerable<Event> events);
 }

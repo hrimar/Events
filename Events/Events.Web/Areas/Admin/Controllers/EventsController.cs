@@ -675,6 +675,112 @@ public class EventsController : Controller
         }
     }
 
+    // POST: Admin/Events/BulkApplyChanges
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> BulkApplyChanges(BulkEventOperationViewModel model)
+    {
+        try
+        {
+            if (model?.SelectedEventIds == null || model.SelectedEventIds.Count == 0)
+            {
+                TempData["ErrorMessage"] = "No events selected.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            if (model.OperationsToApply == null || model.OperationsToApply.Count == 0)
+            {
+                TempData["ErrorMessage"] = "No operations selected.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            // Batch operation strategy: load all events, modify in memory, update in batch
+            // Benefits: Single database transaction, minimal round-trips, better performance
+            // Trade-off: Slightly more memory usage (negligible for typical admin operations)
+
+            int changedCount = 0;
+
+            // Phase 1: Load all events and apply structural changes in memory
+            var eventsToUpdate = new List<Event>();
+
+            foreach (var eventId in model.SelectedEventIds)
+            {
+                try
+                {
+                    var eventEntity = await _eventService.GetEventByIdAsync(eventId);
+                    if (eventEntity == null)
+                    {
+                        continue;
+                    }
+
+                    bool eventChanged = false;
+                    if (model.OperationsToApply.Contains("category") && model.BulkCategoryId.HasValue)
+                    {
+                        eventEntity.CategoryId = model.BulkCategoryId.Value;
+                        eventChanged = true;
+                    }
+
+                    if (model.OperationsToApply.Contains("subcategory") && model.BulkSubCategoryId.HasValue)
+                    {
+                        eventEntity.SubCategoryId = model.BulkSubCategoryId.Value;
+                        eventChanged = true;
+                    }
+
+                    if (model.OperationsToApply.Contains("starttime") && model.BulkStartTime.HasValue)
+                    {
+                        eventEntity.StartTime = model.BulkStartTime.Value;
+                        eventChanged = true;
+                    }
+
+                    if (eventChanged)
+                    {
+                        eventEntity.UpdatedAt = DateTime.UtcNow;
+                        eventsToUpdate.Add(eventEntity);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Error loading event {EventId} for bulk update", eventId);
+                    continue;
+                }
+            }
+
+            // Phase 2: Batch update all modified events in single transaction
+            if (eventsToUpdate.Any())
+            {
+                changedCount = await _eventService.BulkUpdateEventsAsync(eventsToUpdate);
+            }
+
+            // Phase 3: Batch assign tags (separate operation for better separation of concerns)
+            if (model.OperationsToApply.Contains("tags") && model.BulkTagIds.Any())
+            {
+                // Add selected tags to all events (existing tags are preserved)
+                await _tagService.BulkAssignTagsToMultipleEventsAsync(model.SelectedEventIds, model.BulkTagIds);
+            }
+
+            _logger.LogInformation("Bulk operations completed: {ChangedCount} events updated, " + "Tags assigned: {HasTags}, Operations: {Operations}",
+                changedCount, model.OperationsToApply.Contains("tags"),string.Join(", ", model.OperationsToApply));
+
+            var successMessages = new List<string>();
+            if (changedCount > 0)
+                successMessages.Add($"{changedCount} event(s) updated");
+            if (model.OperationsToApply.Contains("tags") && model.BulkTagIds.Any())
+                successMessages.Add($"tags assigned to {model.SelectedEventIds.Count} event(s)");
+
+            TempData["SuccessMessage"] = successMessages.Any()
+                ? $"Bulk operations completed successfully: {string.Join(", ", successMessages)}."
+                : "Bulk operations completed.";
+
+            return RedirectToAction(nameof(Index));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error applying bulk operations");
+            TempData["ErrorMessage"] = "An error occurred while applying bulk operations.";
+            return RedirectToAction(nameof(Index));
+        }
+    }
+
     private static IEnumerable<Event> ApplySorting(IEnumerable<Event> events, string sortField, string sortOrder)
     {
         var normalizedSort = string.IsNullOrWhiteSpace(sortField) ? "date" : sortField.ToLowerInvariant();

@@ -30,4 +30,15 @@ public interface IEventService
 
     Task<int> GetTotalEventsCountAsync(EventStatus? status = null);
     Task<bool> EventExistsAsync(int id);
+
+    /// <summary>
+    /// Batch update multiple events efficiently in a single database transaction.
+    /// 
+    /// Advantages of batch operations:
+    /// - Single database round-trip (not N round-trips for N events)
+    /// - One transaction scope ensures data consistency
+    /// - Optimal for admin operations affecting 5-100 events
+    /// - Better performance than sequential individual updates
+    /// </summary>
+    Task<int> BulkUpdateEventsAsync(IEnumerable<Event> events);
 }

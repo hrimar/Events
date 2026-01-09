@@ -270,4 +270,43 @@ public class EventRepository : IEventRepository
             await _context.SaveChangesAsync();
         }
     }
+
+    /// <summary>
+    /// Batch update multiple events with a single database transaction.
+    /// All events are marked for update, then SaveChanges is called ONCE for all of them.
+    /// 
+    /// Performance benefits:
+    /// - Single SaveChanges call (not N calls)
+    /// - Single database transaction (all or nothing)
+    /// - Significantly faster than sequential updates
+    /// - Optimal for bulk admin operations
+    /// </summary>
+    public async Task<int> BulkUpdateAsync(IEnumerable<Event> events)
+    {
+        try
+        {
+            if (events == null || !events.Any())
+            {
+                return 0;
+            }
+
+            var eventList = events.ToList();
+
+            // Mark all events for update (doesn't hit database yet)
+            foreach (var eventEntity in eventList)
+            {
+                eventEntity.UpdatedAt = DateTime.UtcNow;
+                _context.Events.Update(eventEntity);
+            }
+
+            // Single efficient SaveChanges call for ALL events
+            await _context.SaveChangesAsync();
+
+            return eventList.Count;
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException("Error during bulk update of events", ex);
+        }
+    }
 }
