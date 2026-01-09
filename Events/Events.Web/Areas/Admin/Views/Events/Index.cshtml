@@ -45,19 +45,8 @@
                 <input type="text" class="form-control" name="search" value="@search" placeholder="Search events by name, location...">
             </div>
             <div class="col-md-4">
-                <select class="form-select" name="category">
+                <select class="form-select" name="category" asp-items="ViewBag.AvailableCategories">
                     <option value="">All Categories</option>
-                    <option value="Music" selected="@(category == "Music")">Music</option>
-                    <option value="Art" selected="@(category == "Art")">Art</option>
-                    <option value="Business" selected="@(category == "Business")">Business</option>
-                    <option value="Sports" selected="@(category == "Sports")">Sports</option>
-                    <option value="Theatre" selected="@(category == "Theatre")">Theatre</option>
-                    <option value="Cinema" selected="@(category == "Cinema")">Cinema</option>
-                    <option value="Festivals" selected="@(category == "Festivals")">Festivals</option>
-                    <option value="Exhibitions" selected="@(category == "Exhibitions")">Exhibitions</option>
-                    <option value="Conferences" selected="@(category == "Conferences")">Conferences</option>
-                    <option value="Workshops" selected="@(category == "Workshops")">Workshops</option>
-                    <option value="Undefined" selected="@(category == "Undefined")">Undefined</option>
                 </select>
             </div>
             <div class="col-md-2">
@@ -412,16 +401,6 @@ else
                         <div class="card-body" id="categoryOperation" style="display: none;">
                             <select class="form-select" name="bulkCategoryId" id="bulkCategorySelect">
                                 <option value="">Select Category...</option>
-                                <option value="2">Art</option>
-                                <option value="3">Business</option>
-                                <option value="4">Cinema</option>
-                                <option value="5">Conferences</option>
-                                <option value="6">Exhibitions</option>
-                                <option value="7">Festivals</option>
-                                <option value="1">Music</option>
-                                <option value="8">Sports</option>
-                                <option value="9">Theatre</option>
-                                <option value="10">Workshops</option>
                             </select>
                         </div>
                     </div>
@@ -495,11 +474,15 @@ else
 @section Scripts {
     <script>
         let allTags = []; // Will be populated from server
+        let allCategories = @Html.Raw(ViewBag.CategoriesJson ?? "[]"); // Categories from server
         const MAX_BULK_TAGS = 3;
 
         $(document).ready(function() {
             // Load all tags when page loads
             loadAllTags();
+            
+            // Populate bulk category select
+            populateBulkCategories();
 
             // Select All checkbox
             $('#selectAllCheckbox').on('change', function() {
@@ -635,6 +618,18 @@ else
         });
 
         // HELPER FUNCTIONS
+
+        function populateBulkCategories() {
+            const select = $('#bulkCategorySelect');
+            select.empty();
+            select.append('<option value="">Select Category...</option>');
+            
+            if (allCategories && allCategories.length > 0) {
+                allCategories.forEach(cat => {
+                    select.append(`<option value="${cat.id}">${cat.name}</option>`);
+                });
+            }
+        }
 
         function loadAllTags() {
             $.ajax({

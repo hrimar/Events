@@ -7,6 +7,8 @@ using Events.Web.Models;
 using Events.Web.Models.Admin;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Newtonsoft.Json;
 
 namespace Events.Web.Areas.Admin.Controllers;
 
@@ -85,10 +87,28 @@ public class EventsController : Controller
             var eventViewModels = AdminEventViewModel.FromEntities(events);
             var paginatedEvents = new PaginatedList<AdminEventViewModel>(eventViewModels, totalCount, page, pageSize);
 
+            // Load categories from database for filter dropdown
+            var categories = await _categoryRepository.GetAllAsync();
+            ViewBag.AvailableCategories = categories
+                .Select(c => new SelectListItem 
+                { 
+                    Value = c.Name,
+                    Text = c.Name,
+                    Selected = c.Name == category
+                })
+                .OrderBy(c => c.Text)
+                .ToList();
+
             ViewBag.SearchTerm = search;
             ViewBag.Category = category;
             ViewBag.SortBy = normalizedSortBy;
             ViewBag.SortOrder = normalizedSortOrder;
+
+            // Also expose categories as JSON for bulk operations modal
+            var categoriesJson = JsonConvert.SerializeObject(
+                categories.Select(c => new { id = c.Id, name = c.Name }).ToList()
+            );
+            ViewBag.CategoriesJson = categoriesJson;
 
             return View(paginatedEvents);
         }
