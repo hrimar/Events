@@ -253,7 +253,10 @@ public class EventsController : Controller
         }
     }
 
-    private static IEnumerable<Events.Models.Entities.Event> ApplySorting(IEnumerable<Events.Models.Entities.Event> events, string? sortBy, string? sortOrder)
+    private static IEnumerable<Events.Models.Entities.Event> ApplySorting(
+        IEnumerable<Events.Models.Entities.Event> events, 
+        string? sortBy, 
+        string? sortOrder)
     {
         var isDescending = sortOrder?.ToLower() == "desc";
         
@@ -268,6 +271,9 @@ public class EventsController : Controller
             "category" => isDescending
                 ? events.OrderByDescending(e => e.Category?.Name ?? "ZZZ")
                 : events.OrderBy(e => e.Category?.Name ?? "ZZZ"),
+            "subcategory" => isDescending
+                ? events.OrderByDescending(e => e.SubCategory?.Name ?? "ZZZ")
+                : events.OrderBy(e => e.SubCategory?.Name ?? "ZZZ"),
             "date" or _ => isDescending
                 ? events.OrderByDescending(e => e.Date)
                 : events.OrderBy(e => e.Date)

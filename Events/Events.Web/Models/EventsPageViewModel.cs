@@ -40,7 +40,8 @@ public class EventsPageViewModel
         new() { Value = "date", DisplayName = "Date", IconClass = "fas fa-calendar" },
         new() { Value = "name", DisplayName = "Name", IconClass = "fas fa-sort-alpha-up" },
         new() { Value = "price", DisplayName = "Price", IconClass = "fas fa-dollar-sign" },
-        new() { Value = "category", DisplayName = "Category", IconClass = "fas fa-tags" }
+        new() { Value = "category", DisplayName = "Category", IconClass = "fas fa-tags" },
+        new() { Value = "subcategory", DisplayName = "Subcategory", IconClass = "fas fa-layer-group" }
     };
 
     // Helper properties for UI

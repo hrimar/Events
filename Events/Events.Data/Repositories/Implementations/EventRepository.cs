@@ -129,10 +129,8 @@ public class EventRepository : IEventRepository
                 ? query.OrderByDescending(e => e.IsFeatured)
                 : query.OrderBy(e => e.IsFeatured),
             _ => isDescending
-                ? query.OrderByDescending(e => e.Date)
-                    .ThenByDescending(e => e.StartTime.HasValue ? e.StartTime.Value : TimeSpan.Zero)
-                : query.OrderBy(e => e.Date)
-                    .ThenBy(e => e.StartTime.HasValue ? e.StartTime.Value : TimeSpan.Zero)
+                ? query.OrderByDescending(e => e.Date).ThenByDescending(e => e.StartTime.HasValue ? e.StartTime.Value : TimeSpan.Zero)
+                : query.OrderBy(e => e.Date).ThenBy(e => e.StartTime.HasValue ? e.StartTime.Value : TimeSpan.Zero)
         };
     }
 
