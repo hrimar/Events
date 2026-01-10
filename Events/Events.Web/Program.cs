@@ -90,10 +90,12 @@ static void RegisterServices(WebApplicationBuilder builder)
     builder.Services.AddScoped<IEventTagRepository, EventTagRepository>();
     builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
     builder.Services.AddScoped<ISubCategoryRepository, SubCategoryRepository>();
+    builder.Services.AddScoped<IUserFavoriteEventRepository, UserFavoriteEventRepository>();
 
     // Services
     builder.Services.AddScoped<IEventService, EventService>();
     builder.Services.AddScoped<ITagService, TagService>();
+    builder.Services.AddScoped<IUserFavoriteEventService, UserFavoriteEventService>();
 }
 
 static async Task InitializeDatabaseAsync(WebApplication app)
