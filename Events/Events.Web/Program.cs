@@ -2,6 +2,7 @@ using Events.Data.Context;
 using Events.Data.Services;
 using Events.Data.Repositories.Implementations;
 using Events.Data.Repositories.Interfaces;
+using Events.Models.Entities;
 using Events.Services.Implementations;
 using Events.Services.Interfaces;
 using Microsoft.AspNetCore.Identity;
@@ -54,7 +55,7 @@ static void ConfigureDatabase(WebApplicationBuilder builder)
 
 static void ConfigureIdentity(WebApplicationBuilder builder)
 {
-    builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
+    builder.Services.AddIdentity<User, IdentityRole>(options =>
     {
         options.Password.RequireDigit = true;
         options.Password.RequiredLength = 8;

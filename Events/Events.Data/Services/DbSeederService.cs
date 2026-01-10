@@ -1,3 +1,4 @@
+using Events.Models.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -9,7 +10,7 @@ public static class DbSeederService
     public static async Task SeedDatabaseAsync(IServiceProvider serviceProvider, ILogger logger)
     {
         using var scope = serviceProvider.CreateScope();
-        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<IdentityUser>>();
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
         var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
         await SeedRolesAsync(roleManager, logger);
@@ -43,7 +44,7 @@ public static class DbSeederService
         }
     }
 
-    public static async Task SeedUsersAsync(UserManager<IdentityUser> userManager, ILogger logger)
+    public static async Task SeedUsersAsync(UserManager<User> userManager, ILogger logger)
     {
         logger.LogWarning("Seeding development users with hardcoded passwords - NOT FOR PRODUCTION!");
         
@@ -66,14 +67,14 @@ public static class DbSeederService
             roles: new[] { "User" });
     }
 
-    private static async Task SeedUserAsync(UserManager<IdentityUser> userManager, ILogger logger, 
+    private static async Task SeedUserAsync(UserManager<User> userManager, ILogger logger, 
         string email, string password, string[] roles)
     {
         var user = await userManager.FindByEmailAsync(email);
         
         if (user == null)
         {
-            user = new IdentityUser
+            user = new User
             {
                 UserName = email,
                 Email = email,
