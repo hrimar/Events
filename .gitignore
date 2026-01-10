@@ -11,6 +11,9 @@
 **/appsettings.*.json
 !**/appsettings.json
 
+# Launch settings (local development configuration)
+**/launchSettings.json
+
 # Environment files
 .env
 .env.local
