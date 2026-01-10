@@ -110,9 +110,19 @@
                             }
                         </div>
                         <div class="text-end">
-                            <button class="btn btn-outline-danger mb-2" onclick="toggleFavorite(@Model.Id)">
-                                <i class="fas fa-heart"></i> Save
-                            </button>
+                            @if (User.Identity?.IsAuthenticated ?? false)
+                            {
+                                <button class="btn btn-outline-danger mb-2" onclick="toggleFavorite(@Model.Id)">
+                                    <i class="fas fa-heart"></i> Save
+                                </button>
+                            }
+                            else
+                            {
+                                <a href="/Identity/Account/Login?returnUrl=@Url.Action("Details", "Events", 
+                                    new { id = Model.Id })" class="btn btn-outline-secondary mb-2">
+                                    <i class="fas fa-heart"></i> Login to Save
+                                </a>
+                            }
                             <br>
                             <div class="dropdown">
                                 <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
@@ -286,22 +296,11 @@
 </div>
 
 @section Scripts {
+    <script src="~/js/favorites.js"></script>
     <script>
         function toggleFavorite(eventId) {
-            $.post('/api/favorites/toggle', { eventId: eventId })
-                .done(function(data) {
-                    // Toggle heart icon
-                    const heartIcon = event.target.closest('button').querySelector('i');
-                    heartIcon.classList.toggle('fas');
-                    heartIcon.classList.toggle('far');
-                    
-                    // Show success message
-                    showToast('Event saved to favorites!', 'success');
-                })
-                .fail(function() {
-                    console.log('Error toggling favorite');
-                    showToast('Error saving to favorites', 'error');
-                });
+            const button = event.target.closest('button');
+            Favorites.toggleFavorite(eventId, button);
         }
 
         function shareEvent(platform) {
@@ -329,28 +328,11 @@
         function copyLink() {
             navigator.clipboard.writeText(window.location.href)
                 .then(() => {
-                    showToast('Link copied to clipboard!', 'success');
+                    Favorites.showMessage('Link copied to clipboard!', 'success');
                 })
                 .catch(() => {
-                    showToast('Failed to copy link', 'error');
+                    Favorites.showMessage('Failed to copy link', 'error');
                 });
-        }
-        
-        function showToast(message, type = 'info') {
-            const toastClass = type === 'success' ? 'bg-success' : type === 'error' ? 'bg-danger' : 'bg-info';
-            const toast = document.createElement('div');
-            toast.className = 'toast position-fixed top-0 end-0 m-3 show';
-            toast.innerHTML = `
-                <div class="toast-body ${toastClass} text-white">
-                    <i class="fas fa-${type === 'success' ? 'check' : type === 'error' ? 'exclamation-triangle' : 'info'} me-2"></i>
-                    ${message}
-                </div>
-            `;
-            document.body.appendChild(toast);
-            
-            setTimeout(() => {
-                toast.remove();
-            }, 3000);
         }
     </script>
     

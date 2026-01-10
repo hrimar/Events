@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Events.Data.Context;
 
-public class EventsDbContext : IdentityDbContext
+public class EventsDbContext : IdentityDbContext<User>
 {
     public EventsDbContext(DbContextOptions<EventsDbContext> options)
         : base(options)
@@ -17,6 +17,7 @@ public class EventsDbContext : IdentityDbContext
     public DbSet<EventTag> EventTags { get; set; }
     public DbSet<Category> Categories { get; set; }
     public DbSet<SubCategory> SubCategories { get; set; }
+    public DbSet<UserFavoriteEvent> UserFavoriteEvents { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -78,6 +79,7 @@ public class EventsDbContext : IdentityDbContext
         ConfigureTagEntity(modelBuilder);
         ConfigureEventTagEntity(modelBuilder);
         ConfigureCategoryEntity(modelBuilder);
+        ConfigureUserFavoriteEventEntity(modelBuilder);
 
         SeedCategories(modelBuilder);
         SeedSubCategories(modelBuilder);
@@ -508,6 +510,32 @@ public class EventsDbContext : IdentityDbContext
             // Set database default for CreatedAt
             entity.Property(c => c.CreatedAt)
                 .HasDefaultValueSql("GETUTCDATE()");
+        });
+    }
+
+    private static void ConfigureUserFavoriteEventEntity(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<UserFavoriteEvent>(entity =>
+        {
+            entity.HasKey(u => new { u.UserId, u.EventId });
+
+            // Configure FK to User with proper navigation property
+            entity.HasOne(u => u.User)
+                .WithMany(u => u.FavoriteEvents)
+                .HasForeignKey(u => u.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Configure FK to Event
+            entity.HasOne(u => u.Event)
+                .WithMany()
+                .HasForeignKey(u => u.EventId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.Property(u => u.AddedAt)
+                .HasDefaultValueSql("GETUTCDATE()");
+
+            entity.HasIndex(u => u.UserId);
+            entity.HasIndex(u => u.EventId);
         });
     }
 

@@ -1,5 +1,6 @@
 using Events.Data.Repositories.Interfaces;
 using Events.Models.Enums;
+using Events.Web.Models.DTOs;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Events.Web.Controllers.Api;
@@ -18,15 +19,17 @@ public class CategoriesController : ControllerBase
     }
 
     [HttpGet("subcategories/{categoryId}")]
-    public async Task<ActionResult<List<object>>> GetSubCategoriesByCategory(int categoryId)
+    [ProducesResponseType(typeof(List<SubCategoryDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<List<SubCategoryDto>>> GetSubCategoriesByCategory(int categoryId)
     {
         try
         {
             var allSubCategories = await _subCategoryRepository.GetAllAsync();
             var subCategoriesForCategory = allSubCategories
                 .Where(sc => sc.CategoryId == categoryId)
-                .Select(sc => new { id = sc.Id, name = sc.Name })
-                .OrderBy(sc => sc.name)
+                .Select(sc => new SubCategoryDto { Id = sc.Id, Name = sc.Name })
+                .OrderBy(sc => sc.Name)
                 .ToList();
 
             return Ok(subCategoriesForCategory);
@@ -34,30 +37,34 @@ public class CategoriesController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting subcategories for category {CategoryId}", categoryId);
-            return StatusCode(500, "Error getting subcategories");
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Error getting subcategories" });
         }
     }
 
     [HttpGet("subcategories")]
-    public async Task<ActionResult<List<object>>> GetSubCategoriesForCategory(string category)
+    [ProducesResponseType(typeof(List<SubCategoryDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<List<SubCategoryDto>>> GetSubCategoriesForCategory(
+        string category)
     {
         try
         {
             if (string.IsNullOrWhiteSpace(category))
             {
-                return Ok(new List<object>());
+                return Ok(new List<SubCategoryDto>());
             }
 
             if (!Enum.TryParse<EventCategory>(category, true, out var parsedCategory))
             {
-                return Ok(new List<object>());
+                return BadRequest("Invalid category name");
             }
 
             var subCategories = await _subCategoryRepository.GetByCategoryAsync(parsedCategory);
             
             var result = subCategories
-                .Select(sc => new { id = sc.Name, name = sc.Name })
-                .OrderBy(sc => sc.name)
+                .Select(sc => new SubCategoryDto { Id = sc.Id, Name = sc.Name })
+                .OrderBy(sc => sc.Name)
                 .ToList();
 
             return Ok(result);
@@ -65,7 +72,7 @@ public class CategoriesController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting subcategories for category {Category}", category);
-            return StatusCode(500, "Error getting subcategories");
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Error getting subcategories" });
         }
     }
 }

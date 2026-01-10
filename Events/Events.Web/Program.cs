@@ -2,6 +2,7 @@ using Events.Data.Context;
 using Events.Data.Services;
 using Events.Data.Repositories.Implementations;
 using Events.Data.Repositories.Interfaces;
+using Events.Models.Entities;
 using Events.Services.Implementations;
 using Events.Services.Interfaces;
 using Microsoft.AspNetCore.Identity;
@@ -54,7 +55,7 @@ static void ConfigureDatabase(WebApplicationBuilder builder)
 
 static void ConfigureIdentity(WebApplicationBuilder builder)
 {
-    builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
+    builder.Services.AddIdentity<User, IdentityRole>(options =>
     {
         options.Password.RequireDigit = true;
         options.Password.RequiredLength = 8;
@@ -89,10 +90,12 @@ static void RegisterServices(WebApplicationBuilder builder)
     builder.Services.AddScoped<IEventTagRepository, EventTagRepository>();
     builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
     builder.Services.AddScoped<ISubCategoryRepository, SubCategoryRepository>();
+    builder.Services.AddScoped<IUserFavoriteEventRepository, UserFavoriteEventRepository>();
 
     // Services
     builder.Services.AddScoped<IEventService, EventService>();
     builder.Services.AddScoped<ITagService, TagService>();
+    builder.Services.AddScoped<IUserFavoriteEventService, UserFavoriteEventService>();
 }
 
 static async Task InitializeDatabaseAsync(WebApplication app)
