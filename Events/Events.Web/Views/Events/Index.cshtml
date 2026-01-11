@@ -167,8 +167,8 @@
                     }
                     @if(!string.IsNullOrEmpty(Model.SelectedSubCategory))
                     {
-                        <span class="badge bg-dark">
-                            <i class="fas fa-chevron-right me-1"></i>@Model.SelectedSubCategory
+                        <span class="badge bg-primary">
+                            <i class="fas fa-layer-group me-1"></i>SubCategory: @Model.SelectedSubCategory
                         </span>
                     }
                     @if(Model.IsFreeFilter == true)
@@ -271,6 +271,10 @@
                         {
                             <span class="badge bg-primary">@Model.CurrentCategory</span>
                         }
+                        @if(!string.IsNullOrEmpty(Model.SelectedSubCategory))
+                        {
+                            <span class="badge bg-primary">@Model.SelectedSubCategory</span>
+                        }
                         @if(Model.IsFreeFilter == true)
                         {
                             <span class="badge bg-success">Free Events</span>
@@ -334,9 +338,10 @@
                                         </a>
                                         @if(!string.IsNullOrEmpty(eventItem.SubCategoryName))
                                         {
-                                            <span class="badge bg-dark text-decoration-none ms-1">
+                                            <a href="@Url.Action("Index", "Events", new { subCategory = eventItem.SubCategoryName })" 
+                                               class="badge bg-dark text-decoration-none ms-1">
                                                 @eventItem.SubCategoryName
-                                            </span>
+                                            </a>
                                         }
                                     </div>
                                 }

@@ -52,7 +52,8 @@ public class EventsController : Controller
             }
             else
             {
-                var (events, count) = await _eventService.GetPagedEventsAsync(1, int.MaxValue, EventStatus.Published, category, free, fromDate);
+                var (events, count) = await _eventService.GetPagedEventsAsync(
+                    1, int.MaxValue, EventStatus.Published, category, subCategory, free, fromDate);
                 allEvents = events;
             }
 
@@ -74,12 +75,6 @@ public class EventsController : Controller
             if (toDate.HasValue)
             {
                 allEvents = allEvents.Where(e => e.Date <= toDate.Value);
-            }
-
-            // Apply subcategory filtering if specified
-            if (!string.IsNullOrWhiteSpace(subCategory))
-            {
-                allEvents = allEvents.Where(e => string.Equals(e.SubCategory?.Name, subCategory, StringComparison.OrdinalIgnoreCase));
             }
 
             allEvents = ApplySorting(allEvents, sortBy, sortOrder);
@@ -197,7 +192,7 @@ public class EventsController : Controller
         try
         {
             var futureEvents = await _eventService.GetPagedEventsAsync(
-                1, int.MaxValue, EventStatus.Published, null, null, DateTime.Today);
+                1, int.MaxValue, EventStatus.Published, null, null, null, DateTime.Today);
             
             var futureEventIds = futureEvents.Events.Select(e => e.Id).ToList();
             var allTags = await _tagService.GetAllTagsAsync();
@@ -226,7 +221,8 @@ public class EventsController : Controller
     {
         try
         {
-            var futureEvents = await _eventService.GetPagedEventsAsync(1, int.MaxValue, EventStatus.Published, null, null, DateTime.Today);
+            var futureEvents = await _eventService.GetPagedEventsAsync(
+                1, int.MaxValue, EventStatus.Published, null, null, null, DateTime.Today);
             
             var futureEventIds = futureEvents.Events.Select(e => e.Id).ToList();
             var allTags = await _tagService.GetAllTagsAsync();
@@ -289,7 +285,7 @@ public class EventsController : Controller
             // Fill with category-based events if needed
             if (relatedEvents.Count < 3 && eventEntity.Category != null)
             {
-                var related = await _eventService.GetPagedEventsAsync(1, 6, EventStatus.Published, eventEntity.Category.Name, null, DateTime.Today);
+                var related = await _eventService.GetPagedEventsAsync(1, 6, EventStatus.Published, eventEntity.Category.Name, null, null, DateTime.Today);
                 var categoryRelated = EventViewModel.FromEntities(related.Events.Where(e => e.Id != id && !relatedEvents.Any(r => r.Id == e.Id)));
                 relatedEvents.AddRange(categoryRelated);
             }

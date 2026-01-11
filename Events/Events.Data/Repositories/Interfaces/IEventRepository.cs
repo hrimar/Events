@@ -20,14 +20,15 @@ public interface IEventRepository
 
     // pagination and filtering
     Task<(IEnumerable<Event> Events, int TotalCount)> GetPagedEventsAsync(
-    int page,
-    int pageSize,
-    EventStatus? status = null,
-    string? categoryName = null,
-    bool? isFree = null,
-    DateTime? fromDate = null,
-    string? sortBy = null,
-    string sortOrder = "asc");
+        int page,
+        int pageSize,
+        EventStatus? status = null,
+        string? categoryName = null,
+        string? subCategoryName = null,
+        bool? isFree = null,
+        DateTime? fromDate = null,
+        string? sortBy = null,
+        string sortOrder = "asc");
 
     Task<IEnumerable<Event>> GetFeaturedEventsAsync(int count = 10);
     Task<IEnumerable<Event>> GetUpcomingEventsAsync(int count = 10);

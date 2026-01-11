@@ -61,6 +61,7 @@ public class EventService : IEventService
         int pageSize,
         EventStatus? status = null,
         string? categoryName = null,
+        string? subCategoryName = null,
         bool? isFree = null,
         DateTime? fromDate = null,
         string? sortBy = null,
@@ -74,10 +75,14 @@ public class EventService : IEventService
             if (pageSize < 1) pageSize = 12;
             if (pageSize > 50000) pageSize = 50000; // Safety limit to prevent memory issues
 
-            _logger.LogInformation("Getting paged events: Page {Page}, PageSize {PageSize}, Status {Status}, Category {Category}, FromDate {FromDate}, SortBy {SortBy}, SortOrder {SortOrder}",
-                page, pageSize, status, categoryName, fromDate, sortBy, sortOrder);
+            _logger.LogInformation(
+                "Getting paged events: Page {Page}, PageSize {PageSize}, Status {Status}, " +
+                "Category {Category}, SubCategory {SubCategory}, FromDate {FromDate}, " +
+                "SortBy {SortBy}, SortOrder {SortOrder}",
+                page, pageSize, status, categoryName, subCategoryName, fromDate, sortBy, sortOrder);
 
-            return await _eventRepository.GetPagedEventsAsync(page, pageSize, status, categoryName, isFree, fromDate, sortBy, sortOrder);
+            return await _eventRepository.GetPagedEventsAsync(
+                page, pageSize, status, categoryName, subCategoryName, isFree, fromDate, sortBy, sortOrder);
         }
         catch (Exception ex)
         {

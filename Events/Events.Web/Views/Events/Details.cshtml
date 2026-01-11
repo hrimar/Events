@@ -77,9 +77,10 @@
                                 }
                                 @if(!string.IsNullOrEmpty(Model.SubCategoryName))
                                 {
-                                    <span class="badge bg-secondary">
+                                    <a href="@Url.Action("Index", "Events", new { subCategory = Model.SubCategoryName })" 
+                                       class="badge bg-secondary text-decoration-none">
                                         <i class="fas fa-tags me-1"></i>@Model.SubCategoryName
-                                    </span>
+                                    </a>
                                 }
                             </div>
 

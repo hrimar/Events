@@ -77,6 +77,7 @@ public class EventsController : Controller
                     category,
                     null,
                     null,
+                    null,
                     normalizedSortBy,
                     normalizedSortOrder);
 

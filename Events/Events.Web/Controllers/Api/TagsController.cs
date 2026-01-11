@@ -25,7 +25,8 @@ public class TagsController : ControllerBase
     {
         try
         {
-            var futureEvents = await _eventService.GetPagedEventsAsync(1, int.MaxValue, EventStatus.Published, null, null, DateTime.Today);
+            var futureEvents = await _eventService.GetPagedEventsAsync(
+                1, int.MaxValue, EventStatus.Published, null, null, null, DateTime.Today);
             
             var futureEventIds = futureEvents.Events.Select(e => e.Id).ToList();
             var allTags = await _tagService.GetAllTagsAsync();
@@ -62,7 +63,8 @@ public class TagsController : ControllerBase
                 return Ok(new List<TagViewModel>());
             }
 
-            var futureEvents = await _eventService.GetPagedEventsAsync(1, int.MaxValue, EventStatus.Published, null, null, DateTime.Today);
+            var futureEvents = await _eventService.GetPagedEventsAsync(
+                1, int.MaxValue, EventStatus.Published, null, null, null, DateTime.Today);
             
             var futureEventIds = futureEvents.Events.Select(e => e.Id).ToList();
             var allTags = await _tagService.GetAllTagsAsync();
@@ -100,7 +102,8 @@ public class TagsController : ControllerBase
                 return BadRequest("Invalid category");
             }
 
-            var futureEvents = await _eventService.GetPagedEventsAsync(1, int.MaxValue, EventStatus.Published, null, null, DateTime.Today);
+            var futureEvents = await _eventService.GetPagedEventsAsync(
+                1, int.MaxValue, EventStatus.Published, null, null, null, DateTime.Today);
             
             var futureEventIds = futureEvents.Events.Select(e => e.Id).ToList();
             var allTags = await _tagService.GetAllTagsAsync();

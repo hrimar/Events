@@ -8,8 +8,9 @@ public class EventViewModel
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public DateTime Date { get; set; }
+    public TimeSpan? StartTime { get; set; }
     public string FormattedDate => Date.ToString("dd.MM.yyyy");
-    public string FormattedTime => Date.ToString("HH:mm");
+    public string FormattedTime => StartTime?.ToString(@"hh\:mm") ?? Date.ToString("HH:mm");
     public string City { get; set; } = string.Empty;
     public string Location { get; set; } = string.Empty;
     public string? Description { get; set; }
@@ -40,6 +41,7 @@ public class EventViewModel
             Id = eventEntity.Id,
             Name = eventEntity.Name,
             Date = eventEntity.Date,
+            StartTime = eventEntity.StartTime,
             City = eventEntity.City,
             Location = eventEntity.Location,
             Description = eventEntity.Description,

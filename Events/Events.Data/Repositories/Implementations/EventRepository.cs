@@ -53,6 +53,7 @@ public class EventRepository : IEventRepository
         int pageSize,
         EventStatus? status = null,
         string? categoryName = null,
+        string? subCategoryName = null,
         bool? isFree = null,
         DateTime? fromDate = null,
         string? sortBy = null,
@@ -70,9 +71,18 @@ public class EventRepository : IEventRepository
             query = query.Where(e => e.Status == status.Value);
         }
 
-        if (!string.IsNullOrEmpty(categoryName))
+        // Priority: subCategoryName > categoryName
+        if (!string.IsNullOrEmpty(subCategoryName))
         {
-            query = query.Where(e => e.Category != null && e.Category.Name == categoryName);
+            query = query.Where(e => 
+                e.SubCategory != null && 
+                e.SubCategory.Name == subCategoryName);
+        }
+        else if (!string.IsNullOrEmpty(categoryName))
+        {
+            query = query.Where(e => 
+                e.Category != null && 
+                e.Category.Name == categoryName);
         }
 
         if (isFree.HasValue)

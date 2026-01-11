@@ -17,6 +17,7 @@ public interface IEventService
         int pageSize,
         EventStatus? status = null,
         string? categoryName = null,
+        string? subCategoryName = null,
         bool? isFree = null,
         DateTime? fromDate = null,
         string? sortBy = null,
