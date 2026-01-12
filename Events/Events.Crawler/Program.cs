@@ -71,6 +71,7 @@ var host = new HostBuilder()
         services.AddScoped<IEventCrawlerStrategy, TicketStationCrawler>(); // via Playwright
         services.AddScoped<IEventCrawlerStrategy, EpaygoCrawler>(); // via Playwright
         services.AddScoped<IEventCrawlerStrategy, EventimCrawler>(); // via Playwright & AJAX
+        services.AddScoped<IEventCrawlerStrategy, NdkCrawler>(); // via Playwright
 
         Console.WriteLine("Services configured successfully");
     })
