@@ -168,7 +168,7 @@ public class EventimCrawler : IWebScrapingCrawler
         }
     }
 
-    private async Task<List<EventimEventInstance>> GetEventimEventsAsync()
+    private async Task<List<EventimEventInstanceDto>> GetEventimEventsAsync()
     {
         var retryCount = 0;
 
@@ -265,33 +265,34 @@ public class EventimCrawler : IWebScrapingCrawler
             }
         }
 
-        return new List<EventimEventInstance>();
+        return new List<EventimEventInstanceDto>();
     }
 
-    private async Task<List<EventimEventInstance>> CrawlAllEventsAsync(IPage page)
+    private async Task<List<EventimEventInstanceDto>> CrawlAllEventsAsync(IPage page)
     {
-        var allEvents = new List<EventimEventInstance>();
-        var processedUrls = new HashSet<string>();
+        var allEvents = new List<EventimEventInstanceDto>();
 
         _logger.LogInformation("Starting to crawl all Eventim events...");
 
-        var currentUrl = "/api/search?lang=bg";
-        int consecutiveEmptyPages = 0;
-        const int maxEmptyPages = 3;
-        int totalProcessed = 0;
+        const string baseApiUrl =
+            "https://public-api.eventim.com/websearch/search/api/exploration/v2/" +
+            "productGroups?webId=web__eventim-bgr&language=bg&retail_partner=BGI&" +
+            "city_ids=7510&city_ids=null&sort=Recommendation&in_stock=true";
 
-        while (!string.IsNullOrEmpty(currentUrl) && !processedUrls.Contains(currentUrl))
+        int pageNumber = 1;
+
+        while (true)
         {
-            processedUrls.Add(currentUrl);
-            totalProcessed++;
-
             try
             {
-                _logger.LogDebug("API call to: {Url} (page {PageNumber})", currentUrl, totalProcessed);
+                var currentUrl = pageNumber == 1 ? baseApiUrl : $"{baseApiUrl}&page={pageNumber}";
+
+                _logger.LogDebug("API call to page {PageNumber}", pageNumber);
 
                 var apiResponse = await page.EvaluateAsync<string>($@"
                     async () => {{
                         try {{
+
                             const response = await fetch('{currentUrl}', {{
                                 method: 'GET',
                                 headers: {{
@@ -323,143 +324,89 @@ public class EventimCrawler : IWebScrapingCrawler
                     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
                 };
 
-                EventimResultsDto? parsed = null;
-                try
-                {
-                    parsed = JsonSerializer.Deserialize<EventimResultsDto>(apiResponse, options);
-                }
-                catch (JsonException jsonEx)
-                {
-                    _logger.LogWarning(jsonEx, "JSON parsing error, attempting to clean response");
-                    var cleanedJson = CleanJsonCategoryFields(apiResponse);
-                    parsed = JsonSerializer.Deserialize<EventimResultsDto>(cleanedJson, options);
-                }
+                var parsed = JsonSerializer.Deserialize<EventimProductGroupsResponseDto>(apiResponse, options);
 
-                if (parsed?.Results != null && parsed.Results.Count > 0)
+                if (parsed?.ProductGroups == null || parsed.ProductGroups.Count == 0)
                 {
-                    _logger.LogDebug("Received {EventCount} events from this page", parsed.Results.Count);
-
-                    var eventInstances = ConvertToEventInstances(parsed.Results);
-                    var sofiaEventsCount = eventInstances.Count;
-                    allEvents.AddRange(eventInstances);
-
-                    _logger.LogDebug("Sofia events from this page: {SofiaEvents}, Total: {TotalEvents}", sofiaEventsCount, allEvents.Count);
-
-                    consecutiveEmptyPages = 0;
-                }
-                else
-                {
-                    _logger.LogDebug("No events from this page");
-                    consecutiveEmptyPages++;
-
-                    if (consecutiveEmptyPages >= maxEmptyPages)
-                    {
-                        _logger.LogInformation("Stopping after {EmptyPages} consecutive empty pages", consecutiveEmptyPages);
-                        break;
-                    }
-                }
-
-                if (!string.IsNullOrEmpty(parsed?.NextPage))
-                {
-                    var uri = new Uri(parsed.NextPage);
-                    currentUrl = uri.PathAndQuery;
-                    _logger.LogDebug("Next page: {NextUrl}", currentUrl);
-                    await Task.Delay(_delayBetweenRequests);
-                }
-                else
-                {
-                    _logger.LogInformation("No more pages available");
+                    _logger.LogInformation("No more product groups available on page {PageNumber}", pageNumber);
                     break;
                 }
 
-                if (totalProcessed > 200) // Safety limit
-                {
-                    _logger.LogWarning("Reached maximum page limit - stopping");
-                    break;
-                }
+                _logger.LogDebug("Received {ProductGroupCount} product groups from page {PageNumber}", parsed.ProductGroups.Count, pageNumber);
+
+                var eventInstances = ConvertProductGroupsToEventInstances(parsed.ProductGroups);
+                allEvents.AddRange(eventInstances);
+
+                _logger.LogDebug("Events from this page: {EventCount}, Total: {TotalEvents}", eventInstances.Count, allEvents.Count);
+
+                await Task.Delay(_delayBetweenRequests);
+                pageNumber++;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error processing page {Url}", currentUrl);
+                _logger.LogError(ex, "Error processing page {PageNumber}", pageNumber);
                 break;
             }
         }
 
-        _logger.LogInformation("Total collected Sofia events: {TotalEvents} (from {TotalPages} pages)", allEvents.Count, totalProcessed);
+        _logger.LogInformation("Total collected events: {TotalEvents} (from {TotalPages} pages)", allEvents.Count, pageNumber - 1);
         return allEvents;
     }
 
-    private string CleanJsonCategoryFields(string json)
+    private List<EventimEventInstanceDto> ConvertProductGroupsToEventInstances(List<EventimProductGroupDto> productGroups)
     {
-        var pattern = @"""category"":\s*""(\d+)""";
-        var replacement = @"""category"":$1";
-        return Regex.Replace(json, pattern, replacement);
-    }
+        var eventInstances = new List<EventimEventInstanceDto>();
 
-    private List<EventimEventInstance> ConvertToEventInstances(List<EventimEventDto> eventimEvents)
-    {
-        var eventInstances = new List<EventimEventInstance>();
-
-        foreach (var eventimEvent in eventimEvents)
+        foreach (var productGroup in productGroups)
         {
-            if (eventimEvent.Events != null && eventimEvent.Events.Any())
+            if (productGroup.Products == null || !productGroup.Products.Any())
+                continue;
+
+            foreach (var product in productGroup.Products)
             {
-                foreach (var eventInstance in eventimEvent.Events)
+                // Skip if no live entertainment data
+                if (product.TypeAttributes?.LiveEntertainment == null)
+                    continue;
+
+                var liveEntertainment = product.TypeAttributes.LiveEntertainment;
+
+                // Skip if no location data
+                if (liveEntertainment.Location == null)
+                    continue;
+
+                var eventInfo = new EventimEventInstanceDto
                 {
-                    // Filter: Only Sofia events
-                    if (!IsSofiaEvent(eventInstance.City))
-                        continue;
+                    Name = product.Name,
+                    Description = null,
+                    ImageUrl = productGroup.ImageUrl,
+                    Date = liveEntertainment.StartDate,
+                    Price = null,
+                    IsFree = false,
+                    City = liveEntertainment.Location.City,
+                    TicketUrl = product.Link,
+                    SourceUrl = "https://www.eventim.bg",
+                    Venue = liveEntertainment.Location.Name
+                };
 
-                    var eventInfo = new EventimEventInstance
-                    {
-                        Name = eventimEvent.Title,
-                        Description = null, // Not provided by API
-                        ImageUrl = !string.IsNullOrEmpty(eventimEvent.Image) ? $"https://www.eventim.bg{eventimEvent.Image}" : null,
-                        Date = eventInstance.DateStart?.DateTime,
-                        Price = null, // Ignore the price for now
-                        IsFree = false, // by default all events are considered paid. The admin will adjust if needed the free ones
-                        City = eventInstance.City,
-                        TicketUrl = !string.IsNullOrEmpty(eventimEvent.Url) ? $"https://www.eventim.bg{eventimEvent.Url}" : null,
-                        SourceUrl = "https://www.eventim.bg",
-                        Venue = eventInstance.Venue
-                    };
-
-                    eventInstances.Add(eventInfo);
-                }
+                eventInstances.Add(eventInfo);
             }
         }
 
         return eventInstances;
     }
 
-    private bool IsSofiaEvent(string? city)
-    {
-        if (string.IsNullOrEmpty(city))
-            return false;
-
-        var sofiaVariants = new[]
-        {
-            "София", "Sofia", "СОФИЯ", "SOFIA",
-            "Софія", "Софија", // Different cyrillic variants
-            "ГОЛЯМА СЦЕНА", // Special case - theaters in Sofia
-            "Голяма сцена"
-        };
-
-        return sofiaVariants.Any(variant => city.Contains(variant, StringComparison.OrdinalIgnoreCase));
-    }
-
-    private CrawledEventDto? MapEventimToStandardDto(EventimEventInstance eventimEvent)
+    private CrawledEventDto? MapEventimToStandardDto(EventimEventInstanceDto eventimEvent)
     {
         return new CrawledEventDto
         {
             ExternalId = GenerateEventId(eventimEvent.Name, eventimEvent.TicketUrl),
             Source = SourceName,
-            Name = CleanText(eventimEvent.Name) ?? "Unknown Event",
+            Name = CleanText(eventimEvent.Name) ?? "",
             Description = CleanText(eventimEvent.Description),
             StartDate = TryParseEventDate(eventimEvent.Date),
             City = eventimEvent.City ?? "",
             Location = eventimEvent.Venue ?? "",
-            ImageUrl = eventimEvent.ImageUrl,
+            ImageUrl = eventimEvent.ImageUrl, // TODO: Add a default image if not presented
             SourceUrl = eventimEvent.SourceUrl,
             TicketUrl = eventimEvent.TicketUrl,
             Price = eventimEvent.Price,
@@ -469,8 +416,8 @@ public class EventimCrawler : IWebScrapingCrawler
                 ["original_date_text"] = eventimEvent.Date ?? "",
                 ["city"] = eventimEvent.City ?? "",
                 ["venue"] = eventimEvent.Venue ?? "",
-                ["extraction_method"] = "Playwright_Eventim_API",
-                ["crawled_from"] = "https://www.eventim.bg/api/search"
+                ["extraction_method"] = "Playwright_Eventim_Public_API",
+                ["crawled_from"] = "https://public-api.eventim.com/websearch/search/api/" + "exploration/v2/productGroups"
             }
         };
     }
@@ -483,7 +430,8 @@ public class EventimCrawler : IWebScrapingCrawler
 
     private string? CleanText(string? text)
     {
-        if (string.IsNullOrWhiteSpace(text)) return null;
+        if (string.IsNullOrWhiteSpace(text)) 
+            return null;
         return text.Trim().Replace("\n", " ").Replace("\r", "").Replace("  ", " ");
     }
 
@@ -493,9 +441,13 @@ public class EventimCrawler : IWebScrapingCrawler
 
         var formats = new[]
         {
-            "yyyy-MM-ddTHH:mm:ss.fffZ",
+            // ISO 8601 formats (from new API)
+            "yyyy-MM-ddTHH:mm:sszzz",
+            "yyyy-MM-ddTHH:mm:ss.fffzzz",
             "yyyy-MM-ddTHH:mm:ssZ",
+            "yyyy-MM-ddTHH:mm:ss.fffZ",
             "yyyy-MM-ddTHH:mm:ss",
+            // Other formats
             "yyyy-MM-dd HH:mm:ss",
             "dd.MM.yyyy",
             "dd/MM/yyyy",
@@ -508,12 +460,13 @@ public class EventimCrawler : IWebScrapingCrawler
 
         foreach (var format in formats)
         {
-            if (DateTime.TryParseExact(dateText.Trim(), format, null, System.Globalization.DateTimeStyles.None, out var date))
+            if (DateTime.TryParseExact(dateText.Trim(), format, null, System.Globalization.DateTimeStyles.RoundtripKind, out var date))
             {
                 return date;
             }
         }
 
+        // Fallback to automatic parsing
         if (DateTime.TryParse(dateText, out var parsedDate))
         {
             return parsedDate;
@@ -548,8 +501,7 @@ public class EventimCrawler : IWebScrapingCrawler
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to ensure Playwright browsers are installed");
-                throw new InvalidOperationException(
-                    "Playwright browsers are not installed. Please run 'npx playwright install chromium' manually.", ex);
+                throw new InvalidOperationException("Playwright browsers are not installed. Please run 'npx playwright install chromium' manually.", ex);
             }
         }
     }
@@ -601,20 +553,5 @@ public class EventimCrawler : IWebScrapingCrawler
         var chromePath = Path.Combine(latestChromiumDir, "chrome-win", "chrome.exe");
 
         return File.Exists(chromePath) ? chromePath : null;
-    }
-
-    // Helper class for event instances
-    private class EventimEventInstance
-    {
-        public string? Name { get; set; }
-        public string? Description { get; set; }
-        public string? ImageUrl { get; set; }
-        public string? Date { get; set; }
-        public decimal? Price { get; set; }
-        public string? City { get; set; }
-        public string? TicketUrl { get; set; }
-        public string? SourceUrl { get; set; }
-        public bool IsFree { get; set; }
-        public string? Venue { get; set; }
     }
 }

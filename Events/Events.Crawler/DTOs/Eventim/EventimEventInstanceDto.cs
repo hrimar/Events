@@ -1,30 +1,15 @@
-using System.Text.Json.Serialization;
-
 namespace Events.Crawler.DTOs.Eventim;
 
 public class EventimEventInstanceDto
 {
-    [JsonPropertyName("dateStart")]
-    public EventimDateDto? DateStart { get; set; }
-
-    [JsonPropertyName("dateEnd")]
-    public EventimDateDto? DateEnd { get; set; }
-
-    [JsonPropertyName("timezone")]
-    public string? Timezone { get; set; }
-
-    [JsonPropertyName("venue")]
-    public string? Venue { get; set; }
-
-    [JsonPropertyName("city")]
+    public string? Name { get; set; }
+    public string? Description { get; set; }
+    public string? ImageUrl { get; set; }
+    public string? Date { get; set; }
+    public decimal? Price { get; set; }
     public string? City { get; set; }
-
-    [JsonPropertyName("street")]
-    public string? Street { get; set; }
-
-    [JsonPropertyName("lkz")]
-    public string? Lkz { get; set; }
-
-    [JsonPropertyName("category")]
-    public object? Category { get; set; } // Can be string or int
+    public string? TicketUrl { get; set; }
+    public string? SourceUrl { get; set; }
+    public bool IsFree { get; set; }
+    public string? Venue { get; set; }
 }
