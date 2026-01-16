@@ -89,6 +89,8 @@ static void ConfigureAzureStorage(WebApplicationBuilder builder)
 {
     var blobStorageUri = builder.Configuration["BlobStorage:Uri"];
 
+    // Allow null during design-time (EF migrations in CI/CD)
+    // In production, App Service environment variables will provide the value
     if (!string.IsNullOrEmpty(blobStorageUri))
     {
         var containerUri = new Uri($"{blobStorageUri.TrimEnd('/')}/event-images");
@@ -97,10 +99,20 @@ static void ConfigureAzureStorage(WebApplicationBuilder builder)
         builder.Services.AddSingleton(blobContainerClient);
         builder.Services.AddScoped<IImageUploadService, AzureBlobImageService>();
     }
-    else
+    else if (!builder.Environment.IsDevelopment() && !IsDesignTime(builder))
     {
-        throw new InvalidOperationException("BlobStorage:Uri configuration is missing. Please configure it in appsettings.json");
+        // Only throw in production, not during design-time migrations
+        throw new InvalidOperationException(
+            "BlobStorage:Uri configuration is missing. Please configure it in App Service environment variables or appsettings.json");
     }
+    // In development/design-time without BlobStorage: skip registration (won't be used for migrations)
+}
+
+static bool IsDesignTime(WebApplicationBuilder builder)
+{
+    // Check if running for EF migrations (design-time)
+    return builder.Configuration["__DesignTime"] == "true" || 
+           string.IsNullOrEmpty(builder.Configuration.GetConnectionString("EventsConnection"));
 }
 
 static void RegisterServices(WebApplicationBuilder builder)
