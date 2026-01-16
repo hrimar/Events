@@ -31,6 +31,9 @@ public class Event
     public string? ImageUrl { get; set; }
 
     [MaxLength(500)]
+    public string? ThumbnailUrl { get; set; }
+
+    [MaxLength(500)]
     public string? TicketUrl { get; set; }
 
     public bool IsFree { get; set; }

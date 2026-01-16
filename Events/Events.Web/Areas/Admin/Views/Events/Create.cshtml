@@ -16,6 +16,9 @@
         <form asp-action="Create" method="post" id="createEventForm">
             @Html.AntiForgeryToken()
             
+            <!-- Temporary Image Upload Session ID (GUID) -->
+            <input type="hidden" id="TempImageSessionId" name="TempImageSessionId" value="@Guid.NewGuid()" />
+
             <!-- Basic Information Card -->
             <div class="card mb-4">
                 <div class="card-header bg-primary text-white">
@@ -133,23 +136,92 @@
                     <h5 class="mb-0"><i class="fas fa-image me-2"></i>Media & Links</h5>
                 </div>
                 <div class="card-body">
-                    <div class="mb-3">
-                        <label asp-for="ImageUrl" class="form-label">Image URL *</label>
-                        <input asp-for="ImageUrl" class="form-control" placeholder="https://example.com/image.jpg" required />
-                        <span asp-validation-for="ImageUrl" class="text-danger small"></span>
-                        <div class="mt-2">
-                            <img id="imagePreview" src="" alt="Event Image" class="img-thumbnail" style="max-height: 200px; display: none;">
-                            <div id="noImagePreview" class="bg-light text-center p-5 rounded">
-                                <i class="fas fa-image text-muted" style="font-size: 3rem;"></i>
-                                <p class="text-muted mt-2">Image preview will appear here</p>
+                    <ul class="nav nav-tabs mb-3" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="url-tab" 
+                                    data-bs-toggle="tab" 
+                                    data-bs-target="#url-content" 
+                                    type="button" role="tab">
+                                <i class="fas fa-link me-2"></i>From URL
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="upload-tab" 
+                                    data-bs-toggle="tab" 
+                                    data-bs-target="#upload-content" 
+                                    type="button" role="tab">
+                                <i class="fas fa-cloud-upload-alt me-2"></i>Upload Image
+                            </button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content">
+                        <div class="tab-pane fade show active" id="url-content" 
+                             role="tabpanel">
+                            <div class="mb-3">
+                                <label asp-for="ImageUrl" class="form-label">
+                                    Image URL
+                                </label>
+                                <input asp-for="ImageUrl" class="form-control" 
+                                       placeholder="https://example.com/image.jpg" />
+                                <span asp-validation-for="ImageUrl" 
+                                      class="text-danger small"></span>
+                                <small class="text-muted">
+                                    Or use the Upload tab to upload an image
+                                </small>
+                            </div>
+                        </div>
+
+                        <div class="tab-pane fade" id="upload-content" 
+                             role="tabpanel">
+                            <div class="mb-3">
+                                <label class="form-label">Upload Image</label>
+                                <div id="dropZone" 
+                                     class="border-2 border-dashed rounded p-5 text-center cursor-pointer bg-light"
+                                     style="border-color: #dee2e6; transition: all 0.3s;">
+                                    <i class="fas fa-cloud-upload-alt" 
+                                       style="font-size: 3rem; color: #6c757d;"></i>
+                                    <p class="mt-3 mb-0">Drag and drop image here 
+                                       or click to select</p>
+                                    <small class="text-muted">
+                                        Supported: JPEG, PNG, WebP (Max 5MB)
+                                    </small>
+                                    <input type="file" id="imageFile" 
+                                           accept="image/jpeg,image/png,image/webp" 
+                                           style="display: none;">
+                                </div>
+                                <div id="imagePreview" style="display: none;" 
+                                     class="mt-3"></div>
+                                <div id="uploadProgress" class="progress mt-2" 
+                                     style="display: none;">
+                                    <div class="progress-bar progress-bar-striped " +
+                                         "progress-bar-animated" role="progressbar" 
+                                         style="width: 100%"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
                     
-                    <div class="mb-3">
-                        <label asp-for="TicketUrl" class="form-label">Ticket URL</label>
-                        <input asp-for="TicketUrl" class="form-control" placeholder="https://tickets.example.com" />
-                        <span asp-validation-for="TicketUrl" class="text-danger small"></span>
+                    <div class="mt-3">
+                        <img id="sidebarImagePreview" src="" alt="Event Image" 
+                             class="img-thumbnail" 
+                             style="max-height: 200px; display: none;">
+                        <div id="noImagePreview" 
+                             class="bg-light text-center p-5 rounded">
+                            <i class="fas fa-image text-muted" 
+                               style="font-size: 3rem;"></i>
+                            <p class="text-muted mt-2">Image preview will appear here</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3 mt-3">
+                        <label asp-for="TicketUrl" class="form-label">
+                            Ticket URL
+                        </label>
+                        <input asp-for="TicketUrl" class="form-control" 
+                               placeholder="https://tickets.example.com" />
+                        <span asp-validation-for="TicketUrl" 
+                              class="text-danger small"></span>
                     </div>
                 </div>
             </div>
@@ -274,9 +346,13 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/admin-image-upload.js"></script>
     
     <script>
         $(document).ready(function() {
+            // Initialize image uploader with temporary GUID
+            const tempSessionId = document.getElementById('TempImageSessionId').value;
+            
             // Subcategory filtering based on category selection
             var allSubCategories = [];
             $('#subCategorySelect option').each(function() {
@@ -356,13 +432,9 @@
             $('input[name="ImageUrl"]').on('blur', function() {
                 var url = $(this).val();
                 if (url) {
-                    $('#imagePreview').attr('src', url).show();
-                    $('#noImagePreview').hide();
                     $('#sidebarImagePreview').attr('src', url).show();
                     $('#imagePreviewContainer #noImagePreview').hide();
                 } else {
-                    $('#imagePreview').hide();
-                    $('#noImagePreview').show();
                     $('#sidebarImagePreview').hide();
                     $('#imagePreviewContainer #noImagePreview').show();
                 }
@@ -458,4 +530,34 @@
             });
         });
     </script>
+}
+
+@section Styles {
+    <style>
+        #dropZone {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        #dropZone.drag-over {
+            background-color: #e7f3ff !important;
+            border-color: #0d6efd !important;
+            transform: scale(1.02);
+        }
+
+        .preview-wrapper {
+            position: relative;
+        }
+
+        .preview-image {
+            max-width: 100%;
+            border-radius: 0.25rem;
+        }
+
+        .preview-info {
+            display: block;
+            margin-top: 0.5rem;
+            color: #6c757d;
+        }
+    </style>
 }

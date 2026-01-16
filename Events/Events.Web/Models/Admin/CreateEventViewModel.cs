@@ -1,4 +1,4 @@
-using Events.Models.Enums;
+﻿using Events.Models.Enums;
 using System.ComponentModel.DataAnnotations;
 
 namespace Events.Web.Models.Admin;
@@ -10,13 +10,13 @@ public class CreateEventViewModel
     public string Name { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Date is required")]
-    public DateTime Date { get; set; }
+    public DateTime Date { get; set; } = DateTime.Now;
 
     public TimeSpan? StartTime { get; set; }
 
     [Required(ErrorMessage = "City is required")]
     [StringLength(100, MinimumLength = 2, ErrorMessage = "City must be between 2 and 100 characters")]
-    public string City { get; set; } = string.Empty;
+    public string City { get; set; } = "София";
 
     [Required(ErrorMessage = "Location/Venue is required")]
     [StringLength(300, MinimumLength = 3, ErrorMessage = "Location must be between 3 and 300 characters")]

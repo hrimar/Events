@@ -7,12 +7,15 @@ using Events.Services.Implementations;
 using Events.Services.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Azure.Storage.Blobs;
+using Azure.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 
 ConfigureDatabase(builder);
 ConfigureIdentity(builder);
 ConfigureAuthorization(builder);
+ConfigureAzureStorage(builder);
 RegisterServices(builder);
 
 builder.Services.AddRazorPages();
@@ -30,7 +33,7 @@ app.Run();
 static void ConfigureDatabase(WebApplicationBuilder builder)
 {
     // Support for design-time operations with environment variable fallback
-    var connectionString = builder.Configuration.GetConnectionString("EventsConnection") 
+    var connectionString = builder.Configuration.GetConnectionString("EventsConnection")
         ?? Environment.GetEnvironmentVariable("DESIGN_TIME_CONNECTION_STRING")
         ?? throw new InvalidOperationException("Connection string 'EventsConnection' not found.");
 
@@ -82,6 +85,24 @@ static void ConfigureAuthorization(WebApplicationBuilder builder)
     });
 }
 
+static void ConfigureAzureStorage(WebApplicationBuilder builder)
+{
+    var blobStorageUri = builder.Configuration["BlobStorage:Uri"];
+
+    if (!string.IsNullOrEmpty(blobStorageUri))
+    {
+        var containerUri = new Uri($"{blobStorageUri.TrimEnd('/')}/event-images");
+        var blobContainerClient = new BlobContainerClient(containerUri, new DefaultAzureCredential());
+
+        builder.Services.AddSingleton(blobContainerClient);
+        builder.Services.AddScoped<IImageUploadService, AzureBlobImageService>();
+    }
+    else
+    {
+        throw new InvalidOperationException("BlobStorage:Uri configuration is missing. Please configure it in appsettings.json");
+    }
+}
+
 static void RegisterServices(WebApplicationBuilder builder)
 {
     // Repositories
@@ -109,7 +130,7 @@ static async Task InitializeDatabaseAsync(WebApplication app)
         if (app.Environment.IsDevelopment())
         {
             var context = scope.ServiceProvider.GetRequiredService<EventsDbContext>();
-            
+
             logger.LogInformation("Development environment - applying migrations...");
             await context.Database.MigrateAsync();
             logger.LogInformation("Database migrations completed successfully");
@@ -149,15 +170,15 @@ static void ConfigureHttpPipeline(WebApplication app)
     app.Use(async (context, next) =>
     {
         context.Response.Headers["X-Content-Type-Options"] = "nosniff";
-        context.Response.Headers["X-Frame-Options"] = "DENY";  
+        context.Response.Headers["X-Frame-Options"] = "DENY";
         context.Response.Headers["X-XSS-Protection"] = "1; mode=block";
         context.Response.Headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
-        
+
         if (!app.Environment.IsDevelopment())
         {
             context.Response.Headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains";
         }
-        
+
         await next();
     });
 

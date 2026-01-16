@@ -135,28 +135,102 @@
                     <h5 class="mb-0"><i class="fas fa-image me-2"></i>Media & Links</h5>
                 </div>
                 <div class="card-body">
-                    <div class="mb-3">
-                        <label asp-for="ImageUrl" class="form-label">Image URL</label>
-                        <input asp-for="ImageUrl" class="form-control" placeholder="https://example.com/image.jpg" />
-                        <span asp-validation-for="ImageUrl" class="text-danger small"></span>
+                    <ul class="nav nav-tabs mb-3" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="url-tab" 
+                                    data-bs-toggle="tab" 
+                                    data-bs-target="#url-content" 
+                                    type="button" role="tab">
+                                <i class="fas fa-link me-2"></i>From URL
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="upload-tab" 
+                                    data-bs-toggle="tab" 
+                                    data-bs-target="#upload-content" 
+                                    type="button" role="tab">
+                                <i class="fas fa-cloud-upload-alt me-2"></i>Upload Image
+                            </button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content">
+                        <div class="tab-pane fade show active" id="url-content" 
+                             role="tabpanel">
+                            <div class="mb-3">
+                                <label asp-for="ImageUrl" class="form-label">
+                                    Image URL
+                                </label>
+                                <input asp-for="ImageUrl" class="form-control" 
+                                       placeholder="https://example.com/image.jpg" />
+                                <span asp-validation-for="ImageUrl" 
+                                      class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="tab-pane fade" id="upload-content" 
+                             role="tabpanel">
+                            <div class="mb-3">
+                                <label class="form-label">Upload Image</label>
+                                <div id="dropZone" 
+                                     class="border-2 border-dashed rounded p-5 text-center cursor-pointer bg-light"
+                                     style="border-color: #dee2e6; transition: all 0.3s;">
+                                    <i class="fas fa-cloud-upload-alt" 
+                                       style="font-size: 3rem; color: #6c757d;"></i>
+                                    <p class="mt-3 mb-0">Drag and drop image here 
+                                       or click to select</p>
+                                    <small class="text-muted">
+                                        Supported: JPEG, PNG, WebP (Max 5MB)
+                                    </small>
+                                    <input type="file" id="imageFile" 
+                                           accept="image/jpeg,image/png,image/webp" 
+                                           style="display: none;">
+                                </div>
+                                <div id="imagePreview" style="display: none;" 
+                                     class="mt-3"></div>
+                                <div id="uploadProgress" class="progress mt-2" 
+                                     style="display: none;">
+                                    <div class="progress-bar progress-bar-striped " +
+                                         "progress-bar-animated" role="progressbar" 
+                                         style="width: 100%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3">
                         @if(!string.IsNullOrEmpty(Model.ImageUrl))
                         {
-                            <div class="mt-2">
-                                <img src="@Model.ImageUrl" alt="Event Image" class="img-thumbnail" style="max-height: 200px;">
+                            <img src="@Model.ImageUrl" alt="Event Image" class="img-thumbnail" style="max-height: 200px;">
+                        }
+                        else
+                        {
+                            <div class="bg-light text-center p-5 rounded">
+                                <i class="fas fa-image text-muted" style="font-size: 3rem;"></i>
+                                <p class="text-muted mt-2">No image</p>
                             </div>
                         }
                     </div>
                     
-                    <div class="mb-3">
-                        <label asp-for="TicketUrl" class="form-label">Ticket URL</label>
-                        <input asp-for="TicketUrl" class="form-control" placeholder="https://tickets.example.com" />
-                        <span asp-validation-for="TicketUrl" class="text-danger small"></span>
+                    <div class="mb-3 mt-3">
+                        <label asp-for="TicketUrl" class="form-label">
+                            Ticket URL
+                        </label>
+                        <input asp-for="TicketUrl" class="form-control" 
+                               placeholder="https://tickets.example.com" />
+                        <span asp-validation-for="TicketUrl" 
+                              class="text-danger small"></span>
                     </div>
                     
                     <div class="mb-3">
-                        <label asp-for="SourceUrl" class="form-label">Source URL</label>
-                        <input asp-for="SourceUrl" class="form-control" placeholder="https://source.example.com" readonly />
-                        <small class="text-muted">Original source where event was crawled from (read-only)</small>
+                        <label asp-for="SourceUrl" class="form-label">
+                            Source URL
+                        </label>
+                        <input asp-for="SourceUrl" class="form-control" 
+                               placeholder="https://source.example.com" readonly />
+                        <small class="text-muted">
+                            Original source where event was crawled from (read-only)
+                        </small>
                     </div>
                 </div>
             </div>
@@ -363,6 +437,7 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/admin-image-upload.js"></script>
     
     <script>
         $(document).ready(function() {
@@ -449,8 +524,8 @@
             $('input[name="ImageUrl"]').on('blur', function() {
                 var url = $(this).val();
                 if (url) {
-                    // Update preview (in a real scenario, you might want to validate URL first)
-                    console.log('Image URL changed:', url);
+                    // Update preview (we can also validate URL first)
+                    // console.log('Image URL changed:', url);
                 }
             });
             
@@ -485,4 +560,34 @@
             });
         });
     </script>
+}
+
+@section Styles {
+    <style>
+        #dropZone {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        #dropZone.drag-over {
+            background-color: #e7f3ff !important;
+            border-color: #0d6efd !important;
+            transform: scale(1.02);
+        }
+
+        .preview-wrapper {
+            position: relative;
+        }
+
+        .preview-image {
+            max-width: 100%;
+            border-radius: 0.25rem;
+        }
+
+        .preview-info {
+            display: block;
+            margin-top: 0.5rem;
+            color: #6c757d;
+        }
+    </style>
 }
