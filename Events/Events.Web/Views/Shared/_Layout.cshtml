@@ -24,7 +24,7 @@
 <body>
 <nav class="navbar navbar-expand-lg bg-white shadow-sm">
     <div class="container">
-        <a class="navbar-brand fw-bold text-primary" asp-controller="Home" asp-action="Index">
+        <a class="navbar-brand fw-bold text-primary" asp-area="" asp-controller="Home" asp-action="Index">
             <i class="fas fa-calendar-alt me-2"></i>Sofia Events
         </a>
         
@@ -35,12 +35,12 @@
         <div class="navbar-collapse collapse" id="navbarNav">
             <ul class="navbar-nav me-auto">
                 <li class="nav-item">
-                    <a class="nav-link" asp-controller="Home" asp-action="Index">
+                    <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">
                         <i class="fas fa-home me-1"></i>Home
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" asp-controller="Events" asp-action="Index">
+                    <a class="nav-link" asp-area="" asp-controller="Events" asp-action="Index">
                         <i class="fas fa-calendar me-1"></i>All Events
                     </a>
                 </li>
@@ -52,7 +52,7 @@
                         @foreach(var category in EventsPageViewModel.AvailableCategories)
                         {
                             <li>
-                                <a class="dropdown-item" asp-controller="Events" asp-action="Index" asp-route-category="@category.Value">
+                                <a class="dropdown-item" asp-area="" asp-controller="Events" asp-action="Index" asp-route-category="@category.Value">
                                     <i class="@category.IconClass me-2"></i>@category.DisplayName
                                 </a>
                             </li>
@@ -71,7 +71,7 @@
             
             <!-- Enhanced Navigation Search with Tag Support -->
             <div class="d-none d-lg-flex flex-grow-1 mx-4 position-relative">
-                <form asp-controller="Events" asp-action="Index" method="get" class="d-flex w-100">
+                <form asp-area="" asp-controller="Events" asp-action="Index" method="get" class="d-flex w-100">
                     <input class="form-control me-2" type="search" name="search" id="navbar-search" 
                            placeholder="Search events or #tags..." autocomplete="off">
                     <button class="btn btn-primary" type="submit">

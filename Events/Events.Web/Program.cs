@@ -1,14 +1,17 @@
+using Azure.Identity;
+using Azure.Storage.Blobs;
 using Events.Data.Context;
-using Events.Data.Services;
 using Events.Data.Repositories.Implementations;
 using Events.Data.Repositories.Interfaces;
+using Events.Data.Services;
 using Events.Models.Entities;
 using Events.Services.Implementations;
 using Events.Services.Interfaces;
+using Events.Web.Options;
+using Events.Web.Services.Email;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
-using Azure.Storage.Blobs;
-using Azure.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +19,7 @@ ConfigureDatabase(builder);
 ConfigureIdentity(builder);
 ConfigureAuthorization(builder);
 ConfigureAzureStorage(builder);
+ConfigureEmail(builder);
 RegisterServices(builder);
 
 builder.Services.AddRazorPages();
@@ -85,6 +89,11 @@ static void ConfigureAuthorization(WebApplicationBuilder builder)
     });
 }
 
+static bool IsDesignTime(WebApplicationBuilder builder)
+{
+    return builder.Configuration["__DesignTime"] == "true" || string.IsNullOrEmpty(builder.Configuration.GetConnectionString("EventsConnection"));
+}
+
 static void ConfigureAzureStorage(WebApplicationBuilder builder)
 {
     var blobStorageUri = builder.Configuration["BlobStorage:Uri"];
@@ -102,17 +111,25 @@ static void ConfigureAzureStorage(WebApplicationBuilder builder)
     else if (!builder.Environment.IsDevelopment() && !IsDesignTime(builder))
     {
         // Only throw in production, not during design-time migrations
-        throw new InvalidOperationException(
-            "BlobStorage:Uri configuration is missing. Please configure it in App Service environment variables or appsettings.json");
+        throw new InvalidOperationException("BlobStorage:Uri configuration is missing. Please configure it in App Service environment variables or appsettings.json");
     }
     // In development/design-time without BlobStorage: skip registration (won't be used for migrations)
 }
 
-static bool IsDesignTime(WebApplicationBuilder builder)
+static void ConfigureEmail(WebApplicationBuilder builder)
 {
-    // Check if running for EF migrations (design-time)
-    return builder.Configuration["__DesignTime"] == "true" || 
-           string.IsNullOrEmpty(builder.Configuration.GetConnectionString("EventsConnection"));
+    const string sectionName = "Smtp";
+    var smtpSection = builder.Configuration.GetSection(sectionName);
+
+    builder.Services.AddOptions<SmtpOptions>()
+        .Bind(smtpSection)
+        .ValidateDataAnnotations()
+        .Validate(o => !string.IsNullOrWhiteSpace(o.From), "Smtp:From is required.")
+        .Validate(o => !string.IsNullOrWhiteSpace(o.Host), "Smtp:Host is required.")
+        .Validate(o => o.Port > 0, "Smtp:Port must be greater than zero.")
+        .ValidateOnStart();
+
+    builder.Services.AddTransient<IEmailSender, SmtpEmailSender>();
 }
 
 static void RegisterServices(WebApplicationBuilder builder)
