@@ -21,19 +21,22 @@ public class EventsController : Controller
     private readonly ICategoryRepository _categoryRepository;
     private readonly ISubCategoryRepository _subCategoryRepository;
     private readonly ITagService _tagService;
+    private readonly IImageUploadService _imageUploadService;
 
     public EventsController(
         ILogger<EventsController> logger, 
         IEventService eventService,
         ICategoryRepository categoryRepository,
         ISubCategoryRepository subCategoryRepository,
-        ITagService tagService)
+        ITagService tagService,
+        IImageUploadService imageUploadService)
     {
         _logger = logger;
         _eventService = eventService;
         _categoryRepository = categoryRepository;
         _subCategoryRepository = subCategoryRepository;
         _tagService = tagService;
+        _imageUploadService = imageUploadService;
     }
 
     // GET: Admin/Events
@@ -435,6 +438,7 @@ public class EventsController : Controller
             eventEntity.Location = model.Location;
             eventEntity.Description = model.Description;
             eventEntity.ImageUrl = model.ImageUrl;
+            eventEntity.ThumbnailUrl = model.ThumbnailUrl;
             eventEntity.TicketUrl = model.TicketUrl;
             eventEntity.IsFree = model.IsFree;
             eventEntity.Price = model.Price;
@@ -528,11 +532,41 @@ public class EventsController : Controller
                 return NotFound();
             }
 
+            var eventName = eventEntity.Name;
+
+            // Delete associated images from Azure Blob Storage before deleting the event
+            if (!string.IsNullOrEmpty(eventEntity.ImageUrl))
+            {
+                var originalDeleted = await _imageUploadService.DeleteImageAsync(eventEntity.ImageUrl);
+                if (originalDeleted)
+                {
+                    _logger.LogInformation("Deleted original image for event {EventId}: {ImageUrl}", id, eventEntity.ImageUrl);
+                }
+                else
+                {
+                    _logger.LogWarning("Failed to delete original image for event {EventId}: {ImageUrl}", id, eventEntity.ImageUrl);
+                }
+            }
+
+            if (!string.IsNullOrEmpty(eventEntity.ThumbnailUrl))
+            {
+                var thumbnailDeleted = await _imageUploadService.DeleteImageAsync(eventEntity.ThumbnailUrl);
+                if (thumbnailDeleted)
+                {
+                    _logger.LogInformation("Deleted thumbnail image for event {EventId}: {ThumbnailUrl}", id, eventEntity.ThumbnailUrl);
+                }
+                else
+                {
+                    _logger.LogWarning("Failed to delete thumbnail image for event {EventId}: {ThumbnailUrl}", id, eventEntity.ThumbnailUrl);
+                }
+            }
+
+            // Delete the event from database
             await _eventService.DeleteEventAsync(id);
 
-            _logger.LogInformation("Event {EventId} deleted successfully", id);
+            _logger.LogInformation("Event {EventId} deleted successfully along with images", id);
 
-            TempData["SuccessMessage"] = $"Event '{eventEntity.Name}' has been deleted successfully.";
+            TempData["SuccessMessage"] = $"Event '{eventName}' has been deleted successfully along with its images.";
 
             return RedirectToAction(nameof(Index));
         }
@@ -637,6 +671,7 @@ public class EventsController : Controller
                 Location = model.Location,
                 Description = model.Description,
                 ImageUrl = model.ImageUrl,
+                ThumbnailUrl = model.ThumbnailUrl,
                 TicketUrl = model.TicketUrl,
                 IsFree = model.IsFree,
                 Price = model.Price,

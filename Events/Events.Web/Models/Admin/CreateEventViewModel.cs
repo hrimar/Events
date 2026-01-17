@@ -30,6 +30,9 @@ public class CreateEventViewModel
     [Url(ErrorMessage = "Please enter a valid image URL")]
     public string ImageUrl { get; set; } = string.Empty;
 
+    [StringLength(500, ErrorMessage = "Thumbnail URL cannot exceed 500 characters")]
+    public string? ThumbnailUrl { get; set; }
+
     [StringLength(500, ErrorMessage = "Ticket URL cannot exceed 500 characters")]
     [Url(ErrorMessage = "Please enter a valid ticket URL")]
     public string? TicketUrl { get; set; }

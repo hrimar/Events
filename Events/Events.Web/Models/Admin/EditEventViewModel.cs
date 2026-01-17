@@ -12,6 +12,7 @@ public class EditEventViewModel
     public string Location { get; set; } = string.Empty;
     public string? Description { get; set; }
     public string? ImageUrl { get; set; }
+    public string? ThumbnailUrl { get; set; }
     public string? TicketUrl { get; set; }
     public bool IsFree { get; set; }
     public decimal? Price { get; set; }

@@ -147,6 +147,12 @@ class AdminImageUploader {
                     data.originalImageUrl;
             }
 
+            // Also store thumbnail URL if there's a field for it
+            const thumbnailInput = document.getElementById('ThumbnailUrl');
+            if (thumbnailInput && data.thumbnailImageUrl) {
+                thumbnailInput.value = data.thumbnailImageUrl;
+            }
+
             this.showSuccess('Image uploaded successfully');
             this.showProgress(false);
         } catch (error) {

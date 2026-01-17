@@ -15,6 +15,7 @@ public class EventViewModel
     public string Location { get; set; } = string.Empty;
     public string? Description { get; set; }
     public string? ImageUrl { get; set; }
+    public string? ThumbnailUrl { get; set; }
     public string? TicketUrl { get; set; }
     public bool IsFree { get; set; }
     public decimal? Price { get; set; }
@@ -46,6 +47,7 @@ public class EventViewModel
             Location = eventEntity.Location,
             Description = eventEntity.Description,
             ImageUrl = eventEntity.ImageUrl,
+            ThumbnailUrl = eventEntity.ThumbnailUrl,
             TicketUrl = eventEntity.TicketUrl,
             IsFree = eventEntity.IsFree,
             //Price = eventEntity.Price,

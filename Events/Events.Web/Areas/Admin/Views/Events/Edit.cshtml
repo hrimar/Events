@@ -16,6 +16,7 @@
         <form asp-action="Edit" method="post" id="editEventForm">
             @Html.AntiForgeryToken()
             <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="ThumbnailUrl" id="ThumbnailUrl" />
             
             <!-- Basic Information Card -->
             <div class="card mb-4">

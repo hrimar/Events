@@ -17,7 +17,9 @@
             @Html.AntiForgeryToken()
             
             <!-- Temporary Image Upload Session ID (GUID) -->
-            <input type="hidden" id="TempImageSessionId" name="TempImageSessionId" value="@Guid.NewGuid()" />
+            <input type="hidden" id="TempImageSessionId" 
+                   name="TempImageSessionId" value="@Guid.NewGuid()" />
+            <input type="hidden" id="ThumbnailUrl" name="ThumbnailUrl" />
 
             <!-- Basic Information Card -->
             <div class="card mb-4">
