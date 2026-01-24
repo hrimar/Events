@@ -64,6 +64,27 @@ public class TagRepository : ITagRepository
         }
     }
 
+    public async Task DeleteRangeAsync(IEnumerable<int> ids)
+    {
+        var idList = ids?.Distinct().ToList();
+        if (idList == null || idList.Count == 0)
+        {
+            return;
+        }
+
+        var tags = await _context.Tags
+            .Where(t => idList.Contains(t.Id))
+            .ToListAsync();
+
+        if (!tags.Any())
+        {
+            return;
+        }
+
+        _context.Tags.RemoveRange(tags);
+        await _context.SaveChangesAsync();
+    }
+
     public async Task<(List<TagAdminProjection> Tags, int TotalCount)> GetPagedAdminTagsAsync(
         int page,
         int pageSize,
@@ -169,6 +190,14 @@ public class TagRepository : ITagRepository
             MostUsedTagName = topTag?.Name,
             MostUsedTagCount = topTag?.Count ?? 0
         };
+    }
+
+    public async Task<List<int>> GetOrphanTagIdsAsync()
+    {
+        return await _context.Tags
+            .Where(t => !t.EventTags.Any())
+            .Select(t => t.Id)
+            .ToListAsync();
     }
 
     private static IQueryable<Tag> ApplySorting(IQueryable<Tag> query, string sortBy, string sortOrder)

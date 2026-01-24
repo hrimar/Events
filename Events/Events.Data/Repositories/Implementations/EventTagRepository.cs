@@ -85,4 +85,20 @@ public class EventTagRepository : IEventTagRepository
         return await _context.EventTags
             .AnyAsync(et => et.EventId == eventId && et.TagId == tagId);
     }
+
+    public async Task RemoveEventTagsByTagIdsAsync(IEnumerable<int> tagIds)
+    {
+        var tagIdList = tagIds?.Distinct().ToList() ?? new List<int>();
+        if (!tagIdList.Any()) return;
+
+        var eventTags = await _context.EventTags
+            .Where(et => tagIdList.Contains(et.TagId))
+            .ToListAsync();
+
+        if (eventTags.Any())
+        {
+            _context.EventTags.RemoveRange(eventTags);
+            await _context.SaveChangesAsync();
+        }
+    }
 }

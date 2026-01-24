@@ -115,6 +115,93 @@ public class TagsController : Controller
         }
     }
 
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteSelected(
+        int[] selectedTagIds,
+        int page,
+        int pageSize,
+        string? search,
+        int? category,
+        bool showOrphansOnly,
+        bool showWithoutCategoryOnly,
+        string sortBy,
+        string sortOrder)
+    {
+        if (selectedTagIds == null || selectedTagIds.Length == 0)
+        {
+            TempData["ErrorMessage"] = "Select at least one tag to delete.";
+        }
+        else
+        {
+            try
+            {
+                await _tagService.DeleteTagsAsync(selectedTagIds);
+                TempData["SuccessMessage"] = $"Deleted {selectedTagIds.Length} tag(s).";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to delete selected tags");
+                TempData["ErrorMessage"] = "Failed to delete selected tags.";
+            }
+        }
+
+        return RedirectToAction(nameof(Index), new
+        {
+            page,
+            pageSize,
+            search,
+            category,
+            showOrphansOnly,
+            showWithoutCategoryOnly,
+            sortBy,
+            sortOrder
+        });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteOrphanTags(
+        int page,
+        int pageSize,
+        string? search,
+        int? category,
+        bool showOrphansOnly,
+        bool showWithoutCategoryOnly,
+        string sortBy,
+        string sortOrder)
+    {
+        try
+        {
+            var deletedCount = await _tagService.DeleteOrphanTagsAsync();
+            if (deletedCount > 0)
+            {
+                TempData["SuccessMessage"] = $"Deleted {deletedCount} orphan tag(s).";
+            }
+            else
+            {
+                TempData["InfoMessage"] = "No orphan tags to delete.";
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to delete orphan tags");
+            TempData["ErrorMessage"] = "Failed to delete orphan tags.";
+        }
+
+        return RedirectToAction(nameof(Index), new
+        {
+            page,
+            pageSize,
+            search,
+            category,
+            showOrphansOnly,
+            showWithoutCategoryOnly,
+            sortBy,
+            sortOrder
+        });
+    }
+
     private static List<SelectListItem> BuildCategoryOptions(IEnumerable<Category> categories, EventCategory? selected)
     {
         var items = new List<SelectListItem>

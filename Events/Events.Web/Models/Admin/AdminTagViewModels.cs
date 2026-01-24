@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Events.Models.Enums;
 
 namespace Events.Web.Models.Admin;

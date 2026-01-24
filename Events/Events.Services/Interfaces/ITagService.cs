@@ -16,7 +16,10 @@ public interface ITagService
     Task RemoveTagFromEventAsync(int eventId, int tagId);
 
     Task<AdminTagListResult> GetAdminTagsAsync(AdminTagQuery query, CancellationToken cancellationToken = default);
-    
+
+    Task DeleteTagsAsync(IEnumerable<int> tagIds);
+    Task<int> DeleteOrphanTagsAsync();
+
     // Bulk operations for better performance
     Task BulkAddTagsToEventAsync(int eventId, List<int> tagIds);
     Task BulkRemoveTagsFromEventAsync(int eventId);
@@ -24,7 +27,6 @@ public interface ITagService
 
     /// <summary>
     /// Batch assign tags to multiple events efficiently in a single database transaction.
-    /// 
     /// Advantages of batch operations:
     /// - Single database round-trip (not N*M round-trips for N events and M tags)
     /// - One transaction scope ensures consistency across all events

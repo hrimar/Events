@@ -12,6 +12,7 @@ public interface ITagRepository
     Task<Tag> AddAsync(Tag tag);
     Task<Tag> UpdateAsync(Tag tag);
     Task DeleteAsync(int id);
+    Task DeleteRangeAsync(IEnumerable<int> ids);
 
     Task<(List<TagAdminProjection> Tags, int TotalCount)> GetPagedAdminTagsAsync(
         int page,
@@ -29,6 +30,8 @@ public interface ITagRepository
         CancellationToken cancellationToken);
 
     Task<TagStatisticsResult> GetStatisticsAsync(CancellationToken cancellationToken);
+
+    Task<List<int>> GetOrphanTagIdsAsync();
 }
 
 public class TagAdminProjection

@@ -107,106 +107,131 @@
     <div class="card-body">
         @if (hasTags)
         {
-            <div class="table-responsive">
-                <table class="table align-middle">
-                    <thead>
-                        <tr>
-                            <th>
-                                <a href="@Url.Action("Index", nameSortRoute)" class="text-decoration-none text-dark d-flex align-items-center gap-1">
-                                    Tag
-                                    @if (Model.IsCurrentSort(AdminTagSortFields.Name))
-                                    {
-                                        <i class="fas fa-chevron-@(normalizedSortOrder == AdminTagSortOrders.Asc ? "up" : "down") ms-1"></i>
-                                    }
-                                </a>
-                            </th>
-                            <th>Category</th>
-                            <th class="text-center">
-                                <a href="@Url.Action("Index", usageSortRoute)" class="text-decoration-none text-dark">
-                                    Usage
-                                    @if (Model.IsCurrentSort(AdminTagSortFields.Usage))
-                                    {
-                                        <i class="fas fa-chevron-@(normalizedSortOrder == AdminTagSortOrders.Asc ? "up" : "down") ms-1"></i>
-                                    }
-                                </a>
-                            </th>
-                            <th>Primary categories</th>
-                            <th>Subcategories</th>
-                            <th>
-                                <a href="@Url.Action("Index", createdSortRoute)" class="text-decoration-none text-dark">
-                                    Created
-                                    @if (Model.IsCurrentSort(AdminTagSortFields.Created))
-                                    {
-                                        <i class="fas fa-chevron-@(normalizedSortOrder == AdminTagSortOrders.Asc ? "up" : "down") ms-1"></i>
-                                    }
-                                </a>
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    @foreach (var tag in Model.Tags.Items)
-                    {
-                        <tr>
-                            <td>
-                                <div class="fw-semibold">@tag.Name</div>
-                                @if (!string.IsNullOrWhiteSpace(tag.Description))
-                                {
-                                    <div class="text-muted small">@tag.Description</div>
-                                }
-                                <div class="mt-1 d-flex gap-1">
-                                    @if (tag.IsOrphan)
-                                    {
-                                        <span class="badge bg-light text-danger border">No events</span>
-                                    }
-                                </div>
-                            </td>
-                            <td>
-                                @if (tag.HasCategory)
-                                {
-                                    <span class="badge bg-primary-subtle text-primary">@tag.CategoryDisplay</span>
-                                }
-                                else
-                                {
-                                    <span>—</span>
-                                }
-                            </td>
-                            <td class="text-center fw-semibold">@tag.UsageCount</td>
-                            <td>
-                                @if (tag.CategoryUsage.Any())
-                                {
-                                    <div class="d-flex flex-wrap gap-1">
-                                        @foreach (var category in tag.CategoryUsage)
-                                        {
-                                            <span class="badge bg-light text-dark border">@category</span>
-                                        }
-                                    </div>
-                                }
-                                else
-                                {
-                                    <span class="text-muted">—</span>
-                                }
-                            </td>
-                            <td>
-                                @if (tag.SubCategoryUsage.Any())
-                                {
-                                    <div class="d-flex flex-wrap gap-1">
-                                        @foreach (var subCategory in tag.SubCategoryUsage)
-                                        {
-                                            <span class="badge bg-light text-dark border">@subCategory</span>
-                                        }
-                                    </div>
-                                }
-                                else
-                                {
-                                    <span class="text-muted">—</span>
-                                }
-                            </td>
-                            <td>@tag.CreatedAt.ToString("dd MMM yyyy")</td>
-                        </tr>
-                    }
-                    </tbody>
-                </table>
+            <div class="d-flex justify-content-end gap-2 mb-3 flex-wrap">
+                <form asp-action="DeleteOrphanTags" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="page" value="@Model.Tags.CurrentPage" />
+                    <input type="hidden" name="pageSize" value="@Model.Tags.PageSize" />
+                    <input type="hidden" name="search" value="@Model.SearchTerm" />
+                    <input type="hidden" name="category" value="@(Model.CategoryFilter.HasValue ? ((int)Model.CategoryFilter.Value).ToString() : string.Empty)" />
+                    <input type="hidden" name="showOrphansOnly" value="@Model.ShowOrphansOnly" />
+                    <input type="hidden" name="showWithoutCategoryOnly" value="@Model.ShowWithoutCategoryOnly" />
+                    <input type="hidden" name="sortBy" value="@normalizedSortBy" />
+                    <input type="hidden" name="sortOrder" value="@normalizedSortOrder" />
+                    <button type="submit" class="btn btn-outline-danger">
+                        <i class="fas fa-trash-can me-1"></i>Delete orphan tags
+                    </button>
+                </form>
             </div>
+
+            <form asp-action="DeleteSelected" method="post" id="deleteSelectedForm">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="page" value="@Model.Tags.CurrentPage" />
+                <input type="hidden" name="pageSize" value="@Model.Tags.PageSize" />
+                <input type="hidden" name="search" value="@Model.SearchTerm" />
+                <input type="hidden" name="category" value="@(Model.CategoryFilter.HasValue ? ((int)Model.CategoryFilter.Value).ToString() : string.Empty)" />
+                <input type="hidden" name="showOrphansOnly" value="@Model.ShowOrphansOnly" />
+                <input type="hidden" name="showWithoutCategoryOnly" value="@Model.ShowWithoutCategoryOnly" />
+                <input type="hidden" name="sortBy" value="@normalizedSortBy" />
+                <input type="hidden" name="sortOrder" value="@normalizedSortOrder" />
+
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead>
+                            <tr>
+                                <th style="width:1%;">
+                                    <input type="checkbox" class="form-check-input" id="selectAllTags" />
+                                </th>
+                                <th>
+                                    <a href="@Url.Action("Index", nameSortRoute)" class="text-decoration-none text-dark d-flex align-items-center gap-1">
+                                        Tag
+                                        @if (Model.IsCurrentSort(AdminTagSortFields.Name))
+                                        {
+                                            <i class="fas fa-chevron-@(normalizedSortOrder == AdminTagSortOrders.Asc ? "up" : "down") ms-1"></i>
+                                        }
+                                    </a>
+                                </th>
+                                <th>Category</th>
+                                <th class="text-center">
+                                    <a href="@Url.Action("Index", usageSortRoute)" class="text-decoration-none text-dark">
+                                        Usage
+                                        @if (Model.IsCurrentSort(AdminTagSortFields.Usage))
+                                        {
+                                            <i class="fas fa-chevron-@(normalizedSortOrder == AdminTagSortOrders.Asc ? "up" : "down") ms-1"></i>
+                                        }
+                                    </a>
+                                </th>
+                                <th>Used in categories</th>
+                                <th>
+                                    <a href="@Url.Action("Index", createdSortRoute)" class="text-decoration-none text-dark">
+                                        Created
+                                        @if (Model.IsCurrentSort(AdminTagSortFields.Created))
+                                        {
+                                            <i class="fas fa-chevron-@(normalizedSortOrder == AdminTagSortOrders.Asc ? "up" : "down") ms-1"></i>
+                                        }
+                                    </a>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var tag in Model.Tags.Items)
+                        {
+                            <tr>
+                                <td>
+                                    <input type="checkbox" class="form-check-input tag-checkbox" name="selectedTagIds" value="@tag.Id" />
+                                </td>
+                                <td>
+                                    <div class="fw-semibold">@tag.Name</div>
+                                    @if (!string.IsNullOrWhiteSpace(tag.Description))
+                                    {
+                                        <div class="text-muted small">@tag.Description</div>
+                                    }
+                                    <div class="mt-1 d-flex gap-1">
+                                        @if (tag.IsOrphan)
+                                        {
+                                            <span class="badge bg-light text-danger border">No events</span>
+                                        }
+                                    </div>
+                                </td>
+                                <td>
+                                    @if (tag.HasCategory)
+                                    {
+                                        <span class="badge bg-primary-subtle text-primary">@tag.CategoryDisplay</span>
+                                    }
+                                    else
+                                    {
+                                        <span>—</span>
+                                    }
+                                </td>
+                                <td class="text-center fw-semibold">@tag.UsageCount</td>
+                                <td>
+                                    @if (tag.CategoryUsage.Any())
+                                    {
+                                        <div class="d-flex flex-wrap gap-1">
+                                            @foreach (var categoryName in tag.CategoryUsage)
+                                            {
+                                                <span class="badge bg-light text-dark border">@categoryName</span>
+                                            }
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">—</span>
+                                    }
+                                </td>
+                                <td>@tag.CreatedAt.ToString("dd MMM yyyy")</td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="d-flex justify-content-end mt-3">
+                    <button type="submit" class="btn btn-danger" id="deleteSelectedButton" disabled>
+                        <i class="fas fa-trash me-1"></i>Delete selected
+                    </button>
+                </div>
+            </form>
 
             @if (Model.Tags.TotalPages > 1)
             {
@@ -245,3 +270,37 @@
         }
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        (() => {
+            const selectAll = document.getElementById('selectAllTags');
+            const deleteButton = document.getElementById('deleteSelectedButton');
+
+            const updateState = () => {
+                const checkboxes = document.querySelectorAll('.tag-checkbox');
+                const anyChecked = Array.from(checkboxes).some(cb => cb.checked);
+                if (deleteButton) {
+                    deleteButton.disabled = !anyChecked;
+                }
+                if (selectAll) {
+                    selectAll.checked = anyChecked && Array.from(checkboxes).every(cb => cb.checked);
+                }
+            };
+
+            if (selectAll) {
+                selectAll.addEventListener('change', () => {
+                    document.querySelectorAll('.tag-checkbox').forEach(cb => cb.checked = selectAll.checked);
+                    updateState();
+                });
+            }
+
+            document.addEventListener('change', (e) => {
+                const target = e.target;
+                if (target && target.classList && target.classList.contains('tag-checkbox')) {
+                    updateState();
+                }
+            });
+        })();
+    </script>
+}

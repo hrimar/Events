@@ -104,6 +104,51 @@ public class TagService : ITagService
         }
     }
 
+    public async Task DeleteTagsAsync(IEnumerable<int> tagIds)
+    {
+        var ids = tagIds?.Distinct().ToList();
+        if (ids == null || !ids.Any())
+        {
+            return;
+        }
+
+        try
+        {
+            await _eventTagRepository.RemoveEventTagsByTagIdsAsync(ids);
+            await _tagRepository.DeleteRangeAsync(ids);
+
+            _logger.LogInformation("Deleted {Count} tags", ids.Count);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error deleting selected tags");
+            throw;
+        }
+    }
+
+    public async Task<int> DeleteOrphanTagsAsync()
+    {
+        try
+        {
+            var orphanIds = await _tagRepository.GetOrphanTagIdsAsync();
+            if (!orphanIds.Any())
+            {
+                return 0;
+            }
+
+            await _eventTagRepository.RemoveEventTagsByTagIdsAsync(orphanIds);
+            await _tagRepository.DeleteRangeAsync(orphanIds);
+
+            _logger.LogInformation("Deleted {Count} orphan tags", orphanIds.Count);
+            return orphanIds.Count;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error deleting orphan tags");
+            throw;
+        }
+    }
+
     public async Task AddTagToEventAsync(int eventId, int tagId)
     {
         try
@@ -131,7 +176,7 @@ public class TagService : ITagService
             // Get all event tags and remove the specific one
             var eventTags = await _eventTagRepository.GetEventTagsByEventIdAsync(eventId);
             var tagToRemove = eventTags.FirstOrDefault(et => et.TagId == tagId);
-            
+
             if (tagToRemove != null)
             {
                 // For single removal, we use direct EF operations
@@ -235,7 +280,7 @@ public class TagService : ITagService
             }).ToList();
 
             await _eventTagRepository.BulkAddEventTagsAsync(eventTags);
-            
+
             _logger.LogInformation("Bulk added {Count} tags to event {EventId}", tagIds.Count, eventId);
         }
         catch (Exception ex)
@@ -314,8 +359,7 @@ public class TagService : ITagService
             {
                 await _eventTagRepository.BulkAddEventTagsAsync(eventTags);
 
-                _logger.LogInformation(
-                    "Bulk assigned {TagCount} tags to {EventCount} events ({TotalOperations} total operations)",
+                _logger.LogInformation("Bulk assigned {TagCount} tags to {EventCount} events ({TotalOperations} total operations)",
                     tagIdList.Count,
                     eventIdList.Count,
                     eventTags.Count);

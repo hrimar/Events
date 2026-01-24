@@ -256,7 +256,7 @@ public class EventProcessingService : IEventProcessingService
                     var newTag = new Tag
                     {
                         Name = cleanTagName,
-                        Category = eventCategory, // Set based on event category instead of null
+                        Category = eventCategory, // Set based on event category
                         CreatedAt = DateTime.UtcNow
                     };
                     existingTag = await tagService.CreateTagAsync(newTag);
