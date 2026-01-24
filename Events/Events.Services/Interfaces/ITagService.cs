@@ -1,4 +1,6 @@
 ﻿using Events.Models.Entities;
+using Events.Services.Models.Admin;
+using Events.Services.Models.Admin.DTOs;
 
 namespace Events.Services.Interfaces;
 
@@ -12,6 +14,8 @@ public interface ITagService
     Task DeleteTagAsync(int id);
     Task AddTagToEventAsync(int eventId, int tagId);
     Task RemoveTagFromEventAsync(int eventId, int tagId);
+
+    Task<AdminTagListResult> GetAdminTagsAsync(AdminTagQuery query, CancellationToken cancellationToken = default);
     
     // Bulk operations for better performance
     Task BulkAddTagsToEventAsync(int eventId, List<int> tagIds);

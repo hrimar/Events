@@ -1,6 +1,8 @@
 ﻿using Events.Data.Repositories.Interfaces;
 using Events.Models.Entities;
 using Events.Services.Interfaces;
+using Events.Services.Models.Admin;
+using Events.Services.Models.Admin.DTOs;
 using Microsoft.Extensions.Logging;
 
 namespace Events.Services.Implementations;
@@ -13,7 +15,7 @@ public class TagService : ITagService
     private readonly ILogger<TagService> _logger;
 
     public TagService(
-        ITagRepository tagRepository, 
+        ITagRepository tagRepository,
         IEventRepository eventRepository,
         IEventTagRepository eventTagRepository,
         ILogger<TagService> logger)
@@ -152,6 +154,73 @@ public class TagService : ITagService
         }
     }
 
+    public async Task<AdminTagListResult> GetAdminTagsAsync(AdminTagQuery query, CancellationToken cancellationToken = default)
+    {
+        var normalized = (query ?? new AdminTagQuery()).Normalize();
+
+        try
+        {
+            var (tagProjections, totalCount) = await _tagRepository.GetPagedAdminTagsAsync(
+                normalized.Page,
+                normalized.PageSize,
+                normalized.SearchTerm,
+                normalized.Category,
+                normalized.ShowOrphansOnly,
+                normalized.ShowWithoutCategoryOnly,
+                normalized.SortBy,
+                normalized.SortOrder,
+                cancellationToken);
+
+            var tagIds = tagProjections.Select(p => p.Id).ToList();
+            var usageLookup = await _tagRepository.GetUsageAggregatesAsync(tagIds, cancellationToken);
+
+            var dtoList = tagProjections.Select(p =>
+            {
+                usageLookup.TryGetValue(p.Id, out var aggregate);
+                return new AdminTagDto
+                {
+                    Id = p.Id,
+                    Name = p.Name,
+                    Description = p.Description,
+                    Category = p.Category,
+                    CreatedAt = p.CreatedAt,
+                    UsageCount = aggregate?.UsageCount ?? p.UsageCount,
+                    CategoryUsage = aggregate?.Categories ?? Array.Empty<string>(),
+                    SubCategoryUsage = aggregate?.SubCategories ?? Array.Empty<string>()
+                };
+            }).ToList();
+
+            var statisticsResult = await _tagRepository.GetStatisticsAsync(cancellationToken);
+
+            return new AdminTagListResult
+            {
+                Tags = dtoList,
+                Page = normalized.Page,
+                PageSize = normalized.PageSize,
+                TotalCount = totalCount,
+                SearchTerm = normalized.SearchTerm,
+                Category = normalized.Category,
+                ShowOrphansOnly = normalized.ShowOrphansOnly,
+                ShowWithoutCategoryOnly = normalized.ShowWithoutCategoryOnly,
+                SortBy = normalized.SortBy,
+                SortOrder = normalized.SortOrder,
+                Statistics = new AdminTagStatisticsDto
+                {
+                    TotalTags = statisticsResult.TotalTags,
+                    WithoutCategoryTags = statisticsResult.WithoutCategoryTags,
+                    OrphanTags = statisticsResult.OrphanTags,
+                    MostUsedTagName = statisticsResult.MostUsedTagName,
+                    MostUsedTagCount = statisticsResult.MostUsedTagCount
+                }
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error loading admin tags for page {Page}", normalized.Page);
+            throw;
+        }
+    }
+
     // Bulk operations for better performance
     public async Task BulkAddTagsToEventAsync(int eventId, List<int> tagIds)
     {
@@ -216,15 +285,6 @@ public class TagService : ITagService
             var eventIdList = eventIds.ToList();
             var tagIdList = tagIds.ToList();
 
-            // Batch assignment strategy:
-            // - Create all EventTag records at once
-            // - Single database operation
-            // Benefits:
-            // - One database round-trip instead of N*M
-            // - One transaction for consistency
-            // - ~N*M times faster than sequential assignments
-            // - Ideal for admin operations affecting 5-100 events with 1-3 tags each
-
             var eventTags = new List<EventTag>();
 
             foreach (var eventId in eventIdList)
@@ -252,7 +312,6 @@ public class TagService : ITagService
 
             if (eventTags.Any())
             {
-                // Single bulk operation - all tags for all events in one call
                 await _eventTagRepository.BulkAddEventTagsAsync(eventTags);
 
                 _logger.LogInformation(

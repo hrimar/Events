@@ -1,0 +1,247 @@
+@using Events.Services.Models.Admin
+@model Events.Web.Models.Admin.AdminTagManagementViewModel
+@{
+    ViewData["Title"] = "Tag Management";
+    var hasTags = Model.Tags.TotalCount > 0;
+    var normalizedSortBy = Model.SortByNormalized;
+    var normalizedSortOrder = Model.SortOrderNormalized;
+    var nameSortRoute = Model.BuildSortRouteValues(AdminTagSortFields.Name);
+    var usageSortRoute = Model.BuildSortRouteValues(AdminTagSortFields.Usage);
+    var createdSortRoute = Model.BuildSortRouteValues(AdminTagSortFields.Created);
+}
+
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h1 class="h3 mb-0">Tag management</h1>
+        <p class="text-muted mb-0">Track tag growth, missing links, and cleanup candidates.</p>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card stat-card border-start border-4 border-primary">
+            <div class="card-body">
+                <small class="text-muted">Total tags</small>
+                <h3 class="mb-0">@Model.Statistics.TotalTags</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card border-start border-4 border-warning">
+            <div class="card-body">
+                <small class="text-muted">Without category</small>
+                <h3 class="mb-0">@Model.Statistics.WithoutCategoryTags</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card border-start border-4 border-danger">
+            <div class="card-body">
+                <small class="text-muted">No events</small>
+                <h3 class="mb-0">@Model.Statistics.OrphanTags</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card border-start border-4 border-success">
+            <div class="card-body">
+                <small class="text-muted">Most used tag</small>
+                <h3 class="mb-0">
+                    @if (!string.IsNullOrWhiteSpace(Model.Statistics.MostUsedTagName))
+                    {
+                        <text>@Model.Statistics.MostUsedTagName (@Model.Statistics.MostUsedTagCount)</text>
+                    }
+                    else
+                    {
+                        <text>—</text>
+                    }
+                </h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <form class="row g-3 align-items-end" method="get">
+            <div class="col-lg-4">
+                <label class="form-label" for="search">Search</label>
+                <input type="text" class="form-control" id="search" name="search" value="@Model.SearchTerm" placeholder="Tag name" />
+            </div>
+            <div class="col-lg-3">
+                <label class="form-label" for="category">Category</label>
+                <select class="form-select" id="category" name="category">
+                    @foreach (var option in Model.CategoryOptions)
+                    {
+                        <option value="@option.Value" selected="@option.Selected">@option.Text</option>
+                    }
+                </select>
+            </div>
+            <div class="col-lg-3">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="true" id="showOrphansOnly" name="showOrphansOnly" @(Model.ShowOrphansOnly ? "checked" : string.Empty) />
+                    <label class="form-check-label" for="showOrphansOnly">
+                        Only tags without events
+                    </label>
+                </div>
+                <div class="form-check mt-2">
+                    <input class="form-check-input" type="checkbox" value="true" id="showWithoutCategoryOnly" name="showWithoutCategoryOnly" @(Model.ShowWithoutCategoryOnly ? "checked" : string.Empty) />
+                    <label class="form-check-label" for="showWithoutCategoryOnly">
+                        Only tags without category
+                    </label>
+                </div>
+            </div>
+            <div class="col-lg-2 d-flex gap-2">
+                <button type="submit" class="btn btn-primary flex-fill">
+                    <i class="fas fa-search me-1"></i>Apply
+                </button>
+                <a class="btn btn-outline-secondary flex-fill" asp-action="Index">Reset</a>
+            </div>
+            <input type="hidden" name="sortBy" value="@normalizedSortBy" />
+            <input type="hidden" name="sortOrder" value="@normalizedSortOrder" />
+        </form>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        @if (hasTags)
+        {
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th>
+                                <a href="@Url.Action("Index", nameSortRoute)" class="text-decoration-none text-dark d-flex align-items-center gap-1">
+                                    Tag
+                                    @if (Model.IsCurrentSort(AdminTagSortFields.Name))
+                                    {
+                                        <i class="fas fa-chevron-@(normalizedSortOrder == AdminTagSortOrders.Asc ? "up" : "down") ms-1"></i>
+                                    }
+                                </a>
+                            </th>
+                            <th>Category</th>
+                            <th class="text-center">
+                                <a href="@Url.Action("Index", usageSortRoute)" class="text-decoration-none text-dark">
+                                    Usage
+                                    @if (Model.IsCurrentSort(AdminTagSortFields.Usage))
+                                    {
+                                        <i class="fas fa-chevron-@(normalizedSortOrder == AdminTagSortOrders.Asc ? "up" : "down") ms-1"></i>
+                                    }
+                                </a>
+                            </th>
+                            <th>Primary categories</th>
+                            <th>Subcategories</th>
+                            <th>
+                                <a href="@Url.Action("Index", createdSortRoute)" class="text-decoration-none text-dark">
+                                    Created
+                                    @if (Model.IsCurrentSort(AdminTagSortFields.Created))
+                                    {
+                                        <i class="fas fa-chevron-@(normalizedSortOrder == AdminTagSortOrders.Asc ? "up" : "down") ms-1"></i>
+                                    }
+                                </a>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var tag in Model.Tags.Items)
+                    {
+                        <tr>
+                            <td>
+                                <div class="fw-semibold">@tag.Name</div>
+                                @if (!string.IsNullOrWhiteSpace(tag.Description))
+                                {
+                                    <div class="text-muted small">@tag.Description</div>
+                                }
+                                <div class="mt-1 d-flex gap-1">
+                                    @if (tag.IsOrphan)
+                                    {
+                                        <span class="badge bg-light text-danger border">No events</span>
+                                    }
+                                </div>
+                            </td>
+                            <td>
+                                @if (tag.HasCategory)
+                                {
+                                    <span class="badge bg-primary-subtle text-primary">@tag.CategoryDisplay</span>
+                                }
+                                else
+                                {
+                                    <span>—</span>
+                                }
+                            </td>
+                            <td class="text-center fw-semibold">@tag.UsageCount</td>
+                            <td>
+                                @if (tag.CategoryUsage.Any())
+                                {
+                                    <div class="d-flex flex-wrap gap-1">
+                                        @foreach (var category in tag.CategoryUsage)
+                                        {
+                                            <span class="badge bg-light text-dark border">@category</span>
+                                        }
+                                    </div>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">—</span>
+                                }
+                            </td>
+                            <td>
+                                @if (tag.SubCategoryUsage.Any())
+                                {
+                                    <div class="d-flex flex-wrap gap-1">
+                                        @foreach (var subCategory in tag.SubCategoryUsage)
+                                        {
+                                            <span class="badge bg-light text-dark border">@subCategory</span>
+                                        }
+                                    </div>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">—</span>
+                                }
+                            </td>
+                            <td>@tag.CreatedAt.ToString("dd MMM yyyy")</td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+
+            @if (Model.Tags.TotalPages > 1)
+            {
+                <nav aria-label="Tag pagination" class="mt-4">
+                    <ul class="pagination justify-content-center mb-0">
+                        @if (Model.Tags.HasPreviousPage)
+                        {
+                            <li class="page-item">
+                                <a class="page-link" href="@Url.Action("Index", new { page = Model.Tags.CurrentPage - 1, pageSize = Model.Tags.PageSize, search = Model.SearchTerm, category = Model.CategoryFilter.HasValue ? (int?)Model.CategoryFilter.Value : null, showOrphansOnly = Model.ShowOrphansOnly, showWithoutCategoryOnly = Model.ShowWithoutCategoryOnly, sortBy = normalizedSortBy, sortOrder = normalizedSortOrder })">Previous</a>
+                            </li>
+                        }
+
+                        @for (var pageNumber = 1; pageNumber <= Model.Tags.TotalPages; pageNumber++)
+                        {
+                            <li class="page-item @(pageNumber == Model.Tags.CurrentPage ? "active" : string.Empty)">
+                                <a class="page-link" href="@Url.Action("Index", new { page = pageNumber, pageSize = Model.Tags.PageSize, search = Model.SearchTerm, category = Model.CategoryFilter.HasValue ? (int?)Model.CategoryFilter.Value : null, showOrphansOnly = Model.ShowOrphansOnly, showWithoutCategoryOnly = Model.ShowWithoutCategoryOnly, sortBy = normalizedSortBy, sortOrder = normalizedSortOrder })">@pageNumber</a>
+                            </li>
+                        }
+
+                        @if (Model.Tags.HasNextPage)
+                        {
+                            <li class="page-item">
+                                <a class="page-link" href="@Url.Action("Index", new { page = Model.Tags.CurrentPage + 1, pageSize = Model.Tags.PageSize, search = Model.SearchTerm, category = Model.CategoryFilter.HasValue ? (int?)Model.CategoryFilter.Value : null, showOrphansOnly = Model.ShowOrphansOnly, showWithoutCategoryOnly = Model.ShowWithoutCategoryOnly, sortBy = normalizedSortBy, sortOrder = normalizedSortOrder })">Next</a>
+                            </li>
+                        }
+                    </ul>
+                </nav>
+            }
+        }
+        else
+        {
+            <div class="alert alert-info mb-0">
+                <strong>No tags found.</strong>
+                <span class="ms-1">Try adjusting filters or wait for new data from the crawler.</span>
+            </div>
+        }
+    </div>
+</div>
