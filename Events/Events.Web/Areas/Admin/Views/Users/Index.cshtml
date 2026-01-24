@@ -1,0 +1,296 @@
+@using System.Linq
+@using Events.Services.Models.Admin
+@model Events.Web.Models.Admin.AdminUserManagementViewModel
+@{
+    ViewData["Title"] = "Users";
+    var hasUsers = Model.Users.TotalCount > 0;
+    var pageStart = hasUsers ? ((Model.Users.CurrentPage - 1) * Model.Users.PageSize) + 1 : 0;
+    var pageEnd = hasUsers ? Math.Min(Model.Users.CurrentPage * Model.Users.PageSize, Model.Users.TotalCount) : 0;
+    var pageWindowStart = Math.Max(1, Model.Users.CurrentPage - 2);
+    var pageWindowEnd = Math.Min(Model.Users.TotalPages, Model.Users.CurrentPage + 2);
+    var normalizedSortBy = string.IsNullOrWhiteSpace(Model.SortBy) ? AdminUserSortFields.Email : Model.SortBy.ToLowerInvariant();
+    var normalizedSortOrder = string.Equals(Model.SortOrder, AdminUserSortOrders.Desc, StringComparison.OrdinalIgnoreCase)
+        ? AdminUserSortOrders.Desc
+        : AdminUserSortOrders.Asc;
+    Func<string, string> buildSortUrl = column =>
+    {
+        var normalizedColumn = column.ToLowerInvariant();
+        var isCurrent = string.Equals(normalizedSortBy, normalizedColumn, StringComparison.OrdinalIgnoreCase);
+        var nextOrder = isCurrent && normalizedSortOrder == AdminUserSortOrders.Asc ? AdminUserSortOrders.Desc : AdminUserSortOrders.Asc;
+        return Url.Action("Index", new
+        {
+            page = 1,
+            pageSize = Model.Users.PageSize,
+            search = Model.SearchTerm,
+            sortBy = normalizedColumn,
+            sortOrder = nextOrder
+        });
+    };
+    Func<string, bool> isCurrentSort = column => string.Equals(normalizedSortBy, column.ToLowerInvariant(), StringComparison.OrdinalIgnoreCase);
+}
+
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h1 class="h3 mb-0">User Management</h1>
+        <p class="text-muted mb-0">Monitor registrations, email confirmations, and favorite trends.</p>
+    </div>
+    <div>
+        <a class="btn btn-primary" href="#" role="button" disabled>
+            <i class="fas fa-cloud-upload-alt me-1"></i>Sync to mailing list
+        </a>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card stat-card border-start border-4 border-primary">
+            <div class="card-body">
+                <small class="text-muted">Total users</small>
+                <h3 class="mb-0">@Model.TotalUsers</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card border-start border-4 border-success">
+            <div class="card-body">
+                <small class="text-muted">Confirmed emails</small>
+                <h3 class="mb-0">@Model.ConfirmedEmails</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card border-start border-4 border-warning">
+            <div class="card-body">
+                <small class="text-muted">New this week</small>
+                <h3 class="mb-0">@Model.NewUsersThisWeek</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card border-start border-4 border-danger">
+            <div class="card-body">
+                <small class="text-muted">Locked accounts</small>
+                <h3 class="mb-0">@Model.LockedUsers</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <form class="row g-3 align-items-end" method="get">
+            <div class="col-md-8">
+                <label class="form-label" for="search">Search</label>
+                <input type="text" class="form-control" id="search" name="search" value="@Model.SearchTerm" placeholder="Email or username" />
+            </div>
+            <div class="col-md-4 d-flex gap-2 align-items-end">
+                <button type="submit" class="btn btn-primary flex-fill">
+                    <i class="fas fa-search me-1"></i>Apply
+                </button>
+                <a class="btn btn-outline-secondary flex-fill" asp-action="Index" asp-route-page="1">Reset</a>
+            </div>
+            <input type="hidden" name="sortBy" value="@normalizedSortBy" />
+            <input type="hidden" name="sortOrder" value="@normalizedSortOrder" />
+        </form>
+    </div>
+</div>
+
+<div class="d-flex justify-content-between align-items-center text-muted mb-3">
+    <div>
+        Showing
+        <span class="fw-semibold">@(hasUsers ? pageStart : 0)</span>
+        –
+        <span class="fw-semibold">@(hasUsers ? pageEnd : 0)</span>
+        of
+        <span class="fw-semibold">@Model.Users.TotalCount</span>
+        users
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        @if (hasUsers)
+        {
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th>
+                                <a href="@buildSortUrl(AdminUserSortFields.Email)" class="text-decoration-none text-dark d-flex align-items-center gap-1">
+                                    Email
+                                    @if (isCurrentSort(AdminUserSortFields.Email))
+                                    {
+                                        <i class="fas fa-chevron-@(normalizedSortOrder == AdminUserSortOrders.Asc ? "up" : "down") ms-1"></i>
+                                    }
+                                </a>
+                            </th>
+                            <th>Role</th>
+                            <th class="text-center">
+                                <a href="@buildSortUrl(AdminUserSortFields.Favorites)" class="text-decoration-none text-dark d-inline-flex align-items-center gap-1 justify-content-center">
+                                    Favorites
+                                    @if (isCurrentSort(AdminUserSortFields.Favorites))
+                                    {
+                                        <i class="fas fa-chevron-@(normalizedSortOrder == AdminUserSortOrders.Asc ? "up" : "down")"></i>
+                                    }
+                                </a>
+                            </th>
+                            <th>Favorite categories</th>
+                            <th>Favorite subcategories</th>
+                            <th>
+                                <a href="@buildSortUrl(AdminUserSortFields.Status)" class="text-decoration-none text-dark d-flex align-items-center gap-1">
+                                    Verification
+                                    @if (isCurrentSort(AdminUserSortFields.Status))
+                                    {
+                                        <i class="fas fa-chevron-@(normalizedSortOrder == AdminUserSortOrders.Asc ? "up" : "down") ms-1"></i>
+                                    }
+                                </a>
+                            </th>
+                            <th>
+                                <a href="@buildSortUrl(AdminUserSortFields.Registered)" class="text-decoration-none text-dark d-flex align-items-center gap-1">
+                                    Registered
+                                    @if (isCurrentSort(AdminUserSortFields.Registered))
+                                    {
+                                        <i class="fas fa-chevron-@(normalizedSortOrder == AdminUserSortOrders.Asc ? "up" : "down") ms-1"></i>
+                                    }
+                                </a>
+                            </th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var user in Model.Users.Items)
+                    {
+                        var currentRole = user.Roles.FirstOrDefault() ?? "User";
+                        var isAdministrator = user.Roles.Any(r => string.Equals(r, "Administrator", StringComparison.OrdinalIgnoreCase));
+                        <tr>
+                            <td>
+                                <div class="fw-semibold">@user.Email</div>
+                            </td>
+                            <td>
+                                @if (isAdministrator)
+                                {
+                                    <span class="badge bg-dark">Administrator</span>
+                                    <div class="text-muted small">Managed via identity roles</div>
+                                }
+                                else
+                                {
+                                    <form method="post" asp-action="UpdateRole" class="d-flex flex-column flex-lg-row gap-2">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="userId" value="@user.Id" />
+                                        <input type="hidden" name="page" value="@Model.Users.CurrentPage" />
+                                        <input type="hidden" name="pageSize" value="@Model.Users.PageSize" />
+                                        <input type="hidden" name="search" value="@Model.SearchTerm" />
+                                        <input type="hidden" name="sortBy" value="@normalizedSortBy" />
+                                        <input type="hidden" name="sortOrder" value="@normalizedSortOrder" />
+                                        <select name="role" class="form-select form-select-sm" aria-label="Select role">
+                                            <option value="User" selected="@string.Equals(currentRole, "User", StringComparison.OrdinalIgnoreCase)">User</option>
+                                            <option value="EventManager" selected="@string.Equals(currentRole, "EventManager", StringComparison.OrdinalIgnoreCase)">Event Manager</option>
+                                        </select>
+                                        <button type="submit" class="btn btn-sm btn-outline-primary">Apply</button>
+                                    </form>
+                                }
+                            </td>
+                            <td class="text-center">@user.FavoriteEventsCount</td>
+                            <td>
+                                @if (user.FavoriteCategories?.Count > 0)
+                                {
+                                    <div class="d-flex flex-wrap gap-1 favorite-categories-column">
+                                        @foreach (var category in user.FavoriteCategories)
+                                        {
+                                            <span class="badge bg-light text-dark border border-1">@category</span>
+                                        }
+                                    </div>
+                                }
+                                else
+                                {
+                                    <span>—</span>
+                                }
+                            </td>
+                            <td>
+                                @if (user.FavoriteSubCategories?.Count > 0)
+                                {
+                                    <div class="d-flex flex-wrap gap-1 favorite-subcategories-column">
+                                        @foreach (var subCategory in user.FavoriteSubCategories)
+                                        {
+                                            <span class="badge bg-light text-dark border border-1">@subCategory</span>
+                                        }
+                                    </div>
+                                }
+                                else
+                                {
+                                    <span>—</span>
+                                }
+                            </td>
+                            <td>
+                                <span class="badge @(user.EmailConfirmed ? "bg-success" : "bg-warning text-dark")">
+                                    @(user.EmailConfirmed ? "Email confirmed" : "Email not confirmed")
+                                </span>
+                                <span class="badge @(user.IsLockedOut ? "bg-danger" : "bg-secondary")">
+                                    @(user.IsLockedOut ? "Locked" : "Unlocked")
+                                </span>
+                            </td>
+                            <td>@user.RegisteredAt.ToString("dd MMM yyyy")</td>
+                            <td class="text-center">
+                                <form method="post" asp-action="ToggleLock" class="d-inline-block">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="userId" value="@user.Id" />
+                                    <input type="hidden" name="page" value="@Model.Users.CurrentPage" />
+                                    <input type="hidden" name="pageSize" value="@Model.Users.PageSize" />
+                                    <input type="hidden" name="search" value="@Model.SearchTerm" />
+                                    <input type="hidden" name="sortBy" value="@normalizedSortBy" />
+                                    <input type="hidden" name="sortOrder" value="@normalizedSortOrder" />
+                                    <input type="hidden" name="lockUser" value="@(user.IsLockedOut ? "false" : "true")" />
+                                    <button type="submit" class="btn btn-sm @(user.IsLockedOut ? "btn-outline-success" : "btn-outline-danger")">
+                                        <i class="fas @(user.IsLockedOut ? "fa-unlock" : "fa-lock") me-1"></i>
+                                        @(user.IsLockedOut ? "Unlock" : "Lock")
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-info mb-0">
+                <strong>No users found.</strong>
+                @if (!string.IsNullOrWhiteSpace(Model.SearchTerm))
+                {
+                    <span class="ms-1">Try clearing the filters and searching again.</span>
+                }
+                else
+                {
+                    <span class="ms-1">New registrations will appear here automatically.</span>
+                }
+            </div>
+        }
+
+        @if (Model.Users.TotalPages > 1)
+        {
+            <nav aria-label="User pagination" class="mt-4">
+                <ul class="pagination justify-content-center mb-0">
+                    @if (Model.Users.HasPreviousPage)
+                    {
+                        <li class="page-item">
+                            <a class="page-link" href="@Url.Action("Index", new { page = Model.Users.CurrentPage - 1, pageSize = Model.Users.PageSize, search = Model.SearchTerm, sortBy = normalizedSortBy, sortOrder = normalizedSortOrder })">Previous</a>
+                        </li>
+                    }
+                    @for (var pageNumber = pageWindowStart; pageNumber <= pageWindowEnd; pageNumber++)
+                    {
+                        <li class="page-item @(pageNumber == Model.Users.CurrentPage ? "active" : string.Empty)">
+                            <a class="page-link" href="@Url.Action("Index", new { page = pageNumber, pageSize = Model.Users.PageSize, search = Model.SearchTerm, sortBy = normalizedSortBy, sortOrder = normalizedSortOrder })">@pageNumber</a>
+                        </li>
+                    }
+                    @if (Model.Users.HasNextPage)
+                    {
+                        <li class="page-item">
+                            <a class="page-link" href="@Url.Action("Index", new { page = Model.Users.CurrentPage + 1, pageSize = Model.Users.PageSize, search = Model.SearchTerm, sortBy = normalizedSortBy, sortOrder = normalizedSortOrder })">Next</a>
+                        </li>
+                    }
+                </ul>
+            </nav>
+        }
+    </div>
+</div>

@@ -9,6 +9,11 @@ namespace Events.Models.Entities;
 public class User : IdentityUser
 {
     /// <summary>
+    /// Date and time when the user registered. Stored in UTC.
+    /// </summary>
+    public DateTime RegisteredAt { get; set; } = DateTime.UtcNow;
+
+    /// <summary>
     /// Navigation property for EF Core - collection of user's favorite events.
     /// This is the single source of truth for user's favorite events.
     /// Read-only to ensure all modifications go through domain methods.

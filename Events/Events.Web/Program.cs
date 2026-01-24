@@ -146,6 +146,7 @@ static void RegisterServices(WebApplicationBuilder builder)
     builder.Services.AddScoped<IEventService, EventService>();
     builder.Services.AddScoped<ITagService, TagService>();
     builder.Services.AddScoped<IUserFavoriteEventService, UserFavoriteEventService>();
+    builder.Services.AddScoped<IAdminUserService, AdminUserService>();
 }
 
 static async Task InitializeDatabaseAsync(WebApplication app)

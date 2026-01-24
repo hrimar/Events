@@ -80,9 +80,18 @@ public class EventsDbContext : IdentityDbContext<User>
         ConfigureEventTagEntity(modelBuilder);
         ConfigureCategoryEntity(modelBuilder);
         ConfigureUserFavoriteEventEntity(modelBuilder);
+        ConfigureUserEntity(modelBuilder);
 
         SeedCategories(modelBuilder);
         SeedSubCategories(modelBuilder);
+    }
+
+    private static void ConfigureUserEntity(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<User>(entity =>
+        {
+            entity.Property(u => u.RegisteredAt).HasDefaultValueSql("GETUTCDATE()");
+        });
     }
 
     private static void SeedSubCategories(ModelBuilder modelBuilder)
@@ -506,7 +515,7 @@ public class EventsDbContext : IdentityDbContext<User>
             entity.Property(c => c.Description).HasMaxLength(500);
             entity.Property(c => c.DefaultImageUrl).HasMaxLength(500);
             entity.HasIndex(c => c.CategoryType).IsUnique();
-            
+
             // Set database default for CreatedAt
             entity.Property(c => c.CreatedAt)
                 .HasDefaultValueSql("GETUTCDATE()");
