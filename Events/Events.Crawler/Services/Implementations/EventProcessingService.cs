@@ -4,6 +4,7 @@ using Events.Crawler.Services;
 using Events.Crawler.Services.Interfaces;
 using Events.Models.Entities;
 using Events.Models.Enums;
+using Events.Services.Helpers;
 using Events.Services.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -244,7 +245,7 @@ public class EventProcessingService : IEventProcessingService
         
         foreach (var tagName in tags)
         {
-            var cleanTagName = CleanAndValidateTagName(tagName);
+            var cleanTagName = TagNameNormalizer.Normalize(tagName);
             if (string.IsNullOrEmpty(cleanTagName)) continue;
 
             try
@@ -296,30 +297,6 @@ public class EventProcessingService : IEventProcessingService
                 _logger.LogError(ex, "Failed to bulk assign tags to event {EventId}", eventId);
             }
         }
-    }
-
-    private static string? CleanAndValidateTagName(string? tagName)
-    {
-        if (string.IsNullOrWhiteSpace(tagName)) return null;
-
-        var cleaned = tagName.Trim()
-            .Replace("\n", " ")
-            .Replace("\r", "")
-            .Replace("  ", " ");
-
-        // Enhanced cleaning for better tag quality
-        if (cleaned.Length > 50) // Reduced from 100
-        {
-            cleaned = cleaned[..47] + "...";
-        }
-
-        // Skip if contains problematic characters
-        if (cleaned.Contains("ул.") || cleaned.Contains("№") || cleaned.Contains("(") || cleaned.Contains(")"))
-        {
-            return null;
-        }
-
-        return string.IsNullOrWhiteSpace(cleaned) ? null : cleaned;
     }
 
     private async Task<Event?> UpdateEventFromCrawledDataAsync(Event existingEvent, CrawledEventDto crawledEvent, IEventService eventService)

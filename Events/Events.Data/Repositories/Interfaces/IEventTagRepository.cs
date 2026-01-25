@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Events.Models.Entities;
 
 namespace Events.Data.Repositories.Interfaces;

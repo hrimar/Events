@@ -1,5 +1,6 @@
 ﻿using Events.Data.Repositories.Interfaces;
 using Events.Models.Entities;
+using Events.Services.Helpers;
 using Events.Services.Interfaces;
 using Events.Services.Models.Admin;
 using Events.Services.Models.Admin.DTOs;
@@ -56,7 +57,13 @@ public class TagService : ITagService
     {
         try
         {
-            return await _tagRepository.GetByNameAsync(name);
+            var normalized = TagNameNormalizer.Normalize(name);
+            if (string.IsNullOrEmpty(normalized))
+            {
+                return null;
+            }
+
+            return await _tagRepository.GetByNameAsync(normalized);
         }
         catch (Exception ex)
         {
@@ -69,6 +76,7 @@ public class TagService : ITagService
     {
         try
         {
+            await NormalizeAndValidateTagAsync(tag);
             return await _tagRepository.AddAsync(tag);
         }
         catch (Exception ex)
@@ -82,6 +90,7 @@ public class TagService : ITagService
     {
         try
         {
+            await NormalizeAndValidateTagAsync(tag);
             return await _tagRepository.UpdateAsync(tag);
         }
         catch (Exception ex)
@@ -371,4 +380,24 @@ public class TagService : ITagService
             throw new ApplicationException("Failed to bulk assign tags to events", ex);
         }
     }
+
+    private async Task NormalizeAndValidateTagAsync(Tag tag)
+    {
+        var normalizedName = TagNameNormalizer.Normalize(tag.Name);
+        if (string.IsNullOrEmpty(normalizedName))
+        {
+            throw new ArgumentException("Tag name is invalid.", nameof(tag));
+        }
+
+        var existing = await _tagRepository.GetByNameAsync(normalizedName);
+        if (existing != null && existing.Id != tag.Id)
+        {
+            throw new InvalidOperationException($"Tag '{normalizedName}' already exists.");
+        }
+
+        tag.Name = normalizedName;
+        tag.Description = NormalizeDescription(tag.Description);
+    }
+
+    private static string? NormalizeDescription(string? description) => string.IsNullOrWhiteSpace(description) ? null : description.Trim();
 }

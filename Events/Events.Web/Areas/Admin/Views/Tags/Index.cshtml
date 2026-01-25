@@ -15,6 +15,9 @@
         <h1 class="h3 mb-0">Tag management</h1>
         <p class="text-muted mb-0">Track tag growth, missing links, and cleanup candidates.</p>
     </div>
+    <a asp-action="Create" class="btn btn-primary">
+        <i class="fas fa-plus me-1"></i>New tag
+    </a>
 </div>
 
 <div class="row g-3 mb-4">
@@ -171,6 +174,7 @@
                                         }
                                     </a>
                                 </th>
+                                <th class="text-end">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -220,6 +224,11 @@
                                     }
                                 </td>
                                 <td>@tag.CreatedAt.ToString("dd MMM yyyy")</td>
+                                <td class="text-end">
+                                    <a asp-action="Edit" asp-route-id="@tag.Id" class="btn btn-sm btn-outline-secondary">
+                                        <i class="fas fa-pen"></i>
+                                    </a>
+                                </td>
                             </tr>
                         }
                         </tbody>

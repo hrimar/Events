@@ -202,6 +202,155 @@ public class TagsController : Controller
         });
     }
 
+    public async Task<IActionResult> Create()
+    {
+        var model = new AdminTagFormViewModel();
+        await PopulateCategoryOptionsAsync(model);
+        return View(model);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Create(AdminTagFormViewModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            await PopulateCategoryOptionsAsync(model);
+            return View(model);
+        }
+
+        try
+        {
+            var tag = new Tag
+            {
+                Name = model.Name,
+                Description = model.Description,
+                Category = model.Category
+            };
+
+            await _tagService.CreateTagAsync(tag);
+
+            TempData["SuccessMessage"] = $"Tag '{tag.Name}' created successfully.";
+            return RedirectToAction(nameof(Index));
+        }
+        catch (InvalidOperationException ex)
+        {
+            ModelState.AddModelError(nameof(model.Name), ex.Message);
+        }
+        catch (ArgumentException ex)
+        {
+            ModelState.AddModelError(nameof(model.Name), ex.Message);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating tag {TagName}", model.Name);
+            TempData["ErrorMessage"] = "Failed to create tag.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        await PopulateCategoryOptionsAsync(model);
+        return View(model);
+    }
+
+    public async Task<IActionResult> Edit(int id)
+    {
+        var tag = await _tagService.GetTagByIdAsync(id);
+        if (tag == null)
+        {
+            return NotFound();
+        }
+
+        var model = new AdminTagFormViewModel
+        {
+            Id = tag.Id,
+            Name = tag.Name,
+            Description = tag.Description,
+            Category = tag.Category
+        };
+
+        await PopulateCategoryOptionsAsync(model);
+        return View(model);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Edit(int id, AdminTagFormViewModel model)
+    {
+        if (id != model.Id)
+        {
+            return NotFound();
+        }
+
+        if (!ModelState.IsValid)
+        {
+            await PopulateCategoryOptionsAsync(model);
+            return View(model);
+        }
+
+        try
+        {
+            var tag = new Tag
+            {
+                Id = model.Id,
+                Name = model.Name,
+                Description = model.Description,
+                Category = model.Category
+            };
+
+            await _tagService.UpdateTagAsync(tag);
+            TempData["SuccessMessage"] = $"Tag '{tag.Name}' updated successfully.";
+            return RedirectToAction(nameof(Index));
+        }
+        catch (InvalidOperationException ex)
+        {
+            ModelState.AddModelError(nameof(model.Name), ex.Message);
+        }
+        catch (ArgumentException ex)
+        {
+            ModelState.AddModelError(nameof(model.Name), ex.Message);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating tag {TagId}", model.Id);
+            TempData["ErrorMessage"] = "Failed to update tag.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        await PopulateCategoryOptionsAsync(model);
+        return View(model);
+    }
+
+    private async Task PopulateCategoryOptionsAsync(AdminTagFormViewModel model)
+    {
+        var categories = await _categoryRepository.GetAllAsync();
+        model.CategoryOptions = BuildCategorySelectionItems(categories, model.Category);
+    }
+
+    private static List<SelectListItem> BuildCategorySelectionItems(IEnumerable<Category> categories, EventCategory? selected)
+    {
+        var items = new List<SelectListItem>
+        {
+            new SelectListItem
+            {
+                Value = string.Empty,
+                Text = "Unassigned",
+                Selected = !selected.HasValue
+            }
+        };
+
+        items.AddRange(
+            categories
+                .OrderBy(c => c.Name)
+                .Select(c => new SelectListItem
+                {
+                    Value = ((int)c.CategoryType).ToString(),
+                    Text = c.Name,
+                    Selected = selected.HasValue && c.CategoryType == selected.Value
+                }));
+
+        return items;
+    }
+
     private static List<SelectListItem> BuildCategoryOptions(IEnumerable<Category> categories, EventCategory? selected)
     {
         var items = new List<SelectListItem>

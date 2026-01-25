@@ -27,7 +27,15 @@ public class TagRepository : ITagRepository
 
     public async Task<Tag?> GetByNameAsync(string name)
     {
-        return await _context.Tags.FirstOrDefaultAsync(t => t.Name == name);
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return null;
+        }
+
+        var normalized = name.Trim().ToLower();
+        return await _context.Tags
+            .AsNoTracking() // Important to avoid tracking issues on updates after that
+            .FirstOrDefaultAsync(t => t.Name.ToLower() == normalized);
     }
 
     public async Task<IEnumerable<Tag>> GetByCategoryAsync(EventCategory? category)
