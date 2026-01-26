@@ -18,21 +18,27 @@ public class EventTagRepository : IEventTagRepository
     {
         if (!eventTags.Any()) return;
 
-        // Simplified deduplication logic to avoid EF Core LINQ translation issues
-        var eventIds = eventTags.Select(et => et.EventId).Distinct().ToList();
-        var tagIds = eventTags.Select(et => et.TagId).Distinct().ToList();
+        // Remove duplicates within the incoming batch to avoid tracking conflicts
+        var distinctEventTags = eventTags
+            .GroupBy(et => new { et.EventId, et.TagId })
+            .Select(g => g.First())
+            .ToList();
 
-        // Get existing EventTag pairs for these events and tags
-        var existingEventTags = await _context.EventTags
+        var eventIds = distinctEventTags.Select(et => et.EventId).Distinct().ToList();
+        var tagIds = distinctEventTags.Select(et => et.TagId).Distinct().ToList();
+
+        var existingPairProjections = await _context.EventTags
+            .AsNoTracking()
             .Where(et => eventIds.Contains(et.EventId) && tagIds.Contains(et.TagId))
             .Select(et => new { et.EventId, et.TagId })
             .ToListAsync();
 
-        var existingSet = existingEventTags.ToHashSet();
+        var existingSet = existingPairProjections
+            .Select(p => (p.EventId, p.TagId))
+            .ToHashSet();
 
-        // Filter out duplicates
-        var newEventTags = eventTags
-            .Where(et => !existingSet.Contains(new { et.EventId, et.TagId }))
+        var newEventTags = distinctEventTags
+            .Where(et => !existingSet.Contains((et.EventId, et.TagId)))
             .ToList();
 
         if (newEventTags.Any())

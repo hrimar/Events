@@ -23,7 +23,7 @@ public class BiletBgApiCrawler : IHttpApiCrawler
         _httpClient = httpClient;
         _configuration = configuration;
         _logger = logger;
-        
+
         _httpClient.BaseAddress = new Uri("https://panel.bilet.bg/api/v1/");
         _httpClient.DefaultRequestHeaders.Add("User-Agent", "Events-Crawler/1.0");
     }
@@ -72,7 +72,7 @@ public class BiletBgApiCrawler : IHttpApiCrawler
 
     public async Task<T> GetDataAsync<T>(string endpoint, Dictionary<string, string>? parameters = null)
     {
-        var queryString = parameters != null 
+        var queryString = parameters != null
             ? "?" + string.Join("&", parameters.Select(p => $"{p.Key}={Uri.EscapeDataString(p.Value)}"))
             : "";
 
@@ -110,19 +110,34 @@ public class BiletBgApiCrawler : IHttpApiCrawler
             ["page"] = "1"
         };
 
-        string? nextPageUrl = $"events?{string.Join("&", parameters.Select(p => $"{p.Key}={Uri.EscapeDataString(p.Value)}"))}";
+        string? nextPageUrl = EnsureIncludeVenueParameter($"events?{string.Join("&", parameters.Select(p => $"{p.Key}={Uri.EscapeDataString(p.Value)}"))}");
 
-        do
+        while (!string.IsNullOrEmpty(nextPageUrl))
         {
             var ticket = await GetDataAsync<BiletTicketDto>(nextPageUrl);
             if (ticket?.Events != null)
                 allEvents.AddRange(ticket.Events);
-                        
-            nextPageUrl = ticket?.NextPageUrl;
+
+            nextPageUrl = EnsureIncludeVenueParameter(ticket?.NextPageUrl);
         }
-        while (!string.IsNullOrEmpty(nextPageUrl));
 
         return allEvents;
+    }
+
+    private static string? EnsureIncludeVenueParameter(string? url)
+    {
+        if (string.IsNullOrWhiteSpace(url))
+        {
+            return url;
+        }
+
+        if (url.Contains("include=", StringComparison.OrdinalIgnoreCase))
+        {
+            return url;
+        }
+
+        var separator = url.Contains('?') ? "&" : "?";
+        return $"{url}{separator}include=venue";
     }
 
     private CrawledEventDto? MapToStandardDto(BiletEventDto biletEvent)
@@ -130,10 +145,19 @@ public class BiletBgApiCrawler : IHttpApiCrawler
         // Early filtration for Events because we are interested in Events from Sofia only
         var city = biletEvent.Place?.City?.Trim().ToLowerInvariant();
 
-        // If city is missing, assume Sofia by default (many events omit the city for Sofia)
+        // If city is missing, inspect the slug for other Bulgarian cities
         if (string.IsNullOrEmpty(city))
         {
-            city = "софия"; // Default to Sofia if city is missing (for now)
+            if (IsSlugForNonSofiaCity(biletEvent.Slug))
+            {
+                _logger.LogDebug("Filtering out event {EventName} ({EventId}) due to slug hinting a non-Sofia city: {Slug}",
+                    biletEvent.Name,
+                    biletEvent.Id,
+                    biletEvent.Slug);
+                return null;
+            }
+
+            city = "софия"; // Default to Sofia only when there is no slug evidence for another city
         }
 
         if (!IsSofiaCity(city))
@@ -164,6 +188,45 @@ public class BiletBgApiCrawler : IHttpApiCrawler
                 ["city"] = biletEvent.Place?.City ?? ""
             }
         };
+    }
+
+    private static readonly string[] NonSofiaSlugKeywords =
+    {
+        "varna",
+        "plovdiv",
+        "burgas",
+        "veliko-tarnovo",
+        "stara-zagora",
+        "ruse",
+        "pleven",
+        "dobrich",
+        "sliven",
+        "shumen",
+        "kardzhali",
+        "haskovo",
+        "gabrovo",
+        "vratsa",
+        "pazardzhik",
+        "pernik",
+        "yambol",
+        "smolyan",
+        "silistra",
+        "razgrad",
+        "lovech",
+        "targovishte",
+        "svishtov",
+        "kazanlak"
+    };
+
+    private static bool IsSlugForNonSofiaCity(string? slug)
+    {
+        if (string.IsNullOrWhiteSpace(slug))
+        {
+            return false;
+        }
+
+        var normalizedSlug = slug.Trim().ToLowerInvariant();
+        return NonSofiaSlugKeywords.Any(normalizedSlug.Contains);
     }
 
     private static bool IsSofiaCity(string city)
