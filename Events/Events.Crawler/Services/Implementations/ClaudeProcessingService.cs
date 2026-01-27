@@ -82,36 +82,38 @@ Here is the event you need to categorize:
 Event: {eventName}
 Desc: {description}
 Location: {location}
+Use the event name, description, AND location (venues like Театър Сфумато, Кино Влайкова often signal the correct category) to determine the best category, subcategory, and tags.
 
 Your task is to:
 1. Select ONE category and ONE subcategory from the provided list that best fits this event
 2. Add between 0 and 3 tags that help with event classification
 
 Important rules for TAGS:
-- Tags should provide additional useful classification information beyond what the category/subcategory already convey
-- Tags should NOT repeat or closely match the event name, venue name, category, or subcategory
-- Do NOT use tags related to the city name (e.g. Sofia), as all events are already in Sofia
-- Good tag examples include: Kids, Family, Outdoors, Pet-friendly, Shopping, Networking, Educational, Evening, Weekend, etc.
+- Tags MUST be in English only and must provide additional useful classification information beyond what the category/subcategory already convey
+- Never repeat or closely match the event name, venue name, category, or subcategory
+- Never output city or venue names (e.g., Sofia, Teatar Sfoumato, Kino Vlaikova, NDK, club names); the system handles venue tagging separately and all events are already in Sofia
+- Never use the words 'None' or 'Free'; if no tags apply, leave the tag section empty (e.g., 5|Drama|)
+- Prefer high-value descriptors such as: Kids, Family, Educational, Networking, Legendary, International, Outdoor, Club, Evening, Morning, Weekend, Workshop, PetFriendly
 - Tags should be general descriptors that help users filter and discover events
-- If no suitable tags can be identified, set tag None rather than forcing inappropriate ones
+- Maximum 3 tags; only emit a tag if the event information clearly supports it
 
 Before providing your answer, use the scratchpad to think through:
-- What type of event this is based on the name
+- What type of event this is based on the name, description, and location
 - Which category and subcategory best fit
 - What additional characteristics might be useful as tags
 - Whether your proposed tags add value beyond the category/subcategory
 
-CRITICAL: Return your answer ONLY in the format CATEGORY|SUBCATEGORY|tag1,tag2,tag3! If no suitable tags, set tag None
+CRITICAL: Return your answer ONLY in the format CATEGORY|SUBCATEGORY|tag1,tag2,tag3! If no suitable tags, keep the tag section empty
 NO explanations! NO descriptions! ONLY the format!
 
 Examples:
-Slayer концерт → 1|Metal|thrash metal,концерт
-Левски-ЦСКА → 4|Football|футбол,спорт
-Пикасо изложба → 8|ArtExhibitions|изкуство,живопис
-София филм фест → 7|FilmFestivals|филми,фестивал
-Пиеса за възрастни → 5|Drama|None
-Детски уикенд в парка → 1|Pop|Kids,Family,Outdoors
-Бизнес закуска за предприемачи → 3|Networking Events|Networking,Educational,Morning
+Slayer концерт → 1|Metal|thrash metal,concert,legendary
+Пикасо изложба → 8|ArtExhibitions|art,painting
+София филм фест → 7|FilmFestivals|films,festival
+Пиеса за възрастни → 5|Drama|adult
+Детски уикенд в парка → 1|Pop|kids,family,outdoors
+Бизнес закуска за предприемачи → 3|Networking Events|educational,morning
+Клубна нощ с международен DJ → 1|Electronic|club,international,nightlife
 
 Return:";
 
@@ -323,16 +325,73 @@ Return:";
         return genres.Any() ? genres.Take(3) : new[] { "музика" };
     }
 
+    // TODO: Extend the curated list of emblematic venues that should receive dedicated tags. Extend as needed when new landmarks appear.
+    private static readonly (string Keyword, string Tag)[] SignificantVenueTags = new[]
+    {
+        ("театър натфиз", "театър натфиз"),
+        ("тба", "тба"),
+        ("театър 199", "театър 199"),
+        ("университетски театър нбу", "университетски театър нбу"),
+        ("зала българия", "зала българия"),
+        ("арена 888", "арена 888"),
+        ("бнр", "бнр"),
+        ("топлоцентрала", "топлоцентрала"),
+        ("малката текила", "малката текила"),
+        ("podlez galeriya", "podlez galeriya"),
+        ("joy station", "joy station"),
+        ("борисова градина", "борисова градина"),
+        ("юнак", "юнак"),
+        ("търговски център", "търговски център")
+    };
+
+    private static readonly (string Keyword, string Tag)[] GenericVenueTags = new[]
+    {
+        ("club", "club"),
+        ("клуб", "club"),
+        ("ндк", "ndk"),
+        ("бар", "bar"),
+        ("galeria", "gallery"),
+        ("галерия", "gallery"),
+        ("опера", "opera"),
+        ("колодрум", "colodrum"),
+        ("парк", "park"),
+        ("читалище", "chitalishte"),
+        ("зала", "hall")
+    };
+
+    private static string? GetGenericVenueTag(string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text)) return null;
+
+        var lowered = text.ToLowerInvariant();
+        foreach (var (keyword, tag) in GenericVenueTags)
+        {
+            if (lowered.Contains(keyword))
+            {
+                return tag;
+            }
+        }
+
+        return null;
+    }
+
     private List<string> ExtractTagsWithKeywords(string eventName, string description, string? location, EventCategory? category)
     {
         var tags = new List<string>();
         var text = $"{eventName} {description}".ToLower();
 
-        // Location - normalize common issues
-        var normalizedLocation = NormalizeLocation(location);
-        if (!string.IsNullOrWhiteSpace(normalizedLocation))
+        var genericVenueTag = GetGenericVenueTag(eventName) ?? GetGenericVenueTag(location);
+        if (!string.IsNullOrWhiteSpace(genericVenueTag))
         {
-            tags.Add(normalizedLocation);
+            tags.Add(genericVenueTag);
+        }
+        else
+        {
+            var venueTag = NormalizeLocation(location);
+            if (!string.IsNullOrWhiteSpace(venueTag))
+            {
+                tags.Add(venueTag);
+            }
         }
 
         // Category-specific enhanced tags
@@ -356,7 +415,7 @@ Return:";
                 else if (text.Contains("концерт"))
                     tags.Add("концерт");
 
-                if (new[] { "пп", "сигнал", "тангра", "фсб", "щурците" }.Any(keyword => text.Contains(keyword)))
+                if (new[] { "бтр", "сигнал", "тангра", "фсб", "щурците" }.Any(keyword => text.Contains(keyword)))
                     tags.Add("българска музика");
                 break;
 
@@ -390,12 +449,10 @@ Return:";
                 break;
 
             case null:
-                tags.Add("некласифицирано");
                 break;
         }
 
         // General enhanced tags
-        if (text.Contains("безплатно") || text.Contains("free")) tags.Add("безплатно");
         if (text.Contains("вечер") || text.Contains("нощ")) tags.Add("вечерно");
         if (text.Contains("сутрин") || text.Contains("утро") || text.Contains("morning")) tags.Add("сутрешно");
         if (text.Contains("семейство") || text.Contains("family") || text.Contains("деца")) tags.Add("семейно");
@@ -408,47 +465,21 @@ Return:";
         return CleanAndValidateTags(tags).Take(6).ToList();
     }
 
-    private string NormalizeLocation(string? location)
+    private string? NormalizeLocation(string? location)
     {
-        if (string.IsNullOrWhiteSpace(location)) return "софия";
+        if (string.IsNullOrWhiteSpace(location)) return null;
 
         var normalized = location.ToLower().Trim();
 
-        // Common location normalizations to fix the garbage tags
-        var locationMap = new Dictionary<string, string>
+        foreach (var (keyword, tag) in SignificantVenueTags)
         {
-            ["sofia"] = "софия",
-            ["bulgaria"] = "българия",
-            ["ндк"] = "ndk",
-            ["национален дворец на културата"] = "ndk",
-            ["зала 1"] = "зала1"
-        };
-
-        foreach (var (key, value) in locationMap)
-        {
-            normalized = normalized.Replace(key, value);
+            if (normalized.Contains(keyword))
+            {
+                return tag;
+            }
         }
 
-        // Remove addresses and keep only venue names
-        if (normalized.Contains("ул.") || normalized.Contains("улица") || normalized.Contains("№"))
-        {
-            // Extract venue name before address
-            var parts = normalized.Split(new[] { "ул.", "улица", "№", "(", "," }, StringSplitOptions.RemoveEmptyEntries);
-            normalized = parts.FirstOrDefault()?.Trim() ?? "софия";
-        }
-
-        // Handle the specific garbage case: "софия, ул. "емил берсински" №5, sofia, bulgaria топлоцентрала зала 1"
-        if (normalized.Contains("топлоцентрала"))
-        {
-            return "топлоцентрала";
-        }
-
-        if (normalized.Contains("bunker"))
-        {
-            return "bunker club";
-        }
-
-        return normalized.Length > 20 ? "софия" : normalized;
+        return null;
     }
 
     private List<string> CleanAndValidateTags(List<string> tags)
@@ -460,6 +491,8 @@ Return:";
             if (string.IsNullOrWhiteSpace(tag)) continue;
 
             var cleanTag = tag.Trim().ToLower();
+
+            if (cleanTag is "none" or "безплатно") continue;
 
             // Skip if too long or has invalid characters
             if (cleanTag.Length > 30 || cleanTag.Contains("№") || cleanTag.Contains("ул.")) continue;
