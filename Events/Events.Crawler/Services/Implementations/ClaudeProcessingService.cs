@@ -42,11 +42,6 @@ public class ClaudeProcessingService : IAiTaggingService
         return await ProcessEventComprehensivelyAsync(eventName, description, location);
     }
 
-    public async Task<IEnumerable<string>> ExtractMusicGenresAsync(string eventName, string description)
-    {
-        return await Task.FromResult(ExtractMusicGenresWithKeywords(eventName, description));
-    }
-
     // Single comprehensive method - replaces both ClassifyEventAsync + GenerateTagsAsync
     public async Task<TaggingResult> ProcessEventComprehensivelyAsync(string eventName, string description, string? location = null)
     {
@@ -284,47 +279,6 @@ Return:";
         return null;
     }
 
-    private IEnumerable<string> ExtractMusicGenresWithKeywords(string eventName, string description)
-    {
-        var text = $"{eventName} {description}".ToLower();
-        var genres = new List<string>();
-
-        var genreMap = new Dictionary<string[], string>
-        {
-            [new[] { "slayer", "metallica", "megadeth", "anthrax", "testament", "exodus", "overkill", "kreator" }] = "thrash metal",
-            [new[] { "iron maiden", "black sabbath", "judas priest", "motorhead", "dio", "ozzy осбърн", "accept" }] = "heavy metal",
-            [new[] { "death", "cannibal corpse", "morbid angel", "obituary", "deicide", "suffocation", "dying fetus" }] = "death metal",
-            [new[] { "mayhem", "darkthrone", "emperor", "immortal", "burzum", "bathory", "venom" }] = "black metal",
-            [new[] { "helloween", "blind guardian", "stratovarius", "rhapsody", "gamma ray", "sonata arctica" }] = "power metal",
-            [new[] { "dream theater", "tool", "opeth", "porcupine tree", "meshuggah", "gojira" }] = "progressive metal",
-            [new[] { "nirvana", "pearl jam", "soundgarden", "alice in chains", "stone temple pilots" }] = "grunge",
-            [new[] { "led zeppelin", "pink floyd", "deep purple", "queen", "the beatles", "the rolling stones" }] = "класически рок",
-            [new[] { "jazz", "джаз", "coltrane", "miles davis", "herbie hancock", "keith jarrett", "pat metheny" }] = "джаз",
-            [new[] { "blues", "блус", "bb king", "muddy waters", "robert johnson", "eric clapton" }] = "блус",
-            [new[] { "classical", "класическа", "симфония", "оркестър", "mozart", "beethoven", "bach", "chopin" }] = "класическа",
-            [new[] { "electronic", "електронна", "techno", "house", "deadmau5", "tiësto", "armin", "calvin harris" }] = "електронна",
-            [new[] { "pop", "поп", "madonna", "michael jackson", "taylor swift", "ed sheeran" }] = "поп",
-            [new[] { "folk", "фолк", "народна", "bob dylan", "joni mitchell", "neil young" }] = "фолк",
-            [new[] { "hip-hop", "хип-хоп", "rap", "рап", "eminem", "jay-z", "kendrick lamar" }] = "хип-хоп",
-            [new[] { "пп", "сигнал", "тангра", "фсб", "епизод", "диапазон", "щурците", "б.т.р.", "конкрет", "остава" }] = "българска музика"
-        };
-
-        foreach (var (keywords, genre) in genreMap)
-        {
-            if (keywords.Any(keyword => text.Contains(keyword)))
-            {
-                genres.Add(genre);
-            }
-        }
-
-        if (genres.Any())
-        {
-            _logger.LogInformation("Detected music genres for '{EventName}': {Genres}", eventName, string.Join(", ", genres));
-        }
-
-        return genres.Any() ? genres.Take(3) : new[] { "музика" };
-    }
-
     // TODO: Extend the curated list of emblematic venues that should receive dedicated tags. Extend as needed when new landmarks appear.
     private static readonly (string Keyword, string Tag)[] SignificantVenueTags = new[]
     {
@@ -375,96 +329,6 @@ Return:";
         return null;
     }
 
-    private List<string> ExtractTagsWithKeywords(string eventName, string description, string? location, EventCategory? category)
-    {
-        var tags = new List<string>();
-        var text = $"{eventName} {description}".ToLower();
-
-        var genericVenueTag = GetGenericVenueTag(eventName) ?? GetGenericVenueTag(location);
-        if (!string.IsNullOrWhiteSpace(genericVenueTag))
-        {
-            tags.Add(genericVenueTag);
-        }
-        else
-        {
-            var venueTag = NormalizeLocation(location);
-            if (!string.IsNullOrWhiteSpace(venueTag))
-            {
-                tags.Add(venueTag);
-            }
-        }
-
-        // Category-specific enhanced tags
-        switch (category)
-        {
-            case EventCategory.Music:
-                if (text.Contains("slayer"))
-                    tags.AddRange(new[] { "thrash metal", "heavy metal", "международни", "легендарни", "концерт" });
-                else if (text.Contains("metallica"))
-                    tags.AddRange(new[] { "thrash metal", "heavy metal", "международни", "мегазвезди", "концерт" });
-                else if (text.Contains("iron maiden"))
-                    tags.AddRange(new[] { "heavy metal", "nwobhm", "международни", "класически", "концерт" });
-                else if (text.Contains("megadeth"))
-                    tags.AddRange(new[] { "thrash metal", "heavy metal", "международни", "концерт" });
-                else if (text.Contains("jazz") || text.Contains("джаз"))
-                    tags.AddRange(new[] { "джаз", "импровизация", "sophisticated", "концерт" });
-                else if (text.Contains("blues") || text.Contains("блус"))
-                    tags.AddRange(new[] { "блус", "традиционна музика", "концерт" });
-                else if (text.Contains("класическа") || text.Contains("симфония"))
-                    tags.AddRange(new[] { "класическа музика", "оркестър", "концерт" });
-                else if (text.Contains("концерт"))
-                    tags.Add("концерт");
-
-                if (new[] { "бтр", "сигнал", "тангра", "фсб", "щурците" }.Any(keyword => text.Contains(keyword)))
-                    tags.Add("българска музика");
-                break;
-
-            case EventCategory.Sports:
-                if (text.Contains("футбол")) tags.Add("футбол");
-                if (text.Contains("баскетбол")) tags.Add("баскетбол");
-                if (text.Contains("тенис")) tags.Add("тенис");
-                if (text.Contains("волейбол")) tags.Add("волейбол");
-                break;
-
-            case EventCategory.Theatre:
-                if (text.Contains("драма")) tags.Add("драма");
-                if (text.Contains("комедия")) tags.Add("комедия");
-                if (text.Contains("мюзикъл")) tags.Add("мюзикъл");
-                break;
-
-            case EventCategory.Cinema:
-                if (text.Contains("филм")) tags.Add("филм");
-                if (text.Contains("документален")) tags.Add("документален");
-                if (text.Contains("анимация")) tags.Add("анимация");
-                break;
-
-            case EventCategory.Exhibitions:
-                if (text.Contains("изложба")) tags.Add("изложба");
-                if (text.Contains("галерия")) tags.Add("галерия");
-                break;
-
-            case EventCategory.Festivals:
-                if (text.Contains("фестивал")) tags.Add("фестивал");
-                if (text.Contains("празник")) tags.Add("празник");
-                break;
-
-            case null:
-                break;
-        }
-
-        // General enhanced tags
-        if (text.Contains("вечер") || text.Contains("нощ")) tags.Add("вечерно");
-        if (text.Contains("сутрин") || text.Contains("утро") || text.Contains("morning")) tags.Add("сутрешно");
-        if (text.Contains("семейство") || text.Contains("family") || text.Contains("деца")) tags.Add("семейно");
-        if (text.Contains("открито") || text.Contains("outdoor") || text.Contains("парк")) tags.Add("на открито");
-        if (text.Contains("international") || text.Contains("международн")) tags.Add("международни");
-
-        // Ensure minimum tags
-        if (tags.Count == 1) tags.Add("събитие");
-
-        return CleanAndValidateTags(tags).Take(6).ToList();
-    }
-
     private string? NormalizeLocation(string? location)
     {
         if (string.IsNullOrWhiteSpace(location)) return null;
@@ -494,10 +358,8 @@ Return:";
 
             if (cleanTag is "none" or "безплатно") continue;
 
-            // Skip if too long or has invalid characters
             if (cleanTag.Length > 30 || cleanTag.Contains("№") || cleanTag.Contains("ул.")) continue;
 
-            // Skip if it's just numbers or gibberish
             if (cleanTag.All(char.IsDigit) || cleanTag.Length < 3) continue;
 
             cleaned.Add(cleanTag);
@@ -516,14 +378,6 @@ Return:";
         if (category.HasValue)
         {
             suggestedSubCategory = ExtractSubCategory(eventName, description, category.Value);
-        }
-
-        // Add music genres if it's a music event
-        if (category == EventCategory.Music)
-        {
-            var musicGenres = ExtractMusicGenresWithKeywords(eventName, description);
-            tags.AddRange(musicGenres);
-            tags = CleanAndValidateTags(tags).Take(6).ToList();
         }
 
         return new TaggingResult
@@ -552,7 +406,6 @@ Return:";
 
     private string? ExtractMusicSubCategory(string text)
     {
-        // Metal detection with high priority
         if (new[] { "slayer", "metallica", "megadeth", "anthrax", "iron maiden", "black sabbath" }.Any(keyword => text.Contains(keyword)))
             return "Metal";
 
@@ -665,6 +518,20 @@ Return:";
                 _lastRequest = DateTime.UtcNow;
             }
         });
+    }
+
+    private List<string> ExtractTagsWithKeywords(string eventName, string description, string? location, EventCategory? category)
+    {
+        var tags = new List<string>();
+
+        var venueTag = GetGenericVenueTag(eventName) ?? GetGenericVenueTag(location) ?? NormalizeLocation(location);
+
+        if (!string.IsNullOrWhiteSpace(venueTag))
+        {
+            tags.Add(venueTag);
+        }
+
+        return CleanAndValidateTags(tags).Take(6).ToList();
     }
 }
 
