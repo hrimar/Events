@@ -1,0 +1,53 @@
+﻿@page
+@model ResetAuthenticatorModel
+@{
+    ViewData["Title"] = "Reset Authenticator Key";
+    ViewData["ActivePage"] = ManageNavPages.TwoFactorAuthentication;
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-5 col-md-7">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-5">
+                    <partial name="_StatusMessage" for="StatusMessage" />
+
+                    <div class="text-center mb-4">
+                        <i class="fas fa-sync fa-3x text-danger mb-3"></i>
+                        <h2 class="fw-bold">@ViewData["Title"]</h2>
+                        <p class="text-muted">Generate a new authenticator key</p>
+                    </div>
+
+                    <div class="alert alert-danger" role="alert">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        <strong>Important Warning!</strong>
+                        <ul class="mb-0 mt-2 small">
+                            <li>Your authenticator app will not work until you reconfigure it</li>
+                            <li>This will temporarily disable 2FA until you verify your new authenticator app</li>
+                            <li>If you do not complete the configuration, you may lose access to your account</li>
+                        </ul>
+                    </div>
+
+                    <form id="reset-authenticator-form" method="post">
+                        <div class="d-grid gap-2">
+                            <button id="reset-authenticator-button" class="btn btn-danger btn-lg" type="submit">
+                                <i class="fas fa-sync me-2"></i>Reset Authenticator Key
+                            </button>
+                            <a asp-page="./TwoFactorAuthentication" class="btn btn-outline-secondary btn-lg text-decoration-none">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                        </div>
+                    </form>
+
+                    <hr class="my-4">
+
+                    <div class="text-center">
+                        <a asp-page="./Index" class="text-decoration-none">
+                            <i class="fas fa-arrow-left me-1"></i>Back to Account Settings
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,21 +1,55 @@
 ﻿@page
 @model LogoutModel
 @{
-    ViewData["Title"] = "Log out";
+    ViewData["Title"] = "Log Out";
 }
 
-<header>
-    <h1>@ViewData["Title"]</h1>
-    @{
-        if (User.Identity?.IsAuthenticated ?? false)
-        {
-            <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Page("/", new { area = "" })" method="post">
-                <button type="submit" class="nav-link btn btn-link text-dark">Click here to Logout</button>
-            </form>
-        }
-        else
-        {
-            <p>You have successfully logged out of the application.</p>
-        }
-    }
-</header>
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-5 col-md-7">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-5">
+                    <div class="text-center">
+                        @if (User.Identity?.IsAuthenticated ?? false)
+                        {
+                            <i class="fas fa-sign-out-alt fa-3x text-warning mb-3"></i>
+                            <h2 class="fw-bold mb-3">Ready to Leave?</h2>
+                            <p class="text-muted mb-4">Click the button below to log out of your account</p>
+
+                            <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Page("/", new { area = "" })" method="post">
+                                <button type="submit" class="btn btn-warning btn-lg w-100">
+                                    <i class="fas fa-sign-out-alt me-2"></i>Log Out
+                                </button>
+                            </form>
+
+                            <hr class="my-4">
+
+                            <p class="mb-0">
+                                <a asp-page="./Login" class="text-decoration-none">
+                                    <i class="fas fa-arrow-left me-1"></i>Go Back
+                                </a>
+                            </p>
+                        }
+                        else
+                        {
+                            <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                            <h2 class="fw-bold mb-3">Successfully Logged Out</h2>
+                            <p class="text-muted mb-4">You have successfully logged out of your account.</p>
+
+                            <hr class="my-4">
+
+                            <div class="d-grid gap-2">
+                                <a asp-page="/Account/Login" class="btn btn-primary btn-lg text-decoration-none">
+                                    <i class="fas fa-sign-in-alt me-2"></i>Log In Again
+                                </a>
+                                <a href="/" class="btn btn-outline-secondary btn-lg text-decoration-none">
+                                    <i class="fas fa-home me-2"></i>Back to Home
+                                </a>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

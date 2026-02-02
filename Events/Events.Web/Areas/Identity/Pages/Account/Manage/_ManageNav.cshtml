@@ -1,16 +1,59 @@
-﻿+@using Events.Models.Entities
+﻿@using Events.Models.Entities
 @inject SignInManager<User> SignInManager
 @{
     var hasExternalLogins = (await SignInManager.GetExternalAuthenticationSchemesAsync()).Any();
 }
-<ul class="nav nav-pills flex-column">
-    <li class="nav-item"><a class="nav-link @ManageNavPages.IndexNavClass(ViewContext)" id="profile" asp-page="./Index">Profile</a></li>
-    <li class="nav-item"><a class="nav-link @ManageNavPages.EmailNavClass(ViewContext)" id="email" asp-page="./Email">Email</a></li>
-    <li class="nav-item"><a class="nav-link @ManageNavPages.ChangePasswordNavClass(ViewContext)" id="change-password" asp-page="./ChangePassword">Password</a></li>
+
+<div class="list-group">
+    <a class="list-group-item list-group-item-action @ManageNavPages.IndexNavClass(ViewContext)" id="profile" asp-page="./Index">
+        <i class="fas fa-user me-2"></i>Profile
+    </a>
+    <a class="list-group-item list-group-item-action @ManageNavPages.EmailNavClass(ViewContext)" id="email" asp-page="./Email">
+        <i class="fas fa-envelope me-2"></i>Email
+    </a>
+    <a class="list-group-item list-group-item-action @ManageNavPages.ChangePasswordNavClass(ViewContext)" id="change-password" asp-page="./ChangePassword">
+        <i class="fas fa-lock me-2"></i>Password
+    </a>
     @if (hasExternalLogins)
     {
-        <li id="external-logins" class="nav-item"><a id="external-login" class="nav-link @ManageNavPages.ExternalLoginsNavClass(ViewContext)" asp-page="./ExternalLogins">External logins</a></li>
+        <a id="external-login" class="list-group-item list-group-item-action @ManageNavPages.ExternalLoginsNavClass(ViewContext)" asp-page="./ExternalLogins">
+            <i class="fas fa-link me-2"></i>External Logins
+        </a>
     }
-    <li class="nav-item"><a class="nav-link @ManageNavPages.TwoFactorAuthenticationNavClass(ViewContext)" id="two-factor" asp-page="./TwoFactorAuthentication">Two-factor authentication</a></li>
-    <li class="nav-item"><a class="nav-link @ManageNavPages.PersonalDataNavClass(ViewContext)" id="personal-data" asp-page="./PersonalData">Personal data</a></li>
-</ul>
+    <a class="list-group-item list-group-item-action @ManageNavPages.TwoFactorAuthenticationNavClass(ViewContext)" id="two-factor" asp-page="./TwoFactorAuthentication">
+        <i class="fas fa-shield-alt me-2"></i>Two-Factor Auth
+    </a>
+    <a class="list-group-item list-group-item-action @ManageNavPages.PersonalDataNavClass(ViewContext)" id="personal-data" asp-page="./PersonalData">
+        <i class="fas fa-shield-alt me-2"></i>Personal Data
+    </a>
+</div>
+
+<hr class="my-3">
+
+<a href="/" class="btn btn-outline-secondary btn-sm w-100">
+    <i class="fas fa-arrow-left me-1"></i>Back to Home
+</a>
+
+<style>
+    .list-group-item {
+        color: #495057;
+        transition: all 0.3s ease;
+    }
+
+    .list-group-item:hover {
+        background-color: #f8f9fa;
+        color: #0d6efd;
+        transform: translateX(4px);
+    }
+
+    .list-group-item.active {
+        background-color: #0d6efd;
+        color: white;
+        font-weight: 500;
+    }
+
+    .list-group-item i {
+        width: 20px;
+        text-align: center;
+    }
+</style>

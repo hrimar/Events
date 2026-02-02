@@ -33,6 +33,11 @@
             <span class="navbar-toggler-icon"></span>
         </button>
         
+        <!-- Mobile Login -->
+        <div class="d-lg-none ms-auto">
+            <partial name="_LoginPartial" />
+        </div>
+        
         <div class="navbar-collapse collapse" id="navbarNav">
             <ul class="navbar-nav me-auto">
                 <li class="nav-item">
@@ -70,7 +75,7 @@
                 }
             </ul>
             
-            <!-- Enhanced Navigation Search with Tag Support -->
+            <!-- Desktop Navigation Search with Tag Support -->
             <div class="d-none d-lg-flex flex-grow-1 mx-4 position-relative">
                 <form asp-area="" asp-controller="Events" asp-action="Index" method="get" class="d-flex w-100">
                     <input class="form-control me-2" type="search" name="search" id="navbar-search" 
@@ -90,6 +95,19 @@
             
             <partial name="_LoginPartial" />
         </div>
+        
+        <!-- Mobile Search Bar -->
+        <div class="d-lg-none w-100 mt-2 border-top pt-2">
+            <form asp-area="" asp-controller="Events" asp-action="Index" method="get" class="d-flex gap-2">
+                <input class="form-control" type="search" name="search" id="mobile-navbar-search" 
+                       placeholder="Search events..." autocomplete="off">
+                <button class="btn btn-primary" type="submit">
+                    <i class="fas fa-search"></i>
+                </button>
+            </form>
+            <div id="mobile-navbar-search-results" class="position-absolute w-100 bg-white border rounded shadow-lg mt-1" style="display: none; z-index: 1000; max-height: 300px; overflow-y: auto; margin-left: -12px; margin-right: -12px; max-width: calc(100% + 24px);"></div>
+        </div>
+        
     </div>
 </nav>
 
@@ -120,106 +138,108 @@
 <!-- Enhanced Navigation Search Script -->
 <script>
 $(document).ready(function() {
-    let searchTimeout;
-    const searchInput = $('#navbar-search');
-    const resultsContainer = $('#navbar-search-results');
+    initializeSearch('#navbar-search', '#navbar-search-results', false);
+    initializeSearch('#mobile-navbar-search', '#mobile-navbar-search-results', true);
     
-    searchInput.on('input', function() {
-        clearTimeout(searchTimeout);
-        const query = $(this).val().trim();
+    function initializeSearch(searchInputSelector, resultsContainerSelector, isMobile) {
+        let searchTimeout;
+        const searchInput = $(searchInputSelector);
+        const resultsContainer = $(resultsContainerSelector);
         
-        if (query.length >= 2) {
-            searchTimeout = setTimeout(() => {
-                performNavbarSearch(query);
-            }, 300);
-        } else {
-            hideSearchResults();
-        }
-    });
-    
-    // Hide results when clicking outside
-    $(document).on('click', function(e) {
-        if (!$(e.target).closest('.position-relative').length) {
-            hideSearchResults();
-        }
-    });
-    
-    // Handle search result clicks with proper encoding
-    $(document).on('click', '.navbar-search-item', function(e) {
-        e.preventDefault();
-        const isTag = $(this).data('is-tag');
-        const value = $(this).data('value');
-        
-        if (isTag) {
-            const tagParam = encodeURIComponent(value);
-            const url = `/Events?tags=${tagParam}`;
-            window.location.href = url;
-        } else {
-            const eventId = $(this).data('id');
-            window.location.href = `/Events/Details/${eventId}`;
-        }
-    });
-    
-    function performNavbarSearch(query) {
-        $.ajax({
-            url: '/Events/Search',
-            data: { query: query },
-            success: function(data) {
-                displaySearchResults(data, query);
-            },
-            error: function() {
-                hideSearchResults();
+        searchInput.on('input', function() {
+            clearTimeout(searchTimeout);
+            const query = $(this).val().trim();
+            
+            if (query.length >= 2) {
+                searchTimeout = setTimeout(() => {
+                    performSearch(query);
+                }, 300);
+            } else {
+                resultsContainer.hide();
             }
         });
-    }
-    
-    function displaySearchResults(data, query) {
-        if (!data || data.length === 0) {
-            hideSearchResults();
-            return;
-        }
         
-        let html = '<div class="p-2">';
-        
-        // Group by type
-        const events = data.filter(item => !item.isTag);
-        const tags = data.filter(item => item.isTag);
-        
-        if (tags.length > 0) {
-            html += '<div class="mb-2"><small class="text-muted fw-bold">Tags</small></div>';
-            tags.forEach(item => {
-                html += `
-                    <div class="navbar-search-item p-2 rounded hover-bg-light cursor-pointer" 
-                         data-is-tag="true" data-value="${item.tagName}">
-                        <i class="fas fa-tag text-info me-2"></i>
-                        <strong>${item.name}</strong> 
-                        <small class="text-muted">${item.location}</small>
-                    </div>`;
-            });
-        }
-        
-        if (events.length > 0) {
-            if (tags.length > 0) {
-                html += '<hr class="my-2">';
+        // Hide results when clicking outside
+        $(document).on('click', function(e) {
+            const isClickInsideSearch = $(e.target).closest(searchInputSelector).length > 0 || 
+                                       $(e.target).closest(resultsContainerSelector).length > 0;
+            if (!isClickInsideSearch) {
+                resultsContainer.hide();
             }
-            html += '<div class="mb-2"><small class="text-muted fw-bold">Events</small></div>';
-            events.slice(0, 4).forEach(item => {
-                html += `
-                    <div class="navbar-search-item p-2 rounded hover-bg-light cursor-pointer" 
-                         data-is-tag="false" data-id="${item.id}">
-                        <i class="fas fa-calendar text-primary me-2"></i>
-                        <strong>${item.name}</strong><br>
-                        <small class="text-muted">${item.category || ''} ${item.date ? '• ' + item.date : ''}</small>
-                    </div>`;
+        });
+        
+        // Handle search result clicks
+        $(document).on('click', `.${searchInputSelector.substring(1)}-item`, function(e) {
+            e.preventDefault();
+            const isTag = $(this).data('is-tag');
+            const value = $(this).data('value');
+            
+            if (isTag) {
+                const tagParam = encodeURIComponent(value);
+                const url = `/Events?tags=${tagParam}`;
+                window.location.href = url;
+            } else {
+                const eventId = $(this).data('id');
+                window.location.href = `/Events/Details/${eventId}`;
+            }
+        });
+        
+        function performSearch(query) {
+            $.ajax({
+                url: '/Events/Search',
+                data: { query: query },
+                success: function(data) {
+                    displaySearchResults(data, query);
+                },
+                error: function() {
+                    resultsContainer.hide();
+                }
             });
         }
         
-        html += '</div>';
-        resultsContainer.html(html).show();
-    }
-    
-    function hideSearchResults() {
-        resultsContainer.hide();
+        function displaySearchResults(data, query) {
+            if (!data || data.length === 0) {
+                resultsContainer.hide();
+                return;
+            }
+            
+            let html = '<div class="p-2">';
+            
+            const events = data.filter(item => !item.isTag);
+            const tags = data.filter(item => item.isTag);
+            
+            if (tags.length > 0) {
+                html += '<div class="mb-2"><small class="text-muted fw-bold">Tags</small></div>';
+                tags.forEach(item => {
+                    html += `
+                        <div class="navbar-search-item p-2 rounded hover-bg-light cursor-pointer" 
+                             data-is-tag="true" data-value="${item.tagName}">
+                            <i class="fas fa-tag text-info me-2"></i>
+                            <strong>${item.name}</strong> 
+                            <small class="text-muted">${item.location}</small>
+                        </div>`;
+                });
+            }
+            
+            if (events.length > 0) {
+                if (tags.length > 0) {
+                    html += '<hr class="my-2">';
+                }
+                html += '<div class="mb-2"><small class="text-muted fw-bold">Events</small></div>';
+                events.slice(0, 4).forEach(item => {
+                    html += `
+                        <div class="navbar-search-item p-2 rounded hover-bg-light cursor-pointer" 
+                             data-is-tag="false" data-id="${item.id}">
+                            <i class="fas fa-calendar text-primary me-2"></i>
+                            <strong>${item.name}</strong><br>
+                            <small class="text-muted">${item.category || ''} ${item.date ? '• ' + item.date : ''}</small>
+                        </div>`;
+                });
+            }
+            
+            html += '</div>';
+            resultsContainer.html(html).show();
+        }
     }
 });
 </script>
@@ -235,6 +255,29 @@ $(document).ready(function() {
     
     .navbar-search-item {
         transition: background-color 0.2s ease;
+    }
+    
+    /* Desktop: Login buttons on one line */
+    @@media (min-width: 992px) {
+        .navbar-nav:last-child {
+            flex-direction: row;
+        }
+    }
+    
+    /* Mobile: Login in navbar-nav should be horizontal */
+    .d-lg-none .navbar-nav {
+        flex-direction: row;
+        gap: 0.5rem;
+    }
+    
+    .d-lg-none .navbar-nav .nav-item {
+        margin-right: 0.5rem;
+    }
+    
+    /* Mobile: Login box styling */
+    .d-lg-none > div .navbar-nav {
+        margin: 0;
+        padding: 0;
     }
 </style>
 

@@ -1,0 +1,67 @@
+﻿@page
+@model DeletePersonalDataModel
+@{
+    ViewData["Title"] = "Delete Account";
+    ViewData["ActivePage"] = ManageNavPages.PersonalData;
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-5 col-md-7">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-5">
+                    <div class="text-center mb-4">
+                        <i class="fas fa-trash-alt fa-3x text-danger mb-3"></i>
+                        <h2 class="fw-bold">@ViewData["Title"]</h2>
+                        <p class="text-muted">Permanently delete your account</p>
+                    </div>
+
+                    <div class="alert alert-danger" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Warning:</strong> Deleting this data will permanently remove your account and all associated data. This action cannot be undone.
+                    </div>
+
+                    <form id="delete-user" method="post">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+                        
+                        @if (Model.RequirePassword)
+                        {
+                            <div class="mb-4">
+                                <label asp-for="Input.Password" class="form-label">
+                                    <i class="fas fa-lock me-2"></i>Confirm Password
+                                </label>
+                                <input asp-for="Input.Password" class="form-control form-control-lg" type="password" autocomplete="current-password" aria-required="true" placeholder="Enter your password to confirm deletion" />
+                                <span asp-validation-for="Input.Password" class="text-danger"></span>
+                                <small class="text-muted d-block mt-2">
+                                    We need your password to confirm this action
+                                </small>
+                            </div>
+                        }
+                        
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-danger btn-lg" type="submit">
+                                <i class="fas fa-trash-alt me-2"></i>Yes, Delete My Account
+                            </button>
+                            <a asp-page="./PersonalData" class="btn btn-outline-secondary btn-lg text-decoration-none">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <div class="text-center">
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle me-1"></i>
+                                This action is permanent and cannot be reversed
+                            </small>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
