@@ -27,9 +27,4 @@
     <ProjectReference Include="..\Events.Services\Events.Services.csproj" />
   </ItemGroup>
 
-  <!-- Exclude Development appsettings from production deployment -->
-  <ItemGroup>
-    <Content Remove="appsettings.Development.json" />
-  </ItemGroup>
-
 </Project>
