@@ -299,6 +299,8 @@
 @section Scripts {
     <script src="~/js/favorites.js"></script>
     <script>
+        const shareTitle = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Name ?? string.Empty));
+
         function toggleFavorite(eventId) {
             const button = event.target.closest('button');
             Favorites.toggleFavorite(eventId, button);
@@ -306,7 +308,7 @@
 
         function shareEvent(platform) {
             const url = encodeURIComponent(window.location.href);
-            const title = encodeURIComponent('@Model.Name');
+            const title = encodeURIComponent(shareTitle);
             
             let shareUrl = '';
             switch(platform) {
