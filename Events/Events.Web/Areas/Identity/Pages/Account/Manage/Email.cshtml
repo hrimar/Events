@@ -25,7 +25,14 @@
                     <partial name="_StatusMessage" for="StatusMessage" />
 
                     <form id="email-form" method="post">
-                        <div asp-validation-summary="All" class="alert alert-danger d-none" role="alert"></div>
+                        @if (!ViewData.ModelState.IsValid)
+                        {
+                            <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
+                        }
+                        else
+                        {
+                            <div asp-validation-summary="All" class="alert alert-danger d-none" role="alert"></div>
+                        }
                         
                         <div class="mb-3">
                             <label asp-for="Email" class="form-label">
@@ -89,18 +96,3 @@
         </div>
     </div>
 </div>
-
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const validationSummary = document.querySelector('[asp-validation-summary]');
-            if (validationSummary) {
-                const errorItems = validationSummary.querySelectorAll('li, ul > li');
-                if (errorItems.length > 0) {
-                    validationSummary.classList.remove('d-none');
-                }
-            }
-        });
-    </script>
-}

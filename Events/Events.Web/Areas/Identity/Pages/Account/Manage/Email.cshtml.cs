@@ -124,10 +124,21 @@ namespace Events.Web.Areas.Identity.Pages.Account.Manage
                     pageHandler: null,
                     values: new { area = "Identity", userId = userId, email = Input.NewEmail, code = code },
                     protocol: Request.Scheme);
-                await _emailSender.SendEmailAsync(
-                    Input.NewEmail,
-                    "Confirm your email",
-                    $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+
+                try
+                {
+                    await _emailSender.SendEmailAsync(
+                        Input.NewEmail,
+                        "Confirm your email",
+                        $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+                }
+                catch (Exception ex)
+                {
+                    ModelState.AddModelError(string.Empty,
+                        "We couldn't send the confirmation email. Please try again later or contact support.");
+                    await LoadAsync(user);
+                    return Page();
+                }
 
                 StatusMessage = "Confirmation link to change email sent. Please check your email.";
                 return RedirectToPage();
@@ -160,10 +171,20 @@ namespace Events.Web.Areas.Identity.Pages.Account.Manage
                 pageHandler: null,
                 values: new { area = "Identity", userId = userId, code = code },
                 protocol: Request.Scheme);
-            await _emailSender.SendEmailAsync(
-                email,
-                "Confirm your email",
-                $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+
+            try
+            {
+                await _emailSender.SendEmailAsync(
+                    email,
+                    "Confirm your email",
+                    $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError(string.Empty, "We couldn't send the verification email. Please try again later or contact support.");
+                await LoadAsync(user);
+                return Page();
+            }
 
             StatusMessage = "Verification email sent. Please check your email.";
             return RedirectToPage();

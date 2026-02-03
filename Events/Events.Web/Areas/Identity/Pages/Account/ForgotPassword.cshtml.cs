@@ -71,10 +71,18 @@ namespace Events.Web.Areas.Identity.Pages.Account
                     values: new { area = "Identity", code },
                     protocol: Request.Scheme);
 
-                await _emailSender.SendEmailAsync(
-                    Input.Email,
-                    "Reset Password",
-                    $"Please reset your password by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+                try
+                {
+                    await _emailSender.SendEmailAsync(
+                        Input.Email,
+                        "Reset Password",
+                        $"Please reset your password by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+                }
+                catch (Exception ex)
+                {
+                    ModelState.AddModelError(string.Empty, "We couldn't send the password reset email. Please try again later or contact support.");
+                    return Page();
+                }
 
                 return RedirectToPage("./ForgotPasswordConfirmation");
             }
