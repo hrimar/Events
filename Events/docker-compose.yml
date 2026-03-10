@@ -1,0 +1,24 @@
+services:
+
+  crawler:
+    build:
+      context: .
+      dockerfile: Events.Crawler/Dockerfile
+    container_name: events-crawler
+    environment:
+      FUNCTIONS_WORKER_RUNTIME: dotnet-isolated
+      ASPNETCORE_ENVIRONMENT: Development
+      PLAYWRIGHT_BROWSERS_PATH: /home/site/wwwroot/.playwright
+      AzureWebJobsStorage: ${AZURE_WEBJOBS_STORAGE}
+      ConnectionStrings__EventsConnection: ${EVENTS_CONNECTION_STRING}
+      Claude__ApiKey: ${CLAUDE_API_KEY}
+      Groq__ApiKey: ${GROQ_API_KEY}
+    ports:
+      - '7071:80'
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:80/api/ping']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s

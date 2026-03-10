@@ -1,0 +1,14 @@
+bin/
+obj/
+.vscode/
+.git/
+*.user
+*.suo
+*.db
+*.md
+*.txt
+docker-compose*
+node_modules/
+playwright_browsers/
+.env
+.env.*

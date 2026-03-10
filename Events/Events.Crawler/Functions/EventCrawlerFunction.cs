@@ -26,10 +26,13 @@ public class EventCrawlerFunction
     }
 
     [Function("CrawlEventsFunction")]
-    public async Task CrawlEventsTimerFunction([TimerTrigger("0 0 4 * * *")] TimerInfo myTimer)
-    //public async Task CrawlEventsTimerFunction([TimerTrigger("0 27 19 * * *")] TimerInfo myTimer)
+    // public async Task CrawlEventsTimerFunction([TimerTrigger("0 0 4 * * *")] TimerInfo myTimer)
+    // PRODUCTION: runs daily at 04:00 UTC via Container Apps Job cron schedule
+    // The RunOnStartup=true ensures the function fires immediately when the container starts,
+    // which is the correct behavior for a Container Apps Job triggered by the cron schedule.
+    public async Task CrawlEventsTimerFunction([TimerTrigger("0 0 4 * * *", RunOnStartup = true)] TimerInfo myTimer)
     {
-        using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(8));
+        using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(28));
 
         _logger.LogInformation("Event crawler function started at: {Time}", DateTime.UtcNow);
 
@@ -164,8 +167,7 @@ public class EventCrawlerFunction
 
     [Function("CrawlSpecificSourceFunction")]
     public async Task<HttpResponseData> CrawlSpecificSource(
-        [HttpTrigger(AuthorizationLevel.Function, "post", Route = "crawl/{source}")] HttpRequestData req, 
-        string source)
+        [HttpTrigger(AuthorizationLevel.Function, "post", Route = "crawl/{source}")] HttpRequestData req, string source)
     {
         _logger.LogInformation("Manual crawl requested for source: {Source}", source);
 
