@@ -1,6 +1,7 @@
 ﻿using Events.Crawler.DTOs.Common;
 using Events.Crawler.DTOs.Eventim;
 using Events.Crawler.Enums;
+using Events.Crawler.Services.Helpers;
 using Events.Crawler.Services.Interfaces;
 using Microsoft.Extensions.Logging;
 using Microsoft.Playwright;
@@ -157,15 +158,7 @@ public class EventimCrawler : IWebScrapingCrawler
 
     public bool IsHealthy()
     {
-        try
-        {
-            var chromiumPath = GetChromiumPath();
-            return !string.IsNullOrEmpty(chromiumPath) && File.Exists(chromiumPath);
-        }
-        catch
-        {
-            return false;
-        }
+        return PlaywrightHelper.IsChromiumAvailable();
     }
 
     private async Task<List<EventimEventInstanceDto>> GetEventimEventsAsync()
@@ -488,7 +481,7 @@ public class EventimCrawler : IWebScrapingCrawler
             {
                 _logger.LogInformation("Checking Playwright browser installation...");
 
-                var chromiumPath = GetChromiumPath();
+                var chromiumPath = PlaywrightHelper.GetChromiumExecutablePath();
                 if (string.IsNullOrEmpty(chromiumPath) || !File.Exists(chromiumPath))
                 {
                     _logger.LogWarning("Playwright browsers not found. Attempting to install...");
@@ -537,21 +530,5 @@ public class EventimCrawler : IWebScrapingCrawler
             _logger.LogError(ex, "Error installing Playwright browsers");
             throw;
         }
-    }
-
-    private string? GetChromiumPath()
-    {
-        var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        var playwrightDir = Path.Combine(localAppData, "ms-playwright");
-
-        if (!Directory.Exists(playwrightDir)) return null;
-
-        var chromiumDirs = Directory.GetDirectories(playwrightDir, "chromium-*");
-        if (!chromiumDirs.Any()) return null;
-
-        var latestChromiumDir = chromiumDirs.OrderByDescending(d => d).First();
-        var chromePath = Path.Combine(latestChromiumDir, "chrome-win", "chrome.exe");
-
-        return File.Exists(chromePath) ? chromePath : null;
     }
 }
