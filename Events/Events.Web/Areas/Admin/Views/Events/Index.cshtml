@@ -107,8 +107,7 @@
                 </div>
             </div>
             <small class="text-muted">
-                Note: You can only select items from the current page. Selection will be cleared when 
-                navigating to another page.
+                Note: You can only select items from the current page. Selection will be cleared when navigating to another page.
             </small>
         </div>
     </div>
@@ -483,6 +482,27 @@ else
                             </div>
                         </div>
                     </div>
+
+                    <!-- Status Operation -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <div class="form-check">
+                                <input class="form-check-input bulk-operation-check" type="checkbox" id="applyStatus" value="status" />
+                                <label class="form-check-label" for="applyStatus">
+                                    Change Status
+                                </label>
+                            </div>
+                        </div>
+                        <div class="card-body" id="statusOperation" style="display: none;">
+                            <select class="form-select" name="bulkStatus" id="bulkStatusSelect">
+                                <option value="">Select Status...</option>
+                                @foreach (var status in Html.GetEnumSelectList<EventStatus>())
+                                {
+                                    <option value="@status.Value">@status.Text</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
@@ -542,6 +562,9 @@ else
                 } else if (operationType === 'isfree') {
                     const isFreeDiv = $('#isFreeOperation');
                     $(this).is(':checked') ? isFreeDiv.show() : isFreeDiv.hide();
+                } else if (operationType === 'status') {
+                    const statusDiv = $('#statusOperation');
+                    $(this).is(':checked') ? statusDiv.show() : statusDiv.hide();
                 }
             });
 
@@ -631,6 +654,12 @@ else
                 const isFreeValue = $('input[name="bulkIsFree"]:checked').val();
                 if (isFreeValue) {
                     selectedEventsInput.append(`<input type="hidden" name="BulkIsFree" value="${isFreeValue}" />`);
+                }
+
+                // Add BulkStatus if status operation selected
+                const statusValue = $('#bulkStatusSelect').val();
+                if (statusValue) {
+                    selectedEventsInput.append(`<input type="hidden" name="BulkStatus" value="${statusValue}" />`);
                 }
             });
 

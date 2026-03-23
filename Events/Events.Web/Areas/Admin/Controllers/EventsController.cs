@@ -24,7 +24,7 @@ public class EventsController : Controller
     private readonly IImageUploadService _imageUploadService;
 
     public EventsController(
-        ILogger<EventsController> logger, 
+        ILogger<EventsController> logger,
         IEventService eventService,
         ICategoryRepository categoryRepository,
         ISubCategoryRepository subCategoryRepository,
@@ -94,8 +94,8 @@ public class EventsController : Controller
             // Load categories from database for filter dropdown
             var categories = await _categoryRepository.GetAllAsync();
             ViewBag.AvailableCategories = categories
-                .Select(c => new SelectListItem 
-                { 
+                .Select(c => new SelectListItem
+                {
                     Value = c.Name,
                     Text = c.Name,
                     Selected = c.Name == category
@@ -109,9 +109,7 @@ public class EventsController : Controller
             ViewBag.SortOrder = normalizedSortOrder;
 
             // Also expose categories as JSON for bulk operations modal
-            var categoriesJson = JsonConvert.SerializeObject(
-                categories.Select(c => new { id = c.Id, name = c.Name }).ToList()
-            );
+            var categoriesJson = JsonConvert.SerializeObject(categories.Select(c => new { id = c.Id, name = c.Name }).ToList());
             ViewBag.CategoriesJson = categoriesJson;
 
             return View(paginatedEvents);
@@ -186,8 +184,8 @@ public class EventsController : Controller
 
             _logger.LogInformation("Event {EventId} featured status changed to {IsFeatured}", id, isFeatured);
 
-            TempData["SuccessMessage"] = isFeatured 
-                ? $"Event '{eventEntity.Name}' has been added to featured events." 
+            TempData["SuccessMessage"] = isFeatured
+                ? $"Event '{eventEntity.Name}' has been added to featured events."
                 : $"Event '{eventEntity.Name}' has been removed from featured events.";
 
             return RedirectToAction(nameof(Featured));
@@ -206,7 +204,7 @@ public class EventsController : Controller
         try
         {
             var allEvents = await _eventService.GetAllEventsAsync();
-            
+
             // Filter uncategorized events (CategoryId = 11 is Undefined)
             var uncategorizedEvents = allEvents.Where(e => e.CategoryId == 11);
 
@@ -290,7 +288,7 @@ public class EventsController : Controller
             // Update category and subcategory
             eventEntity.CategoryId = categoryId;
             eventEntity.SubCategoryId = subCategoryId;
-            
+
             // Automatically set status to Published when categorizing from Undefined
             // CategoryId = 11 is Undefined
             if (oldCategoryId == 11 && categoryId != 11)
@@ -298,7 +296,7 @@ public class EventsController : Controller
                 eventEntity.Status = EventStatus.Published;
                 _logger.LogInformation("Event {EventId} status automatically changed to Published after categorization", id);
             }
-            
+
             await _eventService.UpdateEventAsync(eventEntity);
 
             _logger.LogInformation("Event {EventId} category updated from {OldCategory} to {CategoryId}", id, oldCategoryId, categoryId);
@@ -454,7 +452,7 @@ public class EventsController : Controller
             {
                 // Get current tag IDs
                 var currentTagIds = eventEntity.EventTags?.Select(et => et.TagId).ToList() ?? new List<int>();
-                
+
                 // Remove tags that are no longer selected
                 var tagsToRemove = currentTagIds.Except(model.SelectedTagIds).ToList();
                 if (tagsToRemove.Any())
@@ -689,7 +687,7 @@ public class EventsController : Controller
             if (model.SelectedTagIds.Any())
             {
                 await _tagService.BulkAddTagsToEventAsync(createdEvent.Id, model.SelectedTagIds);
-                _logger.LogInformation("Assigned {TagCount} tags to event {EventId}", 
+                _logger.LogInformation("Assigned {TagCount} tags to event {EventId}",
                     model.SelectedTagIds.Count, createdEvent.Id);
             }
 
@@ -794,6 +792,12 @@ public class EventsController : Controller
                         eventChanged = true;
                     }
 
+                    if (model.OperationsToApply.Contains("status") && model.BulkStatus.HasValue)
+                    {
+                        eventEntity.Status = model.BulkStatus.Value;
+                        eventChanged = true;
+                    }
+
                     if (eventChanged)
                     {
                         eventEntity.UpdatedAt = DateTime.UtcNow;
@@ -820,8 +824,9 @@ public class EventsController : Controller
                 await _tagService.BulkAssignTagsToMultipleEventsAsync(model.SelectedEventIds, model.BulkTagIds);
             }
 
-            _logger.LogInformation("Bulk operations completed: {ChangedCount} events updated, " + "Tags assigned: {HasTags}, Operations: {Operations}",
-                changedCount, model.OperationsToApply.Contains("tags"),string.Join(", ", model.OperationsToApply));
+            _logger.LogInformation(
+                "Bulk operations completed: {ChangedCount} events updated, Tags assigned: {HasTags}, Operations: {Operations}",
+                changedCount, model.OperationsToApply.Contains("tags"), string.Join(", ", model.OperationsToApply));
 
             var successMessages = new List<string>();
             if (changedCount > 0)

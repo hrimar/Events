@@ -156,8 +156,7 @@
                     </ul>
 
                     <div class="tab-content">
-                        <div class="tab-pane fade show active" id="url-content" 
-                             role="tabpanel">
+                        <div class="tab-pane fade show active" id="url-content" role="tabpanel">
                             <div class="mb-3">
                                 <label asp-for="ImageUrl" class="form-label">
                                     Image URL
@@ -169,8 +168,7 @@
                             </div>
                         </div>
 
-                        <div class="tab-pane fade" id="upload-content" 
-                             role="tabpanel">
+                        <div class="tab-pane fade" id="upload-content" role="tabpanel">
                             <div class="mb-3">
                                 <label class="form-label">Upload Image</label>
                                 <div id="dropZone" 
@@ -268,12 +266,8 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label asp-for="Status" class="form-label">Event Status *</label>
-                            <select asp-for="Status" class="form-select" required>
-                                <option value="0" selected="@(Model.Status == EventStatus.Draft)">Draft</option>
-                                <option value="1" selected="@(Model.Status == EventStatus.Published)">Published</option>
-                                <option value="2" selected="@(Model.Status == EventStatus.Cancelled)">Cancelled</option>
-                                <option value="3" selected="@(Model.Status == EventStatus.Postponed)">Postponed</option>
-                                <option value="4" selected="@(Model.Status == EventStatus.SoldOut)">Sold Out</option>
+                            <select asp-for="Status" class="form-select"
+                                    asp-items="Html.GetEnumSelectList<EventStatus>()" required>
                             </select>
                             <span asp-validation-for="Status" class="text-danger small"></span>
                         </div>

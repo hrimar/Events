@@ -1,3 +1,5 @@
+using Events.Models.Enums;
+
 namespace Events.Web.Models.Admin;
 
 public class BulkEventOperationViewModel
@@ -18,7 +20,10 @@ public class BulkEventOperationViewModel
     
     // IsFree operation (null = don't apply, true = free, false = paid)
     public bool? BulkIsFree { get; set; }
-    
+
+    // Status operation
+    public EventStatus? BulkStatus { get; set; }
+
     // Which operations to apply
     public List<string> OperationsToApply { get; set; } = new();
 }
