@@ -42,7 +42,7 @@ jobs:
         run: az acr login --name ${{ env.ACR_NAME }}
 
       - name: Build and push Docker image
-        working-directory: Events/Events
+        working-directory: Events
         run: |
           docker build \
             -f Events.Crawler/Dockerfile \
