@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "functionTimeout": "00:10:00",
+  "functionTimeout": "00:28:00",
   "extensions": {
     "http": {
       "maxConcurrentRequests": 100,

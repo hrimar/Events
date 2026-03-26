@@ -1,0 +1,80 @@
+name: Deploy Crawler to Azure Container Registry
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'Events/Events.Crawler/**'
+      - 'Events/Events.Models/**'
+      - 'Events/Events.Data/**'
+      - 'Events/Events.Services/**'
+  workflow_dispatch: # allows manual trigger from GitHub UI
+
+env:
+  ACR_NAME: gosofiacrawleracr
+  JOB_NAME: gosofia-crawler-job
+  RESOURCE_GROUP: gosofia-prod-we-rg
+  IMAGE_NAME: events-crawler
+
+jobs:
+  build-and-push:
+    name: Build and Push Docker Image
+    runs-on: ubuntu-latest
+
+    outputs:
+      image_tag: ${{ steps.meta.outputs.tag }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Generate image tag
+        id: meta
+        # Use short commit SHA as tag — unique, traceable, avoids "latest" cache issues
+        run: echo "tag=$(echo $GITHUB_SHA | cut -c1-7)" >> $GITHUB_OUTPUT
+
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Login to Azure Container Registry
+        run: az acr login --name ${{ env.ACR_NAME }}
+
+      - name: Build and push Docker image
+        working-directory: Events/Events
+        run: |
+          docker build \
+            -f Events.Crawler/Dockerfile \
+            -t ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.tag }} \
+            -t ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:latest \
+            .
+          docker push ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.tag }}
+          docker push ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:latest
+
+  deploy:
+    name: Update Container Apps Job
+    runs-on: ubuntu-latest
+    needs: build-and-push
+
+    steps:
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Update Container Apps Job image
+        # Point the job to the new specific tag — not latest, for deterministic deploys
+        run: |
+          az containerapp job update \
+            --name ${{ env.JOB_NAME }} \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --image ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ needs.build-and-push.outputs.image_tag }}
+
+      - name: Verify deployment
+        run: |
+          IMAGE=$(az containerapp job show \
+            --name ${{ env.JOB_NAME }} \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --query "properties.template.containers[0].image" -o tsv)
+          echo "Deployed image: $IMAGE"

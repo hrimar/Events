@@ -1,9 +1,11 @@
 ﻿using Events.Crawler.DTOs.Common;
 using Events.Crawler.DTOs.TicketStation;
 using Events.Crawler.Enums;
+using Events.Crawler.Services.Helpers;
 using Events.Crawler.Services.Interfaces;
 using Microsoft.Extensions.Logging;
 using Microsoft.Playwright;
+using System.Diagnostics;
 
 namespace Events.Crawler.Services.Implementations;
 
@@ -12,6 +14,8 @@ public class TicketStationCrawler : IWebScrapingCrawler
     private readonly ILogger<TicketStationCrawler> _logger;
     private readonly int _maxRetries = 3;
     private readonly int _delayBetweenRequests = 2000;
+    private static bool _browsersInstalled = false;
+    private static readonly object _installLock = new();
 
     public string SourceName => "ticketstation.bg";
     public CrawlerType CrawlerType => CrawlerType.WebScraping;
@@ -59,14 +63,6 @@ public class TicketStationCrawler : IWebScrapingCrawler
         }
 
         return result;
-    }
-
-    // Browsers are pre-installed during GitHub Actions deployment
-    // No runtime installation needed - Playwright will use pre-installed browsers
-    private void EnsureBrowsersInstalled()
-    {
-        // Skip runtime check - browsers are installed at build time via GitHub Actions
-        // Playwright will automatically find them in the deployment package
     }
 
     public async Task<IEnumerable<string>> ExtractElementsAsync(string url, string selector)
@@ -156,11 +152,71 @@ public class TicketStationCrawler : IWebScrapingCrawler
 
     public bool IsHealthy()
     {
-        // Browsers are pre-installed at deployment time
-        // Always return true - actual browser functionality is tested during crawl
-        return true;
+        return PlaywrightHelper.IsChromiumAvailable();
     }
 
+    private void EnsureBrowsersInstalled()
+    {
+        if (_browsersInstalled) return;
+
+        lock (_installLock)
+        {
+            if (_browsersInstalled) return;
+
+            try
+            {
+                _logger.LogInformation("Checking Playwright browser installation...");
+
+                var chromiumPath = PlaywrightHelper.GetChromiumExecutablePath();
+                if (string.IsNullOrEmpty(chromiumPath) || !File.Exists(chromiumPath))
+                {
+                    _logger.LogWarning("Playwright browsers not found. Attempting to install...");
+                    InstallPlaywrightBrowsers();
+                }
+
+                _browsersInstalled = true;
+                _logger.LogInformation("Playwright browsers are ready");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to ensure Playwright browsers are installed");
+                throw new InvalidOperationException("Playwright browsers are not installed. Please run 'npx playwright install chromium' manually.", ex);
+            }
+        }
+    }
+
+    private void InstallPlaywrightBrowsers()
+    {
+        try
+        {
+            var processInfo = new ProcessStartInfo
+            {
+                FileName = "npx",
+                Arguments = "playwright install chromium",
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                CreateNoWindow = true
+            };
+
+            using var process = Process.Start(processInfo);
+            if (process != null)
+            {
+                process.WaitForExit(TimeSpan.FromMinutes(5));
+
+                if (process.ExitCode != 0)
+                {
+                    var error = process.StandardError.ReadToEnd();
+                    throw new InvalidOperationException($"Failed to install Playwright browsers: {error}");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error installing Playwright browsers");
+            throw;
+        }
+    }
 
     private async Task<List<TicketStationEventDto>> GetTicketStationEventsAsync(string url)
     {
@@ -582,22 +638,35 @@ public class TicketStationCrawler : IWebScrapingCrawler
         try
         {
             var currentDate = DateTime.Today;
-            
+
             // Dictionary of Bulgarian months -> month number
             var bulgarianMonths = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
             {
-                ["януари"] = 1, ["ян"] = 1, ["яну"] = 1,
-                ["февруари"] = 2, ["фев"] = 2, ["феб"] = 2,
-                ["март"] = 3, ["мар"] = 3,
-                ["април"] = 4, ["апр"] = 4,
+                ["януари"] = 1,
+                ["ян"] = 1,
+                ["яну"] = 1,
+                ["февруари"] = 2,
+                ["фев"] = 2,
+                ["феб"] = 2,
+                ["март"] = 3,
+                ["мар"] = 3,
+                ["април"] = 4,
+                ["апр"] = 4,
                 ["май"] = 5,
-                ["юни"] = 6, ["юн"] = 6,
-                ["юли"] = 7, ["юл"] = 7,
-                ["август"] = 8, ["авг"] = 8,
-                ["септември"] = 9, ["сеп"] = 9,
-                ["октомври"] = 10, ["окт"] = 10,
-                ["ноември"] = 11, ["ное"] = 11,
-                ["декември"] = 12, ["дек"] = 12
+                ["юни"] = 6,
+                ["юн"] = 6,
+                ["юли"] = 7,
+                ["юл"] = 7,
+                ["август"] = 8,
+                ["авг"] = 8,
+                ["септември"] = 9,
+                ["сеп"] = 9,
+                ["октомври"] = 10,
+                ["окт"] = 10,
+                ["ноември"] = 11,
+                ["ное"] = 11,
+                ["декември"] = 12,
+                ["дек"] = 12
             };
 
             // HIGH PRIORITY PATTERNS (specific date formats for events)
@@ -712,7 +781,7 @@ public class TicketStationCrawler : IWebScrapingCrawler
                     int.TryParse(match.Groups[2].Value, out int secondNum))
                 {
                     int day, month;
-                    
+
                     if (firstNum > 12 && secondNum <= 12)
                     {
                         day = firstNum;
@@ -773,14 +842,14 @@ public class TicketStationCrawler : IWebScrapingCrawler
             if (IsValidDate(year, month, day))
             {
                 var parsedDate = new DateTime(year, month, day);
-                
+
                 // Ignore dates more than 3 years in the past (likely historical references)
                 if (parsedDate < currentDate.AddYears(-3))
                 {
                     _logger.LogDebug("Ignoring historical date (older than 3 years): {Date}", parsedDate.ToString("yyyy-MM-dd"));
                     return false;
                 }
-                
+
                 date = parsedDate;
                 return true;
             }
@@ -799,7 +868,7 @@ public class TicketStationCrawler : IWebScrapingCrawler
         if (int.TryParse(dayStr, out int day) && bulgarianMonths.TryGetValue(monthStr.ToLowerInvariant(), out int month))
         {
             var year = DetermineYearForDate(currentDate, month);
-            
+
             if (IsValidDate(year, month, day))
             {
                 date = new DateTime(year, month, day);

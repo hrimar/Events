@@ -1,6 +1,7 @@
 ﻿using Events.Crawler.DTOs.Common;
 using Events.Crawler.DTOs.Entase;
 using Events.Crawler.Enums;
+using Events.Crawler.Services.Helpers;
 using Events.Crawler.Services.Interfaces;
 using Microsoft.Extensions.Logging;
 using Microsoft.Playwright;
@@ -157,15 +158,7 @@ public class EntaseCrawler : IWebScrapingCrawler
 
     public bool IsHealthy()
     {
-        try
-        {
-            var chromiumPath = GetChromiumPath();
-            return !string.IsNullOrEmpty(chromiumPath) && File.Exists(chromiumPath);
-        }
-        catch
-        {
-            return false;
-        }
+        return PlaywrightHelper.IsChromiumAvailable();
     }
 
     private async Task<List<EntaseEventDto>> GetEntaseEventsAsync()
@@ -558,23 +551,7 @@ public class EntaseCrawler : IWebScrapingCrawler
         }
     }
 
-    private string? GetChromiumPath()
-    {
-        var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        var playwrightDir = Path.Combine(localAppData, "ms-playwright");
-
-        if (!Directory.Exists(playwrightDir))
-            return null;
-
-        var chromiumDirs = Directory.GetDirectories(playwrightDir, "chromium-*");
-        if (!chromiumDirs.Any())
-            return null;
-
-        var latestChromiumDir = chromiumDirs.OrderByDescending(d => d).First();
-        var chromePath = Path.Combine(latestChromiumDir, "chrome-win", "chrome.exe");
-
-        return File.Exists(chromePath) ? chromePath : null;
-    }
+    private string? GetChromiumPath() => PlaywrightHelper.GetChromiumExecutablePath();
 
     private CrawledEventDto? MapToStandardDto(EntaseEventDto entaseEvent, EntaseSpectacleDto spectacle)
     {

@@ -19,12 +19,16 @@ var host = new HostBuilder()
     {
         services.AddLogging();
 
-        var connectionString = context.Configuration.GetConnectionString("EventsConnection")
-            ?? context.Configuration["ConnectionStrings__EventsConnection"];
+        // Azure Functions isolated host in a container reads configuration exclusively from environment variables.
+        // GetConnectionString() maps to the ConnectionStrings__<name> env var automatically via the .NET config system.
+        var connectionString =
+            context.Configuration.GetConnectionString("EventsConnection")
+            ?? Environment.GetEnvironmentVariable("ConnectionStrings__EventsConnection");
 
         if (string.IsNullOrEmpty(connectionString))
         {
-            throw new InvalidOperationException("Database connection not configured. Add 'EventsConnection' to Connection Strings with type 'SQLServer'."); 
+            throw new InvalidOperationException(
+                "Database connection not configured. Set 'ConnectionStrings__EventsConnection' environment variable in docker-compose.yml or Azure App Settings.");
         }
 
         Console.WriteLine($"Environment: {context.HostingEnvironment.EnvironmentName}");
@@ -67,14 +71,14 @@ var host = new HostBuilder()
         });
 
         // Crawler strategies
-        services.AddScoped<IEventCrawlerStrategy, BiletBgApiCrawler>(); // via HttpClient
+        services.AddScoped<IEventCrawlerStrategy, BiletBgApiCrawler>();  // via HttpClient
         services.AddScoped<IEventCrawlerStrategy, TicketStationCrawler>(); // via Playwright
-        services.AddScoped<IEventCrawlerStrategy, EpaygoCrawler>(); // via Playwright
-        services.AddScoped<IEventCrawlerStrategy, EventimCrawler>(); // via Playwright & AJAX
-        services.AddScoped<IEventCrawlerStrategy, NdkCrawler>(); // via Playwright
-        services.AddScoped<IEventCrawlerStrategy, EntaseCrawler>(); // via Playwright
+        services.AddScoped<IEventCrawlerStrategy, EpaygoCrawler>();       // via Playwright
+        services.AddScoped<IEventCrawlerStrategy, EventimCrawler>();      // via Playwright & AJAX
+        services.AddScoped<IEventCrawlerStrategy, NdkCrawler>();          // via Playwright
+        services.AddScoped<IEventCrawlerStrategy, EntaseCrawler>();       // via Playwright
 
-        Console.WriteLine("Services configured successfully");
+        System.Diagnostics.Trace.WriteLine("Services configured successfully");
     })
     .Build();
 

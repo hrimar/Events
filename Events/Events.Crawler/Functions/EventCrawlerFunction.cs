@@ -4,6 +4,7 @@ using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.Net;
 
@@ -14,22 +15,26 @@ public class EventCrawlerFunction
     private readonly ICrawlerService _crawlerService;
     private readonly IEventProcessingService _eventProcessingService;
     private readonly ILogger<EventCrawlerFunction> _logger;
+    private readonly IHostApplicationLifetime _lifetime;
 
     public EventCrawlerFunction(
         ICrawlerService crawlerService,
         IEventProcessingService eventProcessingService,
-        ILogger<EventCrawlerFunction> logger)
+        ILogger<EventCrawlerFunction> logger,
+        IHostApplicationLifetime lifetime)
     {
         _crawlerService = crawlerService;
         _eventProcessingService = eventProcessingService;
         _logger = logger;
+        _lifetime = lifetime;
     }
 
     [Function("CrawlEventsFunction")]
-    public async Task CrawlEventsTimerFunction([TimerTrigger("0 0 4 * * *")] TimerInfo myTimer)
-    //public async Task CrawlEventsTimerFunction([TimerTrigger("0 27 19 * * *")] TimerInfo myTimer)
+    // Runs daily at 04:00 UTC. RunOnStartup=true is required for Container Apps Job — the container starts at 04:00
+    // and must execute immediately. After completion the host is stopped so the container exits cleanly and the Job reports Succeeded.
+    public async Task CrawlEventsTimerFunction([TimerTrigger("0 0 4 * * *", RunOnStartup = true)] TimerInfo myTimer)
     {
-        using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(8));
+        using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(28));
 
         _logger.LogInformation("Event crawler function started at: {Time}", DateTime.UtcNow);
 
@@ -67,8 +72,13 @@ public class EventCrawlerFunction
             _logger.LogError(ex, "Error during event crawling process");
             throw; // Re-throw to trigger Azure Function retry policy
         }
-
-        _logger.LogInformation("Event crawler function completed at: {Time}", DateTime.UtcNow);
+        finally
+        {
+            _logger.LogInformation("Event crawler function completed at: {Time}", DateTime.UtcNow);
+            // Allow logs to flush before stopping the host
+            await Task.Delay(TimeSpan.FromSeconds(5));
+            _lifetime.StopApplication();
+        }
     }
 
 
@@ -164,8 +174,7 @@ public class EventCrawlerFunction
 
     [Function("CrawlSpecificSourceFunction")]
     public async Task<HttpResponseData> CrawlSpecificSource(
-        [HttpTrigger(AuthorizationLevel.Function, "post", Route = "crawl/{source}")] HttpRequestData req, 
-        string source)
+        [HttpTrigger(AuthorizationLevel.Function, "post", Route = "crawl/{source}")] HttpRequestData req, string source)
     {
         _logger.LogInformation("Manual crawl requested for source: {Source}", source);
 
