@@ -8,8 +8,6 @@ on:
       - 'Events/Events.Models/**'
       - 'Events/Events.Data/**'
       - 'Events/Events.Services/**'
-      - 'Events/Events.Crawler/Dockerfile'
-      - '.github/workflows/crawler-deploy.yml'
   workflow_dispatch: # allows manual trigger from GitHub UI
 
 env:
