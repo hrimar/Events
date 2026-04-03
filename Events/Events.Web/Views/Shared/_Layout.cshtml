@@ -1,5 +1,8 @@
 ﻿@using Events.Models.Enums
 @using Events.Web.Models
+@using Events.Web.Resources
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<SharedResources> Localizer
 
 <!DOCTYPE html>
 <html lang="en">
@@ -42,17 +45,17 @@
             <ul class="navbar-nav me-auto">
                 <li class="nav-item">
                     <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">
-                        <i class="fas fa-home me-1"></i>Home
+                        <i class="fas fa-home me-1"></i>@Localizer["Nav_Home"]
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" asp-area="" asp-controller="Events" asp-action="Index">
-                        <i class="fas fa-calendar me-1"></i>All Events
+                        <i class="fas fa-calendar me-1"></i>@Localizer["Nav_AllEvents"]
                     </a>
                 </li>
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                        <i class="fas fa-filter me-1"></i>Categories
+                        <i class="fas fa-filter me-1"></i>@Localizer["Nav_Categories"]
                     </a>
                     <ul class="dropdown-menu">
                         @foreach(var category in EventsPageViewModel.AvailableCategories)
@@ -69,7 +72,7 @@
                 {
                     <li class="nav-item">
                         <a class="nav-link text-warning" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">
-                            <i class="fas fa-cog me-1"></i>Admin Panel
+                            <i class="fas fa-cog me-1"></i>@Localizer["Nav_AdminPanel"]
                         </a>
                     </li>
                 }
@@ -91,6 +94,11 @@
             <!-- Theme Switcher -->
             <div class="me-3">
                 <partial name="_ThemeSwitcher" />
+            </div>
+
+            <!-- Language Switcher -->
+            <div class="me-3">
+                <partial name="_LanguageSwitcher" />
             </div>
             
             <partial name="_LoginPartial" />
@@ -118,13 +126,28 @@
 <!-- Footer -->
 <footer class="bg-dark text-white py-4 mt-5">
     <div class="container">
-        <div class="row">
+        <div class="row align-items-center">
             <div class="col-md-6">
-                <h6>Sofia Events</h6>
-                <p>Your events portal</p>
+                @* <h6 class="mb-2">Go Sofia Events</h6>
+                <p class="text-white-50 mb-2">@Localizer["Footer_Tagline"]</p> *@
+                <div class="d-flex flex-wrap gap-3">
+                    <a asp-controller="Home" asp-action="AboutUs" class="text-white-50 text-decoration-none footer-link">
+                        @Localizer["Footer_AboutUs"]
+                    </a>
+                    <a asp-controller="Home" asp-action="Privacy" class="text-white-50 text-decoration-none footer-link">
+                        @Localizer["Footer_PrivacyPolicy"]
+                    </a>
+                    <a href="mailto:office@go-sofia.com" class="text-white-50 text-decoration-none footer-link">
+                        <i class="fas fa-envelope me-1"></i>
+                        @* @Localizer["Footer_ContactUs"] *@
+                    </a>
+                </div>
             </div>
-            <div class="col-md-6 text-end">
-                <a href="#" class="text-white-50 text-decoration-none">Contacts</a>
+            <div class="col-md-6 text-md-end mt-3 mt-md-0">
+                <a href="https://www.facebook.com/GoSofia" target="_blank" rel="noopener noreferrer"
+                   class="text-white-50 text-decoration-none footer-social-link" title="Facebook">
+                    <i class="fab fa-facebook-f me-2" style="font-size: 1.4rem;"></i>
+                </a>
             </div>
         </div>
     </div>
@@ -279,6 +302,24 @@ $(document).ready(function() {
         margin: 0;
         padding: 0;
     }
+
+    .footer-link {
+        transition: color 0.2s ease;
+        font-size: 0.9rem;
+    }
+
+    .footer-link:hover {
+        color: #fff !important;
+    }
+
+    .footer-social-link {
+        transition: color 0.2s ease;
+    }
+
+    .footer-social-link:hover {
+        color: #fff !important;
+    }
+
 </style>
 
 @await RenderSectionAsync("Scripts", required: false)

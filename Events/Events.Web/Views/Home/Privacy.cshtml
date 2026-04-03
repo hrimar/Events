@@ -1,6 +1,103 @@
-﻿@{
-    ViewData["Title"] = "Privacy Policy";
-}
-<h1>@ViewData["Title"]</h1>
+﻿@using Events.Web.Resources
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<SharedResources> Localizer
 
-<p>Use this page to detail your site's privacy policy.</p>
+@{
+    ViewData["Title"] = Localizer["Privacy_Title"];
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+
+            <h1 class="mb-1">@Localizer["Privacy_Title"]</h1>
+            <p class="text-muted mb-4">@Localizer["Privacy_Subtitle"]</p>
+
+            <h5>@Localizer["Privacy_S1_Title"]</h5>
+            <p>@Localizer["Privacy_S1_Text"] <a href="mailto:office@go-sofia.com">office@go-sofia.com</a></p>
+
+            <h5>@Localizer["Privacy_S2_Title"]</h5>
+            <p>@Localizer["Privacy_S2_Intro"]</p>
+            <ul>
+                <li>@Localizer["Privacy_S2_Item1"]</li>
+                <li>@Localizer["Privacy_S2_Item2"]</li>
+            </ul>
+            <p>@Localizer["Privacy_S2_WebsiteNote"]</p>
+            <ul>
+                <li>@Localizer["Privacy_S2_DoNot1"]</li>
+                <li>@Localizer["Privacy_S2_DoNot2"]</li>
+                <li>@Localizer["Privacy_S2_DoNot3"]</li>
+                <li>@Localizer["Privacy_S2_DoNot4"]</li>
+            </ul>
+
+            <h5>@Localizer["Privacy_S3_Title"]</h5>
+            <p>@Localizer["Privacy_S3_Intro"]</p>
+            <ul>
+                <li>@Localizer["Privacy_S3_Item1"]</li>
+                <li>@Localizer["Privacy_S3_Item2"]</li>
+                <li>@Localizer["Privacy_S3_Item3"]</li>
+                <li>@Localizer["Privacy_S3_Item4"]</li>
+                <li>@Localizer["Privacy_S3_Item5"]</li>
+            </ul>
+
+            <h5>@Localizer["Privacy_S4_Title"]</h5>
+            <p>@Localizer["Privacy_S4_Intro"]</p>
+            <ul>
+                <li>@Localizer["Privacy_S4_Item1"]</li>
+                <li>@Localizer["Privacy_S4_Item2"]</li>
+                <li>@Localizer["Privacy_S4_Item3"]</li>
+            </ul>
+
+            <h5>@Localizer["Privacy_S5_Title"]</h5>
+            <p>@Localizer["Privacy_S5_Intro"]</p>
+            <ul>
+                <li>@Localizer["Privacy_S5_Item1"]</li>
+                <li>@Localizer["Privacy_S5_Item2"]</li>
+            </ul>
+            <p>@Localizer["Privacy_S5_UserRights"]</p>
+            <ul>
+                <li>@Localizer["Privacy_S5_UserRight1"]</li>
+                <li>@Localizer["Privacy_S5_UserRight2"]</li>
+            </ul>
+
+            <h5>@Localizer["Privacy_S6_Title"]</h5>
+            <p>@Localizer["Privacy_S6_Intro"]</p>
+            <ul>
+                <li>@Localizer["Privacy_S6_Item1"]</li>
+                <li>@Localizer["Privacy_S6_Item2"]</li>
+            </ul>
+            <p><strong>@Localizer["Privacy_S6_Note"]</strong></p>
+
+            <h5>@Localizer["Privacy_S7_Title"]</h5>
+            <p>@Localizer["Privacy_S7_Intro"]</p>
+            <ul>
+                <li>@Localizer["Privacy_S7_Item1"]</li>
+                <li>@Localizer["Privacy_S7_Item2"]</li>
+            </ul>
+            <p>@Localizer["Privacy_S7_Note"]</p>
+
+            <h5>@Localizer["Privacy_S8_Title"]</h5>
+            <p>@Localizer["Privacy_S8_Intro"]</p>
+            <ul>
+                <li>@Localizer["Privacy_S8_Item1"]</li>
+                <li>@Localizer["Privacy_S8_Item2"]</li>
+                <li>@Localizer["Privacy_S8_Item3"]</li>
+                <li>@Localizer["Privacy_S8_Item4"]</li>
+                <li>@Localizer["Privacy_S8_Item5"]</li>
+                <li>@Localizer["Privacy_S8_Item6"]</li>
+            </ul>
+            <p>@Localizer["Privacy_S8_Note"]</p>
+
+            <h5>@Localizer["Privacy_S9_Title"]</h5>
+            <p>@Localizer["Privacy_S9_Text"]</p>
+
+            <h5>@Localizer["Privacy_S10_Title"]</h5>
+            <p>@Localizer["Privacy_S10_Text"]</p>
+
+            <h5>@Localizer["Privacy_S11_Title"]</h5>
+            <p>@Localizer["Privacy_S11_Text"] <a href="mailto:office@go-sofia.com">office@go-sofia.com</a></p>
+
+        </div>
+    </div>
+</div>
+

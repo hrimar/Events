@@ -22,8 +22,9 @@ ConfigureAzureStorage(builder);
 ConfigureEmail(builder);
 RegisterServices(builder);
 
-builder.Services.AddRazorPages();
-builder.Services.AddControllersWithViews();
+ConfigureLocalization(builder);
+builder.Services.AddRazorPages().AddViewLocalization();
+builder.Services.AddControllersWithViews().AddViewLocalization();
 
 var app = builder.Build();
 
@@ -132,6 +133,23 @@ static void ConfigureEmail(WebApplicationBuilder builder)
     builder.Services.AddTransient<IEmailSender, SmtpEmailSender>();
 }
 
+static void ConfigureLocalization(WebApplicationBuilder builder)
+{
+    builder.Services.AddLocalization(options => options.ResourcesPath = string.Empty);
+
+    builder.Services.Configure<RequestLocalizationOptions>(options =>
+    {
+        var supportedCultures = new[] { "bg", "en" };
+
+        options.SetDefaultCulture("bg")
+               .AddSupportedCultures(supportedCultures)
+               .AddSupportedUICultures(supportedCultures);
+
+        // Cookie provider is first - persists user language choice between sessions
+        options.RequestCultureProviders.Insert(0, new Microsoft.AspNetCore.Localization.CookieRequestCultureProvider());
+    });
+}
+
 static void RegisterServices(WebApplicationBuilder builder)
 {
     // Repositories
@@ -214,6 +232,7 @@ static void ConfigureHttpPipeline(WebApplication app)
 
     app.UseHttpsRedirection();
     app.UseStaticFiles();
+    app.UseRequestLocalization();
     app.UseRouting();
     app.UseAuthentication();
     app.UseAuthorization();

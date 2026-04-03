@@ -1,7 +1,9 @@
 using System.Diagnostics;
 using Events.Web.Models;
+using Events.Web.Resources;
 using Events.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
 using Events.Models.Enums;
 
 namespace Events.Web.Controllers
@@ -11,12 +13,18 @@ namespace Events.Web.Controllers
         private readonly ILogger<HomeController> _logger;
         private readonly IEventService _eventService;
         private readonly ITagService _tagService;
+        private readonly IStringLocalizer<SharedResources> _localizer;
 
-        public HomeController(ILogger<HomeController> logger, IEventService eventService, ITagService tagService)
+        public HomeController(
+            ILogger<HomeController> logger,
+            IEventService eventService,
+            ITagService tagService,
+            IStringLocalizer<SharedResources> localizer)
         {
             _logger = logger;
             _eventService = eventService;
             _tagService = tagService;
+            _localizer = localizer;
         }
 
         public async Task<IActionResult> Index()
@@ -88,8 +96,15 @@ namespace Events.Web.Controllers
             }
         }
 
+        public IActionResult AboutUs()
+        {
+            ViewData["Title"] = _localizer["AboutUs_Title"];
+            return View();
+        }
+
         public IActionResult Privacy()
         {
+            ViewData["Title"] = _localizer["Privacy_Title"];
             return View();
         }
 

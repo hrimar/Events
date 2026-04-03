@@ -1,0 +1,135 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+              xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="space" form="qualified" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+
+  <!-- Navigation -->
+  <data name="Nav_Home" xml:space="preserve"><value>Home</value></data>
+  <data name="Nav_AllEvents" xml:space="preserve"><value>All Events</value></data>
+  <data name="Nav_Categories" xml:space="preserve"><value>Categories</value></data>
+  <data name="Nav_AdminPanel" xml:space="preserve"><value>Admin Panel</value></data>
+  <data name="Nav_SearchPlaceholder" xml:space="preserve"><value>Search events or #tags...</value></data>
+  <data name="Nav_SearchPlaceholderMobile" xml:space="preserve"><value>Search events...</value></data>
+
+  <!-- Footer -->
+  <data name="Footer_AboutUs" xml:space="preserve"><value>About Us</value></data>
+  <data name="Footer_PrivacyPolicy" xml:space="preserve"><value>Privacy Policy</value></data>
+  <data name="Footer_ContactUs" xml:space="preserve"><value>Contact Us</value></data>
+  <data name="Footer_Tagline" xml:space="preserve"><value>Your events portal</value></data>
+  <data name="Footer_FollowUs" xml:space="preserve"><value>Follow us</value></data>
+
+  <!-- Home Page - Hero -->
+  <data name="Home_HeroTitle" xml:space="preserve"><value>Discover the Best Events in Sofia</value></data>
+  <data name="Home_HeroSubtitle" xml:space="preserve"><value>Concerts, theatre, sports, and much more. Find your next amazing experience!</value></data>
+  <data name="Home_BrowseAll" xml:space="preserve"><value>Browse All Events</value></data>
+  <data name="Home_FreeEvents" xml:space="preserve"><value>Free Events</value></data>
+
+  <!-- Home Page - Sections -->
+  <data name="Home_BrowseByCategory" xml:space="preserve"><value>Browse by Category</value></data>
+  <data name="Home_FeaturedEvents" xml:space="preserve"><value>Featured Events</value></data>
+  <data name="Home_ViewAllEvents" xml:space="preserve"><value>View All Events</value></data>
+  <data name="Home_Details" xml:space="preserve"><value>Details</value></data>
+  <data name="Home_BuyTickets" xml:space="preserve"><value>Buy tickets</value></data>
+  <data name="Home_Free" xml:space="preserve"><value>Free</value></data>
+
+  <!-- Home Page - Statistics -->
+  <data name="Home_TotalEvents" xml:space="preserve"><value>Total Events</value></data>
+  <data name="Home_TodayEvents" xml:space="preserve"><value>Today's Events</value></data>
+  <data name="Home_Next7Days" xml:space="preserve"><value>Next 7 Days</value></data>
+
+  <!-- About Us Page -->
+  <data name="AboutUs_Title" xml:space="preserve"><value>About Us</value></data>
+  <data name="AboutUs_Heading" xml:space="preserve"><value>About Go Sofia</value></data>
+  <data name="AboutUs_P1" xml:space="preserve"><value>We created Go Sofia with a simple goal: to make discovering events in Sofia easier, more convenient, and more accessible. In a city as active and diverse as Sofia, there are concerts, festivals, exhibitions, performances, family events, and many other activities happening all the time. Yet this information is often scattered across different websites, social media pages, and local sources, making it difficult to find in one place.</value></data>
+  <data name="AboutUs_P2" xml:space="preserve"><value>With go-sofia.com, we aim to bring together useful and up-to-date event information so that both Sofia residents and international visitors can more easily explore what is happening in the city. Our goal is to help people discover events that match their interests and make it easier to enjoy Sofia's cultural and urban life.</value></data>
+  <data name="AboutUs_P3" xml:space="preserve"><value>We believe that when event information is easier to access, the city becomes more open, more connected, and more enjoyable for everyone — whether you live here or are visiting Sofia for a few days.</value></data>
+  <data name="AboutUs_AdvertiseHeading" xml:space="preserve"><value>Advertise with Us</value></data>
+  <data name="AboutUs_AdvertiseText" xml:space="preserve"><value>If you are an event organizer and would like to feature your event on the platform or promote it to a wider audience, feel free to contact us about advertising and promotion opportunities at</value></data>
+
+  <!-- Privacy Policy Page -->
+  <data name="Privacy_Title" xml:space="preserve"><value>Privacy Policy</value></data>
+  <data name="Privacy_Subtitle" xml:space="preserve"><value>of go-sofia.com</value></data>
+  <data name="Privacy_S1_Title" xml:space="preserve"><value>1. Data Controller</value></data>
+  <data name="Privacy_S1_Text" xml:space="preserve"><value>This website is operated by a natural person (hereinafter referred to as the "Controller"). For inquiries regarding the processing of personal data:</value></data>
+  <data name="Privacy_S2_Title" xml:space="preserve"><value>2. What Data We Collect</value></data>
+  <data name="Privacy_S2_Intro" xml:space="preserve"><value>When using the website, we may collect the following personal data:</value></data>
+  <data name="Privacy_S2_Item1" xml:space="preserve"><value>Email address (required for registration)</value></data>
+  <data name="Privacy_S2_Item2" xml:space="preserve"><value>Phone number (optional)</value></data>
+  <data name="Privacy_S2_WebsiteNote" xml:space="preserve"><value>The website:</value></data>
+  <data name="Privacy_S2_DoNot1" xml:space="preserve"><value>Does NOT collect real names</value></data>
+  <data name="Privacy_S2_DoNot2" xml:space="preserve"><value>Does NOT store usage history</value></data>
+  <data name="Privacy_S2_DoNot3" xml:space="preserve"><value>Does NOT collect IP addresses for identification</value></data>
+  <data name="Privacy_S2_DoNot4" xml:space="preserve"><value>Does NOT perform profiling</value></data>
+  <data name="Privacy_S3_Title" xml:space="preserve"><value>3. Purpose of Data Processing</value></data>
+  <data name="Privacy_S3_Intro" xml:space="preserve"><value>We collect and use personal data for the following purposes:</value></data>
+  <data name="Privacy_S3_Item1" xml:space="preserve"><value>Creating and managing user accounts</value></data>
+  <data name="Privacy_S3_Item2" xml:space="preserve"><value>Providing platform functionalities (saving liked events)</value></data>
+  <data name="Privacy_S3_Item3" xml:space="preserve"><value>Providing personalized event recommendations</value></data>
+  <data name="Privacy_S3_Item4" xml:space="preserve"><value>Sending system emails (e.g. registration, password reset)</value></data>
+  <data name="Privacy_S3_Item5" xml:space="preserve"><value>Sending information about new events (only with user consent)</value></data>
+  <data name="Privacy_S4_Title" xml:space="preserve"><value>4. Legal Basis</value></data>
+  <data name="Privacy_S4_Intro" xml:space="preserve"><value>Personal data is processed on the following legal grounds:</value></data>
+  <data name="Privacy_S4_Item1" xml:space="preserve"><value>Performance of a contract – for account creation and maintenance</value></data>
+  <data name="Privacy_S4_Item2" xml:space="preserve"><value>Consent – for future marketing communications</value></data>
+  <data name="Privacy_S4_Item3" xml:space="preserve"><value>Legitimate interest – for improving the service and recommendations</value></data>
+  <data name="Privacy_S5_Title" xml:space="preserve"><value>5. Data Retention</value></data>
+  <data name="Privacy_S5_Intro" xml:space="preserve"><value>Personal data is stored:</value></data>
+  <data name="Privacy_S5_Item1" xml:space="preserve"><value>For as long as the user account exists</value></data>
+  <data name="Privacy_S5_Item2" xml:space="preserve"><value>Until it is explicitly deleted by the user</value></data>
+  <data name="Privacy_S5_UserRights" xml:space="preserve"><value>Users have the ability at any time to:</value></data>
+  <data name="Privacy_S5_UserRight1" xml:space="preserve"><value>download their data</value></data>
+  <data name="Privacy_S5_UserRight2" xml:space="preserve"><value>delete their account (and all associated data)</value></data>
+  <data name="Privacy_S6_Title" xml:space="preserve"><value>6. Data Sharing with Third Parties</value></data>
+  <data name="Privacy_S6_Intro" xml:space="preserve"><value>Personal data may be processed by:</value></data>
+  <data name="Privacy_S6_Item1" xml:space="preserve"><value>Hosting provider (Microsoft Azure – within the EU)</value></data>
+  <data name="Privacy_S6_Item2" xml:space="preserve"><value>Email delivery service (for system messages only)</value></data>
+  <data name="Privacy_S6_Note" xml:space="preserve"><value>Data is NOT sold and is NOT shared with third parties for marketing purposes.</value></data>
+  <data name="Privacy_S7_Title" xml:space="preserve"><value>7. Cookies and Analytics</value></data>
+  <data name="Privacy_S7_Intro" xml:space="preserve"><value>The website may use cookies for:</value></data>
+  <data name="Privacy_S7_Item1" xml:space="preserve"><value>proper functioning of the platform</value></data>
+  <data name="Privacy_S7_Item2" xml:space="preserve"><value>usage analysis (e.g. Google Analytics)</value></data>
+  <data name="Privacy_S7_Note" xml:space="preserve"><value>When analytical tools are used, they will be configured in accordance with applicable data protection requirements.</value></data>
+  <data name="Privacy_S8_Title" xml:space="preserve"><value>8. User Rights</value></data>
+  <data name="Privacy_S8_Intro" xml:space="preserve"><value>Under GDPR, you have the right to:</value></data>
+  <data name="Privacy_S8_Item1" xml:space="preserve"><value>access your data</value></data>
+  <data name="Privacy_S8_Item2" xml:space="preserve"><value>correct inaccurate data</value></data>
+  <data name="Privacy_S8_Item3" xml:space="preserve"><value>delete your data ("right to be forgotten")</value></data>
+  <data name="Privacy_S8_Item4" xml:space="preserve"><value>restrict processing</value></data>
+  <data name="Privacy_S8_Item5" xml:space="preserve"><value>object to processing</value></data>
+  <data name="Privacy_S8_Item6" xml:space="preserve"><value>receive a copy of your data</value></data>
+  <data name="Privacy_S8_Note" xml:space="preserve"><value>You can exercise these rights through your account settings or by contacting the Controller.</value></data>
+  <data name="Privacy_S9_Title" xml:space="preserve"><value>9. Security</value></data>
+  <data name="Privacy_S9_Text" xml:space="preserve"><value>We take reasonable technical and organizational measures to protect personal data against unauthorized access, loss, or misuse.</value></data>
+  <data name="Privacy_S10_Title" xml:space="preserve"><value>10. Changes to This Policy</value></data>
+  <data name="Privacy_S10_Text" xml:space="preserve"><value>This policy may be updated from time to time. We recommend reviewing it periodically.</value></data>
+  <data name="Privacy_S11_Title" xml:space="preserve"><value>11. Contact</value></data>
+  <data name="Privacy_S11_Text" xml:space="preserve"><value>If you have any questions regarding this policy:</value></data>
+</root>

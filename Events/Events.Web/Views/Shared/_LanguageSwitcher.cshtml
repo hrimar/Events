@@ -1,0 +1,27 @@
+﻿@using System.Globalization
+
+@{
+    var currentCulture = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName.ToLower();
+    var returnUrl = Context.Request.Path + Context.Request.QueryString;
+}
+
+<div class="language-switcher d-flex gap-1">
+    <form asp-controller="Language" asp-action="SetLanguage" method="post">
+        <input type="hidden" name="culture" value="bg" />
+        <input type="hidden" name="returnUrl" value="@returnUrl" />
+        <button type="submit"
+                class="btn btn-sm @(currentCulture == "bg" ? "btn-primary" : "btn-outline-secondary")"
+                title="Български">
+            БГ
+        </button>
+    </form>
+    <form asp-controller="Language" asp-action="SetLanguage" method="post">
+        <input type="hidden" name="culture" value="en" />
+        <input type="hidden" name="returnUrl" value="@returnUrl" />
+        <button type="submit"
+                class="btn btn-sm @(currentCulture == "en" ? "btn-primary" : "btn-outline-secondary")"
+                title="English">
+            EN
+        </button>
+    </form>
+</div>

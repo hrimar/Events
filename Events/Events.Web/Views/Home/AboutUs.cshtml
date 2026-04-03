@@ -1,0 +1,29 @@
+@using Events.Web.Resources
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<SharedResources> Localizer
+
+@{
+    ViewData["Title"] = Localizer["AboutUs_Title"];
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+
+            <h1 class="mb-4">@Localizer["AboutUs_Heading"]</h1>
+
+            <p class="lead">@Localizer["AboutUs_P1"]</p>
+            <p>@Localizer["AboutUs_P2"]</p>
+            <p>@Localizer["AboutUs_P3"]</p>
+
+            <hr class="my-4" />
+
+            <h4>@Localizer["AboutUs_AdvertiseHeading"]</h4>
+            <p>
+                @Localizer["AboutUs_AdvertiseText"]
+                <a href="mailto:advertise@go-sofia.com">advertise@go-sofia.com</a>
+            </p>
+
+        </div>
+    </div>
+</div>
