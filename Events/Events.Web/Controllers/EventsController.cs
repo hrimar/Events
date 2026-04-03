@@ -2,11 +2,13 @@ using Events.Data.Repositories.Interfaces;
 using Events.Models.Entities;
 using Events.Services.Interfaces;
 using Events.Web.Models;
+using Events.Web.Resources;
 using Microsoft.AspNetCore.Mvc;
 using Events.Models.Enums;
 using Events.Web.Extensions;
 using Events.Web.Models.DTOs;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.Extensions.Localization;
 
 namespace Events.Web.Controllers;
 
@@ -16,13 +18,20 @@ public class EventsController : Controller
     private readonly IEventService _eventService;
     private readonly ITagService _tagService;
     private readonly ISubCategoryRepository _subCategoryRepository;
+    private readonly IStringLocalizer<SharedResources> _localizer;
 
-    public EventsController(ILogger<EventsController> logger, IEventService eventService, ITagService tagService, ISubCategoryRepository subCategoryRepository)
+    public EventsController(
+        ILogger<EventsController> logger,
+        IEventService eventService,
+        ITagService tagService,
+        ISubCategoryRepository subCategoryRepository,
+        IStringLocalizer<SharedResources> localizer)
     {
         _logger = logger;
         _eventService = eventService;
         _tagService = tagService;
         _subCategoryRepository = subCategoryRepository;
+        _localizer = localizer;
     }
 
     public async Task<IActionResult> Index(
@@ -89,6 +98,8 @@ public class EventsController : Controller
             var paginatedEvents = new PaginatedList<EventViewModel>(eventViewModels, totalCount, page, pageSize);
             var popularTags = await GetPopularTagsAsync();
 
+            var pageTitle = BuildPageTitle(category, free, search);
+
             var viewModel = new EventsPageViewModel
             {
                 Events = paginatedEvents,
@@ -104,7 +115,8 @@ public class EventsController : Controller
                     .ToList() ?? new List<string>(),
                 PopularTags = popularTags,
                 SortBy = sortBy,
-                SortOrder = sortOrder
+                SortOrder = sortOrder,
+                PageTitle = pageTitle
             };
 
             viewModel.AvailableSubCategories = await BuildSubCategoryOptionsAsync(category, subCategory);
@@ -320,6 +332,20 @@ public class EventsController : Controller
             _logger.LogError(ex, "Error loading category page for {Category}", category);
             return RedirectToAction(nameof(Index));
         }
+    }
+
+    private string BuildPageTitle(string? category, bool? free, string? search)
+    {
+        if (!string.IsNullOrWhiteSpace(search))
+            return $"{_localizer["PageTitle_SearchResults"]}: \"{search}\"";
+
+        if (free == true)
+            return _localizer["PageTitle_FreeEvents"];
+
+        if (!string.IsNullOrWhiteSpace(category))
+            return $"{category} {_localizer["PageTitle_Events"]}";
+
+        return _localizer["PageTitle_AllEvents"];
     }
 
     private async Task<List<SelectListItem>> BuildSubCategoryOptionsAsync(string? category, string? selectedSubCategory)

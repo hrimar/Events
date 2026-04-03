@@ -65,6 +65,74 @@
   <data name="Home_TodayEvents" xml:space="preserve"><value>Today's Events</value></data>
   <data name="Home_Next7Days" xml:space="preserve"><value>Next 7 Days</value></data>
 
+  <!-- Events Index Page - Filters -->
+  <data name="PageTitle_AllEvents" xml:space="preserve"><value>All Events</value></data>
+  <data name="PageTitle_FreeEvents" xml:space="preserve"><value>Free Events</value></data>
+  <data name="PageTitle_SearchResults" xml:space="preserve"><value>Search Results</value></data>
+  <data name="PageTitle_Events" xml:space="preserve"><value>Events</value></data>
+  <data name="Events_Category" xml:space="preserve"><value>Category</value></data>
+  <data name="Events_AllCategories" xml:space="preserve"><value>All Categories</value></data>
+  <data name="Events_Subcategory" xml:space="preserve"><value>Subcategory</value></data>
+  <data name="Events_AllSubcategories" xml:space="preserve"><value>All Subcategories</value></data>
+  <data name="Events_SelectCategoryFirst" xml:space="preserve"><value>Select a category first</value></data>
+  <data name="Events_Price" xml:space="preserve"><value>Price</value></data>
+  <data name="Events_AllEvents" xml:space="preserve"><value>All Events</value></data>
+  <data name="Events_FreeOnly" xml:space="preserve"><value>Free Only</value></data>
+  <data name="Events_PaidOnly" xml:space="preserve"><value>Paid Only</value></data>
+  <data name="Events_FromDate" xml:space="preserve"><value>From Date</value></data>
+  <data name="Events_ToDate" xml:space="preserve"><value>To Date</value></data>
+  <data name="Events_PopularTags" xml:space="preserve"><value>Popular Tags</value></data>
+  <data name="Events_BrowseTags" xml:space="preserve"><value>Browse Tags</value></data>
+  <data name="Events_SelectedTags" xml:space="preserve"><value>Selected tags:</value></data>
+  <data name="Events_ClearAll" xml:space="preserve"><value>Clear All</value></data>
+  <data name="Events_Tags" xml:space="preserve"><value>Tags</value></data>
+  <data name="Events_ActiveFilters" xml:space="preserve"><value>Active filters:</value></data>
+  <data name="Events_FilterCategory" xml:space="preserve"><value>Category:</value></data>
+  <data name="Events_FilterSubCategory" xml:space="preserve"><value>SubCategory:</value></data>
+  <data name="Events_FilterFreeEvents" xml:space="preserve"><value>Free Events</value></data>
+  <data name="Events_FilterPaidEvents" xml:space="preserve"><value>Paid Events</value></data>
+  <data name="Events_FilterSearch" xml:space="preserve"><value>Search:</value></data>
+  <data name="Events_SortBy" xml:space="preserve"><value>Sort by:</value></data>
+  <data name="Events_View" xml:space="preserve"><value>View:</value></data>
+  <data name="Events_FilteredResults" xml:space="preserve"><value>Filtered results</value></data>
+  <data name="Events_Tag" xml:space="preserve"><value>Tag</value></data>
+  <data name="Events_Showing" xml:space="preserve"><value>Showing</value></data>
+  <data name="Events_Of" xml:space="preserve"><value>of</value></data>
+  <data name="Events_NoEventsFound" xml:space="preserve"><value>No events found</value></data>
+  <data name="Events_NoEventsHint" xml:space="preserve"><value>Try adjusting your search criteria or browse all events.</value></data>
+  <data name="Events_ViewAllEvents" xml:space="preserve"><value>View All Events</value></data>
+  <data name="Events_Previous" xml:space="preserve"><value>Previous</value></data>
+  <data name="Events_Next" xml:space="preserve"><value>Next</value></data>
+  <data name="Events_More" xml:space="preserve"><value>more</value></data>
+  <data name="Events_Details" xml:space="preserve"><value>Details</value></data>
+  <data name="Events_BuyTickets" xml:space="preserve"><value>Buy tickets</value></data>
+  <data name="Events_Free" xml:space="preserve"><value>Free</value></data>
+
+  <!-- Events Details Page -->
+  <data name="Details_Home" xml:space="preserve"><value>Home</value></data>
+  <data name="Details_Events" xml:space="preserve"><value>Events</value></data>
+  <data name="Details_EventTags" xml:space="preserve"><value>Event Tags</value></data>
+  <data name="Details_FindSimilar" xml:space="preserve"><value>Find Similar Events</value></data>
+  <data name="Details_Save" xml:space="preserve"><value>Save</value></data>
+  <data name="Details_LoginToSave" xml:space="preserve"><value>Login to Save</value></data>
+  <data name="Details_Share" xml:space="preserve"><value>Share</value></data>
+  <data name="Details_CopyLink" xml:space="preserve"><value>Copy Link</value></data>
+  <data name="Details_DateAndTime" xml:space="preserve"><value>Date &amp; Time</value></data>
+  <data name="Details_Location" xml:space="preserve"><value>Location</value></data>
+  <data name="Details_Status" xml:space="preserve"><value>Status</value></data>
+  <data name="Details_AboutEvent" xml:space="preserve"><value>About this event</value></data>
+  <data name="Details_MoreCategoryEvents" xml:space="preserve"><value>More</value></data>
+  <data name="Details_EventsIn" xml:space="preserve"><value>Events in</value></data>
+  <data name="Details_MoreFreeEvents" xml:space="preserve"><value>More Free Events</value></data>
+  <data name="Details_BuyTickets" xml:space="preserve"><value>Buy Tickets</value></data>
+  <data name="Details_TicketRedirect" xml:space="preserve"><value>You'll be redirected to the official ticketing site</value></data>
+  <data name="Details_TicketNotAvailable" xml:space="preserve"><value>Ticket information not available</value></data>
+  <data name="Details_YouMightLike" xml:space="preserve"><value>You Might Also Like</value></data>
+  <data name="Details_ViewAllCategoryEvents" xml:space="preserve"><value>View All</value></data>
+  <data name="Details_Free" xml:space="preserve"><value>Free</value></data>
+  <data name="Details_LinkCopied" xml:space="preserve"><value>Link copied to clipboard!</value></data>
+  <data name="Details_LinkCopyFailed" xml:space="preserve"><value>Failed to copy link</value></data>
+
   <!-- About Us Page -->
   <data name="AboutUs_Title" xml:space="preserve"><value>About Us</value></data>
   <data name="AboutUs_Heading" xml:space="preserve"><value>About Go Sofia</value></data>

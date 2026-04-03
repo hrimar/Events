@@ -1,4 +1,7 @@
 @model Events.Web.Models.EventViewModel
+@using Events.Web.Resources
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<SharedResources> Localizer
 
 @{
     ViewData["Title"] = Model.Name;
@@ -32,8 +35,8 @@
     <!-- Breadcrumb -->
     <nav aria-label="breadcrumb" class="mb-4">
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
-            <li class="breadcrumb-item"><a asp-controller="Events" asp-action="Index">Events</a></li>
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">@Localizer["Details_Home"]</a></li>
+            <li class="breadcrumb-item"><a asp-controller="Events" asp-action="Index">@Localizer["Details_Events"]</a></li>
             @if(!string.IsNullOrEmpty(Model.CategoryName))
             {
                 <li class="breadcrumb-item">
@@ -58,7 +61,7 @@
                     @* Show 'Free' badge only for free events *@
                     @if (Model.IsFree)
                     {
-                        <div class="event-price-overlay event-free">Free</div>
+                        <div class="event-price-overlay event-free">@Localizer["Details_Free"]</div>
                     }
                 </div>
 
@@ -89,7 +92,7 @@
                             {
                                 <div class="mb-3">
                                     <small class="text-muted d-block mb-2">
-                                        <i class="fas fa-tags me-1"></i>Event Tags
+                                        <i class="fas fa-tags me-1"></i>@Localizer["Details_EventTags"]
                                     </small>
                                     <div class="event-tags-detailed">
                                         @foreach(var tag in Model.Tags)
@@ -103,7 +106,7 @@
                                         {
                                             <a href="@Url.Action("Index", "Events", new { tags = string.Join(",", Model.Tags.Take(3)) })" 
                                                class="btn btn-sm btn-outline-info ms-2">
-                                                <i class="fas fa-search me-1"></i>Find Similar Events
+                                                <i class="fas fa-search me-1"></i>@Localizer["Details_FindSimilar"]
                                             </a>
                                         }
                                     </div>
@@ -114,20 +117,20 @@
                             @if (User.Identity?.IsAuthenticated ?? false)
                             {
                                 <button class="btn btn-outline-danger mb-2" onclick="toggleFavorite(@Model.Id)">
-                                    <i class="fas fa-heart"></i> Save
+                                    <i class="fas fa-heart"></i> @Localizer["Details_Save"]
                                 </button>
                             }
                             else
                             {
                                 <a href="/Identity/Account/Login?returnUrl=@Url.Action("Details", "Events", 
                                     new { id = Model.Id })" class="btn btn-outline-secondary mb-2">
-                                    <i class="fas fa-heart"></i> Login to Save
+                                    <i class="fas fa-heart"></i> @Localizer["Details_LoginToSave"]
                                 </a>
                             }
                             <br>
                             <div class="dropdown">
                                 <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                    <i class="fas fa-share-alt"></i> Share
+                                    <i class="fas fa-share-alt"></i> @Localizer["Details_Share"]
                                 </button>
                                 <ul class="dropdown-menu">
                                     <li><a class="dropdown-item" href="#" onclick="shareEvent('facebook')">
@@ -141,7 +144,7 @@
                                     </a></li>
                                     <li><hr class="dropdown-divider"></li>
                                     <li><a class="dropdown-item" href="#" onclick="copyLink()">
-                                        <i class="fas fa-link me-2"></i>Copy Link
+                                        <i class="fas fa-link me-2"></i>@Localizer["Details_CopyLink"]
                                     </a></li>
                                 </ul>
                             </div>
@@ -154,7 +157,7 @@
                             <div class="d-flex align-items-center mb-3">
                                 <i class="fas fa-calendar text-primary me-3" style="width: 20px;"></i>
                                 <div>
-                                    <strong>Date & Time</strong><br>
+                                    <strong>@Localizer["Details_DateAndTime"]</strong><br>
                                     <span class="text-muted">@Model.FormattedDate at @Model.FormattedTime</span>
                                 </div>
                             </div>
@@ -164,7 +167,7 @@
                             <div class="d-flex align-items-center mb-3">
                                 <i class="fas fa-map-marker-alt text-primary me-3" style="width: 20px;"></i>
                                 <div>
-                                    <strong>Location</strong><br>
+                                    <strong>@Localizer["Details_Location"]</strong><br>
                                     <span class="text-muted">@Model.Location</span>
                                 </div>
                             </div>
@@ -176,7 +179,7 @@
                             <div class="d-flex align-items-center mb-3">
                                 <i class="fas fa-clock text-primary me-3" style="width: 20px;"></i>
                                 <div>
-                                    <strong>Status</strong><br>
+                                    <strong>@Localizer["Details_Status"]</strong><br>
                                     <span class="badge bg-success">@Model.Status</span>
                                 </div>
                             </div>
@@ -187,7 +190,7 @@
                     @if(!string.IsNullOrEmpty(Model.Description))
                     {
                         <div class="mb-4">
-                            <h4>About this event</h4>
+                        <h4>@Localizer["Details_AboutEvent"]</h4>
                             <div class="text-muted">
                                 @Html.Raw(Model.Description.Replace("\n", "<br>"))
                             </div>
@@ -199,16 +202,16 @@
                         @if(!string.IsNullOrEmpty(Model.CategoryName))
                         {
                             <a href="@Url.Action("Index", "Events", new { category = Model.CategoryName })" class="btn btn-outline-secondary btn-sm">
-                                <i class="fas fa-layer-group me-1"></i>More @Model.CategoryName Events
+                                <i class="fas fa-layer-group me-1"></i>@Localizer["Details_MoreCategoryEvents"] @Model.CategoryName
                             </a>
                         }
                         <a href="@Url.Action("Index", "Events", new { search = Model.City })" class="btn btn-outline-secondary btn-sm">
-                            <i class="fas fa-map-marker-alt me-1"></i>Events in @Model.City
+                            <i class="fas fa-map-marker-alt me-1"></i>@Localizer["Details_EventsIn"] @Model.City
                         </a>
                         @if(Model.IsFree)
                         {
                             <a href="@Url.Action("Index", "Events", new { free = true })" class="btn btn-outline-success btn-sm">
-                                <i class="fas fa-gift me-1"></i>More Free Events
+                                <i class="fas fa-gift me-1"></i>@Localizer["Details_MoreFreeEvents"]
                             </a>
                         }
                     </div>
@@ -224,15 +227,15 @@
                     @if(Model.HasTicketUrl)
                     {
                         <a href="@Model.TicketUrl" target="_blank" class="btn btn-primary btn-lg w-100 mb-3">
-                            <i class="fas fa-ticket-alt me-2"></i>Buy Tickets
+                            <i class="fas fa-ticket-alt me-2"></i>@Localizer["Details_BuyTickets"]
                         </a>
-                        <small class="text-muted">You'll be redirected to the official ticketing site</small>
+                        <small class="text-muted">@Localizer["Details_TicketRedirect"]</small>
                     }
                     else
                     {
                         <div class="alert alert-info">
                             <i class="fas fa-info-circle"></i>
-                            Ticket information not available
+                            @Localizer["Details_TicketNotAvailable"]
                         </div>
                     }
                 </div>
@@ -246,7 +249,7 @@
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <h6 class="card-title mb-0">
                                 <i class="fas fa-lightbulb text-warning me-1"></i>
-                                You Might Also Like
+                                @Localizer["Details_YouMightLike"]
                             </h6>
                         </div>
                         
@@ -286,7 +289,7 @@
                         @if(!string.IsNullOrEmpty(Model.CategoryName))
                         {
                             <a href="/Events/Category/@Model.CategoryName" class="btn btn-outline-primary btn-sm w-100">
-                                <i class="fas fa-th-list me-1"></i>View All @Model.CategoryName Events
+                                <i class="fas fa-th-list me-1"></i>@Localizer["Details_ViewAllCategoryEvents"] @Model.CategoryName
                             </a>
                         }
                     </div>
@@ -331,10 +334,10 @@
         function copyLink() {
             navigator.clipboard.writeText(window.location.href)
                 .then(() => {
-                    Favorites.showMessage('Link copied to clipboard!', 'success');
+                    Favorites.showMessage('@Localizer["Details_LinkCopied"]', 'success');
                 })
                 .catch(() => {
-                    Favorites.showMessage('Failed to copy link', 'error');
+                    Favorites.showMessage('@Localizer["Details_LinkCopyFailed"]', 'error');
                 });
         }
     </script>

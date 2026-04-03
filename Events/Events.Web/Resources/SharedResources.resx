@@ -65,6 +65,74 @@
   <data name="Home_TodayEvents" xml:space="preserve"><value>Събития днес</value></data>
   <data name="Home_Next7Days" xml:space="preserve"><value>Следващите 7 дни</value></data>
 
+  <!-- Events Index Page - Filters -->
+  <data name="PageTitle_AllEvents" xml:space="preserve"><value>Всички събития</value></data>
+  <data name="PageTitle_FreeEvents" xml:space="preserve"><value>Безплатни събития</value></data>
+  <data name="PageTitle_SearchResults" xml:space="preserve"><value>Резултати от търсене</value></data>
+  <data name="PageTitle_Events" xml:space="preserve"><value>Събития</value></data>
+  <data name="Events_Category" xml:space="preserve"><value>Категория</value></data>
+  <data name="Events_AllCategories" xml:space="preserve"><value>Всички категории</value></data>
+  <data name="Events_Subcategory" xml:space="preserve"><value>Подкатегория</value></data>
+  <data name="Events_AllSubcategories" xml:space="preserve"><value>Всички подкатегории</value></data>
+  <data name="Events_SelectCategoryFirst" xml:space="preserve"><value>Изберете категория</value></data>
+  <data name="Events_Price" xml:space="preserve"><value>Цена</value></data>
+  <data name="Events_AllEvents" xml:space="preserve"><value>Всички събития</value></data>
+  <data name="Events_FreeOnly" xml:space="preserve"><value>Само безплатни</value></data>
+  <data name="Events_PaidOnly" xml:space="preserve"><value>Само платени</value></data>
+  <data name="Events_FromDate" xml:space="preserve"><value>От дата</value></data>
+  <data name="Events_ToDate" xml:space="preserve"><value>До дата</value></data>
+  <data name="Events_PopularTags" xml:space="preserve"><value>Популярни тагове</value></data>
+  <data name="Events_BrowseTags" xml:space="preserve"><value>Разгледай тагове</value></data>
+  <data name="Events_SelectedTags" xml:space="preserve"><value>Избрани тагове:</value></data>
+  <data name="Events_ClearAll" xml:space="preserve"><value>Изчисти</value></data>
+  <data name="Events_Tags" xml:space="preserve"><value>Тагове</value></data>
+  <data name="Events_ActiveFilters" xml:space="preserve"><value>Активни филтри:</value></data>
+  <data name="Events_FilterCategory" xml:space="preserve"><value>Категория:</value></data>
+  <data name="Events_FilterSubCategory" xml:space="preserve"><value>Подкатегория:</value></data>
+  <data name="Events_FilterFreeEvents" xml:space="preserve"><value>Безплатни събития</value></data>
+  <data name="Events_FilterPaidEvents" xml:space="preserve"><value>Платени събития</value></data>
+  <data name="Events_FilterSearch" xml:space="preserve"><value>Търсене:</value></data>
+  <data name="Events_SortBy" xml:space="preserve"><value>Сортирай по:</value></data>
+  <data name="Events_View" xml:space="preserve"><value>Изглед:</value></data>
+  <data name="Events_FilteredResults" xml:space="preserve"><value>Филтрирани резултати</value></data>
+  <data name="Events_Tag" xml:space="preserve"><value>Таг</value></data>
+  <data name="Events_Showing" xml:space="preserve"><value>Показват се</value></data>
+  <data name="Events_Of" xml:space="preserve"><value>от</value></data>
+  <data name="Events_NoEventsFound" xml:space="preserve"><value>Няма намерени събития</value></data>
+  <data name="Events_NoEventsHint" xml:space="preserve"><value>Опитайте да промените критериите за търсене или разгледайте всички събития.</value></data>
+  <data name="Events_ViewAllEvents" xml:space="preserve"><value>Виж всички събития</value></data>
+  <data name="Events_Previous" xml:space="preserve"><value>Предишна</value></data>
+  <data name="Events_Next" xml:space="preserve"><value>Следваща</value></data>
+  <data name="Events_More" xml:space="preserve"><value>още</value></data>
+  <data name="Events_Details" xml:space="preserve"><value>Детайли</value></data>
+  <data name="Events_BuyTickets" xml:space="preserve"><value>Купи билети</value></data>
+  <data name="Events_Free" xml:space="preserve"><value>Безплатно</value></data>
+
+  <!-- Events Details Page -->
+  <data name="Details_Home" xml:space="preserve"><value>Начало</value></data>
+  <data name="Details_Events" xml:space="preserve"><value>Събития</value></data>
+  <data name="Details_EventTags" xml:space="preserve"><value>Тагове на събитието</value></data>
+  <data name="Details_FindSimilar" xml:space="preserve"><value>Намери подобни</value></data>
+  <data name="Details_Save" xml:space="preserve"><value>Запази</value></data>
+  <data name="Details_LoginToSave" xml:space="preserve"><value>Влез за да запазиш</value></data>
+  <data name="Details_Share" xml:space="preserve"><value>Сподели</value></data>
+  <data name="Details_CopyLink" xml:space="preserve"><value>Копирай линк</value></data>
+  <data name="Details_DateAndTime" xml:space="preserve"><value>Дата и час</value></data>
+  <data name="Details_Location" xml:space="preserve"><value>Локация</value></data>
+  <data name="Details_Status" xml:space="preserve"><value>Статус</value></data>
+  <data name="Details_AboutEvent" xml:space="preserve"><value>За събитието</value></data>
+  <data name="Details_MoreCategoryEvents" xml:space="preserve"><value>Още събития от</value></data>
+  <data name="Details_EventsIn" xml:space="preserve"><value>Събития в</value></data>
+  <data name="Details_MoreFreeEvents" xml:space="preserve"><value>Още безплатни събития</value></data>
+  <data name="Details_BuyTickets" xml:space="preserve"><value>Купи билети</value></data>
+  <data name="Details_TicketRedirect" xml:space="preserve"><value>Ще бъдете пренасочени към официалния сайт за билети</value></data>
+  <data name="Details_TicketNotAvailable" xml:space="preserve"><value>Информация за билети не е налична</value></data>
+  <data name="Details_YouMightLike" xml:space="preserve"><value>Може да харесате</value></data>
+  <data name="Details_ViewAllCategoryEvents" xml:space="preserve"><value>Виж всички от</value></data>
+  <data name="Details_Free" xml:space="preserve"><value>Безплатно</value></data>
+  <data name="Details_LinkCopied" xml:space="preserve"><value>Линкът е копиран!</value></data>
+  <data name="Details_LinkCopyFailed" xml:space="preserve"><value>Неуспешно копиране на линк</value></data>
+
   <!-- About Us Page -->
   <data name="AboutUs_Title" xml:space="preserve"><value>За нас</value></data>
   <data name="AboutUs_Heading" xml:space="preserve"><value>За Go Sofia</value></data>

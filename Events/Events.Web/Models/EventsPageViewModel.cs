@@ -14,7 +14,7 @@ public class EventsPageViewModel
     public List<TagViewModel> PopularTags { get; set; } = new(); // Popular tags for tag cloud
     public DateTime? FromDate { get; set; }
     public DateTime? ToDate { get; set; }
-    public string PageTitle { get; set; } = "All Events";
+    public string PageTitle { get; set; } = string.Empty;
 
     public List<SelectListItem> AvailableSubCategories { get; set; } = new();
 
