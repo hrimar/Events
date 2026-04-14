@@ -1,12 +1,13 @@
 using Events.Data.Repositories.Interfaces;
 using Events.Models.Entities;
+using Events.Models.Enums;
 using Events.Services.Interfaces;
+using Events.Web.Extensions;
+using Events.Web.Localization;
 using Events.Web.Models;
+using Events.Web.Models.DTOs;
 using Events.Web.Resources;
 using Microsoft.AspNetCore.Mvc;
-using Events.Models.Enums;
-using Events.Web.Extensions;
-using Events.Web.Models.DTOs;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Localization;
 
@@ -120,6 +121,8 @@ public class EventsController : Controller
             };
 
             viewModel.AvailableSubCategories = await BuildSubCategoryOptionsAsync(category, subCategory);
+            viewModel.LocalizedCategories = EventsPageViewModel.GetAvailableCategories(_localizer);
+            viewModel.LocalizedSortOptions = EventsPageViewModel.GetAvailableSortOptions(_localizer);
 
             return View(viewModel);
         }
@@ -141,7 +144,7 @@ public class EventsController : Controller
     {
         var decodedTagName = Uri.UnescapeDataString(tagName).Trim();
         _logger.LogInformation("Tag filtering requested for: '{TagName}' (decoded: '{DecodedTagName}')", tagName, decodedTagName);
-        
+
         var redirectDto = new TagRedirectDto
         {
             Tags = decodedTagName,
@@ -205,10 +208,10 @@ public class EventsController : Controller
         {
             var futureEvents = await _eventService.GetPagedEventsAsync(
                 1, int.MaxValue, EventStatus.Published, null, null, null, DateTime.Today);
-            
+
             var futureEventIds = futureEvents.Events.Select(e => e.Id).ToList();
             var allTags = await _tagService.GetAllTagsAsync();
-            
+
             return allTags
                 .Where(t => t.EventTags?.Any(et => futureEventIds.Contains(et.EventId)) == true)
                 .Select(t => new TagViewModel
@@ -235,10 +238,10 @@ public class EventsController : Controller
         {
             var futureEvents = await _eventService.GetPagedEventsAsync(
                 1, int.MaxValue, EventStatus.Published, null, null, null, DateTime.Today);
-            
+
             var futureEventIds = futureEvents.Events.Select(e => e.Id).ToList();
             var allTags = await _tagService.GetAllTagsAsync();
-            
+
             var matchingTags = allTags
                 .Where(t => t.Name.Contains(query.Trim(), StringComparison.OrdinalIgnoreCase))
                 .Where(t => t.EventTags?.Any(et => futureEventIds.Contains(et.EventId)) == true)
@@ -275,22 +278,22 @@ public class EventsController : Controller
 
             var viewModel = EventViewModel.FromEntity(eventEntity);
             var relatedEvents = new List<EventViewModel>();
-            
+
             // Try to get events with same tags first
             if (eventEntity.EventTags?.Any() == true)
             {
                 var eventTags = eventEntity.EventTags.Select(et => et.Tag?.Name).Where(name => name != null).ToList();
                 var tagBasedResults = await _eventService.GetAllEventsAsync();
-                
+
                 var relatedByTags = tagBasedResults
-                    .Where(e => e.Id != id && 
-                               e.Date >= DateTime.Today && 
+                    .Where(e => e.Id != id &&
+                               e.Date >= DateTime.Today &&
                                e.Status == EventStatus.Published &&
                                e.EventTags?.Any(et => et.Tag != null && eventTags.Contains(et.Tag.Name)) == true)
                     .OrderByDescending(e => e.EventTags?.Count(et => et.Tag != null && eventTags.Contains(et.Tag.Name)) ?? 0)
                     .Take(6)
                     .ToList();
-                
+
                 relatedEvents.AddRange(EventViewModel.FromEntities(relatedByTags));
             }
 
@@ -341,6 +344,11 @@ public class EventsController : Controller
 
         if (free == true)
             return _localizer["PageTitle_FreeEvents"];
+
+        if (!string.IsNullOrWhiteSpace(category) && Enum.TryParse<EventCategory>(category, ignoreCase: true, out var parsedCategory))
+        {
+            return $"{parsedCategory.Localize(_localizer)} {_localizer["PageTitle_Events"]}";
+        }
 
         if (!string.IsNullOrWhiteSpace(category))
             return $"{category} {_localizer["PageTitle_Events"]}";

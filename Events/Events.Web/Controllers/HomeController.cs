@@ -1,10 +1,11 @@
 using System.Diagnostics;
+using Events.Models.Enums;
+using Events.Services.Interfaces;
+using Events.Web.Localization;
 using Events.Web.Models;
 using Events.Web.Resources;
-using Events.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
-using Events.Models.Enums;
 
 namespace Events.Web.Controllers
 {
@@ -54,7 +55,8 @@ namespace Events.Web.Controllers
                     TotalEvents = totalEvents,
                     TodayEvents = todayEvents,
                     Next7DaysEvents = next7DaysEvents,
-                    PopularTags = popularTags.Take(15).ToList() // Top 15 for homepage
+                    PopularTags = popularTags.Take(15).ToList(), // Top 15 for homepage
+                    LocalizedCategories = EventsPageViewModel.GetAvailableCategories(_localizer)
                 };
 
                 return View(viewModel);

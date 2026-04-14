@@ -16,7 +16,7 @@
                 <label for="category" class="form-label">@Localizer["Events_Category"]</label>
                 <select class="form-select" id="category" name="category">
                     <option value="">@Localizer["Events_AllCategories"]</option>
-                    @foreach(var cat in EventsPageViewModel.AvailableCategories)
+                    @foreach(var cat in Model.LocalizedCategories)
                     {
                         <option value="@cat.Value" selected="@(Model.CurrentCategory == cat.Value)">
                             @cat.DisplayName
@@ -123,8 +123,8 @@
                             {
                                 <div class="mb-3">
                                     <small class="text-muted d-flex align-items-center">
-                                        <i class="@EventsPageViewModel.AvailableCategories.FirstOrDefault(c => c.Value == categoryGroup.Key.ToString())?.IconClass me-1"></i>
-                                        @EventsPageViewModel.AvailableCategories.FirstOrDefault(c => c.Value == categoryGroup.Key.ToString())?.DisplayName Tags
+                                        <i class="@Model.LocalizedCategories.FirstOrDefault(c => c.Value == categoryGroup.Key.ToString())?.IconClass me-1"></i>
+                                        @Model.LocalizedCategories.FirstOrDefault(c => c.Value == categoryGroup.Key.ToString())?.DisplayName @Localizer["Events_Tags"]
                                     </small>
                                     <div class="mt-1">
                                         @foreach(var tag in categoryGroup.Value.Take(8))
@@ -215,7 +215,7 @@
                 <div class="d-flex align-items-center gap-3">
                     <span class="text-muted">@Localizer["Events_SortBy"]</span>
                     <div class="btn-group" role="group">
-                        @foreach(var sortOption in EventsPageViewModel.AvailableSortOptions)
+                        @foreach(var sortOption in Model.LocalizedSortOptions)
                         {
                             var isCurrentSort = Model.SortBy == sortOption.Value;
                             var newSortOrder = isCurrentSort && Model.SortOrder == "asc" ? "desc" : "asc";
@@ -335,9 +335,10 @@
                                 
                                 @if(!string.IsNullOrEmpty(eventItem.CategoryName))
                                 {
+                                    var catDisplay = Model.LocalizedCategories.FirstOrDefault(c => c.Value == eventItem.CategoryName);
                                     <div class="mb-2">
                                         <a href="@Url.Action("Category", "Events", new { category = eventItem.CategoryName })" class="badge bg-secondary text-decoration-none">
-                                            @eventItem.CategoryName
+                                            @(catDisplay?.DisplayName ?? eventItem.CategoryName)
                                         </a>
                                         @if(!string.IsNullOrEmpty(eventItem.SubCategoryName))
                                         {

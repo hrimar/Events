@@ -1,5 +1,8 @@
-using Events.Models.Enums;
+﻿using Events.Models.Enums;
+using Events.Web.Localization;
+using Events.Web.Resources;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.Extensions.Localization;
 
 namespace Events.Web.Models;
 
@@ -18,29 +21,55 @@ public class EventsPageViewModel
 
     public List<SelectListItem> AvailableSubCategories { get; set; } = new();
 
+    // Pre-built localized lists - populated by the controller
+    public List<CategoryDisplayItem> LocalizedCategories { get; set; } = new();
+    public List<SortOption> LocalizedSortOptions { get; set; } = new();
+
     // Sorting functionality
     public string? SortBy { get; set; }
     public string? SortOrder { get; set; } = "asc";
 
-    // Available categories for filter dropdown
-    public static List<CategoryDisplayItem> AvailableCategories =>
+    // Available categories - localized (preferred, call from controllers/views with localizer)
+    public static List<CategoryDisplayItem> GetAvailableCategories(IStringLocalizer<SharedResources> localizer) =>
         Enum.GetValues<EventCategory>()
             .Where(c => c != EventCategory.Undefined) // Don't show Undefined in filter
             .Select(category => new CategoryDisplayItem
             {
                 Value = category.ToString(),
-                DisplayName = GetCategoryDisplayName(category),
-                IconClass = GetCategoryIcon(category)
+                DisplayName = category.Localize(localizer),
+                IconClass = category.LocalizeIcon()
             })
             .ToList();
 
-    // Sort options
+    // Available categories - static fallback (Bulgarian, used when localizer is not available)
+    public static List<CategoryDisplayItem> AvailableCategories =>
+        Enum.GetValues<EventCategory>()
+            .Where(c => c != EventCategory.Undefined)
+            .Select(category => new CategoryDisplayItem
+            {
+                Value = category.ToString(),
+                DisplayName = GetCategoryDisplayName(category),
+                IconClass = category.LocalizeIcon()
+            })
+            .ToList();
+
+    // Sort options - localized
+    public static List<SortOption> GetAvailableSortOptions(IStringLocalizer<SharedResources> localizer) => new()
+    {
+        new() { Value = "date",        DisplayName = localizer["Sort_Date"],        IconClass = "fas fa-calendar" },
+        new() { Value = "name",        DisplayName = localizer["Sort_Name"],        IconClass = "fas fa-sort-alpha-up" },
+        new() { Value = "price",       DisplayName = localizer["Sort_Price"],       IconClass = "fas fa-dollar-sign" },
+        new() { Value = "category",    DisplayName = localizer["Sort_Category"],    IconClass = "fas fa-tags" },
+        new() { Value = "subcategory", DisplayName = localizer["Sort_Subcategory"], IconClass = "fas fa-layer-group" }
+    };
+
+    // Sort options - static fallback (Bulgarian)
     public static List<SortOption> AvailableSortOptions => new()
     {
-        new() { Value = "date", DisplayName = "Date", IconClass = "fas fa-calendar" },
-        new() { Value = "name", DisplayName = "Name", IconClass = "fas fa-sort-alpha-up" },
-        new() { Value = "price", DisplayName = "Price", IconClass = "fas fa-dollar-sign" },
-        new() { Value = "category", DisplayName = "Category", IconClass = "fas fa-tags" },
+        new() { Value = "date",        DisplayName = "Date",        IconClass = "fas fa-calendar" },
+        new() { Value = "name",        DisplayName = "Name",        IconClass = "fas fa-sort-alpha-up" },
+        new() { Value = "price",       DisplayName = "Price",       IconClass = "fas fa-dollar-sign" },
+        new() { Value = "category",    DisplayName = "Category",    IconClass = "fas fa-tags" },
         new() { Value = "subcategory", DisplayName = "Subcategory", IconClass = "fas fa-layer-group" }
     };
 
@@ -107,32 +136,17 @@ public class EventsPageViewModel
 
     private static string GetCategoryDisplayName(EventCategory category) => category switch
     {
-        EventCategory.Music => "Music",
-        EventCategory.Art => "Art & Culture",
-        EventCategory.Business => "Business",
-        EventCategory.Sports => "Sports",
-        EventCategory.Theatre => "Theatre",
-        EventCategory.Cinema => "Cinema",
-        EventCategory.Festivals => "Festivals",
-        EventCategory.Exhibitions => "Exhibitions",
-        EventCategory.Conferences => "Conferences",
-        EventCategory.Workshops => "Workshops",
-        _ => category.ToString()
-    };
-
-    private static string GetCategoryIcon(EventCategory category) => category switch
-    {
-        EventCategory.Music => "fas fa-music",
-        EventCategory.Art => "fas fa-palette",
-        EventCategory.Business => "fas fa-briefcase",
-        EventCategory.Sports => "fas fa-running",
-        EventCategory.Theatre => "fas fa-theater-masks",
-        EventCategory.Cinema => "fas fa-film",
-        EventCategory.Festivals => "fas fa-glass-cheers",
-        EventCategory.Exhibitions => "fas fa-images",
-        EventCategory.Conferences => "fas fa-users",
-        EventCategory.Workshops => "fas fa-tools",
-        _ => "fas fa-calendar"
+        EventCategory.Music       => "Музика",
+        EventCategory.Art         => "Изкуство и Култура",
+        EventCategory.Business    => "Бизнес",
+        EventCategory.Sports      => "Спорт",
+        EventCategory.Theatre     => "Театър",
+        EventCategory.Cinema      => "Кино",
+        EventCategory.Festivals   => "Фестивали",
+        EventCategory.Exhibitions => "Изложби",
+        EventCategory.Conferences => "Конференции",
+        EventCategory.Workshops   => "Уъркшопи",
+        _                         => category.ToString()
     };
 }
 

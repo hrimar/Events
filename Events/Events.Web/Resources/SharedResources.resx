@@ -199,5 +199,192 @@
   <data name="Privacy_S10_Title" xml:space="preserve"><value>10. Промени в тази политика</value></data>
   <data name="Privacy_S10_Text" xml:space="preserve"><value>Настоящата политика може да бъде актуализирана периодично. Препоръчваме да я преглеждате редовно.</value></data>
   <data name="Privacy_S11_Title" xml:space="preserve"><value>11. Контакт</value></data>
-  <data name="Privacy_S11_Text" xml:space="preserve"><value>Ако имате въпроси относно тази политика:</value></data>
+  <!-- Categories -->
+  <data name="Category_Music" xml:space="preserve"><value>Музика</value></data>
+  <data name="Category_Art" xml:space="preserve"><value>Изкуство и Култура</value></data>
+  <data name="Category_Business" xml:space="preserve"><value>Бизнес</value></data>
+  <data name="Category_Sports" xml:space="preserve"><value>Спорт</value></data>
+  <data name="Category_Theatre" xml:space="preserve"><value>Театър</value></data>
+  <data name="Category_Cinema" xml:space="preserve"><value>Кино</value></data>
+  <data name="Category_Festivals" xml:space="preserve"><value>Фестивали</value></data>
+  <data name="Category_Exhibitions" xml:space="preserve"><value>Изложби</value></data>
+  <data name="Category_Conferences" xml:space="preserve"><value>Конференции</value></data>
+  <data name="Category_Workshops" xml:space="preserve"><value>Уъркшопи</value></data>
+
+  <!-- Music SubCategories -->
+  <data name="SubCategory_Pop" xml:space="preserve"><value>Поп</value></data>
+  <data name="SubCategory_Rock" xml:space="preserve"><value>Рок</value></data>
+  <data name="SubCategory_HipHop" xml:space="preserve"><value>Хип Хоп</value></data>
+  <data name="SubCategory_Rap" xml:space="preserve"><value>Рап</value></data>
+  <data name="SubCategory_Jazz" xml:space="preserve"><value>Джаз</value></data>
+  <data name="SubCategory_Blues" xml:space="preserve"><value>Блус</value></data>
+  <data name="SubCategory_Classical" xml:space="preserve"><value>Класическа музика</value></data>
+  <data name="SubCategory_Folk" xml:space="preserve"><value>Фолк</value></data>
+  <data name="SubCategory_TraditionalBulgarian" xml:space="preserve"><value>Традиционна българска музика</value></data>
+  <data name="SubCategory_EDM" xml:space="preserve"><value>EDM</value></data>
+  <data name="SubCategory_Techno" xml:space="preserve"><value>Техно</value></data>
+  <data name="SubCategory_House" xml:space="preserve"><value>Хаус</value></data>
+  <data name="SubCategory_DrumBass" xml:space="preserve"><value>Драм &amp; Бас</value></data>
+  <data name="SubCategory_Trance" xml:space="preserve"><value>Транс</value></data>
+  <data name="SubCategory_Reggae" xml:space="preserve"><value>Реге</value></data>
+  <data name="SubCategory_RB" xml:space="preserve"><value>R&amp;B</value></data>
+  <data name="SubCategory_Metal" xml:space="preserve"><value>Метъл</value></data>
+  <data name="SubCategory_Indie" xml:space="preserve"><value>Инди</value></data>
+  <data name="SubCategory_Acoustic" xml:space="preserve"><value>Акустична музика</value></data>
+  <data name="SubCategory_Alternative" xml:space="preserve"><value>Алтернативна музика</value></data>
+  <data name="SubCategory_Punk" xml:space="preserve"><value>Пънк</value></data>
+  <data name="SubCategory_Soul" xml:space="preserve"><value>Соул</value></data>
+  <data name="SubCategory_Chillout" xml:space="preserve"><value>Чилаут</value></data>
+  <data name="SubCategory_Experimental" xml:space="preserve"><value>Експериментална</value></data>
+  <data name="SubCategory_Choir" xml:space="preserve"><value>Хор</value></data>
+  <data name="SubCategory_WorldMusic" xml:space="preserve"><value>World Music</value></data>
+
+  <!-- Art SubCategories -->
+  <data name="SubCategory_Painting" xml:space="preserve"><value>Живопис</value></data>
+  <data name="SubCategory_Sculpture" xml:space="preserve"><value>Скулптура</value></data>
+  <data name="SubCategory_Photography" xml:space="preserve"><value>Фотография</value></data>
+  <data name="SubCategory_DigitalArt" xml:space="preserve"><value>Дигитално изкуство</value></data>
+  <data name="SubCategory_StreetArt" xml:space="preserve"><value>Улично изкуство</value></data>
+  <data name="SubCategory_Graffiti" xml:space="preserve"><value>Графити</value></data>
+  <data name="SubCategory_Illustration" xml:space="preserve"><value>Илюстрация</value></data>
+  <data name="SubCategory_PerformanceArt" xml:space="preserve"><value>Пърформанс</value></data>
+  <data name="SubCategory_InstallationArt" xml:space="preserve"><value>Инсталация</value></data>
+  <data name="SubCategory_ContemporaryArt" xml:space="preserve"><value>Съвременно изкуство</value></data>
+  <data name="SubCategory_VisualArts" xml:space="preserve"><value>Визуални изкуства</value></data>
+  <data name="SubCategory_MixedMedia" xml:space="preserve"><value>Смесена техника</value></data>
+  <data name="SubCategory_ConceptualArt" xml:space="preserve"><value>Концептуално изкуство</value></data>
+
+  <!-- Business SubCategories -->
+  <data name="SubCategory_NetworkingEvents" xml:space="preserve"><value>Нетуъркинг събития</value></data>
+  <data name="SubCategory_Startups" xml:space="preserve"><value>Стартъпи</value></data>
+  <data name="SubCategory_Entrepreneurship" xml:space="preserve"><value>Предприемачество</value></data>
+  <data name="SubCategory_Marketing" xml:space="preserve"><value>Маркетинг</value></data>
+  <data name="SubCategory_Sales" xml:space="preserve"><value>Продажби</value></data>
+  <data name="SubCategory_Leadership" xml:space="preserve"><value>Лидерство</value></data>
+  <data name="SubCategory_Finance" xml:space="preserve"><value>Финанси</value></data>
+  <data name="SubCategory_RealEstate" xml:space="preserve"><value>Недвижими имоти</value></data>
+  <data name="SubCategory_Investment" xml:space="preserve"><value>Инвестиции</value></data>
+  <data name="SubCategory_ECommerce" xml:space="preserve"><value>Е-търговия</value></data>
+  <data name="SubCategory_Innovation" xml:space="preserve"><value>Иновации</value></data>
+  <data name="SubCategory_Technology" xml:space="preserve"><value>Технологии</value></data>
+  <data name="SubCategory_HRManagement" xml:space="preserve"><value>Управление на човешки ресурси</value></data>
+  <data name="SubCategory_BusinessStrategy" xml:space="preserve"><value>Бизнес стратегия</value></data>
+  <data name="SubCategory_ProductDevelopment" xml:space="preserve"><value>Разработка на продукти</value></data>
+
+  <!-- Sports SubCategories -->
+  <data name="SubCategory_Football" xml:space="preserve"><value>Футбол</value></data>
+  <data name="SubCategory_Basketball" xml:space="preserve"><value>Баскетбол</value></data>
+  <data name="SubCategory_Volleyball" xml:space="preserve"><value>Волейбол</value></data>
+  <data name="SubCategory_Tennis" xml:space="preserve"><value>Тенис</value></data>
+  <data name="SubCategory_Athletics" xml:space="preserve"><value>Лека атлетика</value></data>
+  <data name="SubCategory_Swimming" xml:space="preserve"><value>Плуване</value></data>
+  <data name="SubCategory_Running" xml:space="preserve"><value>Бягане</value></data>
+  <data name="SubCategory_Cycling" xml:space="preserve"><value>Колоездене</value></data>
+  <data name="SubCategory_Boxing" xml:space="preserve"><value>Бокс</value></data>
+  <data name="SubCategory_MMA" xml:space="preserve"><value>MMA</value></data>
+  <data name="SubCategory_Wrestling" xml:space="preserve"><value>Борба</value></data>
+  <data name="SubCategory_Weightlifting" xml:space="preserve"><value>Вдигане на тежести</value></data>
+  <data name="SubCategory_CrossFit" xml:space="preserve"><value>CrossFit</value></data>
+  <data name="SubCategory_Yoga" xml:space="preserve"><value>Йога</value></data>
+  <data name="SubCategory_Fitness" xml:space="preserve"><value>Фитнес</value></data>
+  <data name="SubCategory_Hiking" xml:space="preserve"><value>Планинарство</value></data>
+  <data name="SubCategory_Climbing" xml:space="preserve"><value>Катерене</value></data>
+  <data name="SubCategory_Skiing" xml:space="preserve"><value>Ски</value></data>
+  <data name="SubCategory_Snowboarding" xml:space="preserve"><value>Сноуборд</value></data>
+  <data name="SubCategory_Motocross" xml:space="preserve"><value>Мотокрос</value></data>
+  <data name="SubCategory_eSports" xml:space="preserve"><value>Е-спорт</value></data>
+  <data name="SubCategory_TableTennis" xml:space="preserve"><value>Тенис на маса</value></data>
+  <data name="SubCategory_Badminton" xml:space="preserve"><value>Бадминтон</value></data>
+  <data name="SubCategory_Golf" xml:space="preserve"><value>Голф</value></data>
+  <data name="SubCategory_DanceSport" xml:space="preserve"><value>Спортни танци</value></data>
+
+  <!-- Theatre SubCategories -->
+  <data name="SubCategory_Drama" xml:space="preserve"><value>Драма</value></data>
+  <data name="SubCategory_Comedy" xml:space="preserve"><value>Комедия</value></data>
+  <data name="SubCategory_MusicalTheatre" xml:space="preserve"><value>Мюзикъл</value></data>
+  <data name="SubCategory_Tragedy" xml:space="preserve"><value>Трагедия</value></data>
+  <data name="SubCategory_ExperimentalTheatre" xml:space="preserve"><value>Експериментален театър</value></data>
+  <data name="SubCategory_PuppetTheatre" xml:space="preserve"><value>Куклен театър</value></data>
+  <data name="SubCategory_Improvisation" xml:space="preserve"><value>Импровизация</value></data>
+  <data name="SubCategory_StreetTheatre" xml:space="preserve"><value>Уличен театър</value></data>
+  <data name="SubCategory_Monodrama" xml:space="preserve"><value>Монодрама</value></data>
+  <data name="SubCategory_ChildrensTheatre" xml:space="preserve"><value>Детски театър</value></data>
+  <data name="SubCategory_StandupComedy" xml:space="preserve"><value>Стендъп комедия</value></data>
+
+  <!-- Cinema SubCategories -->
+  <data name="SubCategory_FeatureFilms" xml:space="preserve"><value>Игрални филми</value></data>
+  <data name="SubCategory_ShortFilms" xml:space="preserve"><value>Кратки филми</value></data>
+  <data name="SubCategory_Documentaries" xml:space="preserve"><value>Документални филми</value></data>
+  <data name="SubCategory_Animation" xml:space="preserve"><value>Анимация</value></data>
+  <data name="SubCategory_IndependentCinema" xml:space="preserve"><value>Независимо кино</value></data>
+  <data name="SubCategory_BulgarianCinema" xml:space="preserve"><value>Българско кино</value></data>
+  <data name="SubCategory_InternationalCinema" xml:space="preserve"><value>Международно кино</value></data>
+  <data name="SubCategory_FilmPremieres" xml:space="preserve"><value>Филмови премиери</value></data>
+  <data name="SubCategory_StudentFilms" xml:space="preserve"><value>Студентски филми</value></data>
+  <data name="SubCategory_FilmFestivals" xml:space="preserve"><value>Филмови фестивали</value></data>
+
+  <!-- Festivals SubCategories -->
+  <data name="SubCategory_MusicFestivals" xml:space="preserve"><value>Музикални фестивали</value></data>
+  <data name="SubCategory_ArtFestivals" xml:space="preserve"><value>Арт фестивали</value></data>
+  <data name="SubCategory_FoodAndWineFestivals" xml:space="preserve"><value>Фестивали за храна и вино</value></data>
+  <data name="SubCategory_CulturalFestivals" xml:space="preserve"><value>Културни фестивали</value></data>
+  <data name="SubCategory_FolkloreFestivals" xml:space="preserve"><value>Фолклорни фестивали</value></data>
+  <data name="SubCategory_StreetFestivals" xml:space="preserve"><value>Улични фестивали</value></data>
+  <data name="SubCategory_SummerFestivals" xml:space="preserve"><value>Летни фестивали</value></data>
+  <data name="SubCategory_LightFestivals" xml:space="preserve"><value>Фестивали на светлината</value></data>
+  <data name="SubCategory_CraftBeerFestivals" xml:space="preserve"><value>Фестивали на крафт бира</value></data>
+  <data name="SubCategory_EcoFestivals" xml:space="preserve"><value>Еко фестивали</value></data>
+  <data name="SubCategory_DanceFestivals" xml:space="preserve"><value>Танцови фестивали</value></data>
+  <data name="SubCategory_TechFestivals" xml:space="preserve"><value>Технологични фестивали</value></data>
+
+  <!-- Exhibitions SubCategories -->
+  <data name="SubCategory_ArtExhibitions" xml:space="preserve"><value>Художествени изложби</value></data>
+  <data name="SubCategory_PhotographyExhibitions" xml:space="preserve"><value>Фотографски изложби</value></data>
+  <data name="SubCategory_HistoricalExhibitions" xml:space="preserve"><value>Исторически изложби</value></data>
+  <data name="SubCategory_ScienceExhibitions" xml:space="preserve"><value>Научни изложби</value></data>
+  <data name="SubCategory_TechnologyExhibitions" xml:space="preserve"><value>Технологични изложби</value></data>
+  <data name="SubCategory_AutomotiveExhibitions" xml:space="preserve"><value>Автомобилни изложения</value></data>
+  <data name="SubCategory_DesignExhibitions" xml:space="preserve"><value>Дизайн изложби</value></data>
+  <data name="SubCategory_CulturalHeritageExhibitions" xml:space="preserve"><value>Изложби за културно наследство</value></data>
+  <data name="SubCategory_EducationalExhibitions" xml:space="preserve"><value>Образователни изложби</value></data>
+  <data name="SubCategory_CraftExhibitions" xml:space="preserve"><value>Занаятчийски изложби</value></data>
+
+  <!-- Conferences SubCategories -->
+  <data name="SubCategory_TechConferences" xml:space="preserve"><value>Технологични конференции</value></data>
+  <data name="SubCategory_BusinessConferences" xml:space="preserve"><value>Бизнес конференции</value></data>
+  <data name="SubCategory_StartupConferences" xml:space="preserve"><value>Стартъп конференции</value></data>
+  <data name="SubCategory_AcademicConferences" xml:space="preserve"><value>Академични конференции</value></data>
+  <data name="SubCategory_MarketingConferences" xml:space="preserve"><value>Маркетинг конференции</value></data>
+  <data name="SubCategory_ScienceConferences" xml:space="preserve"><value>Научни конференции</value></data>
+  <data name="SubCategory_HealthAndMedicineConferences" xml:space="preserve"><value>Конференции по здравеопазване</value></data>
+  <data name="SubCategory_AIAndInnovationConferences" xml:space="preserve"><value>Конференции за AI и иновации</value></data>
+  <data name="SubCategory_ITSecurityConferences" xml:space="preserve"><value>Конференции по IT сигурност</value></data>
+  <data name="SubCategory_EnvironmentalConferences" xml:space="preserve"><value>Екологични конференции</value></data>
+  <data name="SubCategory_HRConferences" xml:space="preserve"><value>HR конференции</value></data>
+
+  <!-- Workshops SubCategories -->
+  <data name="SubCategory_ArtWorkshops" xml:space="preserve"><value>Арт уъркшопи</value></data>
+  <data name="SubCategory_MusicWorkshops" xml:space="preserve"><value>Музикални уъркшопи</value></data>
+  <data name="SubCategory_DanceWorkshops" xml:space="preserve"><value>Танцови уъркшопи</value></data>
+  <data name="SubCategory_PhotographyWorkshops" xml:space="preserve"><value>Фото уъркшопи</value></data>
+  <data name="SubCategory_CookingWorkshops" xml:space="preserve"><value>Кулинарни уъркшопи</value></data>
+  <data name="SubCategory_CraftWorkshops" xml:space="preserve"><value>Занаятчийски уъркшопи</value></data>
+  <data name="SubCategory_StartupAndEntrepreneurshipWorkshops" xml:space="preserve"><value>Стартъп и предприемачески уъркшопи</value></data>
+  <data name="SubCategory_PersonalDevelopmentWorkshops" xml:space="preserve"><value>Уъркшопи за личностно развитие</value></data>
+  <data name="SubCategory_CodingWorkshops" xml:space="preserve"><value>Уъркшопи по програмиране</value></data>
+  <data name="SubCategory_LanguageWorkshops" xml:space="preserve"><value>Езикови уъркшопи</value></data>
+  <data name="SubCategory_TheatreWorkshops" xml:space="preserve"><value>Театрални уъркшопи</value></data>
+  <data name="SubCategory_YogaAndWellnessWorkshops" xml:space="preserve"><value>Йога и уелнес уъркшопи</value></data>
+  <data name="SubCategory_MarketingWorkshops" xml:space="preserve"><value>Маркетинг уъркшопи</value></data>
+
+  <!-- Shared Other -->
+  <data name="SubCategory_Other" xml:space="preserve"><value>Друго</value></data>
+
+  <!-- Sort Options -->
+  <data name="Sort_Date" xml:space="preserve"><value>Дата</value></data>
+  <data name="Sort_Name" xml:space="preserve"><value>Название</value></data>
+  <data name="Sort_Price" xml:space="preserve"><value>Цена</value></data>
+  <data name="Sort_Category" xml:space="preserve"><value>Категория</value></data>
+  <data name="Sort_Subcategory" xml:space="preserve"><value>Подкатегория</value></data>
+
 </root>

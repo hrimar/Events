@@ -7,4 +7,5 @@ public class HomePageViewModel
     public int TodayEvents { get; set; }
     public int Next7DaysEvents { get; set; }
     public List<TagViewModel> PopularTags { get; set; } = new(); // Popular tags for homepage
+    public List<CategoryDisplayItem> LocalizedCategories { get; set; } = new();
 }

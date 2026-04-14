@@ -199,5 +199,192 @@
   <data name="Privacy_S10_Title" xml:space="preserve"><value>10. Changes to This Policy</value></data>
   <data name="Privacy_S10_Text" xml:space="preserve"><value>This policy may be updated from time to time. We recommend reviewing it periodically.</value></data>
   <data name="Privacy_S11_Title" xml:space="preserve"><value>11. Contact</value></data>
-  <data name="Privacy_S11_Text" xml:space="preserve"><value>If you have any questions regarding this policy:</value></data>
+  <!-- Categories -->
+  <data name="Category_Music" xml:space="preserve"><value>Music</value></data>
+  <data name="Category_Art" xml:space="preserve"><value>Art &amp; Culture</value></data>
+  <data name="Category_Business" xml:space="preserve"><value>Business</value></data>
+  <data name="Category_Sports" xml:space="preserve"><value>Sports</value></data>
+  <data name="Category_Theatre" xml:space="preserve"><value>Theatre</value></data>
+  <data name="Category_Cinema" xml:space="preserve"><value>Cinema</value></data>
+  <data name="Category_Festivals" xml:space="preserve"><value>Festivals</value></data>
+  <data name="Category_Exhibitions" xml:space="preserve"><value>Exhibitions</value></data>
+  <data name="Category_Conferences" xml:space="preserve"><value>Conferences</value></data>
+  <data name="Category_Workshops" xml:space="preserve"><value>Workshops</value></data>
+
+  <!-- Music SubCategories -->
+  <data name="SubCategory_Pop" xml:space="preserve"><value>Pop</value></data>
+  <data name="SubCategory_Rock" xml:space="preserve"><value>Rock</value></data>
+  <data name="SubCategory_HipHop" xml:space="preserve"><value>Hip Hop</value></data>
+  <data name="SubCategory_Rap" xml:space="preserve"><value>Rap</value></data>
+  <data name="SubCategory_Jazz" xml:space="preserve"><value>Jazz</value></data>
+  <data name="SubCategory_Blues" xml:space="preserve"><value>Blues</value></data>
+  <data name="SubCategory_Classical" xml:space="preserve"><value>Classical</value></data>
+  <data name="SubCategory_Folk" xml:space="preserve"><value>Folk</value></data>
+  <data name="SubCategory_TraditionalBulgarian" xml:space="preserve"><value>Traditional Bulgarian</value></data>
+  <data name="SubCategory_EDM" xml:space="preserve"><value>EDM</value></data>
+  <data name="SubCategory_Techno" xml:space="preserve"><value>Techno</value></data>
+  <data name="SubCategory_House" xml:space="preserve"><value>House</value></data>
+  <data name="SubCategory_DrumBass" xml:space="preserve"><value>Drum &amp; Bass</value></data>
+  <data name="SubCategory_Trance" xml:space="preserve"><value>Trance</value></data>
+  <data name="SubCategory_Reggae" xml:space="preserve"><value>Reggae</value></data>
+  <data name="SubCategory_RB" xml:space="preserve"><value>R&amp;B</value></data>
+  <data name="SubCategory_Metal" xml:space="preserve"><value>Metal</value></data>
+  <data name="SubCategory_Indie" xml:space="preserve"><value>Indie</value></data>
+  <data name="SubCategory_Acoustic" xml:space="preserve"><value>Acoustic</value></data>
+  <data name="SubCategory_Alternative" xml:space="preserve"><value>Alternative</value></data>
+  <data name="SubCategory_Punk" xml:space="preserve"><value>Punk</value></data>
+  <data name="SubCategory_Soul" xml:space="preserve"><value>Soul</value></data>
+  <data name="SubCategory_Chillout" xml:space="preserve"><value>Chillout</value></data>
+  <data name="SubCategory_Experimental" xml:space="preserve"><value>Experimental</value></data>
+  <data name="SubCategory_Choir" xml:space="preserve"><value>Choir</value></data>
+  <data name="SubCategory_WorldMusic" xml:space="preserve"><value>World Music</value></data>
+
+  <!-- Art SubCategories -->
+  <data name="SubCategory_Painting" xml:space="preserve"><value>Painting</value></data>
+  <data name="SubCategory_Sculpture" xml:space="preserve"><value>Sculpture</value></data>
+  <data name="SubCategory_Photography" xml:space="preserve"><value>Photography</value></data>
+  <data name="SubCategory_DigitalArt" xml:space="preserve"><value>Digital Art</value></data>
+  <data name="SubCategory_StreetArt" xml:space="preserve"><value>Street Art</value></data>
+  <data name="SubCategory_Graffiti" xml:space="preserve"><value>Graffiti</value></data>
+  <data name="SubCategory_Illustration" xml:space="preserve"><value>Illustration</value></data>
+  <data name="SubCategory_PerformanceArt" xml:space="preserve"><value>Performance Art</value></data>
+  <data name="SubCategory_InstallationArt" xml:space="preserve"><value>Installation Art</value></data>
+  <data name="SubCategory_ContemporaryArt" xml:space="preserve"><value>Contemporary Art</value></data>
+  <data name="SubCategory_VisualArts" xml:space="preserve"><value>Visual Arts</value></data>
+  <data name="SubCategory_MixedMedia" xml:space="preserve"><value>Mixed Media</value></data>
+  <data name="SubCategory_ConceptualArt" xml:space="preserve"><value>Conceptual Art</value></data>
+
+  <!-- Business SubCategories -->
+  <data name="SubCategory_NetworkingEvents" xml:space="preserve"><value>Networking Events</value></data>
+  <data name="SubCategory_Startups" xml:space="preserve"><value>Startups</value></data>
+  <data name="SubCategory_Entrepreneurship" xml:space="preserve"><value>Entrepreneurship</value></data>
+  <data name="SubCategory_Marketing" xml:space="preserve"><value>Marketing</value></data>
+  <data name="SubCategory_Sales" xml:space="preserve"><value>Sales</value></data>
+  <data name="SubCategory_Leadership" xml:space="preserve"><value>Leadership</value></data>
+  <data name="SubCategory_Finance" xml:space="preserve"><value>Finance</value></data>
+  <data name="SubCategory_RealEstate" xml:space="preserve"><value>Real Estate</value></data>
+  <data name="SubCategory_Investment" xml:space="preserve"><value>Investment</value></data>
+  <data name="SubCategory_ECommerce" xml:space="preserve"><value>E-Commerce</value></data>
+  <data name="SubCategory_Innovation" xml:space="preserve"><value>Innovation</value></data>
+  <data name="SubCategory_Technology" xml:space="preserve"><value>Technology</value></data>
+  <data name="SubCategory_HRManagement" xml:space="preserve"><value>HR Management</value></data>
+  <data name="SubCategory_BusinessStrategy" xml:space="preserve"><value>Business Strategy</value></data>
+  <data name="SubCategory_ProductDevelopment" xml:space="preserve"><value>Product Development</value></data>
+
+  <!-- Sports SubCategories -->
+  <data name="SubCategory_Football" xml:space="preserve"><value>Football</value></data>
+  <data name="SubCategory_Basketball" xml:space="preserve"><value>Basketball</value></data>
+  <data name="SubCategory_Volleyball" xml:space="preserve"><value>Volleyball</value></data>
+  <data name="SubCategory_Tennis" xml:space="preserve"><value>Tennis</value></data>
+  <data name="SubCategory_Athletics" xml:space="preserve"><value>Athletics</value></data>
+  <data name="SubCategory_Swimming" xml:space="preserve"><value>Swimming</value></data>
+  <data name="SubCategory_Running" xml:space="preserve"><value>Running</value></data>
+  <data name="SubCategory_Cycling" xml:space="preserve"><value>Cycling</value></data>
+  <data name="SubCategory_Boxing" xml:space="preserve"><value>Boxing</value></data>
+  <data name="SubCategory_MMA" xml:space="preserve"><value>MMA</value></data>
+  <data name="SubCategory_Wrestling" xml:space="preserve"><value>Wrestling</value></data>
+  <data name="SubCategory_Weightlifting" xml:space="preserve"><value>Weightlifting</value></data>
+  <data name="SubCategory_CrossFit" xml:space="preserve"><value>CrossFit</value></data>
+  <data name="SubCategory_Yoga" xml:space="preserve"><value>Yoga</value></data>
+  <data name="SubCategory_Fitness" xml:space="preserve"><value>Fitness</value></data>
+  <data name="SubCategory_Hiking" xml:space="preserve"><value>Hiking</value></data>
+  <data name="SubCategory_Climbing" xml:space="preserve"><value>Climbing</value></data>
+  <data name="SubCategory_Skiing" xml:space="preserve"><value>Skiing</value></data>
+  <data name="SubCategory_Snowboarding" xml:space="preserve"><value>Snowboarding</value></data>
+  <data name="SubCategory_Motocross" xml:space="preserve"><value>Motocross</value></data>
+  <data name="SubCategory_eSports" xml:space="preserve"><value>eSports</value></data>
+  <data name="SubCategory_TableTennis" xml:space="preserve"><value>Table Tennis</value></data>
+  <data name="SubCategory_Badminton" xml:space="preserve"><value>Badminton</value></data>
+  <data name="SubCategory_Golf" xml:space="preserve"><value>Golf</value></data>
+  <data name="SubCategory_DanceSport" xml:space="preserve"><value>Dance Sport</value></data>
+
+  <!-- Theatre SubCategories -->
+  <data name="SubCategory_Drama" xml:space="preserve"><value>Drama</value></data>
+  <data name="SubCategory_Comedy" xml:space="preserve"><value>Comedy</value></data>
+  <data name="SubCategory_MusicalTheatre" xml:space="preserve"><value>Musical Theatre</value></data>
+  <data name="SubCategory_Tragedy" xml:space="preserve"><value>Tragedy</value></data>
+  <data name="SubCategory_ExperimentalTheatre" xml:space="preserve"><value>Experimental Theatre</value></data>
+  <data name="SubCategory_PuppetTheatre" xml:space="preserve"><value>Puppet Theatre</value></data>
+  <data name="SubCategory_Improvisation" xml:space="preserve"><value>Improvisation</value></data>
+  <data name="SubCategory_StreetTheatre" xml:space="preserve"><value>Street Theatre</value></data>
+  <data name="SubCategory_Monodrama" xml:space="preserve"><value>Monodrama</value></data>
+  <data name="SubCategory_ChildrensTheatre" xml:space="preserve"><value>Children's Theatre</value></data>
+  <data name="SubCategory_StandupComedy" xml:space="preserve"><value>Stand-up Comedy</value></data>
+
+  <!-- Cinema SubCategories -->
+  <data name="SubCategory_FeatureFilms" xml:space="preserve"><value>Feature Films</value></data>
+  <data name="SubCategory_ShortFilms" xml:space="preserve"><value>Short Films</value></data>
+  <data name="SubCategory_Documentaries" xml:space="preserve"><value>Documentaries</value></data>
+  <data name="SubCategory_Animation" xml:space="preserve"><value>Animation</value></data>
+  <data name="SubCategory_IndependentCinema" xml:space="preserve"><value>Independent Cinema</value></data>
+  <data name="SubCategory_BulgarianCinema" xml:space="preserve"><value>Bulgarian Cinema</value></data>
+  <data name="SubCategory_InternationalCinema" xml:space="preserve"><value>International Cinema</value></data>
+  <data name="SubCategory_FilmPremieres" xml:space="preserve"><value>Film Premieres</value></data>
+  <data name="SubCategory_StudentFilms" xml:space="preserve"><value>Student Films</value></data>
+  <data name="SubCategory_FilmFestivals" xml:space="preserve"><value>Film Festivals</value></data>
+
+  <!-- Festivals SubCategories -->
+  <data name="SubCategory_MusicFestivals" xml:space="preserve"><value>Music Festivals</value></data>
+  <data name="SubCategory_ArtFestivals" xml:space="preserve"><value>Art Festivals</value></data>
+  <data name="SubCategory_FoodAndWineFestivals" xml:space="preserve"><value>Food &amp; Wine Festivals</value></data>
+  <data name="SubCategory_CulturalFestivals" xml:space="preserve"><value>Cultural Festivals</value></data>
+  <data name="SubCategory_FolkloreFestivals" xml:space="preserve"><value>Folklore Festivals</value></data>
+  <data name="SubCategory_StreetFestivals" xml:space="preserve"><value>Street Festivals</value></data>
+  <data name="SubCategory_SummerFestivals" xml:space="preserve"><value>Summer Festivals</value></data>
+  <data name="SubCategory_LightFestivals" xml:space="preserve"><value>Light Festivals</value></data>
+  <data name="SubCategory_CraftBeerFestivals" xml:space="preserve"><value>Craft Beer Festivals</value></data>
+  <data name="SubCategory_EcoFestivals" xml:space="preserve"><value>Eco Festivals</value></data>
+  <data name="SubCategory_DanceFestivals" xml:space="preserve"><value>Dance Festivals</value></data>
+  <data name="SubCategory_TechFestivals" xml:space="preserve"><value>Tech Festivals</value></data>
+
+  <!-- Exhibitions SubCategories -->
+  <data name="SubCategory_ArtExhibitions" xml:space="preserve"><value>Art Exhibitions</value></data>
+  <data name="SubCategory_PhotographyExhibitions" xml:space="preserve"><value>Photography Exhibitions</value></data>
+  <data name="SubCategory_HistoricalExhibitions" xml:space="preserve"><value>Historical Exhibitions</value></data>
+  <data name="SubCategory_ScienceExhibitions" xml:space="preserve"><value>Science Exhibitions</value></data>
+  <data name="SubCategory_TechnologyExhibitions" xml:space="preserve"><value>Technology Exhibitions</value></data>
+  <data name="SubCategory_AutomotiveExhibitions" xml:space="preserve"><value>Automotive Exhibitions</value></data>
+  <data name="SubCategory_DesignExhibitions" xml:space="preserve"><value>Design Exhibitions</value></data>
+  <data name="SubCategory_CulturalHeritageExhibitions" xml:space="preserve"><value>Cultural Heritage Exhibitions</value></data>
+  <data name="SubCategory_EducationalExhibitions" xml:space="preserve"><value>Educational Exhibitions</value></data>
+  <data name="SubCategory_CraftExhibitions" xml:space="preserve"><value>Craft Exhibitions</value></data>
+
+  <!-- Conferences SubCategories -->
+  <data name="SubCategory_TechConferences" xml:space="preserve"><value>Tech Conferences</value></data>
+  <data name="SubCategory_BusinessConferences" xml:space="preserve"><value>Business Conferences</value></data>
+  <data name="SubCategory_StartupConferences" xml:space="preserve"><value>Startup Conferences</value></data>
+  <data name="SubCategory_AcademicConferences" xml:space="preserve"><value>Academic Conferences</value></data>
+  <data name="SubCategory_MarketingConferences" xml:space="preserve"><value>Marketing Conferences</value></data>
+  <data name="SubCategory_ScienceConferences" xml:space="preserve"><value>Science Conferences</value></data>
+  <data name="SubCategory_HealthAndMedicineConferences" xml:space="preserve"><value>Health &amp; Medicine Conferences</value></data>
+  <data name="SubCategory_AIAndInnovationConferences" xml:space="preserve"><value>AI &amp; Innovation Conferences</value></data>
+  <data name="SubCategory_ITSecurityConferences" xml:space="preserve"><value>IT Security Conferences</value></data>
+  <data name="SubCategory_EnvironmentalConferences" xml:space="preserve"><value>Environmental Conferences</value></data>
+  <data name="SubCategory_HRConferences" xml:space="preserve"><value>HR Conferences</value></data>
+
+  <!-- Workshops SubCategories -->
+  <data name="SubCategory_ArtWorkshops" xml:space="preserve"><value>Art Workshops</value></data>
+  <data name="SubCategory_MusicWorkshops" xml:space="preserve"><value>Music Workshops</value></data>
+  <data name="SubCategory_DanceWorkshops" xml:space="preserve"><value>Dance Workshops</value></data>
+  <data name="SubCategory_PhotographyWorkshops" xml:space="preserve"><value>Photography Workshops</value></data>
+  <data name="SubCategory_CookingWorkshops" xml:space="preserve"><value>Cooking Workshops</value></data>
+  <data name="SubCategory_CraftWorkshops" xml:space="preserve"><value>Craft Workshops</value></data>
+  <data name="SubCategory_StartupAndEntrepreneurshipWorkshops" xml:space="preserve"><value>Startup &amp; Entrepreneurship Workshops</value></data>
+  <data name="SubCategory_PersonalDevelopmentWorkshops" xml:space="preserve"><value>Personal Development Workshops</value></data>
+  <data name="SubCategory_CodingWorkshops" xml:space="preserve"><value>Coding Workshops</value></data>
+  <data name="SubCategory_LanguageWorkshops" xml:space="preserve"><value>Language Workshops</value></data>
+  <data name="SubCategory_TheatreWorkshops" xml:space="preserve"><value>Theatre Workshops</value></data>
+  <data name="SubCategory_YogaAndWellnessWorkshops" xml:space="preserve"><value>Yoga &amp; Wellness Workshops</value></data>
+  <data name="SubCategory_MarketingWorkshops" xml:space="preserve"><value>Marketing Workshops</value></data>
+
+  <!-- Shared Other -->
+  <data name="SubCategory_Other" xml:space="preserve"><value>Other</value></data>
+
+  <!-- Sort Options -->
+  <data name="Sort_Date" xml:space="preserve"><value>Date</value></data>
+  <data name="Sort_Name" xml:space="preserve"><value>Name</value></data>
+  <data name="Sort_Price" xml:space="preserve"><value>Price</value></data>
+  <data name="Sort_Category" xml:space="preserve"><value>Category</value></data>
+  <data name="Sort_Subcategory" xml:space="preserve"><value>Subcategory</value></data>
+
 </root>
