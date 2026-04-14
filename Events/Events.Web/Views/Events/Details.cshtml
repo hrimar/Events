@@ -1,5 +1,6 @@
 @model Events.Web.Models.EventViewModel
 @using Events.Web.Resources
+@using Events.Web.Localization
 @using Microsoft.Extensions.Localization
 @inject IStringLocalizer<SharedResources> Localizer
 
@@ -40,7 +41,9 @@
             @if(!string.IsNullOrEmpty(Model.CategoryName))
             {
                 <li class="breadcrumb-item">
-                    <a asp-controller="Events" asp-action="Category" asp-route-category="@Model.CategoryName">@Model.CategoryName</a>
+                    <a asp-controller="Events" asp-action="Category" asp-route-category="@Model.CategoryName">
+                        @CategoryLocalizationExtensions.LocalizeCategoryName(Model.CategoryName, Localizer)
+                    </a>
                 </li>
             }
             <li class="breadcrumb-item active" aria-current="page">@Model.Name</li>
@@ -75,14 +78,16 @@
                                 @if(!string.IsNullOrEmpty(Model.CategoryName))
                                 {
                                     <a href="/Events/Category/@Model.CategoryName" class="badge bg-primary text-decoration-none me-2">
-                                        <i class="fas fa-layer-group me-1"></i>@Model.CategoryName
+                                        <i class="fas fa-layer-group me-1"></i>
+                                        @CategoryLocalizationExtensions.LocalizeCategoryName(Model.CategoryName, Localizer)
                                     </a>
                                 }
                                 @if(!string.IsNullOrEmpty(Model.SubCategoryName))
                                 {
                                     <a href="@Url.Action("Index", "Events", new { subCategory = Model.SubCategoryName })" 
                                        class="badge bg-secondary text-decoration-none">
-                                        <i class="fas fa-tags me-1"></i>@Model.SubCategoryName
+                                        <i class="fas fa-tags me-1"></i>
+                                        @CategoryLocalizationExtensions.LocalizeSubCategoryName(Model.SubCategoryName, Localizer)
                                     </a>
                                 }
                             </div>
@@ -180,7 +185,7 @@
                                 <i class="fas fa-clock text-primary me-3" style="width: 20px;"></i>
                                 <div>
                                     <strong>@Localizer["Details_Status"]</strong><br>
-                                    <span class="badge bg-success">@Model.Status</span>
+                                    <span class="badge bg-success">@Model.Status.Localize(Localizer)</span>
                                 </div>
                             </div>
                         </div>
@@ -202,7 +207,7 @@
                         @if(!string.IsNullOrEmpty(Model.CategoryName))
                         {
                             <a href="@Url.Action("Index", "Events", new { category = Model.CategoryName })" class="btn btn-outline-secondary btn-sm">
-                                <i class="fas fa-layer-group me-1"></i>@Localizer["Details_MoreCategoryEvents"] @Model.CategoryName
+                                <i class="fas fa-layer-group me-1"></i>@Localizer["Details_MoreCategoryEvents"] @CategoryLocalizationExtensions.LocalizeCategoryName(Model.CategoryName, Localizer)
                             </a>
                         }
                         <a href="@Url.Action("Index", "Events", new { search = Model.City })" class="btn btn-outline-secondary btn-sm">
@@ -289,7 +294,7 @@
                         @if(!string.IsNullOrEmpty(Model.CategoryName))
                         {
                             <a href="/Events/Category/@Model.CategoryName" class="btn btn-outline-primary btn-sm w-100">
-                                <i class="fas fa-th-list me-1"></i>@Localizer["Details_ViewAllCategoryEvents"] @Model.CategoryName
+                                <i class="fas fa-th-list me-1"></i>@Localizer["Details_ViewAllCategoryEvents"] @CategoryLocalizationExtensions.LocalizeCategoryName(Model.CategoryName, Localizer)
                             </a>
                         }
                     </div>

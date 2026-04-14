@@ -368,7 +368,7 @@ public class EventsController : Controller
             .Select(subCategory => new SelectListItem
             {
                 Value = subCategory.Name,
-                Text = subCategory.Name,
+                Text = CategoryLocalizationExtensions.LocalizeSubCategoryName(subCategory.Name, _localizer),
                 Selected = string.Equals(subCategory.Name, selectedSubCategory, StringComparison.OrdinalIgnoreCase)
             })
             .ToList();

@@ -380,6 +380,13 @@
   <!-- Shared Other -->
   <data name="SubCategory_Other" xml:space="preserve"><value>Other</value></data>
 
+  <!-- Event Status -->
+  <data name="EventStatus_Draft" xml:space="preserve"><value>Draft</value></data>
+  <data name="EventStatus_Published" xml:space="preserve"><value>Published</value></data>
+  <data name="EventStatus_Cancelled" xml:space="preserve"><value>Cancelled</value></data>
+  <data name="EventStatus_Postponed" xml:space="preserve"><value>Postponed</value></data>
+  <data name="EventStatus_SoldOut" xml:space="preserve"><value>Sold Out</value></data>
+
   <!-- Sort Options -->
   <data name="Sort_Date" xml:space="preserve"><value>Date</value></data>
   <data name="Sort_Name" xml:space="preserve"><value>Name</value></data>

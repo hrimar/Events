@@ -284,7 +284,7 @@
   <data name="SubCategory_MMA" xml:space="preserve"><value>MMA</value></data>
   <data name="SubCategory_Wrestling" xml:space="preserve"><value>Борба</value></data>
   <data name="SubCategory_Weightlifting" xml:space="preserve"><value>Вдигане на тежести</value></data>
-  <data name="SubCategory_CrossFit" xml:space="preserve"><value>CrossFit</value></data>
+  <data name="SubCategory_CrossFit" xml:space="preserve"><value>Кросфит</value></data>
   <data name="SubCategory_Yoga" xml:space="preserve"><value>Йога</value></data>
   <data name="SubCategory_Fitness" xml:space="preserve"><value>Фитнес</value></data>
   <data name="SubCategory_Hiking" xml:space="preserve"><value>Планинарство</value></data>
@@ -379,6 +379,13 @@
 
   <!-- Shared Other -->
   <data name="SubCategory_Other" xml:space="preserve"><value>Друго</value></data>
+
+  <!-- Event Status -->
+  <data name="EventStatus_Draft" xml:space="preserve"><value>Чернова</value></data>
+  <data name="EventStatus_Published" xml:space="preserve"><value>Публикувано</value></data>
+  <data name="EventStatus_Cancelled" xml:space="preserve"><value>Отменено</value></data>
+  <data name="EventStatus_Postponed" xml:space="preserve"><value>Отложено</value></data>
+  <data name="EventStatus_SoldOut" xml:space="preserve"><value>Разпродадено</value></data>
 
   <!-- Sort Options -->
   <data name="Sort_Date" xml:space="preserve"><value>Дата</value></data>

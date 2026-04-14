@@ -164,14 +164,16 @@
                     <span class="text-muted">@Localizer["Events_ActiveFilters"]</span>
                     @if(!string.IsNullOrEmpty(Model.CurrentCategory))
                     {
+                        var activeCatDisplay = Model.LocalizedCategories.FirstOrDefault(c => c.Value == Model.CurrentCategory);
                         <span class="badge bg-primary">
-                            <i class="fas fa-layer-group me-1"></i>@Localizer["Events_FilterCategory"] @Model.CurrentCategory
+                            <i class="fas fa-layer-group me-1"></i>@Localizer["Events_FilterCategory"] @(activeCatDisplay?.DisplayName ?? Model.CurrentCategory)
                         </span>
                     }
                     @if(!string.IsNullOrEmpty(Model.SelectedSubCategory))
                     {
+                        var activeSubCatDisplay = Model.AvailableSubCategories.FirstOrDefault(s => s.Value == Model.SelectedSubCategory);
                         <span class="badge bg-primary">
-                            <i class="fas fa-layer-group me-1"></i>@Localizer["Events_FilterSubCategory"] @Model.SelectedSubCategory
+                            <i class="fas fa-layer-group me-1"></i>@Localizer["Events_FilterSubCategory"] @(activeSubCatDisplay?.Text ?? Model.SelectedSubCategory)
                         </span>
                     }
                     @if(Model.IsFreeFilter == true)
@@ -272,11 +274,13 @@
                         @Localizer["Events_FilteredResults"]
                         @if(!string.IsNullOrEmpty(Model.CurrentCategory))
                         {
-                            <span class="badge bg-primary">@Model.CurrentCategory</span>
+                            var resultCatDisplay = Model.LocalizedCategories.FirstOrDefault(c => c.Value == Model.CurrentCategory);
+                            <span class="badge bg-primary">@(resultCatDisplay?.DisplayName ?? Model.CurrentCategory)</span>
                         }
                         @if(!string.IsNullOrEmpty(Model.SelectedSubCategory))
                         {
-                            <span class="badge bg-primary">@Model.SelectedSubCategory</span>
+                            var resultSubCatDisplay = Model.AvailableSubCategories.FirstOrDefault(s => s.Value == Model.SelectedSubCategory);
+                            <span class="badge bg-primary">@(resultSubCatDisplay?.Text ?? Model.SelectedSubCategory)</span>
                         }
                         @if(Model.IsFreeFilter == true)
                         {
@@ -342,9 +346,10 @@
                                         </a>
                                         @if(!string.IsNullOrEmpty(eventItem.SubCategoryName))
                                         {
+                                            var subCatDisplay = Model.AvailableSubCategories.FirstOrDefault(s => s.Value == eventItem.SubCategoryName);
                                             <a href="@Url.Action("Index", "Events", new { subCategory = eventItem.SubCategoryName })" 
                                                class="badge bg-dark text-decoration-none ms-1">
-                                                @eventItem.SubCategoryName
+                                                @(subCatDisplay?.Text ?? eventItem.SubCategoryName)
                                             </a>
                                         }
                                     </div>

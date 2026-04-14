@@ -34,6 +34,32 @@ public static class CategoryLocalizationExtensions
         _                         => "fas fa-calendar"
     };
 
+    // Translates a subcategory by its string name (e.g. from SubCategory.Name in the database).
+    // Falls back to the raw name if no resource key is found.
+    public static string LocalizeSubCategoryName(string subCategoryName, IStringLocalizer<SharedResources> localizer)
+    {
+        var key = $"SubCategory_{subCategoryName}";
+        var localized = localizer[key];
+        return localized.ResourceNotFound ? subCategoryName : localized.Value;
+    }
+
+    // Translates a category by its string name (e.g. from Category.Name in the database).
+    // Falls back to the raw name if no resource key is found.
+    public static string LocalizeCategoryName(string categoryName, IStringLocalizer<SharedResources> localizer)
+    {
+        var key = $"Category_{categoryName}";
+        var localized = localizer[key];
+        return localized.ResourceNotFound ? categoryName : localized.Value;
+    }
+
+    // Translates an EventStatus enum value. Resource key pattern: EventStatus_{EnumValue}
+    public static string Localize(this EventStatus status, IStringLocalizer<SharedResources> localizer)
+    {
+        var key = $"EventStatus_{status}";
+        var localized = localizer[key];
+        return localized.ResourceNotFound ? status.ToString() : localized.Value;
+    }
+
     // SubCategory enums - each follows the same pattern: SubCategory_{EnumValue}
     public static string Localize(this MusicSubCategory sub, IStringLocalizer<SharedResources> localizer)
         => localizer[$"SubCategory_{sub}"];
