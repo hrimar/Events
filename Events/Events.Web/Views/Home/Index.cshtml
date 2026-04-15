@@ -1,5 +1,6 @@
 ﻿@model Events.Web.Models.HomePageViewModel
 @using Events.Web.Resources
+@using Events.Web.Localization
 @using Microsoft.Extensions.Localization
 @inject IStringLocalizer<SharedResources> Localizer
 
@@ -148,7 +149,7 @@
                                     {
                                         <a asp-action="Index" asp-controller="Events" asp-route-subCategory="@eventItem.SubCategoryName"
                                            class="badge bg-dark text-decoration-none ms-1">
-                                            @eventItem.SubCategoryName
+                                            @CategoryLocalizationExtensions.LocalizeSubCategoryName(eventItem.SubCategoryName, Localizer)
                                         </a>
                                     }
                                 </div>
