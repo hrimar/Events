@@ -11,6 +11,8 @@ namespace Events.Web.Controllers
 {
     public class HomeController : Controller
     {
+        private readonly int _maxFeaturedEventsCount = 18;
+
         private readonly ILogger<HomeController> _logger;
         private readonly IEventService _eventService;
         private readonly ITagService _tagService;
@@ -33,7 +35,7 @@ namespace Events.Web.Controllers
             try
             {
                 // Get only featured events for homepage - no pagination needed
-                var featuredEvents = await _eventService.GetFeaturedEventsAsync(6);
+                var featuredEvents = await _eventService.GetFeaturedEventsAsync(_maxFeaturedEventsCount);
 
                 // TotalEvents: all published events from today onwards
                 var totalEvents = await _eventService.GetEventsCountInRangeAsync(DateTime.Today, DateTime.MaxValue, EventStatus.Published);

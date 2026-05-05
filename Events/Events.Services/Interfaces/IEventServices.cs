@@ -31,6 +31,7 @@ public interface IEventService
 
     Task<int> GetTotalEventsCountAsync(EventStatus? status = null);
     Task<bool> EventExistsAsync(int id);
+    Task<Event?> FindEventByNameAsync(string name);
 
     /// <summary>
     /// Batch update multiple events efficiently in a single database transaction.

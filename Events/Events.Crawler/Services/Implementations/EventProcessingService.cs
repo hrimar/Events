@@ -112,15 +112,20 @@ public class EventProcessingService : IEventProcessingService
     {
         try
         {
-            if (crawledEvent.StartDate.HasValue)
-            {
-                var eventDate = crawledEvent.StartDate.Value.Date;
-                var events = await eventService.GetEventsByDateRangeAsync(eventDate, eventDate.AddDays(1));
+            var hasValidDate = crawledEvent.StartDate.HasValue && crawledEvent.StartDate.Value != DateTime.MinValue;
 
-                return events.FirstOrDefault(e => e.Name.Equals(crawledEvent.Name, StringComparison.OrdinalIgnoreCase));
+            if (hasValidDate)
+            {
+                // Fast path: search by date + name
+                var eventDate = crawledEvent.StartDate!.Value.Date;
+                var byDate = await eventService.GetEventsByDateRangeAsync(eventDate, eventDate.AddDays(1));
+                var match = byDate.FirstOrDefault(e => e.Name.Equals(crawledEvent.Name, StringComparison.OrdinalIgnoreCase));
+                if (match != null) return match;
             }
 
-            return null;
+            // Crawled date is missing (DateTime.MinValue) OR date search found nothing.
+            // Single lookup by name — prevents duplicates when admin has manually corrected the date.
+            return await eventService.FindEventByNameAsync(crawledEvent.Name);
         }
         catch (Exception ex)
         {

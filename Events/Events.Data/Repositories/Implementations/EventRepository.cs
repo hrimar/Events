@@ -65,7 +65,7 @@ public class EventRepository : IEventRepository
             .Include(e => e.EventTags)
             .ThenInclude(et => et.Tag)
             .AsQueryable();
-       //var queryString = query.ToQueryString(); // TODO: Use this generated SQL and analize it in via MSSMS Actual Execution Plan!!!
+        //var queryString = query.ToQueryString(); // TODO: Use this generated SQL and analize it in via MSSMS Actual Execution Plan!!!
 
         if (status.HasValue)
         {
@@ -75,14 +75,14 @@ public class EventRepository : IEventRepository
         // Priority: subCategoryName > categoryName
         if (!string.IsNullOrEmpty(subCategoryName))
         {
-            query = query.Where(e => 
-                e.SubCategory != null && 
+            query = query.Where(e =>
+                e.SubCategory != null &&
                 e.SubCategory.Name == subCategoryName);
         }
         else if (!string.IsNullOrEmpty(categoryName))
         {
-            query = query.Where(e => 
-                e.Category != null && 
+            query = query.Where(e =>
+                e.Category != null &&
                 e.Category.Name == categoryName);
         }
 
@@ -180,6 +180,11 @@ public class EventRepository : IEventRepository
         }
 
         return await query.CountAsync();
+    }
+
+    public async Task<Event?> FindByNameAsync(string name)
+    {
+        return await _context.Events.Where(e => e.Name.ToLower() == name.ToLower()).FirstOrDefaultAsync();
     }
 
     public async Task<IEnumerable<Event>> GetByDateRangeAsync(DateTime startDate, DateTime endDate)
