@@ -49,7 +49,7 @@ public class ClaudeProcessingService : IAiTaggingService
         if (_consecutiveFailures >= 3)
         {
             _logger.LogWarning("Skipping AI for '{EventName}' due to {Failures} consecutive failures - using fallback", eventName, _consecutiveFailures);
-            return GenerateEnhancedFallbackTags(eventName, description, location);
+            return FallbackClassification(eventName, description, location);
         }
 
         await _rateLimiter.WaitAsync();
@@ -73,48 +73,60 @@ Below is the list of available categories and subcategories. Each subcategory in
 10=Workshops → Art Workshops(Paint & Wine), Music Workshops(DJ Academy), Dance Workshops(Salsa workshops), Photography Workshops(PhotoSynthesis trainings), Cooking Workshops(Culinary Workshop Bulgaria), Craft Workshops(Handmade Workshops), Startup Workshops(Lean Startup Workshops), Personal Development Workshops(Public Speaking Bootcamps), Coding Workshops(CodeWeek), Language Workshops(English Bootcamps), Theatre Workshops(Acting masterclasses), Yoga Workshops(Yoga Retreats), Wellness Workshops(Breathwork sessions), Marketing Workshops(Social Media Workshops), Other
 11=Undefined
 
+Approved master tag list:
+Family-friendly, For kids, Beginners, Professionals, Students, Adults only, Live, Outdoor, Indoor, Networking, Hands-on, Interactive, Bulgarian culture, Local artists, International guests, Traditional, Contemporary, English-friendly, Seasonal, Holiday special
+
 Here is the event you need to categorize:
 Event: {eventName}
 Desc: {description}
 Location: {location}
+
 Use the event name, description, AND location (venues like Театър Сфумато, Кино Влайкова often signal the correct category) to determine the best category, subcategory, and tags.
 
 Your task is to:
 1. Select ONE category and ONE subcategory from the provided list that best fits this event
-2. Add between 0 and 3 tags that help with event classification
+2. Add between 0 and 3 tags from the approved master tag list only
 
 Important rules for TAGS:
-- Tags MUST be in English only and must provide additional useful classification information beyond what the category/subcategory already convey
-- Never repeat or closely match the event name, venue name, category, or subcategory
-- Never output city or venue names (e.g., Sofia, Teatar Sfoumato, Kino Vlaikova, NDK, club names); the system handles venue tagging separately and all events are already in Sofia
-- Never use the words 'None' or 'Free'; if no tags apply, leave the tag section empty (e.g., 5|Drama|)
-- Prefer high-value descriptors such as: Kids, Family, Educational, Networking, Legendary, International, Outdoor, Club, Evening, Morning, Weekend, Workshop, PetFriendly
-- Tags should be general descriptors that help users filter and discover events
-- Maximum 3 tags; only emit a tag if the event information clearly supports it
+- Tags MUST be in English only
+- Tags MUST be selected ONLY from the approved master tag list
+- Tags must add useful secondary information beyond what the category and subcategory already convey
+- Do NOT repeat, restate, or closely match the event name, venue name, category, or subcategory
+- Do NOT output city names or venue names (e.g. Sofia, Teatar Sfumato, Kino Vlaikova, NDK, club names); the system handles venue information separately and all events are already in Sofia
+- Do NOT invent new tags
+- If no approved tags clearly apply, leave the tag section empty
+- Maximum 3 tags
+- Only output tags that are clearly supported by the event information
+
+Tag selection algorithm:
+1. First determine the best category and subcategory
+2. Then check whether any tag would add real value beyond the chosen category/subcategory
+3. Prefer tags that describe one of these dimensions:
+   - audience (e.g. Family-friendly, For kids, Beginners, Professionals, Students, Adults only)
+   - experience / format (e.g. Live, Outdoor, Indoor, Networking, Hands-on, Interactive)
+   - cultural / visitor relevance (e.g. Bulgarian culture, Local artists, International guests, Traditional, Contemporary, English-friendly)
+   - seasonal / special context (e.g. Seasonal, Holiday special)
+4. Prefer diversity: if selecting multiple tags, choose tags that describe different aspects of the event rather than overlapping ideas
+5. Do NOT use a tag if it is already obvious from the category, subcategory, or event title
+6. It is better to return 0, 1, or 2 tags than to add weak or redundant tags
 
 Before providing your answer, use the scratchpad to think through:
 - What type of event this is based on the name, description, and location
 - Which category and subcategory best fit
-- What additional characteristics might be useful as tags
-- Whether your proposed tags add value beyond the category/subcategory
+- Whether any approved tags add useful value beyond the category/subcategory
+- Whether the chosen tags are clearly supported and non-redundant
 
-CRITICAL: Return your answer ONLY in the format CATEGORY|SUBCATEGORY|tag1,tag2,tag3! If no suitable tags, keep the tag section empty
-NO explanations! NO descriptions! ONLY the format!
+CRITICAL: Return your answer ONLY in the format CATEGORY|SUBCATEGORY|tag1,tag2,tag3
+If no suitable tags apply, keep the tag section empty like this:
+CATEGORY|SUBCATEGORY|
 
-Examples:
-Slayer концерт → 1|Metal|thrash metal,concert,legendary
-Пикасо изложба → 8|ArtExhibitions|art,painting
-София филм фест → 7|FilmFestivals|films,festival
-Пиеса за възрастни → 5|Drama|adult
-Детски уикенд в парка → 1|Pop|kids,family,outdoors
-Бизнес закуска за предприемачи → 3|Networking Events|educational,morning
-Клубна нощ с международен DJ → 1|Electronic|club,international,nightlife
-
-Return:";
+NO explanations
+NO descriptions
+ONLY the format";
 
             var requestBody = new ClaudeRequest
             {
-                Model = "claude-3-haiku-20240307",
+                Model = "claude-haiku-4-5-20251001", // "claude-3-haiku-20240307" was deprecated
                 MaxTokens = 120, // Increased for more robust output
                 Temperature = 0.1,
                 Messages = new[]
@@ -139,7 +151,7 @@ Return:";
                     {
                         _logger.LogWarning("Claude returned invalid format for '{EventName}': {Response} - using fallback", eventName, responseText);
                         _consecutiveFailures++; // Count as failure
-                        return GenerateEnhancedFallbackTags(eventName, description, location);
+                        return FallbackClassification(eventName, description, location);
                     }
 
                     var parts = responseText.Split('|');
@@ -149,7 +161,7 @@ Return:";
                         {
                             _logger.LogWarning("Claude classified '{EventName}' as Undefined", eventName);
                             _consecutiveFailures = Math.Max(0, _consecutiveFailures - 1); // Partial success
-                            return GenerateEnhancedFallbackTags(eventName, description, location);
+                            return FallbackClassification(eventName, description, location);
                         }
 
                         if (Enum.IsDefined(typeof(EventCategory), categoryId))
@@ -157,17 +169,12 @@ Return:";
                             var category = (EventCategory)categoryId;
                             var subcategory = parts.Length > 1 && !string.IsNullOrWhiteSpace(parts[1]) ? parts[1].Trim() : "Other";
 
-                            // Extract tags from AI response or use fallback
                             var aiTags = parts.Length > 2 && !string.IsNullOrWhiteSpace(parts[2])
                                 ? parts[2].Split(',').Select(t => t.Trim()).Where(t => !string.IsNullOrWhiteSpace(t)).ToList()
                                 : new List<string>();
 
-                            // Combine AI tags with keyword-extracted tags
-                            var keywordTags = ExtractTagsWithKeywords(eventName, description, location, category);
-                            var allTags = aiTags.Concat(keywordTags).Distinct().Take(6).ToList();
-
                             _logger.LogInformation("Claude classified '{EventName}' as {Category}|{SubCategory} with tags: {Tags}",
-                                eventName, category, subcategory, string.Join(", ", allTags));
+                                eventName, category, subcategory, string.Join(", ", aiTags));
 
                             // Reset failure counter
                             _consecutiveFailures = 0;
@@ -176,8 +183,8 @@ Return:";
                             {
                                 SuggestedCategory = category,
                                 SuggestedSubCategory = subcategory,
-                                SuggestedTags = allTags,
-                                Confidence = allTags.ToDictionary(tag => tag, _ => 0.85)
+                                SuggestedTags = aiTags,
+                                Confidence = aiTags.ToDictionary(tag => tag, _ => 0.85)
                             };
                         }
                     }
@@ -193,20 +200,19 @@ Return:";
                 _consecutiveFailures++;
             }
 
-            return GenerateEnhancedFallbackTags(eventName, description, location);
+            return FallbackClassification(eventName, description, location);
         }
         catch (HttpRequestException ex) when (ex.Message.Contains("rate_limit_exceeded") || ex.Message.Contains("TooManyRequests"))
         {
             _consecutiveFailures++;
-            _logger.LogWarning("Claude rate limit exceeded (failure #{Failures}), using fallback classification for '{EventName}'",
-                _consecutiveFailures, eventName);
-            return GenerateEnhancedFallbackTags(eventName, description, location);
+            _logger.LogWarning("Claude rate limit exceeded (failure #{Failures}), using fallback classification for '{EventName}'", _consecutiveFailures, eventName);
+            return FallbackClassification(eventName, description, location);
         }
         catch (Exception ex)
         {
             _consecutiveFailures++;
             _logger.LogError(ex, "Error in Claude AI processing for '{EventName}' (failure #{Failures})", eventName, _consecutiveFailures);
-            return GenerateEnhancedFallbackTags(eventName, description, location);
+            return FallbackClassification(eventName, description, location);
         }
         finally
         {
@@ -217,8 +223,8 @@ Return:";
     // Strict format validation
     private static bool IsValidResponseFormat(string response)
     {
-        // Must match: NUMBER|WORD|word,word,word format
-        var pattern = @"^\d+\|[A-Za-z]*\|[a-zA-Zа-яА-Я\s,]*$";
+        // Must match: NUMBER|SUBCATEGORY|tag1,tag2 — tags may contain hyphens (e.g. Family-friendly)
+        var pattern = @"^\d+\|[A-Za-z\s]*\|[a-zA-Zа-яА-Я\s,\-]*$";
         return Regex.IsMatch(response, pattern);
     }
 
@@ -279,121 +285,10 @@ Return:";
         return null;
     }
 
-    // TODO: Extend the curated list of emblematic venues that should receive dedicated tags. Extend as needed when new landmarks appear.
-    private static readonly (string Keyword, string Tag)[] SignificantVenueTags = new[]
-    {
-        ("театър натфиз", "Театър НАТФИЗ"),
-        ("тба", "БТА"),
-        ("театър 199", "Театър 199"),
-        ("театър възраждане", "Театър Възраждане"),
-        ("театър артвент", "Театър Артвент"),
-        ("университетски театър нбу", "университетски театър НБУ"),
-        ("зала българия", "зала България"),
-        ("арена 888", "Арена 888"),
-        ("бнр", "БНР"),
-        ("топлоцентрала", "Топлоцентрала"),
-        ("малката текила", "Малката Текила"),
-        ("podlez galeriya", "Podlez Galeriya"),
-        ("joy station", "Joy Station"),
-        ("борисова градина", "Борисова градина"),
-        ("юнак", "Юнак"),
-        ("търговски център", "Търговски център"),
-        ("хеликон арт", "Хеликон Арт")
-        //("театър натфиз", "NATFIZ"),
-        //("тба", "TBA"),
-        //("театър 199", "199 Theatre"),
-        //("театър възраждане", "Vazrazhdane Theatre"),
-        //("театър артвент", "Artvent Theatre"),
-        //("университетски театър нбу", "NBU"),
-        //("зала българия", "Zala Balgaria"),
-        //("арена 888", "Arena 888"),
-        //("бнр", "BNR"),
-        //("топлоцентрала", "Toplocentrala"),
-        //("малката текила", "Malkata Tekila"),
-        //("podlez galeriya", "Podlez Galeriya"),
-        //("joy station", "Joy Station"),
-        //("борисова градина", "Borisova gradina"),
-        //("юнак", "Yunak"),
-        //("търговски център", "Trade center"),
-        //("хеликон арт", "Helikon Art")
-    };
-
-    private static readonly (string Keyword, string Tag)[] GenericVenueTags = new[]
-    {
-        ("club", "club"),
-        ("клуб", "club"),
-        ("ндк", "NDK"),
-        ("бар", "bar"),
-        ("galeria", "gallery"),
-        ("галерия", "gallery"),
-        ("опера", "opera"),
-        ("колодрум", "colodrum"),
-        ("парк", "park"),
-        ("читалище", "chitalishte"),
-        ("зала", "hall")
-    };
-
-    private static string? GetGenericVenueTag(string? text)
-    {
-        if (string.IsNullOrWhiteSpace(text)) return null;
-
-        var lowered = text.ToLowerInvariant();
-        foreach (var (keyword, tag) in GenericVenueTags)
-        {
-            if (lowered.Contains(keyword))
-            {
-                return tag;
-            }
-        }
-
-        return null;
-    }
-
-    private string? NormalizeLocation(string? location)
-    {
-        if (string.IsNullOrWhiteSpace(location)) return null;
-
-        var normalized = location.ToLower().Trim();
-
-        foreach (var (keyword, tag) in SignificantVenueTags)
-        {
-            if (normalized.Contains(keyword))
-            {
-                return tag;
-            }
-        }
-
-        return null;
-    }
-
-    private List<string> CleanAndValidateTags(List<string> tags)
-    {
-        var cleaned = new List<string>();
-
-        foreach (var tag in tags)
-        {
-            if (string.IsNullOrWhiteSpace(tag)) continue;
-
-            var cleanTag = tag.Trim().ToLower();
-
-            if (cleanTag is "none" or "безплатно") continue;
-
-            if (cleanTag.Length > 30 || cleanTag.Contains("№") || cleanTag.Contains("ул.")) continue;
-
-            if (cleanTag.All(char.IsDigit) || cleanTag.Length < 3) continue;
-
-            cleaned.Add(cleanTag);
-        }
-
-        return cleaned.Distinct().ToList();
-    }
-
-    private TaggingResult GenerateEnhancedFallbackTags(string eventName, string description, string? location)
+    private TaggingResult FallbackClassification(string eventName, string description, string? location)
     {
         var category = TryClassifyWithKeywords(eventName, description);
-        var tags = ExtractTagsWithKeywords(eventName, description, location, category);
 
-        // Extract subcategory for fallback
         string? suggestedSubCategory = null;
         if (category.HasValue)
         {
@@ -404,8 +299,8 @@ Return:";
         {
             SuggestedCategory = category,
             SuggestedSubCategory = suggestedSubCategory,
-            SuggestedTags = tags,
-            Confidence = tags.ToDictionary(tag => tag, _ => 0.8)
+            SuggestedTags = new List<string>(),
+            Confidence = new Dictionary<string, double>()
         };
     }
 
@@ -513,45 +408,29 @@ Return:";
         return "Other";
     }
 
-    private async Task EnsureRateLimit()
+    private async Task EnsureRateLimit() // NEW optomized
     {
-        // Use Task.Run for the synchronous lock operation
-        await Task.Run(() =>
+        TimeSpan delay;
+
+        lock (_lockObject)
         {
-            lock (_lockObject)
-            {
-                var timeSinceLastRequest = DateTime.UtcNow - _lastRequest;
+            var timeSinceLastRequest = DateTime.UtcNow - _lastRequest;
 
-                // More aggressive rate limiting based on failure count
-                var requiredDelay = _consecutiveFailures > 0
-                    ? TimeSpan.FromMilliseconds(2000 + (_consecutiveFailures * 1000)) // 2s + 1s per failure
-                    : TimeSpan.FromMilliseconds(1000); // Normal 1s delay
+            var requiredDelay = _consecutiveFailures > 0
+                ? TimeSpan.FromMilliseconds(2000 + (_consecutiveFailures * 1000))
+                : TimeSpan.FromMilliseconds(1000);
 
-                if (timeSinceLastRequest < requiredDelay)
-                {
-                    var delay = requiredDelay - timeSinceLastRequest;
-                    if (delay > TimeSpan.Zero)
-                    {
-                        Task.Delay(delay).Wait();
-                      }
-                }
-                _lastRequest = DateTime.UtcNow;
-            }
-        });
-    }
+            delay = timeSinceLastRequest < requiredDelay
+                ? requiredDelay - timeSinceLastRequest
+                : TimeSpan.Zero;
 
-    private List<string> ExtractTagsWithKeywords(string eventName, string description, string? location, EventCategory? category)
-    {
-        var tags = new List<string>();
-
-        var venueTag = GetGenericVenueTag(eventName) ?? GetGenericVenueTag(location) ?? NormalizeLocation(location);
-
-        if (!string.IsNullOrWhiteSpace(venueTag))
-        {
-            tags.Add(venueTag);
+            _lastRequest = DateTime.UtcNow + delay;
         }
 
-        return CleanAndValidateTags(tags).Take(6).ToList();
+        if (delay > TimeSpan.Zero)
+        {
+            await Task.Delay(delay);
+        }
     }
 }
 

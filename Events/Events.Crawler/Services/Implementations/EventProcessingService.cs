@@ -195,13 +195,13 @@ public class EventProcessingService : IEventProcessingService
         {
             _logger.LogWarning("AI comprehensive processing timeout for event {EventName}, using fallback", crawledEvent.Name);
             var fallbackEvent = MapToEntity(crawledEvent, null, null);
-            return (fallbackEvent, new List<string> { "некласифицирано" });
+            return (fallbackEvent, new List<string>());
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "AI comprehensive processing failed for event {EventName}, using fallback", crawledEvent.Name);
             var fallbackEvent = MapToEntity(crawledEvent, null, null);
-            return (fallbackEvent, new List<string> { "некласифицирано" });
+            return (fallbackEvent, new List<string>());
         }
     }
 
@@ -224,10 +224,23 @@ public class EventProcessingService : IEventProcessingService
             IsFree = crawledEvent.IsFree || crawledEvent.Price == 0,
             CategoryId = categoryId,
             SubCategoryId = subCategoryId,
-            Status = category.HasValue ? EventStatus.Published : EventStatus.Draft,
+            Status = DetermineEventStatus(category, crawledEvent.StartDate),
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
+    }
+
+    // An event is only Published when it has a valid category AND a known date.
+    // Events without a category or with a missing date are saved as Draft for manual review.
+    private static EventStatus DetermineEventStatus(EventCategory? category, DateTime? startDate)
+    {
+        if (!category.HasValue)
+            return EventStatus.Draft;
+
+        if (!startDate.HasValue || startDate.Value == DateTime.MinValue)
+            return EventStatus.Draft;
+
+        return EventStatus.Published;
     }
 
     public async Task<Event> CreateEventEntityAsync(CrawledEventDto crawledEvent)
