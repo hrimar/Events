@@ -4,6 +4,7 @@ using Events.Crawler.Enums;
 using Events.Crawler.Services.Helpers;
 using Events.Crawler.Services.Interfaces;
 using Microsoft.Extensions.Logging;
+using System.Text.Json.Serialization;
 using Microsoft.Playwright;
 using System.Diagnostics;
 
@@ -246,221 +247,47 @@ public class TicketStationCrawler : IWebScrapingCrawler
                     }
                     catch (TimeoutException)
                     {
-                        _logger.LogWarning("Timeout waiting for .item elements");
-                        await Task.Delay(5000); // Fallback wait
+                        _logger.LogWarning("TicketStation Timeout waiting for .item elements");
+                        await Task.Delay(5000);
                     }
 
-                    // Additional wait for dynamic content
                     await Task.Delay(3000);
 
-                    // Get all item cards
-                    var itemCards = await page.QuerySelectorAllAsync(".item");
+                    // Phase 1: Collect cards from all pages (DOM snapshot + tc:gt API)
+                    var cardDataList = await CollectAllPagesCardDataAsync(page, url);
+                    _logger.LogInformation("Snapshotted {Count} total card references across all pages", cardDataList.Count);
+
+                    // Wait for any pending fetch/network activity from Phase 1 to settle
+                    // before starting GotoAsync calls in Phase 2 — prevents ERR_ABORTED
+                    await page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
+                    await Task.Delay(1000);
+
+                    // Phase 2+3: Process only Sofia events — skip navigation for other cities
                     var events = new List<TicketStationEventDto>();
 
-                    // Process cards one by one to avoid stale element references
-                    int cardIndex = 0;
-                    int totalCards = itemCards.Count;
-
-                    while (cardIndex < totalCards)
+                    foreach (var cardData in cardDataList)
                     {
+                        if (!IsSofiaCity(cardData.City?.Trim().ToLowerInvariant() ?? ""))
+                        {
+                            _logger.LogDebug("Skipping non-Sofia card: {Name} in {City}", cardData.Name, cardData.City);
+                            continue;
+                        }
+
                         try
                         {
-                            // Re-query the cards on the main page to get fresh references
-                            itemCards = await page.QuerySelectorAllAsync(".item");
-
-                            if (cardIndex >= itemCards.Count)
+                            var extracted = await ExtractEventDetailsAsync(page, cardData);
+                            foreach (var eventDto in extracted)
                             {
-                                _logger.LogWarning("Card index {CardIndex} is out of range. Total cards: {TotalCards}", cardIndex, itemCards.Count);
-                                break;
-                            }
-
-                            var card = itemCards[cardIndex];
-                            var eventDto = new TicketStationEventDto();
-
-                            // Step 1: Extract basic info from main page                            
-                            // Extract name from .item-name
-                            var nameElement = await card.QuerySelectorAsync(".item-name");
-                            if (nameElement != null)
-                            {
-                                eventDto.Name = await nameElement.InnerTextAsync();
-                            }
-
-                            // Extract city from .item-city
-                            var cityElement = await card.QuerySelectorAsync(".item-city");
-                            if (cityElement != null)
-                            {
-                                eventDto.City = await cityElement.InnerTextAsync();
-                            }
-
-                            // Extract image URL from the card
-                            var imageElement = await card.QuerySelectorAsync("img");
-                            if (imageElement != null)
-                            {
-                                eventDto.ImageUrl = await imageElement.GetAttributeAsync("src");
-                                // Make URL absolute if it's relative
-                                if (!string.IsNullOrEmpty(eventDto.ImageUrl) && eventDto.ImageUrl.StartsWith("/"))
+                                if (!string.IsNullOrEmpty(eventDto.Name))
                                 {
-                                    var baseUri = new Uri(url);
-                                    eventDto.ImageUrl = $"{baseUri.Scheme}://{baseUri.Host}{eventDto.ImageUrl}";
+                                    events.Add(eventDto);
+                                    _logger.LogDebug("Extracted TicketStation event: {Name} on {Date} in {City}", eventDto.Name, eventDto.Date, eventDto.City);
                                 }
                             }
-
-                            // Get href for detail page (Step 2)
-                            var detailHref = await card.GetAttributeAsync("href");
-                            if (string.IsNullOrEmpty(detailHref))
-                            {
-                                _logger.LogWarning("No href found for event: {EventName}", eventDto.Name);
-                                cardIndex++;
-                                continue;
-                            }
-
-                            // Make detail URL absolute
-                            var detailUrl = detailHref.StartsWith("/") ? $"https://ticketstation.bg{detailHref}" : detailHref;
-
-                            eventDto.Url = "https://ticketstation.bg";
-
-                            // Step 2: Navigate to detail page to extract price and location
-                            try
-                            {
-                                await page.GotoAsync(detailUrl, new PageGotoOptions
-                                {
-                                    WaitUntil = WaitUntilState.DOMContentLoaded,
-                                    Timeout = 30000
-                                });
-
-                                await Task.Delay(2000); // Wait for content to load
-
-                                //// Extract price from .item-price - Ignore the price for now
-                                //var priceElement = await page.QuerySelectorAsync(".item-price");
-                                //if (priceElement != null)
-                                //{
-                                //    var priceText = await priceElement.InnerTextAsync();
-                                //    eventDto.Price = ExtractLowestPriceInEur(priceText);
-                                //}
-
-                                // Find .item element to get href for Step 3 (location/booking page)
-                                var itemElement = await page.QuerySelectorAsync(".item");
-                                if (itemElement != null)
-                                {
-                                    var locationHref = await itemElement.GetAttributeAsync("href");
-                                    if (!string.IsNullOrEmpty(locationHref))
-                                    {
-                                        // Make location URL absolute
-                                        var locationUrl = locationHref.StartsWith("/") ? $"https://ticketstation.bg{locationHref}" : locationHref;
-
-                                        // Step 3: Navigate to location/booking page
-                                        await page.GotoAsync(locationUrl, new PageGotoOptions
-                                        {
-                                            WaitUntil = WaitUntilState.DOMContentLoaded,
-                                            Timeout = 30000
-                                        });
-
-                                        await Task.Delay(2000);
-
-                                        // Set TicketUrl to this final page URL
-                                        eventDto.TicketUrl = locationUrl;
-
-                                        // Extract description
-                                        var descriptionElement = await page.QuerySelectorAsync("#collapseDesc");
-                                        if (descriptionElement != null)
-                                        {
-                                            var descriptionText = await descriptionElement.InnerTextAsync();
-                                            eventDto.Description = descriptionText.Replace("Виж още", "").Trim();
-                                        }
-
-                                        // Extract location from venue link
-                                        var venueLink = await page.QuerySelectorAsync("a.text-wrap");
-                                        if (venueLink != null)
-                                        {
-                                            var venueSpan = await venueLink.QuerySelectorAsync("span");
-                                            if (venueSpan != null)
-                                            {
-                                                var locationText = await venueSpan.InnerTextAsync();
-
-                                                // Parse location: "Арена 8888 София" → venue="Арена 8888"
-                                                // Remove city name from location text if present
-                                                if (!string.IsNullOrEmpty(eventDto.City))
-                                                {
-                                                    locationText = locationText.Replace(eventDto.City, "").Trim();
-                                                    eventDto.Location = locationText;
-                                                }
-                                            }
-                                        }
-
-                                        // Extract date from description
-                                        if (!string.IsNullOrEmpty(eventDto.Description))
-                                        {
-                                            var extractedDate = ExtractDateFromDescription(eventDto.Description);
-                                            if (extractedDate.HasValue)
-                                            {
-                                                eventDto.Date = extractedDate.Value.ToString("yyyy-MM-dd");
-                                                _logger.LogDebug("Successfully parsed date: {Date} for event: {EventName}", eventDto.Date, eventDto.Name);
-                                            }
-                                            else
-                                            {
-                                                // Fallback: Set to null if no date found
-                                                eventDto.Date = null;
-                                                _logger.LogWarning("Could not extract date from description for event: {EventName}", eventDto.Name);
-                                            }
-                                        }
-                                        else
-                                        {
-                                            eventDto.Date = null;
-                                        }
-                                    }
-                                    else
-                                    {
-                                        _logger.LogWarning("No href found in .item element for Step 3: {EventName}", eventDto.Name);
-                                    }
-                                }
-                                else
-                                {
-                                    _logger.LogWarning("No .item element found for Step 3: {EventName}", eventDto.Name);
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-                                _logger.LogWarning(ex, "Error extracting details for event: {EventName}", eventDto.Name);
-                            }
-
-                            // Navigate back to main page for next item
-                            await page.GotoAsync(url, new PageGotoOptions
-                            {
-                                WaitUntil = WaitUntilState.DOMContentLoaded,
-                                Timeout = 30000
-                            });
-                            await Task.Delay(2000);
-
-                            // Only add events that have at least a name
-                            if (!string.IsNullOrEmpty(eventDto.Name))
-                            {
-                                events.Add(eventDto);
-                                _logger.LogDebug("Extracted event: {EventName} on {EventDate} in {EventCity}", eventDto.Name, eventDto.Date, eventDto.City);
-                            }
-
-                            // Move to next card
-                            cardIndex++;
                         }
                         catch (Exception ex)
                         {
-                            _logger.LogWarning(ex, "Error extracting event data from card at index {CardIndex}", cardIndex);
-
-                            // Try to navigate back to main page
-                            try
-                            {
-                                await page.GotoAsync(url, new PageGotoOptions
-                                {
-                                    WaitUntil = WaitUntilState.DOMContentLoaded,
-                                    Timeout = 30000
-                                });
-                                await Task.Delay(2000);
-                            }
-                            catch (Exception navEx)
-                            {
-                                _logger.LogError(navEx, "Failed to navigate back to main page after error");
-                            }
-
-                            cardIndex++;
+                            _logger.LogWarning(ex, "Error extracting details for: {Name}", cardData.Name);
                         }
                     }
 
@@ -484,6 +311,433 @@ public class TicketStationCrawler : IWebScrapingCrawler
         }
 
         return new List<TicketStationEventDto>();
+    }
+
+    private record CardBasicData(string? Name, string? City, string? ImageUrl, string DetailUrl);
+
+    // Collects card data from all pagination pages via Locator clicks.
+    // Uses JS eval for pagination detection and href comparison — immune to stale element handles.
+    // Deduplicates by DetailUrl since the site may show the same card on multiple pages.
+    private async Task<List<CardBasicData>> CollectAllPagesCardDataAsync(IPage page, string baseUrl)
+    {
+        var allCards = new List<CardBasicData>();
+
+        await DismissCookieConsentAsync(page);
+
+        // Page 1 is already loaded in the browser
+        var page1Cards = await SnapshotCardDataAsync(page, baseUrl);
+        allCards.AddRange(page1Cards);
+        _logger.LogInformation("Page 1: snapshotted {Count} cards", page1Cards.Count);
+
+        var pageNumbers = await GetPaginationPageNumbersAsync(page);
+        _logger.LogInformation("Pagination pages found: {Pages}", string.Join(", ", pageNumbers));
+
+        foreach (var pageNum in pageNumbers)
+        {
+            try
+            {
+                var hrefsBefore = await GetAllCardHrefsAsync(page);
+
+                // Set up response listener BEFORE clicking — tc:gt may respond before we await it
+                var responseTask = page.WaitForResponseAsync(
+                    r => r.Url.Contains("tc:gt") && r.Status == 200,
+                    new PageWaitForResponseOptions { Timeout = 12000 });
+
+                // Use Mouse.ClickAsync at the element's real coordinates — simulates full mouse interaction
+                // (mousedown + mouseup + click). JS link.click() only fires 'click', missing pointer events.
+                var paginationLocator = page.Locator("ul.pagination li.page-item a.page-link")
+                    .Filter(new LocatorFilterOptions { HasText = pageNum.ToString() })
+                    .First;
+
+                // ScrollIntoViewIfNeededAsync ensures the element is in the viewport before clicking.
+                // Mouse.ClickAsync uses viewport coordinates — without scrolling, clicks miss off-screen elements.
+                await paginationLocator.ScrollIntoViewIfNeededAsync();
+                await paginationLocator.ClickAsync();
+
+                // Wait for tc:gt network response — signal that new data has arrived
+                try
+                {
+                    await responseTask;
+                    _logger.LogDebug("tc:gt response received for page {Page}", pageNum);
+                }
+                catch (TimeoutException)
+                {
+                    _logger.LogWarning("No tc:gt response detected after clicking page {Page}", pageNum);
+                }
+
+                // Log active pagination page for diagnostics
+                var activePage = await page.EvaluateAsync<string?>(@"() => {
+                    const active = document.querySelector('ul.pagination li.page-item.active a.page-link');
+                    return active ? active.innerText.trim() : null;
+                }");
+                _logger.LogInformation("Active pagination page after click: {ActivePage} (expected: {Expected})", activePage, pageNum);
+
+                // Wait for DOM cards to update
+                await WaitForCardsToRefreshAsync(page, hrefsBefore);
+
+                var pageCards = await SnapshotCardDataAsync(page, baseUrl);
+                allCards.AddRange(pageCards);
+                _logger.LogInformation("Page {PageNum}: snapshotted {Count} cards", pageNum, pageCards.Count);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Error collecting cards from pagination page {Page}", pageNum);
+            }
+        }
+
+        // Deduplicate by DetailUrl — the site shows the same cards on multiple pages
+        var seen = new HashSet<string>();
+        var deduplicated = new List<CardBasicData>();
+        foreach (var card in allCards)
+        {
+            if (seen.Add(card.DetailUrl))
+                deduplicated.Add(card);
+            else
+                _logger.LogDebug("Duplicate card skipped: {Name} ({Url})", card.Name, card.DetailUrl);
+        }
+
+        if (deduplicated.Count < allCards.Count)
+            _logger.LogInformation("Deduplication removed {Count} duplicate cards ({Total} → {Unique})",
+                allCards.Count - deduplicated.Count, allCards.Count, deduplicated.Count);
+
+        return deduplicated;
+    }
+
+    // NOTE: Accepting cookies may trigger a page reload — waits for .item cards to reappear afterward.
+    private async Task DismissCookieConsentAsync(IPage page)
+    {
+        try
+        {
+            // Click via JS to avoid Playwright navigation race conditions
+            var dismissed = await page.EvaluateAsync<bool>(@"() => {
+                const btn = document.querySelector(
+                    '#cookiescript_accept, #cookiescript_acceptall, button[data-cs-action=""accept""], .cookiescript_accept'
+                );
+                if (btn) { btn.click(); return true; }
+                const dialog = document.querySelector('div[role=""dialog""][aria-live=""assertive""]');
+                if (dialog) { dialog.remove(); return true; }
+                return false;
+            }");
+
+            if (dismissed)
+            {
+                // Wait for potential page reload to settle
+                await page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
+                try
+                {
+                    await page.WaitForSelectorAsync(".item", new PageWaitForSelectorOptions { Timeout = 8000 });
+                }
+                catch (TimeoutException)
+                {
+                    await Task.Delay(2000);
+                }
+                _logger.LogInformation("Cookie consent dismissed");
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Could not dismiss cookie consent — will attempt pagination anyway");
+        }
+    }
+
+    // Returns page numbers from pagination, skipping page 1 (already loaded) and non-numeric entries.
+    // Uses JS evaluation to avoid IElementHandle going stale after cookie consent reload.
+    private async Task<List<int>> GetPaginationPageNumbersAsync(IPage page)
+    {
+        var result = new List<int>();
+
+        try
+        {
+            var texts = await page.EvaluateAsync<string[]>(@"() =>
+                Array.from(document.querySelectorAll('ul.pagination li.page-item a.page-link'))
+                    .map(a => a.innerText.trim())
+            ");
+
+            foreach (var text in texts ?? [])
+            {
+                if (int.TryParse(text, out var num) && num > 1)
+                    result.Add(num);
+            }
+
+            result.Sort();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Error reading pagination links");
+        }
+
+        return result;
+    }
+
+    private async Task<string> GetAllCardHrefsAsync(IPage page)
+    {
+        try
+        {
+            // Use specific selector to target only event cards, not other .item elements on the page.
+            var hrefs = await page.EvaluateAsync<string[]>(@"() =>
+                Array.from(document.querySelectorAll('.item.ev-radius.mb-3'))
+                    .map(el => el.getAttribute('href') || '')
+                    .filter(h => h !== '')
+            ");
+            return string.Join("|", hrefs ?? []);
+        }
+        catch
+        {
+            return string.Empty;
+        }
+    }
+
+    // Waits until the full set of card hrefs changes, indicating new page content has loaded.
+    // Comparing the full set (not just first card) prevents false negatives when first card is the same across pages.
+    private async Task WaitForCardsToRefreshAsync(IPage page, string previousHrefs)
+    {
+        var timeout = TimeSpan.FromSeconds(10);
+        var interval = TimeSpan.FromMilliseconds(500);
+        var elapsed = TimeSpan.Zero;
+
+        while (elapsed < timeout)
+        {
+            await Task.Delay(interval);
+            elapsed += interval;
+
+            try
+            {
+                var currentHrefs = await GetAllCardHrefsAsync(page);
+                if (!string.IsNullOrEmpty(currentHrefs) && currentHrefs != previousHrefs)
+                    return;
+            }
+            catch (PlaywrightException)
+            {
+                // Page is mid-navigation after pagination click — keep waiting
+            }
+        }
+
+        // Fallback: pagination may not have changed the visible cards
+        _logger.LogWarning("Card set did not change after pagination click within {Timeout}s — proceeding anyway", timeout.TotalSeconds);
+        await Task.Delay(2000);
+    }
+
+    // Loads the main page once and snapshots all card hrefs, names, cities and images in a single pass.
+    // This eliminates the need to navigate back to the main page for each card.
+    // Uses JS evaluation to extract plain data — immune to stale element handle errors after page reloads.
+    private async Task<List<CardBasicData>> SnapshotCardDataAsync(IPage page, string baseUrl)
+    {
+        var baseUri = new Uri(baseUrl);
+        var host = $"{baseUri.Scheme}://{baseUri.Host}";
+
+        // Ensure cards are present before querying
+        try
+        {
+            await page.WaitForSelectorAsync(".item.ev-radius.mb-3", new PageWaitForSelectorOptions { Timeout = 8000 });
+        }
+        catch (TimeoutException)
+        {
+            _logger.LogWarning("No .item.ev-radius.mb-3 elements found on page before snapshot");
+            return [];
+        }
+
+        List<CardRaw>? raw = null;
+        try
+        {
+            var json = await page.EvaluateAsync<string>(@"() =>
+                JSON.stringify(Array.from(document.querySelectorAll('.item.ev-radius.mb-3')).map(card => ({
+                    href:     card.getAttribute('href') || '',
+                    name:     card.querySelector('.item-name') ? card.querySelector('.item-name').innerText.trim() : '',
+                    city:     card.querySelector('.item-city') ? card.querySelector('.item-city').innerText.trim() : '',
+                    imageUrl: card.querySelector('img') ? (card.querySelector('img').getAttribute('src') || '') : ''
+                })))
+            ");
+
+            if (!string.IsNullOrWhiteSpace(json))
+                raw = System.Text.Json.JsonSerializer.Deserialize<List<CardRaw>>(json,
+                    new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Card snapshot failed");
+            return [];
+        }
+
+        var result = new List<CardBasicData>();
+        foreach (var r in raw ?? [])
+        {
+            if (r is null || string.IsNullOrEmpty(r.Href)) continue;
+
+            var imageUrl = !string.IsNullOrEmpty(r.ImageUrl) && r.ImageUrl.StartsWith("/") ? $"{host}{r.ImageUrl}" : r.ImageUrl;
+
+            var detailUrl = r.Href.StartsWith("/") ? $"https://ticketstation.bg{r.Href}" : r.Href;
+            result.Add(new CardBasicData(r.Name, r.City, imageUrl, detailUrl));
+        }
+
+        return result;
+    }
+
+    private class CardRaw
+    {
+        [JsonPropertyName("href")] public string Href { get; set; } = "";
+        [JsonPropertyName("name")] public string Name { get; set; } = "";
+        [JsonPropertyName("city")] public string City { get; set; } = "";
+        [JsonPropertyName("imageUrl")] public string ImageUrl { get; set; } = "";
+    }
+
+    private class TcGtApiResponse
+    {
+        [JsonPropertyName("data")] public List<TcGtItem> Data { get; set; } = [];
+        [JsonPropertyName("status")] public string Status { get; set; } = "";
+    }
+
+    private class TcGtItem
+    {
+        [JsonPropertyName("id")] public int Id { get; set; }
+        [JsonPropertyName("title")] public string Title { get; set; } = "";
+        [JsonPropertyName("city")] public string City { get; set; } = "";
+        [JsonPropertyName("slug")] public string Slug { get; set; } = "";
+        [JsonPropertyName("image_thumbnail")] public string ImageThumbnail { get; set; } = "";
+        [JsonPropertyName("min_cost")] public string? MinCost { get; set; }
+        [JsonPropertyName("max_cost")] public string? MaxCost { get; set; }
+        [JsonPropertyName("currency")] public string Currency { get; set; } = "";
+    }
+
+    // Navigates to the detail page. If the page contains sub-cards (multiple dates), processes each one.
+    // Returns a list: one dto per date slot, or a single dto for single-date events.
+    private async Task<List<TicketStationEventDto>> ExtractEventDetailsAsync(IPage page, CardBasicData cardData)
+    {
+        var results = new List<TicketStationEventDto>();
+
+        // Step 2: Detail page
+        await page.GotoAsync(cardData.DetailUrl, new PageGotoOptions
+        {
+            WaitUntil = WaitUntilState.DOMContentLoaded,
+            Timeout = 30000
+        });
+        await Task.Delay(2000);
+
+        var itemElements = await page.QuerySelectorAllAsync(".item.ev-radius.mb-3");
+        if (itemElements.Count == 0)
+        {
+            _logger.LogWarning("No .item.ev-radius.mb-3 on detail page for: {Name}", cardData.Name);
+            results.Add(new TicketStationEventDto { Name = cardData.Name, City = cardData.City, ImageUrl = cardData.ImageUrl, Url = "https://ticketstation.bg" });
+            return results;
+        }
+
+        // Determine whether these .item elements are sub-cards (date slots) or direct booking links.
+        // Sub-cards: .item has no #collapseDesc on this page — clicking them leads to the real booking page.
+        // Direct: only one .item with a direct href to the booking page.
+        var firstHref = await itemElements[0].GetAttributeAsync("href");
+        var hasDescOnCurrentPage = await page.QuerySelectorAsync("#collapseDesc") != null;
+
+        if (!hasDescOnCurrentPage && itemElements.Count > 1)
+        {
+            // Sub-cards case: this is an event with multiple date slots
+            _logger.LogInformation("Event '{Name}' has {Count} date sub-cards — processing each", cardData.Name, itemElements.Count);
+
+            // Snapshot sub-card hrefs and names via JS (immune to stale handles after navigation)
+            var subCardJson = await page.EvaluateAsync<string>(@"() =>
+                JSON.stringify(Array.from(document.querySelectorAll('.item.ev-radius.mb-3')).map(card => ({
+                    href: card.getAttribute('href') || '',
+                    name: card.querySelector('.item-name') ? card.querySelector('.item-name').innerText.trim() : ''
+                })))
+            ");
+
+            var subCards = System.Text.Json.JsonSerializer.Deserialize<List<SubCardRaw>>(subCardJson ?? "[]",
+                new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? [];
+
+            foreach (var sub in subCards)
+            {
+                if (string.IsNullOrEmpty(sub.Href)) continue;
+
+                var bookingUrl = sub.Href.StartsWith("/") ? $"https://ticketstation.bg{sub.Href}" : sub.Href;
+                // Sub-card name is more specific (e.g. includes date label) — prefer it over the parent card name
+                var subName = !string.IsNullOrWhiteSpace(sub.Name) ? sub.Name : cardData.Name;
+
+                var dto = await ExtractBookingPageDetailsAsync(page, bookingUrl, new TicketStationEventDto
+                {
+                    Name = subName,
+                    City = cardData.City,
+                    ImageUrl = cardData.ImageUrl,
+                    Url = "https://ticketstation.bg"
+                });
+
+                if (dto != null)
+                    results.Add(dto);
+            }
+        }
+        else
+        {
+            // Single date or direct booking link
+            if (string.IsNullOrEmpty(firstHref))
+            {
+                _logger.LogWarning("No href in .item on detail page for: {Name}", cardData.Name);
+                results.Add(new TicketStationEventDto { Name = cardData.Name, City = cardData.City, ImageUrl = cardData.ImageUrl, Url = "https://ticketstation.bg" });
+                return results;
+            }
+
+            var locationUrl = firstHref.StartsWith("/") ? $"https://ticketstation.bg{firstHref}" : firstHref;
+            var dto = await ExtractBookingPageDetailsAsync(page, locationUrl, new TicketStationEventDto
+            {
+                Name = cardData.Name,
+                City = cardData.City,
+                ImageUrl = cardData.ImageUrl,
+                Url = "https://ticketstation.bg"
+            });
+
+            if (dto != null)
+                results.Add(dto);
+        }
+
+        return results;
+    }
+
+    private class SubCardRaw
+    {
+        [JsonPropertyName("href")] public string Href { get; set; } = "";
+        [JsonPropertyName("name")] public string Name { get; set; } = "";
+    }
+
+    // Navigates to the booking/location page and extracts description, date, venue.
+    private async Task<TicketStationEventDto?> ExtractBookingPageDetailsAsync(IPage page, string bookingUrl, TicketStationEventDto eventDto)
+    {
+        await page.GotoAsync(bookingUrl, new PageGotoOptions
+        {
+            WaitUntil = WaitUntilState.DOMContentLoaded,
+            Timeout = 30000
+        });
+        await Task.Delay(2000);
+
+        eventDto.TicketUrl = bookingUrl;
+
+        var descEl = await page.QuerySelectorAsync("#collapseDesc");
+        if (descEl != null)
+            eventDto.Description = (await descEl.InnerTextAsync()).Replace("Виж още", "").Trim();
+
+        var venueLink = await page.QuerySelectorAsync("a.text-wrap");
+        if (venueLink != null)
+        {
+            var venueSpan = await venueLink.QuerySelectorAsync("span");
+            if (venueSpan != null)
+            {
+                var locationText = await venueSpan.InnerTextAsync();
+                if (!string.IsNullOrEmpty(eventDto.City))
+                    locationText = locationText.Replace(eventDto.City, "").Trim();
+                eventDto.Location = locationText;
+            }
+        }
+
+        if (!string.IsNullOrEmpty(eventDto.Description))
+        {
+            var extractedDate = ExtractDateFromDescription(eventDto.Description);
+            if (extractedDate.HasValue)
+            {
+                eventDto.Date = extractedDate.Value.ToString("yyyy-MM-dd");
+                _logger.LogDebug("Parsed date {Date} for: {Name}", eventDto.Date, eventDto.Name);
+            }
+            else
+            {
+                _logger.LogWarning("Could not extract date for: {Name}", eventDto.Name);
+            }
+        }
+
+        return eventDto;
     }
 
     private CrawledEventDto? MapTicketStationToStandardDto(TicketStationEventDto ticketStationEvent)

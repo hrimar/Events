@@ -408,7 +408,7 @@ ONLY the format";
         return "Other";
     }
 
-    private async Task EnsureRateLimit() // NEW optomized
+    private async Task EnsureRateLimit()
     {
         TimeSpan delay;
 

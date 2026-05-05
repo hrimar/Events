@@ -405,11 +405,11 @@ public class EpaygoCrawler : IWebScrapingCrawler
                 }
             }
 
-            _logger.LogInformation("Phase 1 complete: Found {EventCount} events with basic data", events.Count);
+            _logger.LogInformation("Epaygo Phase 1 complete: Found {EventCount} events with basic data", events.Count);
 
             // Phase 2: Extract city and location info - with name-based pre-filtering
             var eventsNeedingDetails = events.Where(e => !string.IsNullOrEmpty(e.TicketUrl)).ToList();
-            _logger.LogInformation("Phase 2: Pre-filtering {EventCount} events before city/location extraction", eventsNeedingDetails.Count);
+            _logger.LogInformation("Epaygo Phase 2: Pre-filtering {EventCount} events before city/location extraction", eventsNeedingDetails.Count);
 
             // Smart name-based pre-filtering: Skip events with other city names in the title
             var likelySofiaEvents = eventsNeedingDetails.Where(e => !IsObviouslyNonSofiaEvent(e)).ToList();
@@ -417,10 +417,10 @@ public class EpaygoCrawler : IWebScrapingCrawler
             
             if (skippedNonSofiaCount > 0)
             {
-                _logger.LogInformation("Pre-filtered out {SkippedCount} events based on city names in titles", skippedNonSofiaCount);
+                _logger.LogInformation("Emaoygo Pre-filtered out {SkippedCount} events based on city names in titles", skippedNonSofiaCount);
             }
 
-            _logger.LogInformation("Phase 2: Processing {EventCount} events for city/location data", likelySofiaEvents.Count);
+            _logger.LogInformation("Epaygo Phase 2: Processing {EventCount} events for city/location data", likelySofiaEvents.Count);
 
             const int detailBatchSize = 20; // Increased batch size for efficiency
             var processedDetailCount = 0;
