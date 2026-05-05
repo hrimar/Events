@@ -65,7 +65,7 @@ Below is the list of available categories and subcategories. Each subcategory in
 2=Art → Painting(National Art Gallery exhibitions), Sculpture(—), Photography(PhotoSynthesis exhibitions), Digital Art(DA Fest), Street Art(Urban Creatures), Graffiti(Sofia Graffiti Tour), Illustration(—), Performance Art(Water Tower Art Fest), Installation Art(Contemporary gallery installations), Contemporary Art(Structura Gallery), Visual Arts(Sofia Art Week), Mixed Media(—), Conceptual Art(—), Other
 3=Business → Networking Events(Founders Live), Startups(Startup Conference Bulgaria), Entrepreneurship(CEO Angels Club), Marketing(Digital4Sofia), Sales(—), Leadership(Leadership Talks), Finance(Investor Finance Forum), Real Estate(Expo Real Bulgaria), Investment(Money Motion), E-commerce(eCommerce Academy), Innovation(Innovation Explorer), Technology(Webit), HR & Management(HR Industry Expo), Business Strategy(—), Product Development(—), Other
 4=Sports → Football(CSKA–Levski Derby), Basketball(NBL Games), Volleyball(National League), Tennis(Sofia Open), Athletics(—), Swimming(—), Running(Sofia Marathon), Cycling(Tour of Bulgaria), Boxing(MaxFight), MMA(Bulgarian Fighting Championship), Wrestling(—), Weightlifting(—), CrossFit(CrossFit Bulgarian Throwdowns), Yoga(Yoga in the Park), Fitness(FitFest), Hiking(Vitosha hikes), Climbing(Climb.bg events), Skiing(Bansko Ski Cup), Snowboarding(Pamporovo Freestyle), Motocross(Bulgarian Motocross Championship), eSports(A1 Gaming League), Table Tennis(—), Badminton(—), Golf(Pirin Golf Tournaments), Dance Sport(Dance Sport Championships), Other
-5=Theatre → Drama(National Theatre performances), Comedy(Theatre Sofia), Musical Theatre(Musical productions at Opera Houses), Tragedy(—), Experimental Theatre(ACT Festival), Puppet Theatre(Puppet Theatre Sofia), Improvisation(HaHaHa Impro Theatre), Street Theatre(Street performances during festivals), Monodrama(One-man shows), Children's Theatre(Theatre “Pan”), Stand-up Comedy(Comedy Club Sofia, Inside Joke), Other
+5=Theatre → Drama(National Theatre performances), Comedy(Theatre Sofia), Musical Theatre(Musical productions at Opera Houses), Tragedy(—), Experimental Theatre(ACT Festival), Puppet Theatre(Puppet Theatre Sofia), Improvisation(HaHaHa Impro Theatre), Street Theatre(Street performances during festivals), Monodrama(One-man shows), Children's Theatre(Theatre Pan), Stand-up Comedy(Comedy Club Sofia, Inside Joke), Other
 6=Cinema → Feature Films(SIFF), Short Films(In The Palace Film Fest), Documentaries(Master of Art Festival), Animation(Golden Kuker Sofia), Independent Cinema(Screenings at Dom na Kinoto), Bulgarian Cinema(Premiers at Odeon, Lumière Lidl), International Cinema(—), Film Premieres(Weekly premieres in cinemas), Student Films(NATFIZ screenings), Film Festivals(SIFF), Other
 7=Festivals → Music Festivals(Hills of Rock, A to Jazz), Film Festivals(SIFF), Art Festivals(KvARTal Festival), Food & Wine Festivals(DiVino Taste), Cultural Festivals(Gabrovo Carnival), Folklore Festivals(Koprivshtitsa Fest), Street Festivals(Kapana Fest), Summer Festivals(Various coastal festivals), Light Festivals(LUNAR), Craft Beer Festivals(Sofia Brew Fest), Eco Festivals(Uzana Polyana Fest), Dance Festivals(Salsa Fest Bulgaria), Tech Festivals(Webit Expo), Other
 8=Exhibitions → Art Exhibitions(National Gallery), Photography Exhibitions(PhotoSynthesis), Historical Exhibitions(National Museum), Science Exhibitions(Inter Expo Center), Technology Exhibitions(Tech Expo Sofia), Automotive Exhibitions(Sofia Motor Show), Design Exhibitions(Design Week), Cultural Heritage Exhibitions(Regional museum exhibitions), Educational Exhibitions(Book Fair Sofia), Craft Exhibitions(Handmade Fest), Other
@@ -115,11 +115,13 @@ Before providing your answer, use the scratchpad to think through:
 - Which category and subcategory best fit
 - Whether any approved tags add useful value beyond the category/subcategory
 - Whether the chosen tags are clearly supported and non-redundant
+Do NOT write or output the scratchpad — keep it internal. Then output ONLY the final answer.
 
 CRITICAL: Return your answer ONLY in the format CATEGORY|SUBCATEGORY|tag1,tag2,tag3
 If no suitable tags apply, keep the tag section empty like this:
 CATEGORY|SUBCATEGORY|
 
+NO scratchpad
 NO explanations
 NO descriptions
 ONLY the format";
@@ -155,7 +157,9 @@ ONLY the format";
                     }
 
                     var parts = responseText.Split('|');
-                    if (parts.Length >= 2 && int.TryParse(parts[0], out var categoryId))
+                    // Claude sometimes echoes the category name: "1=Music" — strip the name part
+                    var categoryPart = parts[0].Split('=')[0].Trim();
+                    if (parts.Length >= 2 && int.TryParse(categoryPart, out var categoryId))
                     {
                         if (categoryId == 11)
                         {
@@ -223,8 +227,9 @@ ONLY the format";
     // Strict format validation
     private static bool IsValidResponseFormat(string response)
     {
-        // Must match: NUMBER|SUBCATEGORY|tag1,tag2 — tags may contain hyphens (e.g. Family-friendly)
-        var pattern = @"^\d+\|[A-Za-z\s]*\|[a-zA-Zа-яА-Я\s,\-]*$";
+        // Must match: NUMBER|SUBCATEGORY|tags
+        // Allow apostrophes (Children's), ampersands (R&B), = (when Claude echoes category name)
+        var pattern = @"^\d+[^|]*\|[^|]*\|[a-zA-Z\s,\-'&]*$";
         return Regex.IsMatch(response, pattern);
     }
 

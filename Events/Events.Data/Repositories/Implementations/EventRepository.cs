@@ -65,6 +65,7 @@ public class EventRepository : IEventRepository
             .Include(e => e.EventTags)
             .ThenInclude(et => et.Tag)
             .AsQueryable();
+       //var queryString = query.ToQueryString(); // TODO: Use this generated SQL and analize it in via MSSMS Actual Execution Plan!!!
 
         if (status.HasValue)
         {

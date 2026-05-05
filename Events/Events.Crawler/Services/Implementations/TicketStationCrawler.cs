@@ -425,7 +425,7 @@ public class TicketStationCrawler : IWebScrapingCrawler
                 await page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
                 try
                 {
-                    await page.WaitForSelectorAsync(".item", new PageWaitForSelectorOptions { Timeout = 8000 });
+                    await page.WaitForSelectorAsync(".item", new PageWaitForSelectorOptions { Timeout = 5000 });
                 }
                 catch (TimeoutException)
                 {
@@ -604,34 +604,44 @@ public class TicketStationCrawler : IWebScrapingCrawler
     {
         var results = new List<TicketStationEventDto>();
 
-        // Step 2: Detail page
+        // Step 2: Detail page — wait explicitly for .item.ev-radius.mb-3 to render (JS-driven)
         await page.GotoAsync(cardData.DetailUrl, new PageGotoOptions
         {
             WaitUntil = WaitUntilState.DOMContentLoaded,
             Timeout = 30000
         });
-        await Task.Delay(2000);
 
-        var itemElements = await page.QuerySelectorAllAsync(".item.ev-radius.mb-3");
-        if (itemElements.Count == 0)
+        try
         {
-            _logger.LogWarning("No .item.ev-radius.mb-3 on detail page for: {Name}", cardData.Name);
+            await page.WaitForSelectorAsync(".item.ev-radius.mb-3", new PageWaitForSelectorOptions { Timeout = 3000 });
+        }
+        catch (TimeoutException)
+        {
+            _logger.LogWarning("No .item.ev-radius.mb-3 appeared on detail page for: {Name}", cardData.Name);
             results.Add(new TicketStationEventDto { Name = cardData.Name, City = cardData.City, ImageUrl = cardData.ImageUrl, Url = "https://ticketstation.bg" });
             return results;
         }
 
-        // Determine whether these .item elements are sub-cards (date slots) or direct booking links.
-        // Sub-cards: .item has no #collapseDesc on this page — clicking them leads to the real booking page.
-        // Direct: only one .item with a direct href to the booking page.
-        var firstHref = await itemElements[0].GetAttributeAsync("href");
-        var hasDescOnCurrentPage = await page.QuerySelectorAsync("#collapseDesc") != null;
+        var itemElements = await page.QuerySelectorAllAsync(".item.ev-radius.mb-3");
 
-        if (!hasDescOnCurrentPage && itemElements.Count > 1)
+        if (itemElements.Count == 0)
         {
-            // Sub-cards case: this is an event with multiple date slots
+            _logger.LogWarning("No .item.ev-radius.mb-3 found on detail page for: {Name}", cardData.Name);
+            results.Add(new TicketStationEventDto { Name = cardData.Name, City = cardData.City, ImageUrl = cardData.ImageUrl, Url = "https://ticketstation.bg" });
+            return results;
+        }
+
+        // #collapseDesc is present on BOTH the second (detail) and third (booking) page.
+        // Sub-cards detection is based solely on the number of .item.ev-radius.mb-3 cards:
+        // - 1 card  → single date event, navigate to its booking page
+        // - 2+ cards → multiple date slots, process each sub-card separately
+        var firstHref = await itemElements[0].GetAttributeAsync("href");
+
+        if (itemElements.Count > 1)
+        {
+            // Sub-cards case: multiple date slots
             _logger.LogInformation("Event '{Name}' has {Count} date sub-cards — processing each", cardData.Name, itemElements.Count);
 
-            // Snapshot sub-card hrefs and names via JS (immune to stale handles after navigation)
             var subCardJson = await page.EvaluateAsync<string>(@"() =>
                 JSON.stringify(Array.from(document.querySelectorAll('.item.ev-radius.mb-3')).map(card => ({
                     href: card.getAttribute('href') || '',
@@ -647,7 +657,6 @@ public class TicketStationCrawler : IWebScrapingCrawler
                 if (string.IsNullOrEmpty(sub.Href)) continue;
 
                 var bookingUrl = sub.Href.StartsWith("/") ? $"https://ticketstation.bg{sub.Href}" : sub.Href;
-                // Sub-card name is more specific (e.g. includes date label) — prefer it over the parent card name
                 var subName = !string.IsNullOrWhiteSpace(sub.Name) ? sub.Name : cardData.Name;
 
                 var dto = await ExtractBookingPageDetailsAsync(page, bookingUrl, new TicketStationEventDto
@@ -664,10 +673,10 @@ public class TicketStationCrawler : IWebScrapingCrawler
         }
         else
         {
-            // Single date or direct booking link
+            // Single date — navigate to the booking page
             if (string.IsNullOrEmpty(firstHref))
             {
-                _logger.LogWarning("No href in .item on detail page for: {Name}", cardData.Name);
+                _logger.LogWarning("No href in .item.ev-radius.mb-3 on detail page for: {Name}", cardData.Name);
                 results.Add(new TicketStationEventDto { Name = cardData.Name, City = cardData.City, ImageUrl = cardData.ImageUrl, Url = "https://ticketstation.bg" });
                 return results;
             }
