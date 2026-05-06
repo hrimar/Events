@@ -44,7 +44,11 @@ public class EventRepository : IEventRepository
         {
             query = query.Where(e => e.Status == status.Value);
         }
-        query = query.Where(e => e.Date >= fromDate && e.Date <= toDate);
+
+        // Use exclusive upper bound (< next day) so events at any time during toDate are included.
+        // Guard against DateTime.MaxValue overflow before calling AddDays(1).
+        var exclusiveEnd = toDate.Date == DateTime.MaxValue.Date ? DateTime.MaxValue : toDate.Date.AddDays(1);
+        query = query.Where(e => e.Date >= fromDate.Date && e.Date < exclusiveEnd);
         return await query.CountAsync();
     }
 

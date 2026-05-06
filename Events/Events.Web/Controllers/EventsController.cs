@@ -62,8 +62,7 @@ public class EventsController : Controller
             }
             else
             {
-                var (events, count) = await _eventService.GetPagedEventsAsync(
-                    1, int.MaxValue, EventStatus.Published, category, subCategory, free, fromDate);
+                var (events, count) = await _eventService.GetPagedEventsAsync(1, int.MaxValue, EventStatus.Published, category, subCategory, free, fromDate);
                 allEvents = events;
             }
 
@@ -81,10 +80,11 @@ public class EventsController : Controller
                             string.Equals(et.Tag.Name.Trim(), searchTag.Trim(), StringComparison.OrdinalIgnoreCase))));
             }
 
-            // Apply additional date filtering if specified
+            // Use exclusive upper bound (< next day) so events at any time during toDate are included.
             if (toDate.HasValue)
             {
-                allEvents = allEvents.Where(e => e.Date <= toDate.Value);
+                var exclusiveEnd = toDate.Value.Date.AddDays(1);
+                allEvents = allEvents.Where(e => e.Date < exclusiveEnd);
             }
 
             allEvents = ApplySorting(allEvents, sortBy, sortOrder);
