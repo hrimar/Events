@@ -387,6 +387,28 @@
   <data name="EventStatus_Postponed" xml:space="preserve"><value>Отложено</value></data>
   <data name="EventStatus_SoldOut" xml:space="preserve"><value>Разпродадено</value></data>
 
+  <!-- Event Tags (approved master list) -->
+  <data name="Tag_FamilyFriendly" xml:space="preserve"><value>За семейството</value></data>
+  <data name="Tag_ForKids" xml:space="preserve"><value>За деца</value></data>
+  <data name="Tag_Beginners" xml:space="preserve"><value>За начинаещи</value></data>
+  <data name="Tag_Professionals" xml:space="preserve"><value>За професионалисти</value></data>
+  <data name="Tag_Students" xml:space="preserve"><value>За студенти</value></data>
+  <data name="Tag_AdultsOnly" xml:space="preserve"><value>Само за възрастни</value></data>
+  <data name="Tag_Live" xml:space="preserve"><value>На живо</value></data>
+  <data name="Tag_Outdoor" xml:space="preserve"><value>На открито</value></data>
+  <data name="Tag_Indoor" xml:space="preserve"><value>На закрито</value></data>
+  <data name="Tag_Networking" xml:space="preserve"><value>Нетуъркинг</value></data>
+  <data name="Tag_HandsOn" xml:space="preserve"><value>Практическо</value></data>
+  <data name="Tag_Interactive" xml:space="preserve"><value>Интерактивно</value></data>
+  <data name="Tag_BulgarianCulture" xml:space="preserve"><value>Българска култура</value></data>
+  <data name="Tag_LocalArtists" xml:space="preserve"><value>Местни артисти</value></data>
+  <data name="Tag_InternationalGuests" xml:space="preserve"><value>Международни гости</value></data>
+  <data name="Tag_Traditional" xml:space="preserve"><value>Традиционно</value></data>
+  <data name="Tag_Contemporary" xml:space="preserve"><value>Съвременно</value></data>
+  <data name="Tag_EnglishFriendly" xml:space="preserve"><value>На английски</value></data>
+  <data name="Tag_Seasonal" xml:space="preserve"><value>Сезонно</value></data>
+  <data name="Tag_HolidaySpecial" xml:space="preserve"><value>Празнично</value></data>
+
   <!-- Sort Options -->
   <data name="Sort_Date" xml:space="preserve"><value>Дата</value></data>
   <data name="Sort_Name" xml:space="preserve"><value>Название</value></data>

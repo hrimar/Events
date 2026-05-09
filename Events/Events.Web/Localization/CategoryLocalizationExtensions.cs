@@ -34,6 +34,24 @@ public static class CategoryLocalizationExtensions
         _                         => "fas fa-calendar"
     };
 
+    // Translates a tag by its English name from the approved master list.
+    // Converts the raw tag name to a resource key (e.g. "Family-friendly" ? "Tag_FamilyFriendly").
+    // Falls back to the raw English name if no resource key is found.
+    public static string LocalizeTagName(string tagName, IStringLocalizer<SharedResources> localizer)
+    {
+        var key = "Tag_" + TagNameToResourceKey(tagName);
+        var localized = localizer[key];
+        return localized.ResourceNotFound ? tagName : localized.Value;
+    }
+
+    // Converts a raw tag name to a PascalCase resource key suffix.
+    // "Family-friendly" ? "FamilyFriendly", "For kids" ? "ForKids", "Hands-on" ? "HandsOn"
+    private static string TagNameToResourceKey(string tagName) =>
+        string.Concat(
+            tagName
+                .Split(new[] { ' ', '-' }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(word => char.ToUpperInvariant(word[0]) + word[1..]));
+
     // Translates a subcategory by its string name (e.g. from SubCategory.Name in the database).
     // Falls back to the raw name if no resource key is found.
     public static string LocalizeSubCategoryName(string subCategoryName, IStringLocalizer<SharedResources> localizer)

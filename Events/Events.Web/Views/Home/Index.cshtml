@@ -163,7 +163,7 @@
                                     {
                                         <a asp-action="ByTag" asp-controller="Events" asp-route-tagName="@tag"
                                            class="badge bg-info text-white text-decoration-none me-1 mb-1">
-                                            <i class="fas fa-tag me-1"></i>@tag
+                                            <i class="fas fa-tag me-1"></i>@CategoryLocalizationExtensions.LocalizeTagName(tag, Localizer)
                                         </a>
                                     }
                                     @if(eventItem.Tags.Count > 2)

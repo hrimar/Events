@@ -1,5 +1,6 @@
 @model Events.Web.Models.EventsPageViewModel
 @using Events.Web.Resources
+@using Events.Web.Localization
 @using Microsoft.Extensions.Localization
 @inject IStringLocalizer<SharedResources> Localizer
 
@@ -104,7 +105,7 @@
                                     @foreach(var selectedTag in Model.SelectedTags)
                                     {
                                         <span class="badge bg-primary me-1 mb-1" style="font-size: 0.9rem;">
-                                            <i class="fas fa-tag me-1"></i>@selectedTag
+                                            <i class="fas fa-tag me-1"></i>@CategoryLocalizationExtensions.LocalizeTagName(selectedTag, Localizer)
                                             <button type="button" class="btn-close btn-close-white ms-1" style="font-size: 0.6rem;" onclick="removeTag('@selectedTag')"></button>
                                         </span>
                                     }
@@ -131,7 +132,7 @@
                                         {
                                             <button type="button" class="btn btn-sm @tag.BadgeClass me-1 mb-1 tag-button @(Model.SelectedTags.Contains(tag.Name) ? "active" : "")" 
                                                     onclick="toggleTag('@tag.Name')">
-                                                @tag.Name <span class="badge bg-light text-dark ms-1">@tag.EventCount</span>
+                                                @CategoryLocalizationExtensions.LocalizeTagName(tag.Name, Localizer) <span class="badge bg-light text-dark ms-1">@tag.EventCount</span>
                                             </button>
                                         }
                                     </div>
@@ -146,7 +147,7 @@
                                 {
                                     <button type="button" class="btn btn-sm @tag.BadgeClass me-1 mb-1 tag-button @tag.Size @(Model.SelectedTags.Contains(tag.Name) ? "active" : "")" 
                                             onclick="toggleTag('@tag.Name')">
-                                        @tag.Name <span class="badge bg-light text-dark ms-1">@tag.EventCount</span>
+                                        @CategoryLocalizationExtensions.LocalizeTagName(tag.Name, Localizer) <span class="badge bg-light text-dark ms-1">@tag.EventCount</span>
                                     </button>
                                 }
                             </div>
@@ -363,7 +364,7 @@
                                         {
                                             <a href="@Url.Action("ByTag", "Events", new { tagName = tag })" 
                                                class="badge bg-info text-white text-decoration-none me-1 mb-1 tag-link">
-                                                <i class="fas fa-tag me-1"></i>@tag
+                                                <i class="fas fa-tag me-1"></i>@CategoryLocalizationExtensions.LocalizeTagName(tag, Localizer)
                                             </a>
                                         }
                                         @if(eventItem.Tags.Count > 4)

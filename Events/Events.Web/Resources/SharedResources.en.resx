@@ -387,6 +387,28 @@
   <data name="EventStatus_Postponed" xml:space="preserve"><value>Postponed</value></data>
   <data name="EventStatus_SoldOut" xml:space="preserve"><value>Sold Out</value></data>
 
+  <!-- Event Tags (approved master list) -->
+  <data name="Tag_FamilyFriendly" xml:space="preserve"><value>Family-friendly</value></data>
+  <data name="Tag_ForKids" xml:space="preserve"><value>For kids</value></data>
+  <data name="Tag_Beginners" xml:space="preserve"><value>Beginners</value></data>
+  <data name="Tag_Professionals" xml:space="preserve"><value>Professionals</value></data>
+  <data name="Tag_Students" xml:space="preserve"><value>Students</value></data>
+  <data name="Tag_AdultsOnly" xml:space="preserve"><value>Adults only</value></data>
+  <data name="Tag_Live" xml:space="preserve"><value>Live</value></data>
+  <data name="Tag_Outdoor" xml:space="preserve"><value>Outdoor</value></data>
+  <data name="Tag_Indoor" xml:space="preserve"><value>Indoor</value></data>
+  <data name="Tag_Networking" xml:space="preserve"><value>Networking</value></data>
+  <data name="Tag_HandsOn" xml:space="preserve"><value>Hands-on</value></data>
+  <data name="Tag_Interactive" xml:space="preserve"><value>Interactive</value></data>
+  <data name="Tag_BulgarianCulture" xml:space="preserve"><value>Bulgarian culture</value></data>
+  <data name="Tag_LocalArtists" xml:space="preserve"><value>Local artists</value></data>
+  <data name="Tag_InternationalGuests" xml:space="preserve"><value>International guests</value></data>
+  <data name="Tag_Traditional" xml:space="preserve"><value>Traditional</value></data>
+  <data name="Tag_Contemporary" xml:space="preserve"><value>Contemporary</value></data>
+  <data name="Tag_EnglishFriendly" xml:space="preserve"><value>English-friendly</value></data>
+  <data name="Tag_Seasonal" xml:space="preserve"><value>Seasonal</value></data>
+  <data name="Tag_HolidaySpecial" xml:space="preserve"><value>Holiday special</value></data>
+
   <!-- Sort Options -->
   <data name="Sort_Date" xml:space="preserve"><value>Date</value></data>
   <data name="Sort_Name" xml:space="preserve"><value>Name</value></data>
