@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Security.Claims;
 using Events.Models.Enums;
 using Events.Services.Interfaces;
 using Events.Web.Localization;
@@ -16,17 +17,20 @@ namespace Events.Web.Controllers
         private readonly ILogger<HomeController> _logger;
         private readonly IEventService _eventService;
         private readonly ITagService _tagService;
+        private readonly IUserFavoriteEventService _favoriteEventService;
         private readonly IStringLocalizer<SharedResources> _localizer;
 
         public HomeController(
             ILogger<HomeController> logger,
             IEventService eventService,
             ITagService tagService,
+            IUserFavoriteEventService favoriteEventService,
             IStringLocalizer<SharedResources> localizer)
         {
             _logger = logger;
             _eventService = eventService;
             _tagService = tagService;
+            _favoriteEventService = favoriteEventService;
             _localizer = localizer;
         }
 
@@ -48,12 +52,26 @@ namespace Events.Web.Controllers
 
                 var eventViewModels = EventViewModel.FromEntities(featuredEvents);
 
+                // Load saved events only for authenticated users
+                var savedEvents = new List<EventViewModel>();
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (!string.IsNullOrEmpty(userId))
+                {
+                    var favorites = await _favoriteEventService.GetUserFavoritesAsync(userId);
+                    savedEvents = favorites
+                        .Where(f => f.Event != null)
+                        .Select(f => EventViewModel.FromEntity(f.Event!))
+                        .OrderByDescending(e => e.Date)
+                        .ToList();
+                }
+
                 // Get popular tags for homepage
                 var popularTags = await GetPopularTagsAsync();
 
                 var viewModel = new HomePageViewModel
                 {
                     FeaturedEvents = eventViewModels,
+                    SavedEvents = savedEvents,
                     TotalEvents = totalEvents,
                     TodayEvents = todayEvents,
                     Next7DaysEvents = next7DaysEvents,

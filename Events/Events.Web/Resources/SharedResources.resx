@@ -56,6 +56,7 @@
   <data name="Home_BrowseByCategory" xml:space="preserve"><value>Разгледай по категория</value></data>
   <data name="Home_FeaturedEvents" xml:space="preserve"><value>Препоръчани събития</value></data>
   <data name="Home_ViewAllEvents" xml:space="preserve"><value>Виж всички събития</value></data>
+  <data name="Home_SavedEvents" xml:space="preserve"><value>Запазени събития</value></data>
   <data name="Home_Details" xml:space="preserve"><value>Детайли</value></data>
   <data name="Home_BuyTickets" xml:space="preserve"><value>Купи билети</value></data>
   <data name="Home_Free" xml:space="preserve"><value>Безплатно</value></data>
