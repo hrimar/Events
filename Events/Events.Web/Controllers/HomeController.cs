@@ -68,15 +68,25 @@ namespace Events.Web.Controllers
                 // Get popular tags for homepage
                 var popularTags = await GetPopularTagsAsync();
 
+                var localizedCategories = EventsPageViewModel.GetAvailableCategories(_localizer);
+
                 var viewModel = new HomePageViewModel
                 {
-                    FeaturedEvents = eventViewModels,
-                    SavedEvents = savedEvents,
-                    TotalEvents = totalEvents,
-                    TodayEvents = todayEvents,
+                    FeaturedSection = EventsSectionViewModel.CreateFeaturedSection(
+                        events: eventViewModels,
+                        categories: localizedCategories,
+                        title: _localizer["Home_FeaturedEvents"],
+                        viewAllText: _localizer["Home_ViewAllEvents"],
+                        viewAllUrl: Url.Action("Index", "Events")!),
+                    SavedSection = EventsSectionViewModel.CreateSavedSection(
+                        events: savedEvents,
+                        categories: localizedCategories,
+                        title: _localizer["Home_SavedEvents"]),
+                    TotalEvents     = totalEvents,
+                    TodayEvents     = todayEvents,
                     Next7DaysEvents = next7DaysEvents,
-                    PopularTags = popularTags.Take(15).ToList(), // Top 15 for homepage
-                    LocalizedCategories = EventsPageViewModel.GetAvailableCategories(_localizer)
+                    PopularTags     = popularTags.Take(15).ToList(),
+                    LocalizedCategories = localizedCategories
                 };
 
                 return View(viewModel);
