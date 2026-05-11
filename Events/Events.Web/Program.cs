@@ -1,6 +1,7 @@
 using Azure.Identity;
 using Azure.Storage.Blobs;
 using Events.Data.Context;
+using Events.Web.Infrastructure;
 using Events.Data.Repositories.Implementations;
 using Events.Data.Repositories.Interfaces;
 using Events.Data.Services;
@@ -23,6 +24,7 @@ ConfigureEmail(builder);
 RegisterServices(builder);
 
 ConfigureLocalization(builder);
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddRazorPages().AddViewLocalization();
 builder.Services.AddControllersWithViews().AddViewLocalization();
 

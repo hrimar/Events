@@ -25,65 +25,58 @@ public class UsersController : Controller
         int pageSize = 20,
         string? search = null,
         string sortBy = AdminUserSortFields.Email,
-        string sortOrder = AdminUserSortOrders.Asc)
+        string sortOrder = AdminUserSortOrders.Asc,
+        CancellationToken cancellationToken = default)
     {
-        try
+        var query = new AdminUserQuery
         {
-            var query = new AdminUserQuery
+            Page = page,
+            PageSize = pageSize,
+            SearchTerm = search,
+            SortBy = sortBy,
+            SortOrder = sortOrder
+        };
+
+        var result = await _adminUserService.GetUsersAsync(query, cancellationToken);
+
+        var items = result.Users
+            .Select(u => new AdminUserListItemViewModel
             {
-                Page = page,
-                PageSize = pageSize,
-                SearchTerm = search,
-                SortBy = sortBy,
-                SortOrder = sortOrder
-            };
+                Id = u.Id,
+                DisplayName = string.IsNullOrWhiteSpace(u.DisplayName) ? u.Email : u.DisplayName,
+                Email = u.Email,
+                FavoriteEventsCount = u.FavoriteEventsCount,
+                EmailConfirmed = u.EmailConfirmed,
+                IsLockedOut = u.IsLockedOut,
+                PreferredCategory = u.PreferredCategory,
+                FavoriteCategories = u.FavoriteCategories,
+                FavoriteSubCategories = u.FavoriteSubCategories,
+                RegisteredAt = u.RegisteredAt,
+                Roles = u.Roles
+            })
+            .ToList();
 
-            var result = await _adminUserService.GetUsersAsync(query);
+        var paginatedUsers = new PaginatedList<AdminUserListItemViewModel>(
+            items,
+            result.TotalCount,
+            result.Page,
+            result.PageSize);
 
-            var items = result.Users
-                .Select(u => new AdminUserListItemViewModel
-                {
-                    Id = u.Id,
-                    DisplayName = string.IsNullOrWhiteSpace(u.DisplayName) ? u.Email : u.DisplayName,
-                    Email = u.Email,
-                    FavoriteEventsCount = u.FavoriteEventsCount,
-                    EmailConfirmed = u.EmailConfirmed,
-                    IsLockedOut = u.IsLockedOut,
-                    PreferredCategory = u.PreferredCategory,
-                    FavoriteCategories = u.FavoriteCategories,
-                    FavoriteSubCategories = u.FavoriteSubCategories,
-                    RegisteredAt = u.RegisteredAt,
-                    Roles = u.Roles
-                })
-                .ToList();
+        var statistics = result.Statistics ?? new AdminUserStatisticsDto();
 
-            var paginatedUsers = new PaginatedList<AdminUserListItemViewModel>(
-                items,
-                result.TotalCount,
-                result.Page,
-                result.PageSize);
-
-            var statistics = result.Statistics ?? new AdminUserStatisticsDto();
-
-            var viewModel = new AdminUserManagementViewModel
-            {
-                Users = paginatedUsers,
-                SearchTerm = result.SearchTerm,
-                SortBy = result.SortBy,
-                SortOrder = result.SortOrder,
-                TotalUsers = statistics.TotalUsers,
-                ConfirmedEmails = statistics.ConfirmedEmails,
-                LockedUsers = statistics.LockedUsers,
-                NewUsersThisWeek = statistics.NewUsersThisWeek
-            };
-
-            return View(viewModel);
-        }
-        catch (Exception ex)
+        var viewModel = new AdminUserManagementViewModel
         {
-            _logger.LogError(ex, "Error loading admin users list");
-            return View(new AdminUserManagementViewModel());
-        }
+            Users = paginatedUsers,
+            SearchTerm = result.SearchTerm,
+            SortBy = result.SortBy,
+            SortOrder = result.SortOrder,
+            TotalUsers = statistics.TotalUsers,
+            ConfirmedEmails = statistics.ConfirmedEmails,
+            LockedUsers = statistics.LockedUsers,
+            NewUsersThisWeek = statistics.NewUsersThisWeek
+        };
+
+        return View(viewModel);
     }
 
     [HttpPost]
@@ -97,16 +90,12 @@ public class UsersController : Controller
         string sortBy = AdminUserSortFields.Email,
         string sortOrder = AdminUserSortOrders.Asc)
     {
-        try
-        {
-            await _adminUserService.SetUserRoleAsync(userId, role);
-            TempData["SuccessMessage"] = "User role updated successfully.";
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to update role for user {UserId}", userId);
-            TempData["ErrorMessage"] = "Unable to update user role.";
-        }
+        await ExecuteAdminActionAsync(
+            () => _adminUserService.SetUserRoleAsync(userId, role),
+            successMessage: "User role updated successfully.",
+            errorMessage: "Unable to update user role.",
+            errorLog: "Failed to update role for user {UserId}",
+            logArgs: userId);
 
         return RedirectToAction(nameof(Index), new { page, pageSize, search, sortBy, sortOrder });
     }
@@ -122,17 +111,32 @@ public class UsersController : Controller
         string sortBy = AdminUserSortFields.Email,
         string sortOrder = AdminUserSortOrders.Asc)
     {
+        await ExecuteAdminActionAsync(
+            () => _adminUserService.SetLockoutStateAsync(userId, lockUser),
+            successMessage: lockUser ? "User locked successfully." : "User unlocked successfully.",
+            errorMessage: "Unable to update user access.",
+            errorLog: "Failed to toggle lock for user {UserId}",
+            logArgs: userId);
+
+        return RedirectToAction(nameof(Index), new { page, pageSize, search, sortBy, sortOrder });
+    }
+
+    private async Task ExecuteAdminActionAsync(
+        Func<Task> action,
+        string successMessage,
+        string errorMessage,
+        string errorLog,
+        params object[] logArgs)
+    {
         try
         {
-            await _adminUserService.SetLockoutStateAsync(userId, lockUser);
-            TempData["SuccessMessage"] = lockUser ? "User locked successfully." : "User unlocked successfully.";
+            await action();
+            TempData["SuccessMessage"] = successMessage;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to toggle lock for user {UserId}", userId);
-            TempData["ErrorMessage"] = "Unable to update user access.";
+            _logger.LogError(ex, errorLog, logArgs);
+            TempData["ErrorMessage"] = errorMessage;
         }
-
-        return RedirectToAction(nameof(Index), new { page, pageSize, search, sortBy, sortOrder });
     }
 }
