@@ -102,6 +102,12 @@
     @await Html.PartialAsync("_EventsSection", Model.SavedSection)
 }
 
+<!-- Recommended Events (authenticated users with saved events that match upcoming events) -->
+@if((User.Identity?.IsAuthenticated ?? false) && Model.RecommendedSection.Events.Any())
+{
+    @await Html.PartialAsync("_EventsSection", Model.RecommendedSection)
+}
+
 <!-- Statistics Section -->
 <section class="bg-light py-2">
     <div class="container">

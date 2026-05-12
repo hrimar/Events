@@ -61,6 +61,12 @@ public class UserFavoriteEventRepository : IUserFavoriteEventRepository
         return await _context.UserFavoriteEvents
             .Where(u => u.UserId == userId)
             .Include(u => u.Event)
+                .ThenInclude(e => e.Category)
+            .Include(u => u.Event)
+                .ThenInclude(e => e.SubCategory)
+            .Include(u => u.Event)
+                .ThenInclude(e => e.EventTags)
+                    .ThenInclude(et => et.Tag)
             .OrderByDescending(u => u.AddedAt)
             .ToListAsync();
     }

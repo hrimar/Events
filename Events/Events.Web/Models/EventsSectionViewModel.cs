@@ -31,8 +31,8 @@ public class EventsSectionViewModel
     // Factory methods — keep the controller free of mapping boilerplate
     // ---------------------------------------------------------------------------
 
-    public static EventsSectionViewModel CreateFeaturedSection(List<EventViewModel> events, List<CategoryDisplayItem> categories,
-        string title, string viewAllText, string viewAllUrl) => new()
+    public static EventsSectionViewModel CreateFeaturedSection(List<EventViewModel> events, List<CategoryDisplayItem> categories, string title,
+        string viewAllText, string viewAllUrl) => new()
         {
             Title = title,
             Events = events,
@@ -42,12 +42,23 @@ public class EventsSectionViewModel
             LocalizedCategories = categories
         };
 
-    public static EventsSectionViewModel CreateSavedSection(List<EventViewModel> events, List<CategoryDisplayItem> categories, string title) => new()
-    {
-        Title = title,
-        Events = events,
-        MaxItems = 18,
-        ViewAllUrl = null,   // No dedicated favorites page yet
-        LocalizedCategories = categories
-    };
+    public static EventsSectionViewModel CreateSavedSection(List<EventViewModel> events, List<CategoryDisplayItem> categories, string title)
+        => new()
+        {
+            Title = title,
+            Events = events,
+            MaxItems = 18,
+            ViewAllUrl = null, // No dedicated favorites page yet
+            LocalizedCategories = categories
+        };
+
+    public static EventsSectionViewModel CreateRecommendedSection(List<EventViewModel> events, List<CategoryDisplayItem> categories, string title)
+        => new()
+        {
+            Title = title,
+            Events = events,
+            MaxItems = 18,
+            ViewAllUrl = null, // No dedicated favorites page yet
+            LocalizedCategories = categories
+        };
 }

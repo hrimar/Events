@@ -13,6 +13,7 @@ namespace Events.Web.Controllers
     public class HomeController : Controller
     {
         private readonly int _maxFeaturedEventsCount = 18;
+        private const int RecommendedEventsDaysAhead = 10;
 
         private readonly ILogger<HomeController> _logger;
         private readonly IEventService _eventService;
@@ -65,6 +66,34 @@ namespace Events.Web.Controllers
                         .ToList();
                 }
 
+                // Recommended events: next 10 days, same categories/subcategories as saved events
+                var recommendedEvents = new List<EventViewModel>();
+                if (savedEvents.Any())
+                {
+                    var savedCategoryNames = savedEvents
+                        .Select(e => e.CategoryName)
+                        .Where(n => !string.IsNullOrEmpty(n))
+                        .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+                    var savedSubCategoryNames = savedEvents
+                        .Select(e => e.SubCategoryName)
+                        .Where(n => !string.IsNullOrEmpty(n))
+                        .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+                    var savedEventIds = savedEvents.Select(e => e.Id).ToHashSet();
+
+                    var upcoming = await _eventService.GetEventsByDateRangeAsync(DateTime.Today, DateTime.Today.AddDays(RecommendedEventsDaysAhead));
+
+                    recommendedEvents = EventViewModel.FromEntities(
+                        upcoming
+                            .Where(e => e.Status == EventStatus.Published)
+                            .Where(e => !savedEventIds.Contains(e.Id))
+                            .Where(e => savedCategoryNames.Contains(e.Category?.Name ?? string.Empty)
+                                     || savedSubCategoryNames.Contains(e.SubCategory?.Name ?? string.Empty))
+                            .OrderBy(e => e.Date))
+                        .ToList();
+                }
+
                 // Get popular tags for homepage
                 var popularTags = await GetPopularTagsAsync();
 
@@ -82,10 +111,14 @@ namespace Events.Web.Controllers
                         events: savedEvents,
                         categories: localizedCategories,
                         title: _localizer["Home_SavedEvents"]),
-                    TotalEvents     = totalEvents,
-                    TodayEvents     = todayEvents,
+                    RecommendedSection = EventsSectionViewModel.CreateRecommendedSection(
+                        events: recommendedEvents,
+                        categories: localizedCategories,
+                        title: _localizer["Home_RecommendedEvents"]),
+                    TotalEvents = totalEvents,
+                    TodayEvents = todayEvents,
                     Next7DaysEvents = next7DaysEvents,
-                    PopularTags     = popularTags.Take(15).ToList(),
+                    PopularTags = popularTags.Take(15).ToList(),
                     LocalizedCategories = localizedCategories
                 };
 
@@ -109,7 +142,7 @@ namespace Events.Web.Controllers
             try
             {
                 var tags = await _tagService.GetAllTagsAsync();
-                
+
                 return tags
                     .Where(t => t.EventTags.Any()) // Only tags with events
                     .Select(t => new TagViewModel

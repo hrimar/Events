@@ -57,6 +57,7 @@
   <data name="Home_FeaturedEvents" xml:space="preserve"><value>Featured Events</value></data>
   <data name="Home_ViewAllEvents" xml:space="preserve"><value>View All Events</value></data>
   <data name="Home_SavedEvents" xml:space="preserve"><value>Saved Events</value></data>
+  <data name="Home_RecommendedEvents" xml:space="preserve"><value>Recommended Events</value></data>
   <data name="Home_Details" xml:space="preserve"><value>Details</value></data>
   <data name="Home_BuyTickets" xml:space="preserve"><value>Buy tickets</value></data>
   <data name="Home_Free" xml:space="preserve"><value>Free</value></data>
