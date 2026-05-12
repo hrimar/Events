@@ -7,6 +7,7 @@
 @{
     ViewData["Title"] = Model.Name;
     var relatedEvents = ViewBag.RelatedEvents as List<Events.Web.Models.EventViewModel> ?? new List<Events.Web.Models.EventViewModel>();
+    var isOtherSubCategory = (bool)(ViewBag.IsOtherSubCategory ?? true);
     var currentUrl = $"{Context.Request.Scheme}://{Context.Request.Host}{Context.Request.Path}";
     var fullImageUrl = Model.DefaultImage.StartsWith("http") ? Model.DefaultImage : $"{Context.Request.Scheme}://{Context.Request.Host}{Model.DefaultImage}";
 }
@@ -258,7 +259,7 @@
                             </h6>
                         </div>
                         
-                        @foreach(var relatedEvent in relatedEvents.Take(4))
+                        @foreach(var relatedEvent in relatedEvents)
                         {
                             <div class="d-flex mb-3 p-2 rounded border-start border-3 border-info">
                                 <img src="@relatedEvent.DefaultImage" 
@@ -278,6 +279,20 @@
                                     <small class="text-muted">
                                         <i class="fas fa-map-marker-alt me-1"></i>@relatedEvent.Location
                                     </small>
+                                    @if (!string.IsNullOrEmpty(relatedEvent.CategoryName))
+                                    {
+                                        <div class="mt-1">
+                                            <span class="badge bg-primary" style="font-size: 0.7rem;">
+                                                @CategoryLocalizationExtensions.LocalizeCategoryName(relatedEvent.CategoryName, Localizer)
+                                            </span>
+                                            @if (!string.IsNullOrEmpty(relatedEvent.SubCategoryName))
+                                            {
+                                                <span class="badge bg-secondary" style="font-size: 0.7rem;">
+                                                    @CategoryLocalizationExtensions.LocalizeSubCategoryName(relatedEvent.SubCategoryName, Localizer)
+                                                </span>
+                                            }
+                                        </div>
+                                    }
                                     @if(relatedEvent.Tags.Any())
                                     {
                                         <div class="mt-1">
@@ -293,9 +308,22 @@
                         
                         @if(!string.IsNullOrEmpty(Model.CategoryName))
                         {
-                            <a href="/Events/Category/@Model.CategoryName" class="btn btn-outline-primary btn-sm w-100">
-                                <i class="fas fa-th-list me-1"></i>@Localizer["Details_ViewAllCategoryEvents"] @CategoryLocalizationExtensions.LocalizeCategoryName(Model.CategoryName, Localizer)
-                            </a>
+                            if (!isOtherSubCategory && !string.IsNullOrEmpty(Model.SubCategoryName))
+                            {
+                                <a href="@Url.Action("Index", "Events", new { category = Model.CategoryName, subCategory = Model.SubCategoryName })"
+                                   class="btn btn-outline-primary btn-sm w-100">
+                                    <i class="fas fa-th-list me-1"></i>
+                                    @Localizer["Details_ViewAllCategoryEvents"] @CategoryLocalizationExtensions.LocalizeSubCategoryName(Model.SubCategoryName, Localizer)
+                                </a>
+                            }
+                            else
+                            {
+                                <a href="@Url.Action("Index", "Events", new { category = Model.CategoryName })"
+                                   class="btn btn-outline-primary btn-sm w-100">
+                                    <i class="fas fa-th-list me-1"></i>
+                                    @Localizer["Details_ViewAllCategoryEvents"] @CategoryLocalizationExtensions.LocalizeCategoryName(Model.CategoryName, Localizer)
+                                </a>
+                            }
                         }
                     </div>
                 </div>

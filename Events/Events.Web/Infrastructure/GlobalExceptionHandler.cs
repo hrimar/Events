@@ -12,8 +12,13 @@ public class GlobalExceptionHandler : IExceptionHandler
 
     public ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
     {
-        _logger.LogError(exception, "Unhandled exception occurred. Path: {Path}", httpContext.Request.Path);
+        if (exception is OperationCanceledException)
+        {
+            _logger.LogInformation("Request cancelled by client. Path: {Path}", httpContext.Request.Path);
+            return ValueTask.FromResult(false);
+        }
 
+        _logger.LogError(exception, "Unhandled exception occurred. Path: {Path}", httpContext.Request.Path);
         return ValueTask.FromResult(false); // Let UseExceptionHandler("/Home/Error") render the error page
     }
 }

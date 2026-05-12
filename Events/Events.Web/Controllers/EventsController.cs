@@ -15,6 +15,15 @@ namespace Events.Web.Controllers;
 
 public class EventsController : Controller
 {
+    private const int OtherSubCategoryEnumValue = 99;
+    private const int DefaultPageSize = 12;
+    private const int RelatedEventsCount = 4;
+    private const int MinSearchQueryLength = 2;
+    private const int MaxEventSuggestions = 8;
+    private const int MaxTagSuggestions = 5;
+    private const int MaxAutocompleteSuggestions = 10;
+    private const int MaxPopularTagsCount = 20;
+
     private readonly ILogger<EventsController> _logger;
     private readonly IEventService _eventService;
     private readonly ITagService _tagService;
@@ -37,7 +46,7 @@ public class EventsController : Controller
 
     public async Task<IActionResult> Index(
         int page = 1,
-        int pageSize = 12,
+        int pageSize = DefaultPageSize,
         string? category = null,
         string? subCategory = null,
         bool? free = null,
@@ -140,7 +149,7 @@ public class EventsController : Controller
     }
 
     [HttpGet("/Events/Tag/{tagName}")]
-    public IActionResult ByTag(string tagName, int page = 1, int pageSize = 12)
+    public IActionResult ByTag(string tagName, int page = 1, int pageSize = DefaultPageSize)
     {
         var decodedTagName = Uri.UnescapeDataString(tagName).Trim();
         _logger.LogInformation("Tag filtering requested for: '{TagName}' (decoded: '{DecodedTagName}')", tagName, decodedTagName);
@@ -156,7 +165,7 @@ public class EventsController : Controller
     }
 
     [HttpGet("/Events/Tags")]
-    public IActionResult ByTags(string tags, int page = 1, int pageSize = 12)
+    public IActionResult ByTags(string tags, int page = 1, int pageSize = DefaultPageSize)
     {
         var redirectDto = new TagRedirectDto
         {
@@ -173,24 +182,24 @@ public class EventsController : Controller
     {
         try
         {
-            if (string.IsNullOrWhiteSpace(query) || query.Length < 2)
+            if (string.IsNullOrWhiteSpace(query) || query.Length < MinSearchQueryLength)
             {
                 return Json(Array.Empty<object>());
             }
 
             var results = await _eventService.SearchEventsAsync(query);
-            var eventSuggestions = results.Take(8)
+            var eventSuggestions = results.Take(MaxEventSuggestions)
                 .Select(e => e.ToSearchSuggestionDto())
                 .ToList();
 
             var tagResults = await SearchTagsAsync(query);
-            var tagSuggestions = tagResults.Take(5)
+            var tagSuggestions = tagResults.Take(MaxTagSuggestions)
                 .Select(t => t.ToSearchSuggestionDto())
                 .ToList();
 
             var combinedResults = eventSuggestions.Cast<object>()
                 .Concat(tagSuggestions.Cast<object>())
-                .Take(10)
+                .Take(MaxAutocompleteSuggestions)
                 .ToList();
 
             return Json(combinedResults);
@@ -222,7 +231,7 @@ public class EventsController : Controller
                 })
                 .Where(t => t.EventCount > 0)
                 .OrderByDescending(t => t.EventCount)
-                .Take(20)
+                .Take(MaxPopularTagsCount)
                 .ToList();
         }
         catch (Exception ex)
@@ -277,35 +286,37 @@ public class EventsController : Controller
             }
 
             var viewModel = EventViewModel.FromEntity(eventEntity);
-            var relatedEvents = new List<EventViewModel>();
 
-            // Try to get events with same tags first
-            if (eventEntity.EventTags?.Any() == true)
+            // EnumValue == OtherSubCategoryEnumValue represents "Other" across all subcategory enums
+            var isOtherSubCategory = eventEntity.SubCategory == null || eventEntity.SubCategory.EnumValue == OtherSubCategoryEnumValue;
+            List<EventViewModel> relatedEvents;
+            if (!isOtherSubCategory)
             {
-                var eventTags = eventEntity.EventTags.Select(et => et.Tag?.Name).Where(name => name != null).ToList();
-                var tagBasedResults = await _eventService.GetAllEventsAsync();
+                // SubCategory is specific - suggest 4 events from the same SubCategory
+                var result = await _eventService.GetPagedEventsAsync(1, int.MaxValue, EventStatus.Published,
+                    eventEntity.Category?.Name, eventEntity.SubCategory!.Name, null, DateTime.Today);
 
-                var relatedByTags = tagBasedResults
-                    .Where(e => e.Id != id &&
-                               e.Date >= DateTime.Today &&
-                               e.Status == EventStatus.Published &&
-                               e.EventTags?.Any(et => et.Tag != null && eventTags.Contains(et.Tag.Name)) == true)
-                    .OrderByDescending(e => e.EventTags?.Count(et => et.Tag != null && eventTags.Contains(et.Tag.Name)) ?? 0)
-                    .Take(6)
+                relatedEvents = EventViewModel.FromEntities(result.Events.Where(e => e.Id != id).Take(RelatedEventsCount)).ToList();
+            }
+            else
+            {
+                // SubCategory is null or "Other" - suggest 4 events from same Category with at least one matching tag
+                var eventTagNames = eventEntity.EventTags
+                    .Select(et => et.Tag?.Name)
+                    .Where(name => name != null)
+                    .ToHashSet(StringComparer.OrdinalIgnoreCase)!;
+
+                var result = await _eventService.GetPagedEventsAsync(1, int.MaxValue, EventStatus.Published, eventEntity.Category?.Name,
+                    null, null, DateTime.Today);
+
+                relatedEvents = EventViewModel.FromEntities(result.Events
+                        .Where(e => e.Id != id && e.EventTags?.Any(et => et.Tag != null && eventTagNames.Contains(et.Tag.Name)) == true)
+                        .Take(RelatedEventsCount))
                     .ToList();
-
-                relatedEvents.AddRange(EventViewModel.FromEntities(relatedByTags));
             }
 
-            // Fill with category-based events if needed
-            if (relatedEvents.Count < 3 && eventEntity.Category != null)
-            {
-                var related = await _eventService.GetPagedEventsAsync(1, 6, EventStatus.Published, eventEntity.Category.Name, null, null, DateTime.Today);
-                var categoryRelated = EventViewModel.FromEntities(related.Events.Where(e => e.Id != id && !relatedEvents.Any(r => r.Id == e.Id)));
-                relatedEvents.AddRange(categoryRelated);
-            }
-
-            ViewBag.RelatedEvents = relatedEvents.Take(6).ToList();
+            ViewBag.RelatedEvents = relatedEvents;
+            ViewBag.IsOtherSubCategory = isOtherSubCategory;
 
             return View(viewModel);
         }
@@ -317,7 +328,7 @@ public class EventsController : Controller
     }
 
     // GET: /Events/Category/Music
-    public IActionResult Category(string category, int page = 1, int pageSize = 12)
+    public IActionResult Category(string category, int page = 1, int pageSize = DefaultPageSize)
     {
         try
         {
