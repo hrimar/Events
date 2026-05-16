@@ -3,8 +3,10 @@ using Events.Models.Entities;
 using Events.Models.Enums;
 using Events.Services.Interfaces;
 using Events.Data.Repositories.Interfaces;
+using Events.Models.Queries;
 using Events.Web.Models;
 using Events.Web.Models.Admin;
+using Events.Web.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -22,6 +24,7 @@ public class EventsController : Controller
     private readonly ISubCategoryRepository _subCategoryRepository;
     private readonly ITagService _tagService;
     private readonly IImageUploadService _imageUploadService;
+    private readonly IEventFilterOptionsBuilder _eventFilterOptionsBuilder;
 
     public EventsController(
         ILogger<EventsController> logger,
@@ -29,7 +32,8 @@ public class EventsController : Controller
         ICategoryRepository categoryRepository,
         ISubCategoryRepository subCategoryRepository,
         ITagService tagService,
-        IImageUploadService imageUploadService)
+        IImageUploadService imageUploadService,
+        IEventFilterOptionsBuilder eventFilterOptionsBuilder)
     {
         _logger = logger;
         _eventService = eventService;
@@ -37,87 +41,44 @@ public class EventsController : Controller
         _subCategoryRepository = subCategoryRepository;
         _tagService = tagService;
         _imageUploadService = imageUploadService;
+        _eventFilterOptionsBuilder = eventFilterOptionsBuilder;
     }
 
     // GET: Admin/Events
-    public async Task<IActionResult> Index(
-        int page = 1,
-        int pageSize = 20,
-        string? search = null,
-        string? category = null,
-        string sortBy = "date",
-        string sortOrder = "asc")
+    public async Task<IActionResult> Index(EventListCriteria criteria)
     {
         try
         {
-            var normalizedSortBy = string.IsNullOrWhiteSpace(sortBy) ? "date" : sortBy.ToLowerInvariant();
-            var normalizedSortOrder = string.Equals(sortOrder, "desc", StringComparison.OrdinalIgnoreCase) ? "desc" : "asc";
+            var filter = criteria.Normalize();
+            var categories = (await _categoryRepository.GetAllAsync()).ToList();
+            var (events, totalCount) = await _eventService.GetFilteredEventsAsync(filter);
 
-            IEnumerable<Event> events;
-            int totalCount;
-
-            if (!string.IsNullOrWhiteSpace(search))
+            var viewModel = new AdminEventsIndexViewModel
             {
-                var searchResults = await _eventService.SearchEventsAsync(search);
-                events = searchResults;
+                Events = new PaginatedList<AdminEventViewModel>(
+                    AdminEventViewModel.FromEntities(events),
+                    totalCount,
+                    filter.Page,
+                    filter.PageSize),
+                Filters = filter,
+                Options = await _eventFilterOptionsBuilder.BuildAdminOptionsAsync(filter, categories),
+                CategoriesJson = JsonConvert.SerializeObject(categories.Select(c => new { id = c.Id, name = c.Name }))
+            };
 
-                if (!string.IsNullOrWhiteSpace(category))
-                {
-                    events = events.Where(e => e.Category != null && e.Category.Name == category);
-                }
-
-                events = ApplySorting(events, normalizedSortBy, normalizedSortOrder);
-
-                totalCount = events.Count();
-                events = events.Skip((page - 1) * pageSize).Take(pageSize).ToList();
-            }
-            else
-            {
-                var result = await _eventService.GetPagedEventsAsync(
-                    page,
-                    pageSize,
-                    null,
-                    category,
-                    null,
-                    null,
-                    null,
-                    normalizedSortBy,
-                    normalizedSortOrder);
-
-                events = result.Events;
-                totalCount = result.TotalCount;
-            }
-
-            var eventViewModels = AdminEventViewModel.FromEntities(events);
-            var paginatedEvents = new PaginatedList<AdminEventViewModel>(eventViewModels, totalCount, page, pageSize);
-
-            // Load categories from database for filter dropdown
-            var categories = await _categoryRepository.GetAllAsync();
-            ViewBag.AvailableCategories = categories
-                .Select(c => new SelectListItem
-                {
-                    Value = c.Name,
-                    Text = c.Name,
-                    Selected = c.Name == category
-                })
-                .OrderBy(c => c.Text)
-                .ToList();
-
-            ViewBag.SearchTerm = search;
-            ViewBag.Category = category;
-            ViewBag.SortBy = normalizedSortBy;
-            ViewBag.SortOrder = normalizedSortOrder;
-
-            // Also expose categories as JSON for bulk operations modal
-            var categoriesJson = JsonConvert.SerializeObject(categories.Select(c => new { id = c.Id, name = c.Name }).ToList());
-            ViewBag.CategoriesJson = categoriesJson;
-
-            return View(paginatedEvents);
+            return View(viewModel);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error loading admin events list");
-            return View(new PaginatedList<AdminEventViewModel>(new List<AdminEventViewModel>(), 0, 1, pageSize));
+            var emptyFilter = new EventListCriteria { PageSize = criteria.PageSize }.Normalize();
+            var categories = (await _categoryRepository.GetAllAsync()).ToList();
+            return View(new AdminEventsIndexViewModel
+            {
+                Events = new PaginatedList<AdminEventViewModel>(new List<AdminEventViewModel>(), 0, 1, emptyFilter.PageSize),
+                Filters = emptyFilter,
+                Options = await _eventFilterOptionsBuilder.BuildAdminOptionsAsync(emptyFilter, categories),
+                CategoriesJson = JsonConvert.SerializeObject(categories.Select(c => new { id = c.Id, name = c.Name }))
+            });
         }
     }
 
@@ -848,24 +809,4 @@ public class EventsController : Controller
         }
     }
 
-    private static IEnumerable<Event> ApplySorting(IEnumerable<Event> events, string sortField, string sortOrder)
-    {
-        var normalizedSort = string.IsNullOrWhiteSpace(sortField) ? "date" : sortField.ToLowerInvariant();
-        var isDescending = string.Equals(sortOrder, "desc", StringComparison.OrdinalIgnoreCase);
-
-        return normalizedSort switch
-        {
-            "name" => isDescending ? events.OrderByDescending(e => e.Name) : events.OrderBy(e => e.Name),
-            "time" => isDescending ? events.OrderByDescending(e => e.StartTime ?? TimeSpan.Zero) : events.OrderBy(e => e.StartTime ?? TimeSpan.Zero),
-            "category" => isDescending ? events.OrderByDescending(e => e.Category?.Name) : events.OrderBy(e => e.Category?.Name),
-            "subcategory" => isDescending ? events.OrderByDescending(e => e.SubCategory?.Name) : events.OrderBy(e => e.SubCategory?.Name),
-            "location" => isDescending ? events.OrderByDescending(e => e.Location) : events.OrderBy(e => e.Location),
-            "status" => isDescending ? events.OrderByDescending(e => e.Status) : events.OrderBy(e => e.Status),
-            "price" => isDescending ? events.OrderByDescending(e => e.IsFree ? 0m : (e.Price ?? decimal.MaxValue)) : events.OrderBy(e => e.IsFree ? 0m : (e.Price ?? decimal.MaxValue)),
-            "featured" => isDescending ? events.OrderByDescending(e => e.IsFeatured) : events.OrderBy(e => e.IsFeatured),
-            _ => isDescending
-                ? events.OrderByDescending(e => e.Date).ThenByDescending(e => e.StartTime ?? TimeSpan.Zero)
-                : events.OrderBy(e => e.Date).ThenBy(e => e.StartTime ?? TimeSpan.Zero)
-        };
-    }
 }

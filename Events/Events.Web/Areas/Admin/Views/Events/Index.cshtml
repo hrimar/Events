@@ -1,28 +1,37 @@
-@model PaginatedList<AdminEventViewModel>
+@model AdminEventsIndexViewModel
+@using Events.Web.Extensions
 
 @{
     ViewData["Title"] = "All Events";
-    var search = ViewBag.SearchTerm as string;
-    var category = ViewBag.Category as string;
-    var sortBy = ViewBag.SortBy as string ?? "date";
-    var sortOrder = ViewBag.SortOrder as string ?? "asc";
-    var pageSize = Model.PageSize;
+    var filters = Model.Filters;
+    var events = Model.Events;
+    var pageSize = events.PageSize;
+
     Func<string, string> buildSortUrl = column =>
     {
-        var normalizedColumn = column.ToLowerInvariant();
-        var isCurrent = string.Equals(sortBy, normalizedColumn, StringComparison.OrdinalIgnoreCase);
-        var nextOrder = isCurrent && sortOrder == "asc" ? "desc" : "asc";
-        return Url.Action("Index", new
-        {
-            page = 1,
-            pageSize,
-            search,
-            category,
-            sortBy = normalizedColumn,
-            sortOrder = nextOrder
-        });
+        var route = filters.ToRouteValues(page: 1);
+        route["sortBy"] = column.ToLowerInvariant();
+        var isCurrent = string.Equals(filters.SortBy, column, StringComparison.OrdinalIgnoreCase);
+        route["sortOrder"] = isCurrent && filters.SortOrder == "asc" ? "desc" : "asc";
+        return Url.Action("Index", route)!;
     };
-    Func<string, bool> isCurrentSort = column => string.Equals(sortBy, column.ToLowerInvariant(), StringComparison.OrdinalIgnoreCase);
+
+    Func<string, bool> isCurrentSort = column =>
+        string.Equals(filters.SortBy, column, StringComparison.OrdinalIgnoreCase);
+
+    string? selectedCategoryName = filters.CategoryId.HasValue
+        ? Model.Options.Categories.FirstOrDefault(c => c.Value == filters.CategoryId.Value.ToString())?.Text
+        : null;
+
+    string? selectedSubCategoryName = filters.SubCategoryId.HasValue
+        ? Model.Options.SubCategories.FirstOrDefault(c => c.Value == filters.SubCategoryId.Value.ToString())?.Text
+        : null;
+
+    Func<int?, string> pageUrl = page =>
+    {
+        var route = filters.ToRouteValues(page: page);
+        return Url.Action("Index", route)!;
+    };
 }
 
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -40,38 +49,82 @@
 <!-- Search and Filter -->
 <div class="card mb-4">
     <div class="card-body">
-        <form method="get" class="row g-3">
-            <div class="col-md-6">
-                <input type="text" class="form-control" name="search" value="@search" placeholder="Search events by name, location...">
+        <form method="get" class="row g-3" id="admin-events-filter-form">
+            <div class="col-md-3">
+                <label for="search" class="form-label">Search</label>
+                <input type="text" class="form-control" id="search" name="search" value="@filters.Search" placeholder="Name, location...">
             </div>
-            <div class="col-md-4">
-                <select class="form-select" name="category" asp-items="ViewBag.AvailableCategories">
+            <div class="col-md-2">
+                <label for="status" class="form-label">Status</label>
+                <select class="form-select" id="status" name="status" asp-items="Model.Options.Statuses"></select>
+            </div>
+            <div class="col-md-2">
+                <label for="categoryId" class="form-label">Category</label>
+                <select class="form-select" id="categoryId" name="categoryId" asp-items="Model.Options.Categories">
                     <option value="">All Categories</option>
                 </select>
             </div>
             <div class="col-md-2">
-                <button type="submit" class="btn btn-primary w-100">
-                    <i class="fas fa-search me-1"></i>Search
+                <label for="subCategoryId" class="form-label">Subcategory</label>
+                <select class="form-select" id="subCategoryId" name="subCategoryId" asp-items="Model.Options.SubCategories">
+                    @if (!filters.CategoryId.HasValue)
+                    {
+                        <option value="" selected>Select category first</option>
+                    }
+                    else
+                    {
+                        <option value="">All Subcategories</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-1">
+                <label for="fromDate" class="form-label">From</label>
+                <input type="date" class="form-control" id="fromDate" name="fromDate" value="@filters.FromDate?.ToString("yyyy-MM-dd")">
+            </div>
+            <div class="col-md-1">
+                <label for="toDate" class="form-label">To</label>
+                <input type="date" class="form-control" id="toDate" name="toDate" value="@filters.ToDate?.ToString("yyyy-MM-dd")">
+            </div>
+            <div class="col-md-1 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100" title="Apply filters">
+                    <i class="fas fa-search"></i>
                 </button>
             </div>
-            @if(!string.IsNullOrEmpty(search) || !string.IsNullOrEmpty(category))
+            @if (filters.HasActiveFilters)
             {
                 <div class="col-12">
-                    <a href="@Url.Action("Index")" class="btn btn-outline-secondary btn-sm">
+                    <a asp-action="Index" class="btn btn-outline-secondary btn-sm">
                         <i class="fas fa-times me-1"></i>Clear Filters
                     </a>
-                    @if(!string.IsNullOrEmpty(search))
+                    @if (!string.IsNullOrEmpty(filters.Search))
                     {
-                        <span class="badge bg-info ms-2">Search: "@search"</span>
+                        <span class="badge bg-info ms-2">Search: "@filters.Search"</span>
                     }
-                    @if(!string.IsNullOrEmpty(category))
+                    @if (filters.Status.HasValue)
                     {
-                        <span class="badge bg-secondary ms-2">Category: @category</span>
+                        <span class="badge bg-primary ms-2">Status: @filters.Status</span>
+                    }
+                    @if (!string.IsNullOrEmpty(selectedCategoryName))
+                    {
+                        <span class="badge bg-secondary ms-2">Category: @selectedCategoryName</span>
+                    }
+                    @if (!string.IsNullOrEmpty(selectedSubCategoryName))
+                    {
+                        <span class="badge bg-secondary ms-2">Subcategory: @selectedSubCategoryName</span>
+                    }
+                    @if (filters.FromDate.HasValue)
+                    {
+                        <span class="badge bg-light text-dark border ms-2">From: @filters.FromDate.Value.ToString("yyyy-MM-dd")</span>
+                    }
+                    @if (filters.ToDate.HasValue)
+                    {
+                        <span class="badge bg-light text-dark border ms-2">To: @filters.ToDate.Value.ToString("yyyy-MM-dd")</span>
                     }
                 </div>
             }
-            <input type="hidden" name="sortBy" value="@sortBy" />
-            <input type="hidden" name="sortOrder" value="@sortOrder" />
+            <input type="hidden" name="sortBy" value="@filters.SortBy" />
+            <input type="hidden" name="sortOrder" value="@filters.SortOrder" />
+            <input type="hidden" name="pageSize" value="@pageSize" />
         </form>
     </div>
 </div>
@@ -79,14 +132,14 @@
 <!-- Events Count -->
 <div class="mb-3">
     <p class="text-muted">
-        Showing @((Model.CurrentPage - 1) * Model.PageSize + 1) - 
-        @Math.Min(Model.CurrentPage * Model.PageSize, Model.TotalCount) 
-        of @Model.TotalCount events
+        Showing @((events.CurrentPage - 1) * events.PageSize + 1) - 
+        @Math.Min(events.CurrentPage * events.PageSize, events.TotalCount) 
+        of @events.TotalCount events
     </p>
 </div>
 
 <!-- Events Table -->
-@if(Model.Items.Any())
+@if(events.Items.Any())
 {
     <!-- Bulk Operations Toolbar (Hidden by default) -->
     <div id="bulkOperationsBar" class="card mb-4" style="display: none;">
@@ -126,7 +179,7 @@
                                 Event Name
                                 @if(isCurrentSort("name"))
                                 {
-                                    <i class="fas fa-chevron-@(sortOrder == "asc" ? "up" : "down") ms-1"></i>
+                                    <i class="fas fa-chevron-@(filters.SortOrder == "asc" ? "up" : "down") ms-1"></i>
                                 }
                             </a>
                         </th>
@@ -135,7 +188,7 @@
                                 Date
                                 @if(isCurrentSort("date"))
                                 {
-                                    <i class="fas fa-chevron-@(sortOrder == "asc" ? "up" : "down") ms-1"></i>
+                                    <i class="fas fa-chevron-@(filters.SortOrder == "asc" ? "up" : "down") ms-1"></i>
                                 }
                             </a>
                         </th>
@@ -144,7 +197,7 @@
                                 Time
                                 @if(isCurrentSort("time"))
                                 {
-                                    <i class="fas fa-chevron-@(sortOrder == "asc" ? "up" : "down") ms-1"></i>
+                                    <i class="fas fa-chevron-@(filters.SortOrder == "asc" ? "up" : "down") ms-1"></i>
                                 }
                             </a>
                         </th>
@@ -153,7 +206,7 @@
                                 Category
                                 @if(isCurrentSort("category"))
                                 {
-                                    <i class="fas fa-chevron-@(sortOrder == "asc" ? "up" : "down") ms-1"></i>
+                                    <i class="fas fa-chevron-@(filters.SortOrder == "asc" ? "up" : "down") ms-1"></i>
                                 }
                             </a>
                         </th>
@@ -162,7 +215,7 @@
                                 Subcategory
                                 @if(isCurrentSort("subcategory"))
                                 {
-                                    <i class="fas fa-chevron-@(sortOrder == "asc" ? "up" : "down") ms-1"></i>
+                                    <i class="fas fa-chevron-@(filters.SortOrder == "asc" ? "up" : "down") ms-1"></i>
                                 }
                             </a>
                         </th>
@@ -171,7 +224,7 @@
                                 Location
                                 @if(isCurrentSort("location"))
                                 {
-                                    <i class="fas fa-chevron-@(sortOrder == "asc" ? "up" : "down") ms-1"></i>
+                                    <i class="fas fa-chevron-@(filters.SortOrder == "asc" ? "up" : "down") ms-1"></i>
                                 }
                             </a>
                         </th>
@@ -180,7 +233,7 @@
                                 Status
                                 @if(isCurrentSort("status"))
                                 {
-                                    <i class="fas fa-chevron-@(sortOrder == "asc" ? "up" : "down") ms-1"></i>
+                                    <i class="fas fa-chevron-@(filters.SortOrder == "asc" ? "up" : "down") ms-1"></i>
                                 }
                             </a>
                         </th>
@@ -189,7 +242,7 @@
                                 Price
                                 @if(isCurrentSort("price"))
                                 {
-                                    <i class="fas fa-chevron-@(sortOrder == "asc" ? "up" : "down") ms-1"></i>
+                                    <i class="fas fa-chevron-@(filters.SortOrder == "asc" ? "up" : "down") ms-1"></i>
                                 }
                             </a>
                         </th>
@@ -198,7 +251,7 @@
                                 Featured
                                 @if(isCurrentSort("featured"))
                                 {
-                                    <i class="fas fa-chevron-@(sortOrder == "asc" ? "up" : "down") ms-1"></i>
+                                    <i class="fas fa-chevron-@(filters.SortOrder == "asc" ? "up" : "down") ms-1"></i>
                                 }
                             </a>
                         </th>
@@ -206,7 +259,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach(var evt in Model.Items)
+                    @foreach(var evt in events.Items)
                     {
                         <tr class="event-row">
                             <td>
@@ -310,30 +363,30 @@
     </div>
 
     <!-- Pagination -->
-    @if(Model.TotalPages > 1)
+    @if(events.TotalPages > 1)
     {
         <nav aria-label="Events pagination" class="mt-4">
             <ul class="pagination justify-content-center">
-                @if(Model.HasPreviousPage)
+                @if(events.HasPreviousPage)
                 {
                     <li class="page-item">
-                        <a class="page-link" href="?page=@(Model.CurrentPage - 1)@(!string.IsNullOrEmpty(search) ? "&search=" + search : "")@(!string.IsNullOrEmpty(category) ? "&category=" + category : "")&sortBy=@sortBy&sortOrder=@sortOrder">
+                        <a class="page-link" href="@pageUrl(events.CurrentPage - 1)">
                             <i class="fas fa-chevron-left"></i> Previous
                         </a>
                     </li>
                 }
                 
-                @for(var i = Math.Max(1, Model.CurrentPage - 2); i <= Math.Min(Model.TotalPages, Model.CurrentPage + 2); i++)
+                @for(var i = Math.Max(1, events.CurrentPage - 2); i <= Math.Min(events.TotalPages, events.CurrentPage + 2); i++)
                 {
-                    <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
-                        <a class="page-link" href="?page=@i@(!string.IsNullOrEmpty(search) ? "&search=" + search : "")@(!string.IsNullOrEmpty(category) ? "&category=" + category : "")&sortBy=@sortBy&sortOrder=@sortOrder">@i</a>
+                    <li class="page-item @(i == events.CurrentPage ? "active" : "")">
+                        <a class="page-link" href="@pageUrl(i)">@i</a>
                     </li>
                 }
                 
-                @if(Model.HasNextPage)
+                @if(events.HasNextPage)
                 {
                     <li class="page-item">
-                        <a class="page-link" href="?page=@(Model.CurrentPage + 1)@(!string.IsNullOrEmpty(search) ? "&search=" + search : "")@(!string.IsNullOrEmpty(category) ? "&category=" + category : "")&sortBy=@sortBy&sortOrder=@sortOrder">
+                        <a class="page-link" href="@pageUrl(events.CurrentPage + 1)">
                             Next <i class="fas fa-chevron-right"></i>
                         </a>
                     </li>
@@ -349,7 +402,7 @@ else
             <i class="fas fa-calendar-times text-muted" style="font-size: 4rem;"></i>
             <h4 class="mt-3 text-muted">No events found</h4>
             <p class="text-muted">
-                @if(!string.IsNullOrEmpty(search) || !string.IsNullOrEmpty(category))
+                @if(filters.HasActiveFilters)
                 {
                     <text>Try adjusting your search criteria.</text>
                 }
@@ -520,7 +573,7 @@ else
 @section Scripts {
     <script>
         let allTags = []; // Will be populated from server
-        let allCategories = @Html.Raw(ViewBag.CategoriesJson ?? "[]"); // Categories from server
+        let allCategories = @Html.Raw(Model.CategoriesJson ?? "[]"); // Categories from server
         const MAX_BULK_TAGS = 3;
 
         $(document).ready(function() {
@@ -568,7 +621,38 @@ else
                 }
             });
 
-            // Category change - update subcategories dynamically
+            // Filter form: load subcategories when category changes
+            $('#categoryId').on('change', function() {
+                const categoryId = $(this).val();
+                const $subCategorySelect = $('#subCategoryId');
+                const selectedSubCategoryId = '@(filters.SubCategoryId?.ToString() ?? "")';
+
+                if (!categoryId) {
+                    $subCategorySelect.html('<option value="" selected>Select category first</option>');
+                    return;
+                }
+
+                $.ajax({
+                    url: '/api/categories/subcategories/' + categoryId,
+                    method: 'GET',
+                    dataType: 'json',
+                    success: function(data) {
+                        let html = '<option value="">All Subcategories</option>';
+                        if (data && data.length > 0) {
+                            $.each(data, function(_, item) {
+                                const selected = item.id.toString() === selectedSubCategoryId ? ' selected' : '';
+                                html += '<option value="' + item.id + '"' + selected + '>' + item.name + '</option>';
+                            });
+                        }
+                        $subCategorySelect.html(html);
+                    },
+                    error: function() {
+                        $subCategorySelect.html('<option value="">Error loading subcategories</option>');
+                    }
+                });
+            });
+
+            // Category change - update subcategories dynamically (bulk modal)
             $('#bulkCategorySelect').on('change', function() {
                 const categoryId = $(this).val();
                 if (categoryId) {

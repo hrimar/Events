@@ -2,6 +2,7 @@ using Events.Services.Interfaces;
 using Events.Data.Repositories.Interfaces;
 using Events.Models.Entities;
 using Events.Models.Enums;
+using Events.Models.Queries;
 using Microsoft.Extensions.Logging;
 
 namespace Events.Services.Implementations;
@@ -101,6 +102,26 @@ public class EventService : IEventService
         {
             _logger.LogError(ex, "Error getting paged events");
             throw new ApplicationException("Failed to retrieve paged events", ex);
+        }
+    }
+
+    public async Task<(IEnumerable<Event> Events, int TotalCount)> GetFilteredEventsAsync(EventListCriteria criteria)
+    {
+        try
+        {
+            _logger.LogInformation(
+                "Getting filtered events: Page {Page}, PageSize {PageSize}, Status {Status}, " +
+                "CategoryId {CategoryId}, SubCategoryId {SubCategoryId}, Search {Search}, " +
+                "FromDate {FromDate}, ToDate {ToDate}, SortBy {SortBy}, SortOrder {SortOrder}",
+                criteria.Page, criteria.PageSize, criteria.Status, criteria.CategoryId, criteria.SubCategoryId,
+                criteria.Search, criteria.FromDate, criteria.ToDate, criteria.SortBy, criteria.SortOrder);
+
+            return await _eventRepository.GetFilteredEventsAsync(criteria);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting filtered events");
+            throw new ApplicationException("Failed to retrieve filtered events", ex);
         }
     }
 

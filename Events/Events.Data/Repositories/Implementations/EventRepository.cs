@@ -3,6 +3,7 @@ using Events.Data.Context;
 using Events.Data.Repositories.Interfaces;
 using Events.Models.Entities;
 using Events.Models.Enums;
+using Events.Models.Queries;
 using Microsoft.EntityFrameworkCore;
 
 namespace Events.Data.Repositories.Implementations;
@@ -107,6 +108,67 @@ public class EventRepository : IEventRepository
         var events = await orderedQuery
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
+            .ToListAsync();
+
+        return (events, totalCount);
+    }
+
+    public async Task<(IEnumerable<Event> Events, int TotalCount)> GetFilteredEventsAsync(EventListCriteria criteria)
+    {
+        var query = _context.Events
+            .Include(e => e.Category)
+            .Include(e => e.SubCategory)
+            .Include(e => e.EventTags)
+            .ThenInclude(et => et.Tag)
+            .AsQueryable();
+
+        if (criteria.Status.HasValue)
+        {
+            query = query.Where(e => e.Status == criteria.Status.Value);
+        }
+
+        if (criteria.SubCategoryId.HasValue)
+        {
+            query = query.Where(e => e.SubCategoryId == criteria.SubCategoryId.Value);
+        }
+        else if (criteria.CategoryId.HasValue)
+        {
+            query = query.Where(e => e.CategoryId == criteria.CategoryId.Value);
+        }
+
+        if (criteria.IsFree.HasValue)
+        {
+            query = query.Where(e => e.IsFree == criteria.IsFree.Value);
+        }
+
+        if (criteria.FromDate.HasValue)
+        {
+            query = query.Where(e => e.Date >= criteria.FromDate.Value);
+        }
+
+        if (criteria.ToDate.HasValue)
+        {
+            var exclusiveEnd = criteria.ToDate.Value.Date == DateTime.MaxValue.Date
+                ? DateTime.MaxValue
+                : criteria.ToDate.Value.AddDays(1);
+            query = query.Where(e => e.Date < exclusiveEnd);
+        }
+
+        if (!string.IsNullOrWhiteSpace(criteria.Search))
+        {
+            var searchTerm = criteria.Search;
+            query = query.Where(e =>
+                e.Name.Contains(searchTerm) ||
+                (e.Description != null && e.Description.Contains(searchTerm)) ||
+                e.Location.Contains(searchTerm));
+        }
+
+        var totalCount = await query.CountAsync();
+        var orderedQuery = ApplySorting(query, criteria.SortBy, criteria.SortOrder);
+
+        var events = await orderedQuery
+            .Skip((criteria.Page - 1) * criteria.PageSize)
+            .Take(criteria.PageSize)
             .ToListAsync();
 
         return (events, totalCount);

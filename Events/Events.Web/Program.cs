@@ -2,6 +2,7 @@ using Azure.Identity;
 using Azure.Storage.Blobs;
 using Events.Data.Context;
 using Events.Web.Infrastructure;
+using Events.Web.Services;
 using Events.Data.Repositories.Implementations;
 using Events.Data.Repositories.Interfaces;
 using Events.Data.Services;
@@ -167,6 +168,7 @@ static void RegisterServices(WebApplicationBuilder builder)
     builder.Services.AddScoped<ITagService, TagService>();
     builder.Services.AddScoped<IUserFavoriteEventService, UserFavoriteEventService>();
     builder.Services.AddScoped<IAdminUserService, AdminUserService>();
+    builder.Services.AddScoped<IEventFilterOptionsBuilder, EventFilterOptionsBuilder>();
 }
 
 static async Task InitializeDatabaseAsync(WebApplication app)

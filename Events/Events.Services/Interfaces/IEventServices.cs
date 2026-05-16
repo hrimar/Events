@@ -1,5 +1,6 @@
 using Events.Models.Entities;
 using Events.Models.Enums;
+using Events.Models.Queries;
 
 namespace Events.Services.Interfaces;
 
@@ -22,6 +23,8 @@ public interface IEventService
         DateTime? fromDate = null,
         string? sortBy = null,
         string sortOrder = "asc");
+
+    Task<(IEnumerable<Event> Events, int TotalCount)> GetFilteredEventsAsync(EventListCriteria criteria);
 
     Task<IEnumerable<Event>> GetFeaturedEventsAsync(int count = 10);
     Task<IEnumerable<Event>> GetUpcomingEventsAsync(int count = 10);
