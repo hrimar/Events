@@ -6,6 +6,7 @@ using System;
 using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
 using Events.Models.Entities;
+using Events.Web.Localization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -19,15 +20,18 @@ namespace Events.Web.Areas.Identity.Pages.Account
         private readonly SignInManager<User> _signInManager;
         private readonly UserManager<User> _userManager;
         private readonly ILogger<LoginWithRecoveryCodeModel> _logger;
+        private readonly IdentityMessages _messages;
 
         public LoginWithRecoveryCodeModel(
             SignInManager<User> signInManager,
             UserManager<User> userManager,
-            ILogger<LoginWithRecoveryCodeModel> logger)
+            ILogger<LoginWithRecoveryCodeModel> logger,
+            IdentityMessages messages)
         {
             _signInManager = signInManager;
             _userManager = userManager;
             _logger = logger;
+            _messages = messages;
         }
 
         /// <summary>
@@ -106,7 +110,7 @@ namespace Events.Web.Areas.Identity.Pages.Account
             else
             {
                 _logger.LogWarning("Invalid recovery code entered for user with ID '{UserId}' ", user.Id);
-                ModelState.AddModelError(string.Empty, "Invalid recovery code entered.");
+                ModelState.AddModelError(string.Empty, _messages.LoginRecovery_InvalidCode);
                 return Page();
             }
         }

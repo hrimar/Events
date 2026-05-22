@@ -1,7 +1,7 @@
 ﻿@page
 @model EnableAuthenticatorModel
 @{
-    ViewData["Title"] = "Set Up Two-Factor Authentication";
+    ViewData["Title"] = Localizer["Manage_EnableAuth_Title"];
     ViewData["ActivePage"] = ManageNavPages.TwoFactorAuthentication;
 }
 
@@ -15,17 +15,17 @@
                     <div class="text-center mb-4">
                         <i class="fas fa-shield-alt fa-3x text-primary mb-3"></i>
                         <h2 class="fw-bold">@ViewData["Title"]</h2>
-                        <p class="text-muted">Add extra security to your account</p>
+                        <p class="text-muted">@Localizer["Manage_EnableAuth_Subtitle"]</p>
                     </div>
 
                     <div class="alert alert-info" role="alert">
                         <i class="fas fa-info-circle me-2"></i>
-                        Two-factor authentication adds an extra layer of security to your account.
+                        @Localizer["Manage_EnableAuth_Info"]
                     </div>
 
                     <div class="mb-4">
-                        <h5 class="mb-3">Step 1: Download an Authenticator App</h5>
-                        <p class="text-muted small mb-2">Download one of these authenticator apps:</p>
+                        <h5 class="mb-3">@Localizer["Manage_EnableAuth_Step1"]</h5>
+                        <p class="text-muted small mb-2">@Localizer["Manage_EnableAuth_Step1Hint"]</p>
                         <ul class="small text-muted">
                             <li>
                                 Microsoft Authenticator for
@@ -41,8 +41,8 @@
                     </div>
 
                     <div class="mb-4">
-                        <h5 class="mb-3">Step 2: Scan QR Code or Enter Key</h5>
-                        <p class="text-muted small mb-3">Scan this QR code with your authenticator app, or enter the key manually:</p>
+                        <h5 class="mb-3">@Localizer["Manage_EnableAuth_Step2"]</h5>
+                        <p class="text-muted small mb-3">@Localizer["Manage_EnableAuth_Step2Hint"]</p>
                         
                         <div class="text-center mb-3">
                             <div id="qrCode" class="mb-3"></div>
@@ -50,22 +50,22 @@
                         </div>
 
                         <div class="alert alert-secondary" role="alert">
-                            <strong>Manual Entry Key:</strong><br>
+                            <strong>@Localizer["Manage_EnableAuth_ManualKey"]</strong><br>
                             <code style="word-break: break-all;">@Model.SharedKey</code>
-                            <small class="d-block mt-2">Spaces and casing do not matter</small>
+                            <small class="d-block mt-2">@Localizer["Manage_EnableAuth_ManualKeyHint"]</small>
                         </div>
                     </div>
 
                     <div class="mb-4">
-                        <h5 class="mb-3">Step 3: Verify Your App</h5>
-                        <p class="text-muted small mb-3">Enter the 6-digit code from your authenticator app:</p>
+                        <h5 class="mb-3">@Localizer["Manage_EnableAuth_Step3"]</h5>
+                        <p class="text-muted small mb-3">@Localizer["Manage_EnableAuth_Step3Hint"]</p>
                         
                         <form id="send-code" method="post">
                             <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
                             
                             <div class="mb-3">
                                 <label asp-for="Input.Code" class="form-label">
-                                    <i class="fas fa-lock me-2"></i>Verification Code
+                                    <i class="fas fa-lock me-2"></i>@Localizer["Manage_EnableAuth_VerificationCode"]
                                 </label>
                                 <input asp-for="Input.Code" class="form-control form-control-lg text-center" autocomplete="off" placeholder="000000" />
                                 <span asp-validation-for="Input.Code" class="text-danger"></span>
@@ -73,7 +73,7 @@
 
                             <div class="d-grid">
                                 <button type="submit" class="btn btn-primary btn-lg">
-                                    <i class="fas fa-check me-2"></i>Verify & Enable
+                                    <i class="fas fa-check me-2"></i>@Localizer["Manage_EnableAuth_Verify"]
                                 </button>
                             </div>
                         </form>
@@ -83,7 +83,7 @@
 
                     <div class="text-center">
                         <a asp-page="./TwoFactorAuthentication" class="text-decoration-none">
-                            <i class="fas fa-arrow-left me-1"></i>Back
+                            <i class="fas fa-arrow-left me-1"></i>@Localizer["Account_Back"]
                         </a>
                     </div>
                 </div>

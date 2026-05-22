@@ -6,6 +6,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Events.Models.Entities;
+using Events.Web.Localization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -17,13 +18,16 @@ namespace Events.Web.Areas.Identity.Pages.Account.Manage
     {
         private readonly UserManager<User> _userManager;
         private readonly ILogger<GenerateRecoveryCodesModel> _logger;
+        private readonly IdentityMessages _messages;
 
         public GenerateRecoveryCodesModel(
             UserManager<User> userManager,
-            ILogger<GenerateRecoveryCodesModel> logger)
+            ILogger<GenerateRecoveryCodesModel> logger,
+            IdentityMessages messages)
         {
             _userManager = userManager;
             _logger = logger;
+            _messages = messages;
         }
 
         /// <summary>
@@ -76,7 +80,7 @@ namespace Events.Web.Areas.Identity.Pages.Account.Manage
             RecoveryCodes = recoveryCodes.ToArray();
 
             _logger.LogInformation("User with ID '{UserId}' has generated new 2FA recovery codes.", userId);
-            StatusMessage = "You have generated new recovery codes.";
+            StatusMessage = _messages.Manage_RecoveryCodesGenerated;
             return RedirectToPage("./ShowRecoveryCodes");
         }
     }

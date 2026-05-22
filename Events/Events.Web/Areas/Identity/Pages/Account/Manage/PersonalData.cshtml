@@ -1,46 +1,44 @@
 ﻿@page
 @model PersonalDataModel
 @{
-    ViewData["Title"] = "Personal Data";
+    ViewData["Title"] = Localizer["Manage_PersonalData_Title"];
     ViewData["ActivePage"] = ManageNavPages.PersonalData;
 }
 
 <div class="container py-5">
     <div class="row">
-        <!-- Sidebar Navigation -->
         <div class="col-lg-3 col-md-4 mb-4 mb-md-0">
             <partial name="_ManageNav" />
         </div>
 
-        <!-- Main Content -->
         <div class="col-lg-9 col-md-8">
             <div class="card shadow-sm border-0">
                 <div class="card-body p-5">
                     <div class="text-center mb-4">
                         <i class="fas fa-shield-alt fa-3x text-info mb-3"></i>
                         <h2 class="fw-bold">@ViewData["Title"]</h2>
-                        <p class="text-muted">Manage your personal information</p>
+                        <p class="text-muted">@Localizer["Manage_PersonalData_Subtitle"]</p>
                     </div>
 
                     <div class="alert alert-info" role="alert">
                         <i class="fas fa-info-circle me-2"></i>
-                        <strong>Your data:</strong> Your account contains personal data that you have provided. This page allows you to download or delete that data.
+                        @Localizer["Manage_PersonalData_Info"]
                     </div>
 
                     <div class="alert alert-warning" role="alert">
                         <i class="fas fa-exclamation-triangle me-2"></i>
-                        <strong>Warning:</strong> Deleting this data will permanently remove your account, and this cannot be recovered.
+                        @Localizer["Manage_PersonalData_Warning"]
                     </div>
 
                     <div class="d-grid gap-3 mt-4">
                         <form id="download-data" asp-page="DownloadPersonalData" method="post">
                             <button class="btn btn-primary btn-lg w-100" type="submit">
-                                <i class="fas fa-download me-2"></i>Download My Data
+                                <i class="fas fa-download me-2"></i>@Localizer["Manage_DownloadData"]
                             </button>
                         </form>
 
                         <a id="delete" asp-page="DeletePersonalData" class="btn btn-danger btn-lg w-100 text-decoration-none">
-                            <i class="fas fa-trash-alt me-2"></i>Delete My Account
+                            <i class="fas fa-trash-alt me-2"></i>@Localizer["Manage_DeleteAccount"]
                         </a>
                     </div>
                 </div>

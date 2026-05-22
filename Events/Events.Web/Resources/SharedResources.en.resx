@@ -411,6 +411,294 @@
   <data name="Tag_Seasonal" xml:space="preserve"><value>Seasonal</value></data>
   <data name="Tag_HolidaySpecial" xml:space="preserve"><value>Holiday special</value></data>
 
+  <!-- Account Navigation -->
+  <data name="Nav_Register" xml:space="preserve"><value>Register</value></data>
+  <data name="Nav_Login" xml:space="preserve"><value>Log in</value></data>
+  <data name="Nav_Logout" xml:space="preserve"><value>Log out</value></data>
+  <data name="Nav_Manage" xml:space="preserve"><value>Manage account</value></data>
+
+  <!-- Account - Shared -->
+  <data name="Account_Email" xml:space="preserve"><value>Email</value></data>
+  <data name="Account_Password" xml:space="preserve"><value>Password</value></data>
+  <data name="Account_NewPassword" xml:space="preserve"><value>New password</value></data>
+  <data name="Account_ConfirmPassword" xml:space="preserve"><value>Confirm password</value></data>
+  <data name="Account_ConfirmNewPassword" xml:space="preserve"><value>Confirm new password</value></data>
+  <data name="Account_CurrentPassword" xml:space="preserve"><value>Current password</value></data>
+  <data name="Account_EmailAddress" xml:space="preserve"><value>Email address</value></data>
+  <data name="Account_RememberMe" xml:space="preserve"><value>Remember me</value></data>
+  <data name="Account_PlaceholderEmail" xml:space="preserve"><value>name@example.com</value></data>
+  <data name="Account_PlaceholderPassword" xml:space="preserve"><value>Enter your password</value></data>
+  <data name="Account_PlaceholderNewPassword" xml:space="preserve"><value>Choose a strong password</value></data>
+  <data name="Account_PlaceholderConfirmPassword" xml:space="preserve"><value>Confirm your password</value></data>
+  <data name="Account_BackToLogin" xml:space="preserve"><value>Back to log in</value></data>
+  <data name="Account_BackToHome" xml:space="preserve"><value>Back to home</value></data>
+  <data name="Account_BackToProfile" xml:space="preserve"><value>Back to profile</value></data>
+  <data name="Account_Back" xml:space="preserve"><value>Back</value></data>
+  <data name="Account_Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="Account_OrWith" xml:space="preserve"><value>Or log in with</value></data>
+  <data name="Account_OrRegisterWith" xml:space="preserve"><value>Or register with</value></data>
+  <data name="Account_Close" xml:space="preserve"><value>Close</value></data>
+
+  <!-- Login Page -->
+  <data name="Login_Title" xml:space="preserve"><value>Log in</value></data>
+  <data name="Login_Welcome" xml:space="preserve"><value>Welcome back!</value></data>
+  <data name="Login_Subtitle" xml:space="preserve"><value>Log in to your account</value></data>
+  <data name="Login_Submit" xml:space="preserve"><value>Log in</value></data>
+  <data name="Login_ForgotPassword" xml:space="preserve"><value>Forgot your password?</value></data>
+  <data name="Login_RegisterNew" xml:space="preserve"><value>Register as a new user</value></data>
+  <data name="Login_ResendConfirmation" xml:space="preserve"><value>Resend email confirmation</value></data>
+
+  <!-- Register Page -->
+  <data name="Register_Title" xml:space="preserve"><value>Register</value></data>
+  <data name="Register_Heading" xml:space="preserve"><value>Create account</value></data>
+  <data name="Register_Subtitle" xml:space="preserve"><value>Register for Sofia Events</value></data>
+  <data name="Register_Submit" xml:space="preserve"><value>Register</value></data>
+  <data name="Register_PasswordHint" xml:space="preserve"><value>Password must be at least 8 characters and include uppercase, lowercase, a digit, and a special character</value></data>
+  <data name="Register_HasAccount" xml:space="preserve"><value>Already have an account?</value></data>
+  <data name="Register_LoginHere" xml:space="preserve"><value>Log in here</value></data>
+
+  <!-- Forgot Password Page -->
+  <data name="ForgotPassword_Title" xml:space="preserve"><value>Forgot your password?</value></data>
+  <data name="ForgotPassword_Heading" xml:space="preserve"><value>Forgot password?</value></data>
+  <data name="ForgotPassword_Subtitle" xml:space="preserve"><value>Enter your email to reset your password</value></data>
+  <data name="ForgotPassword_Submit" xml:space="preserve"><value>Send reset link</value></data>
+  <data name="ForgotPasswordConfirm_Title" xml:space="preserve"><value>Reset link sent</value></data>
+  <data name="ForgotPasswordConfirm_Heading" xml:space="preserve"><value>Check your email</value></data>
+  <data name="ForgotPasswordConfirm_Lead" xml:space="preserve"><value>We've sent a password reset link to your email address.</value></data>
+  <data name="ForgotPasswordConfirm_Hint" xml:space="preserve"><value>Please check your inbox and click the reset link. If you don't see the email, check your spam folder.</value></data>
+
+  <!-- Reset Password Page -->
+  <data name="ResetPassword_Title" xml:space="preserve"><value>Reset password</value></data>
+  <data name="ResetPassword_Heading" xml:space="preserve"><value>Reset password</value></data>
+  <data name="ResetPassword_Subtitle" xml:space="preserve"><value>Enter your new password</value></data>
+  <data name="ResetPassword_Submit" xml:space="preserve"><value>Reset password</value></data>
+  <data name="ResetPasswordConfirm_Title" xml:space="preserve"><value>Password reset successful</value></data>
+  <data name="ResetPasswordConfirm_Heading" xml:space="preserve"><value>Password reset successfully!</value></data>
+  <data name="ResetPasswordConfirm_Lead" xml:space="preserve"><value>Your password has been reset successfully.</value></data>
+  <data name="ResetPasswordConfirm_Hint" xml:space="preserve"><value>You can now log in with your new password.</value></data>
+  <data name="ResetPasswordConfirm_LoginNow" xml:space="preserve"><value>Log in now</value></data>
+
+  <!-- Register Confirmation Page -->
+  <data name="RegisterConfirm_Title" xml:space="preserve"><value>Registration successful</value></data>
+  <data name="RegisterConfirm_Heading" xml:space="preserve"><value>Registration successful!</value></data>
+  <data name="RegisterConfirm_DevMode" xml:space="preserve"><value>Development mode:</value></data>
+  <data name="RegisterConfirm_DevEmailNotConfigured" xml:space="preserve"><value>Email sender not configured.</value></data>
+  <data name="RegisterConfirm_DevClickLink" xml:space="preserve"><value>Click the link below to confirm your account:</value></data>
+  <data name="RegisterConfirm_ConfirmAccount" xml:space="preserve"><value>Confirm account</value></data>
+  <data name="RegisterConfirm_GoToLogin" xml:space="preserve"><value>Go to log in</value></data>
+  <data name="RegisterConfirm_DevDocs" xml:space="preserve"><value>See this documentation for how to configure a real email sender.</value></data>
+  <data name="RegisterConfirm_CheckEmail" xml:space="preserve"><value>Please check your email to confirm your account.</value></data>
+  <data name="RegisterConfirm_SentLink" xml:space="preserve"><value>We've sent a confirmation link to your email address. Click the link in the email to activate your account.</value></data>
+
+  <!-- Resend Email Confirmation Page -->
+  <data name="ResendEmail_Title" xml:space="preserve"><value>Resend email confirmation</value></data>
+  <data name="ResendEmail_Heading" xml:space="preserve"><value>Resend confirmation</value></data>
+  <data name="ResendEmail_Subtitle" xml:space="preserve"><value>Enter your email to resend the confirmation link</value></data>
+  <data name="ResendEmail_Submit" xml:space="preserve"><value>Resend confirmation</value></data>
+
+  <!-- Confirm Email Page -->
+  <data name="ConfirmEmail_Title" xml:space="preserve"><value>Confirm email</value></data>
+  <data name="ConfirmEmail_Subtitle" xml:space="preserve"><value>Your email is being confirmed</value></data>
+  <data name="ConfirmEmailChange_Title" xml:space="preserve"><value>Confirm email change</value></data>
+  <data name="ConfirmEmailChange_Subtitle" xml:space="preserve"><value>Confirming your new email address</value></data>
+
+  <!-- Access Denied Page -->
+  <data name="AccessDenied_Title" xml:space="preserve"><value>Access denied</value></data>
+  <data name="AccessDenied_Subtitle" xml:space="preserve"><value>You do not have permission to access this resource</value></data>
+  <data name="AccessDenied_Alert" xml:space="preserve"><value>If you believe this is an error, please contact the administrator.</value></data>
+  <data name="AccessDenied_Login" xml:space="preserve"><value>Log in</value></data>
+
+  <!-- Lockout Page -->
+  <data name="Lockout_Title" xml:space="preserve"><value>Account locked</value></data>
+  <data name="Lockout_Subtitle" xml:space="preserve"><value>Your account has been temporarily locked for security reasons</value></data>
+  <data name="Lockout_Alert" xml:space="preserve"><value>Please try again later. If you believe this is an error, contact support.</value></data>
+
+  <!-- External Login Page -->
+  <data name="ExternalLogin_Title" xml:space="preserve"><value>Complete registration</value></data>
+  <data name="ExternalLogin_Subtitle" xml:space="preserve"><value>Finish connecting your {0} account</value></data>
+  <data name="ExternalLogin_Success" xml:space="preserve"><value>Success!</value></data>
+  <data name="ExternalLogin_AuthenticatedWith" xml:space="preserve"><value>You've successfully authenticated with {0}.</value></data>
+  <data name="ExternalLogin_EnterEmail" xml:space="preserve"><value>Please enter an email address below to complete your registration.</value></data>
+  <data name="ExternalLogin_Complete" xml:space="preserve"><value>Complete registration</value></data>
+
+  <!-- Two-Factor Login Pages -->
+  <data name="Login2fa_Title" xml:space="preserve"><value>Two-factor authentication</value></data>
+  <data name="Login2fa_Subtitle" xml:space="preserve"><value>Enter your authenticator code</value></data>
+  <data name="Login2fa_Description" xml:space="preserve"><value>Your login is protected with an authenticator app. Enter your 6-digit code below.</value></data>
+  <data name="Login2fa_Code" xml:space="preserve"><value>Authenticator code</value></data>
+  <data name="Login2fa_PlaceholderCode" xml:space="preserve"><value>Enter 6-digit code</value></data>
+  <data name="Login2fa_RememberMachine" xml:space="preserve"><value>Remember this machine</value></data>
+  <data name="Login2fa_Submit" xml:space="preserve"><value>Verify and log in</value></data>
+  <data name="Login2fa_UseRecovery" xml:space="preserve"><value>Use recovery code instead</value></data>
+  <data name="LoginRecovery_Title" xml:space="preserve"><value>Recovery code login</value></data>
+  <data name="LoginRecovery_Subtitle" xml:space="preserve"><value>Use your recovery code to access your account</value></data>
+  <data name="LoginRecovery_Alert" xml:space="preserve"><value>You requested to log in with a recovery code. This login will not be remembered until you provide an authenticator app code or disable 2FA.</value></data>
+  <data name="LoginRecovery_Code" xml:space="preserve"><value>Recovery code</value></data>
+  <data name="LoginRecovery_Placeholder" xml:space="preserve"><value>Enter your recovery code</value></data>
+  <data name="LoginRecovery_Hint" xml:space="preserve"><value>Recovery codes are long alphanumeric codes provided when you enabled 2FA</value></data>
+
+  <!-- Logout Page -->
+  <data name="Logout_Title" xml:space="preserve"><value>Log out</value></data>
+  <data name="Logout_ReadyToLeave" xml:space="preserve"><value>Ready to leave?</value></data>
+  <data name="Logout_Prompt" xml:space="preserve"><value>Click the button below to log out of your account</value></data>
+  <data name="Logout_GoBack" xml:space="preserve"><value>Go back</value></data>
+  <data name="Logout_SuccessTitle" xml:space="preserve"><value>Successfully logged out</value></data>
+  <data name="Logout_LoginAgain" xml:space="preserve"><value>Log in again</value></data>
+  <data name="Logout_Submit" xml:space="preserve"><value>Log out</value></data>
+  <data name="Logout_Success" xml:space="preserve"><value>You have successfully logged out of your account.</value></data>
+  <data name="Logout_ReturnHome" xml:space="preserve"><value>Return to home</value></data>
+
+  <!-- Manage Navigation -->
+  <data name="Manage_Nav_Profile" xml:space="preserve"><value>Profile</value></data>
+  <data name="Manage_Nav_Email" xml:space="preserve"><value>Email</value></data>
+  <data name="Manage_Nav_Password" xml:space="preserve"><value>Password</value></data>
+  <data name="Manage_Nav_ExternalLogins" xml:space="preserve"><value>External logins</value></data>
+  <data name="Manage_Nav_TwoFactor" xml:space="preserve"><value>Two-factor authentication</value></data>
+  <data name="Manage_Nav_PersonalData" xml:space="preserve"><value>Personal data</value></data>
+
+  <!-- Manage Profile Page -->
+  <data name="Manage_Profile_Title" xml:space="preserve"><value>Profile settings</value></data>
+  <data name="Manage_Profile_Subtitle" xml:space="preserve"><value>Update your profile information</value></data>
+  <data name="Manage_Username" xml:space="preserve"><value>Username</value></data>
+  <data name="Manage_UsernamePlaceholder" xml:space="preserve"><value>Your username</value></data>
+  <data name="Manage_UsernameHint" xml:space="preserve"><value>Your username cannot be changed</value></data>
+  <data name="Manage_Phone" xml:space="preserve"><value>Phone number</value></data>
+  <data name="Manage_PhonePlaceholder" xml:space="preserve"><value>Enter your phone number (optional)</value></data>
+  <data name="Manage_SaveChanges" xml:space="preserve"><value>Save changes</value></data>
+
+  <!-- Manage Email Page -->
+  <data name="Manage_Email_Title" xml:space="preserve"><value>Change email</value></data>
+  <data name="Manage_Email_Subtitle" xml:space="preserve"><value>Update your email address</value></data>
+  <data name="Manage_CurrentEmail" xml:space="preserve"><value>Current email</value></data>
+  <data name="Manage_CurrentEmailPlaceholder" xml:space="preserve"><value>Your current email</value></data>
+  <data name="Manage_EmailVerified" xml:space="preserve"><value>Verified</value></data>
+  <data name="Manage_EmailUnverified" xml:space="preserve"><value>Unverified</value></data>
+  <data name="Manage_SendVerification" xml:space="preserve"><value>Send verification email</value></data>
+  <data name="Manage_NewEmail" xml:space="preserve"><value>New email address</value></data>
+  <data name="Manage_NewEmailPlaceholder" xml:space="preserve"><value>Enter your new email address</value></data>
+  <data name="Manage_ChangeEmail" xml:space="preserve"><value>Change email</value></data>
+
+  <!-- Manage Password Page -->
+  <data name="Manage_Password_Title" xml:space="preserve"><value>Change password</value></data>
+  <data name="Manage_Password_Subtitle" xml:space="preserve"><value>Update your password</value></data>
+  <data name="Manage_Password_CurrentPlaceholder" xml:space="preserve"><value>Enter your current password</value></data>
+  <data name="Manage_Password_NewPlaceholder" xml:space="preserve"><value>Enter your new password</value></data>
+  <data name="Manage_Password_ConfirmPlaceholder" xml:space="preserve"><value>Confirm your new password</value></data>
+  <data name="Manage_UpdatePassword" xml:space="preserve"><value>Update password</value></data>
+
+  <!-- Manage Set Password Page -->
+  <data name="Manage_SetPassword_Title" xml:space="preserve"><value>Set password</value></data>
+  <data name="Manage_SetPassword_Heading" xml:space="preserve"><value>Set your password</value></data>
+  <data name="Manage_SetPassword_Info" xml:space="preserve"><value>You do not have a local password for this site. Add a local account so you can log in without an external login.</value></data>
+  <data name="Manage_SetPassword_Submit" xml:space="preserve"><value>Set password</value></data>
+
+  <!-- Manage Personal Data Page -->
+  <data name="Manage_PersonalData_Title" xml:space="preserve"><value>Personal data</value></data>
+  <data name="Manage_PersonalData_Subtitle" xml:space="preserve"><value>Manage your personal information</value></data>
+  <data name="Manage_PersonalData_Info" xml:space="preserve"><value>Your data: Your account contains personal data you have provided. This page lets you download or delete that data.</value></data>
+  <data name="Manage_PersonalData_Warning" xml:space="preserve"><value>Warning: Deleting this data will permanently remove your account and cannot be recovered.</value></data>
+  <data name="Manage_DownloadData" xml:space="preserve"><value>Download my data</value></data>
+  <data name="Manage_DeleteAccount" xml:space="preserve"><value>Delete my account</value></data>
+
+  <!-- Manage Delete Account Page -->
+  <data name="Manage_Delete_Title" xml:space="preserve"><value>Delete account</value></data>
+  <data name="Manage_Delete_Subtitle" xml:space="preserve"><value>Permanently delete your account</value></data>
+  <data name="Manage_Delete_Warning" xml:space="preserve"><value>Warning: This will permanently remove your account and all associated data. This action cannot be undone.</value></data>
+  <data name="Manage_Delete_ConfirmPassword" xml:space="preserve"><value>Confirm password</value></data>
+  <data name="Manage_Delete_PasswordPlaceholder" xml:space="preserve"><value>Enter your password to confirm deletion</value></data>
+  <data name="Manage_Delete_PasswordHint" xml:space="preserve"><value>We need your password to confirm this action</value></data>
+  <data name="Manage_Delete_Submit" xml:space="preserve"><value>Yes, delete my account</value></data>
+  <data name="Manage_Delete_Permanent" xml:space="preserve"><value>This action is permanent and cannot be reversed</value></data>
+
+  <!-- Manage External Logins Page -->
+  <data name="Manage_ExternalLogins_Title" xml:space="preserve"><value>External login settings</value></data>
+  <data name="Manage_ExternalLogins_Subtitle" xml:space="preserve"><value>Manage your connected social accounts</value></data>
+  <data name="Manage_ExternalLogins_Connected" xml:space="preserve"><value>Connected accounts</value></data>
+  <data name="Manage_ExternalLogins_Remove" xml:space="preserve"><value>Remove</value></data>
+  <data name="Manage_ExternalLogins_AddService" xml:space="preserve"><value>Add another service</value></data>
+  <data name="Manage_ExternalLogins_AddHint" xml:space="preserve"><value>Connect another social account to make logging in easier</value></data>
+
+  <!-- Manage Two-Factor Page -->
+  <data name="Manage_2FA_Title" xml:space="preserve"><value>Two-factor authentication (2FA)</value></data>
+  <data name="Manage_2FA_Subtitle" xml:space="preserve"><value>Secure your account with additional authentication</value></data>
+  <data name="Manage_2FA_NoCodes" xml:space="preserve"><value>No recovery codes left!</value></data>
+  <data name="Manage_2FA_NoCodesBeforeLink" xml:space="preserve"><value>You must</value></data>
+  <data name="Manage_2FA_NoCodesAfterLink" xml:space="preserve"><value> before you can log in with a recovery code.</value></data>
+  <data name="Manage_2FA_OneCode" xml:space="preserve"><value>Only 1 recovery code left!</value></data>
+  <data name="Manage_2FA_OneCodeBeforeLink" xml:space="preserve"><value>You can</value></data>
+  <data name="Manage_2FA_OneCodeAfterLink" xml:space="preserve"><value>.</value></data>
+  <data name="Manage_2FA_CodesLeft" xml:space="preserve"><value>{0} recovery codes left</value></data>
+  <data name="Manage_2FA_CodesLeftBeforeLink" xml:space="preserve"><value>You should</value></data>
+  <data name="Manage_2FA_CodesLeftAfterLink" xml:space="preserve"><value>.</value></data>
+  <data name="Manage_2FA_GenerateLink" xml:space="preserve"><value>generate a new set of recovery codes</value></data>
+  <data name="Manage_2FA_Status" xml:space="preserve"><value>2FA status</value></data>
+  <data name="Manage_2FA_Enabled" xml:space="preserve"><value>Two-factor authentication is enabled</value></data>
+  <data name="Manage_2FA_ResetCodes" xml:space="preserve"><value>Reset recovery codes</value></data>
+  <data name="Manage_2FA_Disable" xml:space="preserve"><value>Disable 2FA</value></data>
+  <data name="Manage_2FA_ForgetBrowser" xml:space="preserve"><value>Forget this browser</value></data>
+  <data name="Manage_2FA_NotEnabled" xml:space="preserve"><value>Two-factor authentication is not enabled</value></data>
+  <data name="Manage_2FA_EnableHint" xml:space="preserve"><value>Enable it to add extra security to your account.</value></data>
+  <data name="Manage_2FA_AuthenticatorApp" xml:space="preserve"><value>Authenticator app</value></data>
+  <data name="Manage_2FA_AddApp" xml:space="preserve"><value>Add authenticator app</value></data>
+  <data name="Manage_2FA_ConfigureApp" xml:space="preserve"><value>Configure authenticator</value></data>
+  <data name="Manage_2FA_ResetAuthenticator" xml:space="preserve"><value>Reset authenticator</value></data>
+  <data name="Manage_2FA_PrivacyRequired" xml:space="preserve"><value>Privacy policy not accepted</value></data>
+  <data name="Manage_2FA_PrivacyHint" xml:space="preserve"><value>You must accept the privacy and cookie policy before you can enable two-factor authentication.</value></data>
+
+  <!-- Manage Enable Authenticator Page -->
+  <data name="Manage_EnableAuth_Title" xml:space="preserve"><value>Set up two-factor authentication</value></data>
+  <data name="Manage_EnableAuth_Subtitle" xml:space="preserve"><value>Add extra security to your account</value></data>
+  <data name="Manage_EnableAuth_Info" xml:space="preserve"><value>Two-factor authentication adds an extra layer of security to your account.</value></data>
+  <data name="Manage_EnableAuth_Step1" xml:space="preserve"><value>Step 1: Download an authenticator app</value></data>
+  <data name="Manage_EnableAuth_Step1Hint" xml:space="preserve"><value>Download one of these authenticator apps:</value></data>
+  <data name="Manage_EnableAuth_Step2" xml:space="preserve"><value>Step 2: Scan QR code or enter key</value></data>
+  <data name="Manage_EnableAuth_Step2Hint" xml:space="preserve"><value>Scan this QR code with your authenticator app, or enter the key manually:</value></data>
+  <data name="Manage_EnableAuth_ManualKey" xml:space="preserve"><value>Manual entry key:</value></data>
+  <data name="Manage_EnableAuth_ManualKeyHint" xml:space="preserve"><value>Spaces and casing do not matter</value></data>
+  <data name="Manage_EnableAuth_Step3" xml:space="preserve"><value>Step 3: Verify your app</value></data>
+  <data name="Manage_EnableAuth_Step3Hint" xml:space="preserve"><value>Enter the 6-digit code from your authenticator app:</value></data>
+  <data name="Manage_EnableAuth_VerificationCode" xml:space="preserve"><value>Verification code</value></data>
+  <data name="Manage_EnableAuth_Verify" xml:space="preserve"><value>Verify and enable</value></data>
+  <data name="Manage_ResetAuthenticator_Title" xml:space="preserve"><value>Reset authenticator key</value></data>
+  <data name="Manage_Disable2fa_Title" xml:space="preserve"><value>Disable two-factor authentication</value></data>
+  <data name="Manage_GenerateRecoveryCodes_Title" xml:space="preserve"><value>Generate recovery codes</value></data>
+  <data name="Manage_DownloadData_Title" xml:space="preserve"><value>Download your data</value></data>
+  <data name="Manage_ShowRecoveryCodes_Title" xml:space="preserve"><value>Recovery codes</value></data>
+
+  <!-- Account Messages (code-behind) -->
+  <data name="Msg_StatusErrorPrefix" xml:space="preserve"><value>Error</value></data>
+  <data name="Msg_Login_InvalidAttempt" xml:space="preserve"><value>Invalid login attempt.</value></data>
+  <data name="Msg_Login2fa_InvalidCode" xml:space="preserve"><value>Invalid authenticator code.</value></data>
+  <data name="Msg_LoginRecovery_InvalidCode" xml:space="preserve"><value>Invalid recovery code entered.</value></data>
+  <data name="Msg_ExternalLogin_ErrorFromProvider" xml:space="preserve"><value>Error from external provider: {0}</value></data>
+  <data name="Msg_ExternalLogin_LoadError" xml:space="preserve"><value>Error loading external login information.</value></data>
+  <data name="Msg_ExternalLogin_ConfirmLoadError" xml:space="preserve"><value>Error loading external login information during confirmation.</value></data>
+  <data name="Msg_ConfirmEmail_Success" xml:space="preserve"><value>Thank you for confirming your email.</value></data>
+  <data name="Msg_ConfirmEmail_Error" xml:space="preserve"><value>Error confirming your email.</value></data>
+  <data name="Msg_ConfirmEmailChange_Error" xml:space="preserve"><value>Error changing email.</value></data>
+  <data name="Msg_ConfirmEmailChange_UserNameError" xml:space="preserve"><value>Error changing user name.</value></data>
+  <data name="Msg_ConfirmEmailChange_Success" xml:space="preserve"><value>Thank you for confirming your email change.</value></data>
+  <data name="Msg_ResendEmail_Sent" xml:space="preserve"><value>Verification email sent. Please check your email.</value></data>
+  <data name="Msg_Manage_ProfileUpdated" xml:space="preserve"><value>Your profile has been updated.</value></data>
+  <data name="Msg_Manage_PhoneUnexpectedError" xml:space="preserve"><value>Unexpected error when trying to set phone number.</value></data>
+  <data name="Msg_Manage_PasswordChanged" xml:space="preserve"><value>Your password has been changed.</value></data>
+  <data name="Msg_Manage_PasswordSet" xml:space="preserve"><value>Your password has been set.</value></data>
+  <data name="Msg_Manage_EmailUnchanged" xml:space="preserve"><value>Your email is unchanged.</value></data>
+  <data name="Msg_Manage_EmailChangeSent" xml:space="preserve"><value>Confirmation link to change email sent. Please check your email.</value></data>
+  <data name="Msg_Manage_EmailVerificationSent" xml:space="preserve"><value>Verification email sent. Please check your email.</value></data>
+  <data name="Msg_Manage_EmailSendFailed" xml:space="preserve"><value>We couldn't send the verification email. Please try again later or contact support.</value></data>
+  <data name="Msg_Manage_DeleteIncorrectPassword" xml:space="preserve"><value>Incorrect password.</value></data>
+  <data name="Msg_Manage_2faDisabled" xml:space="preserve"><value>2FA has been disabled. You can re-enable 2FA when you set up an authenticator app.</value></data>
+  <data name="Msg_Manage_2faBrowserForgotten" xml:space="preserve"><value>The current browser has been forgotten. When you log in again from this browser you will be prompted for your 2FA code.</value></data>
+  <data name="Msg_Manage_AuthenticatorVerified" xml:space="preserve"><value>Your authenticator app has been verified.</value></data>
+  <data name="Msg_Manage_AuthenticatorInvalidCode" xml:space="preserve"><value>Verification code is invalid.</value></data>
+  <data name="Msg_Manage_AuthenticatorReset" xml:space="preserve"><value>Your authenticator app key has been reset. Configure your authenticator app using the new key.</value></data>
+  <data name="Msg_Manage_RecoveryCodesGenerated" xml:space="preserve"><value>You have generated new recovery codes.</value></data>
+  <data name="Msg_Manage_ExternalLoginRemoved" xml:space="preserve"><value>The external login was removed.</value></data>
+  <data name="Msg_Manage_ExternalLoginNotRemoved" xml:space="preserve"><value>The external login was not removed.</value></data>
+  <data name="Msg_Manage_ExternalLoginAdded" xml:space="preserve"><value>The external login was added.</value></data>
+  <data name="Msg_Manage_ExternalLoginNotAdded" xml:space="preserve"><value>The external login was not added. External logins can only be associated with one account.</value></data>
+
   <!-- Sort Options -->
   <data name="Sort_Date" xml:space="preserve"><value>Date</value></data>
   <data name="Sort_Name" xml:space="preserve"><value>Name</value></data>

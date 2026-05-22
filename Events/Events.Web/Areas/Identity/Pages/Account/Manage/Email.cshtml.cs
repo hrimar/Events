@@ -8,6 +8,7 @@ using System.Text;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using Events.Models.Entities;
+using Events.Web.Localization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -21,15 +22,18 @@ namespace Events.Web.Areas.Identity.Pages.Account.Manage
         private readonly UserManager<User> _userManager;
         private readonly SignInManager<User> _signInManager;
         private readonly IEmailSender _emailSender;
+        private readonly IdentityMessages _messages;
 
         public EmailModel(
             UserManager<User> userManager,
             SignInManager<User> signInManager,
-            IEmailSender emailSender)
+            IEmailSender emailSender,
+            IdentityMessages messages)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _emailSender = emailSender;
+            _messages = messages;
         }
 
         /// <summary>
@@ -134,17 +138,16 @@ namespace Events.Web.Areas.Identity.Pages.Account.Manage
                 }
                 catch (Exception ex)
                 {
-                    ModelState.AddModelError(string.Empty,
-                        "We couldn't send the confirmation email. Please try again later or contact support.");
+                    ModelState.AddModelError(string.Empty, _messages.Manage_EmailSendFailed);
                     await LoadAsync(user);
                     return Page();
                 }
 
-                StatusMessage = "Confirmation link to change email sent. Please check your email.";
+                StatusMessage = _messages.Manage_EmailChangeSent;
                 return RedirectToPage();
             }
 
-            StatusMessage = "Your email is unchanged.";
+            StatusMessage = _messages.Manage_EmailUnchanged;
             return RedirectToPage();
         }
 
@@ -181,12 +184,12 @@ namespace Events.Web.Areas.Identity.Pages.Account.Manage
             }
             catch (Exception ex)
             {
-                ModelState.AddModelError(string.Empty, "We couldn't send the verification email. Please try again later or contact support.");
+                ModelState.AddModelError(string.Empty, _messages.Manage_EmailSendFailed);
                 await LoadAsync(user);
                 return Page();
             }
 
-            StatusMessage = "Verification email sent. Please check your email.";
+            StatusMessage = _messages.Manage_EmailVerificationSent;
             return RedirectToPage();
         }
     }

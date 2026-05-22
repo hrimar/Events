@@ -411,6 +411,294 @@
   <data name="Tag_Seasonal" xml:space="preserve"><value>Сезонно</value></data>
   <data name="Tag_HolidaySpecial" xml:space="preserve"><value>Празнично</value></data>
 
+  <!-- Account Navigation -->
+  <data name="Nav_Register" xml:space="preserve"><value>Регистрация</value></data>
+  <data name="Nav_Login" xml:space="preserve"><value>Вход</value></data>
+  <data name="Nav_Logout" xml:space="preserve"><value>Изход</value></data>
+  <data name="Nav_Manage" xml:space="preserve"><value>Управление на профила</value></data>
+
+  <!-- Account - Shared -->
+  <data name="Account_Email" xml:space="preserve"><value>Имейл</value></data>
+  <data name="Account_Password" xml:space="preserve"><value>Парола</value></data>
+  <data name="Account_NewPassword" xml:space="preserve"><value>Нова парола</value></data>
+  <data name="Account_ConfirmPassword" xml:space="preserve"><value>Потвърди паролата</value></data>
+  <data name="Account_ConfirmNewPassword" xml:space="preserve"><value>Потвърди новата парола</value></data>
+  <data name="Account_CurrentPassword" xml:space="preserve"><value>Текуща парола</value></data>
+  <data name="Account_EmailAddress" xml:space="preserve"><value>Имейл адрес</value></data>
+  <data name="Account_RememberMe" xml:space="preserve"><value>Запомни ме</value></data>
+  <data name="Account_PlaceholderEmail" xml:space="preserve"><value>name@example.com</value></data>
+  <data name="Account_PlaceholderPassword" xml:space="preserve"><value>Въведете паролата си</value></data>
+  <data name="Account_PlaceholderNewPassword" xml:space="preserve"><value>Изберете силна парола</value></data>
+  <data name="Account_PlaceholderConfirmPassword" xml:space="preserve"><value>Потвърдете паролата</value></data>
+  <data name="Account_BackToLogin" xml:space="preserve"><value>Обратно към вход</value></data>
+  <data name="Account_BackToHome" xml:space="preserve"><value>Към началото</value></data>
+  <data name="Account_BackToProfile" xml:space="preserve"><value>Обратно към профила</value></data>
+  <data name="Account_Back" xml:space="preserve"><value>Назад</value></data>
+  <data name="Account_Cancel" xml:space="preserve"><value>Отказ</value></data>
+  <data name="Account_OrWith" xml:space="preserve"><value>Или с</value></data>
+  <data name="Account_OrRegisterWith" xml:space="preserve"><value>Или регистрирайте се с</value></data>
+  <data name="Account_Close" xml:space="preserve"><value>Затвори</value></data>
+
+  <!-- Login Page -->
+  <data name="Login_Title" xml:space="preserve"><value>Вход</value></data>
+  <data name="Login_Welcome" xml:space="preserve"><value>Добре дошли отново!</value></data>
+  <data name="Login_Subtitle" xml:space="preserve"><value>Влезте в профила си</value></data>
+  <data name="Login_Submit" xml:space="preserve"><value>Вход</value></data>
+  <data name="Login_ForgotPassword" xml:space="preserve"><value>Забравена парола?</value></data>
+  <data name="Login_RegisterNew" xml:space="preserve"><value>Регистрирайте се</value></data>
+  <data name="Login_ResendConfirmation" xml:space="preserve"><value>Изпрати отново потвърждение по имейл</value></data>
+
+  <!-- Register Page -->
+  <data name="Register_Title" xml:space="preserve"><value>Регистрация</value></data>
+  <data name="Register_Heading" xml:space="preserve"><value>Създайте профил</value></data>
+  <data name="Register_Subtitle" xml:space="preserve"><value>Регистрация в Sofia Events</value></data>
+  <data name="Register_Submit" xml:space="preserve"><value>Регистрация</value></data>
+  <data name="Register_PasswordHint" xml:space="preserve"><value>Паролата трябва да е поне 8 символа и да съдържа главни, малки букви, цифра и специален знак</value></data>
+  <data name="Register_HasAccount" xml:space="preserve"><value>Вече имате профил?</value></data>
+  <data name="Register_LoginHere" xml:space="preserve"><value>Влезте тук</value></data>
+
+  <!-- Forgot Password Page -->
+  <data name="ForgotPassword_Title" xml:space="preserve"><value>Забравена парола?</value></data>
+  <data name="ForgotPassword_Heading" xml:space="preserve"><value>Забравена парола?</value></data>
+  <data name="ForgotPassword_Subtitle" xml:space="preserve"><value>Въведете имейла си, за да получите линк за нулиране</value></data>
+  <data name="ForgotPassword_Submit" xml:space="preserve"><value>Изпрати линк за нулиране</value></data>
+  <data name="ForgotPasswordConfirm_Title" xml:space="preserve"><value>Линкът е изпратен</value></data>
+  <data name="ForgotPasswordConfirm_Heading" xml:space="preserve"><value>Проверете имейла си</value></data>
+  <data name="ForgotPasswordConfirm_Lead" xml:space="preserve"><value>Изпратихме линк за нулиране на паролата на вашия имейл адрес.</value></data>
+  <data name="ForgotPasswordConfirm_Hint" xml:space="preserve"><value>Моля, проверете входящата си поща и следвайте линка. Ако не виждате имейла, проверете папката за спам.</value></data>
+
+  <!-- Reset Password Page -->
+  <data name="ResetPassword_Title" xml:space="preserve"><value>Нулиране на парола</value></data>
+  <data name="ResetPassword_Heading" xml:space="preserve"><value>Нулиране на парола</value></data>
+  <data name="ResetPassword_Subtitle" xml:space="preserve"><value>Въведете новата си парола</value></data>
+  <data name="ResetPassword_Submit" xml:space="preserve"><value>Нулирай паролата</value></data>
+  <data name="ResetPasswordConfirm_Title" xml:space="preserve"><value>Паролата е нулирана</value></data>
+  <data name="ResetPasswordConfirm_Heading" xml:space="preserve"><value>Паролата е нулирана успешно!</value></data>
+  <data name="ResetPasswordConfirm_Lead" xml:space="preserve"><value>Паролата ви беше нулирана успешно.</value></data>
+  <data name="ResetPasswordConfirm_Hint" xml:space="preserve"><value>Вече можете да влезете с новата си парола.</value></data>
+  <data name="ResetPasswordConfirm_LoginNow" xml:space="preserve"><value>Влезте сега</value></data>
+
+  <!-- Register Confirmation Page -->
+  <data name="RegisterConfirm_Title" xml:space="preserve"><value>Успешна регистрация</value></data>
+  <data name="RegisterConfirm_Heading" xml:space="preserve"><value>Регистрацията е успешна!</value></data>
+  <data name="RegisterConfirm_DevMode" xml:space="preserve"><value>Режим за разработка:</value></data>
+  <data name="RegisterConfirm_DevEmailNotConfigured" xml:space="preserve"><value>Имейл изпращачът не е конфигуриран.</value></data>
+  <data name="RegisterConfirm_DevClickLink" xml:space="preserve"><value>Натиснете линка по-долу, за да потвърдите профила:</value></data>
+  <data name="RegisterConfirm_ConfirmAccount" xml:space="preserve"><value>Потвърди профила</value></data>
+  <data name="RegisterConfirm_GoToLogin" xml:space="preserve"><value>Към вход</value></data>
+  <data name="RegisterConfirm_DevDocs" xml:space="preserve"><value>Вижте тази документация за настройка на реален имейл изпращач.</value></data>
+  <data name="RegisterConfirm_CheckEmail" xml:space="preserve"><value>Моля, проверете имейла си, за да потвърдите профила.</value></data>
+  <data name="RegisterConfirm_SentLink" xml:space="preserve"><value>Изпратихме линк за потвърждение на вашия имейл адрес. Следвайте линка в имейла, за да активирате профила.</value></data>
+
+  <!-- Resend Email Confirmation Page -->
+  <data name="ResendEmail_Title" xml:space="preserve"><value>Изпрати отново потвърждение</value></data>
+  <data name="ResendEmail_Heading" xml:space="preserve"><value>Изпрати отново потвърждение</value></data>
+  <data name="ResendEmail_Subtitle" xml:space="preserve"><value>Въведете имейла си, за да получите нов линк за потвърждение</value></data>
+  <data name="ResendEmail_Submit" xml:space="preserve"><value>Изпрати потвърждение</value></data>
+
+  <!-- Confirm Email Page -->
+  <data name="ConfirmEmail_Title" xml:space="preserve"><value>Потвърждение на имейл</value></data>
+  <data name="ConfirmEmail_Subtitle" xml:space="preserve"><value>Имейлът ви се потвърждава</value></data>
+  <data name="ConfirmEmailChange_Title" xml:space="preserve"><value>Потвърждение на смяна на имейл</value></data>
+  <data name="ConfirmEmailChange_Subtitle" xml:space="preserve"><value>Потвърждавате новия си имейл адрес</value></data>
+
+  <!-- Access Denied Page -->
+  <data name="AccessDenied_Title" xml:space="preserve"><value>Достъпът е отказан</value></data>
+  <data name="AccessDenied_Subtitle" xml:space="preserve"><value>Нямате права за достъп до този ресурс</value></data>
+  <data name="AccessDenied_Alert" xml:space="preserve"><value>Ако смятате, че това е грешка, моля свържете се с администратора.</value></data>
+  <data name="AccessDenied_Login" xml:space="preserve"><value>Вход</value></data>
+
+  <!-- Lockout Page -->
+  <data name="Lockout_Title" xml:space="preserve"><value>Профилът е заключен</value></data>
+  <data name="Lockout_Subtitle" xml:space="preserve"><value>Профилът ви е временно заключен поради съображения за сигурност</value></data>
+  <data name="Lockout_Alert" xml:space="preserve"><value>Моля, опитайте отново по-късно. Ако смятате, че това е грешка, свържете се с поддръжката.</value></data>
+
+  <!-- External Login Page -->
+  <data name="ExternalLogin_Title" xml:space="preserve"><value>Довършете регистрацията</value></data>
+  <data name="ExternalLogin_Subtitle" xml:space="preserve"><value>Довършете свързването на профила ви с {0}</value></data>
+  <data name="ExternalLogin_Success" xml:space="preserve"><value>Успех!</value></data>
+  <data name="ExternalLogin_AuthenticatedWith" xml:space="preserve"><value>Успешно се удостоверихте с {0}.</value></data>
+  <data name="ExternalLogin_EnterEmail" xml:space="preserve"><value>Моля, въведете имейл адрес по-долу, за да довършите регистрацията.</value></data>
+  <data name="ExternalLogin_Complete" xml:space="preserve"><value>Довърши регистрацията</value></data>
+
+  <!-- Two-Factor Login Pages -->
+  <data name="Login2fa_Title" xml:space="preserve"><value>Двуфакторно удостоверяване</value></data>
+  <data name="Login2fa_Subtitle" xml:space="preserve"><value>Въведете кода от приложението за удостоверяване</value></data>
+  <data name="Login2fa_Description" xml:space="preserve"><value>Входът ви е защитен с приложение за удостоверяване. Въведете 6-цифрения код по-долу.</value></data>
+  <data name="Login2fa_Code" xml:space="preserve"><value>Код за удостоверяване</value></data>
+  <data name="Login2fa_PlaceholderCode" xml:space="preserve"><value>Въведете 6-цифрен код</value></data>
+  <data name="Login2fa_RememberMachine" xml:space="preserve"><value>Запомни това устройство</value></data>
+  <data name="Login2fa_Submit" xml:space="preserve"><value>Потвърди и влез</value></data>
+  <data name="Login2fa_UseRecovery" xml:space="preserve"><value>Използвай код за възстановяване</value></data>
+  <data name="LoginRecovery_Title" xml:space="preserve"><value>Вход с код за възстановяване</value></data>
+  <data name="LoginRecovery_Subtitle" xml:space="preserve"><value>Използвайте код за възстановяване за достъп до профила</value></data>
+  <data name="LoginRecovery_Alert" xml:space="preserve"><value>Заявихте вход с код за възстановяване. Този вход няма да бъде запомнен, докато не въведете код от приложението или не изключите 2FA.</value></data>
+  <data name="LoginRecovery_Code" xml:space="preserve"><value>Код за възстановяване</value></data>
+  <data name="LoginRecovery_Placeholder" xml:space="preserve"><value>Въведете кода за възстановяване</value></data>
+  <data name="LoginRecovery_Hint" xml:space="preserve"><value>Кодовете за възстановяване са дълги буквено-цифрови кодове, получени при активиране на 2FA</value></data>
+
+  <!-- Logout Page -->
+  <data name="Logout_Title" xml:space="preserve"><value>Изход</value></data>
+  <data name="Logout_ReadyToLeave" xml:space="preserve"><value>Готови да излезете?</value></data>
+  <data name="Logout_Prompt" xml:space="preserve"><value>Натиснете бутона по-долу, за да излезете от профила си</value></data>
+  <data name="Logout_GoBack" xml:space="preserve"><value>Назад</value></data>
+  <data name="Logout_SuccessTitle" xml:space="preserve"><value>Успешен изход</value></data>
+  <data name="Logout_LoginAgain" xml:space="preserve"><value>Влезте отново</value></data>
+  <data name="Logout_Submit" xml:space="preserve"><value>Изход</value></data>
+  <data name="Logout_Success" xml:space="preserve"><value>Успешно излязохте от профила си.</value></data>
+  <data name="Logout_ReturnHome" xml:space="preserve"><value>Към началото</value></data>
+
+  <!-- Manage Navigation -->
+  <data name="Manage_Nav_Profile" xml:space="preserve"><value>Профил</value></data>
+  <data name="Manage_Nav_Email" xml:space="preserve"><value>Имейл</value></data>
+  <data name="Manage_Nav_Password" xml:space="preserve"><value>Парола</value></data>
+  <data name="Manage_Nav_ExternalLogins" xml:space="preserve"><value>Външни входове</value></data>
+  <data name="Manage_Nav_TwoFactor" xml:space="preserve"><value>Двуфакторно удостоверяване</value></data>
+  <data name="Manage_Nav_PersonalData" xml:space="preserve"><value>Лични данни</value></data>
+
+  <!-- Manage Profile Page -->
+  <data name="Manage_Profile_Title" xml:space="preserve"><value>Настройки на профила</value></data>
+  <data name="Manage_Profile_Subtitle" xml:space="preserve"><value>Актуализирайте информацията в профила си</value></data>
+  <data name="Manage_Username" xml:space="preserve"><value>Потребителско име</value></data>
+  <data name="Manage_UsernamePlaceholder" xml:space="preserve"><value>Вашето потребителско име</value></data>
+  <data name="Manage_UsernameHint" xml:space="preserve"><value>Потребителското име не може да се променя</value></data>
+  <data name="Manage_Phone" xml:space="preserve"><value>Телефон</value></data>
+  <data name="Manage_PhonePlaceholder" xml:space="preserve"><value>Въведете телефон (по избор)</value></data>
+  <data name="Manage_SaveChanges" xml:space="preserve"><value>Запази промените</value></data>
+
+  <!-- Manage Email Page -->
+  <data name="Manage_Email_Title" xml:space="preserve"><value>Смяна на имейл</value></data>
+  <data name="Manage_Email_Subtitle" xml:space="preserve"><value>Актуализирайте имейл адреса си</value></data>
+  <data name="Manage_CurrentEmail" xml:space="preserve"><value>Текущ имейл</value></data>
+  <data name="Manage_CurrentEmailPlaceholder" xml:space="preserve"><value>Текущият ви имейл</value></data>
+  <data name="Manage_EmailVerified" xml:space="preserve"><value>Потвърден</value></data>
+  <data name="Manage_EmailUnverified" xml:space="preserve"><value>Непотвърден</value></data>
+  <data name="Manage_SendVerification" xml:space="preserve"><value>Изпрати имейл за потвърждение</value></data>
+  <data name="Manage_NewEmail" xml:space="preserve"><value>Нов имейл адрес</value></data>
+  <data name="Manage_NewEmailPlaceholder" xml:space="preserve"><value>Въведете новия имейл адрес</value></data>
+  <data name="Manage_ChangeEmail" xml:space="preserve"><value>Смени имейла</value></data>
+
+  <!-- Manage Password Page -->
+  <data name="Manage_Password_Title" xml:space="preserve"><value>Смяна на парола</value></data>
+  <data name="Manage_Password_Subtitle" xml:space="preserve"><value>Актуализирайте паролата си</value></data>
+  <data name="Manage_Password_CurrentPlaceholder" xml:space="preserve"><value>Въведете текущата парола</value></data>
+  <data name="Manage_Password_NewPlaceholder" xml:space="preserve"><value>Въведете новата парола</value></data>
+  <data name="Manage_Password_ConfirmPlaceholder" xml:space="preserve"><value>Потвърдете новата парола</value></data>
+  <data name="Manage_UpdatePassword" xml:space="preserve"><value>Актуализирай паролата</value></data>
+
+  <!-- Manage Set Password Page -->
+  <data name="Manage_SetPassword_Title" xml:space="preserve"><value>Задай парола</value></data>
+  <data name="Manage_SetPassword_Heading" xml:space="preserve"><value>Задайте парола</value></data>
+  <data name="Manage_SetPassword_Info" xml:space="preserve"><value>Нямате локална парола за този сайт. Добавете локален профил, за да влизате без външен вход.</value></data>
+  <data name="Manage_SetPassword_Submit" xml:space="preserve"><value>Задай парола</value></data>
+
+  <!-- Manage Personal Data Page -->
+  <data name="Manage_PersonalData_Title" xml:space="preserve"><value>Лични данни</value></data>
+  <data name="Manage_PersonalData_Subtitle" xml:space="preserve"><value>Управлявайте личната си информация</value></data>
+  <data name="Manage_PersonalData_Info" xml:space="preserve"><value>Вашите данни: Профилът съдържа лични данни, които сте предоставили. Тази страница ви позволява да ги изтеглите или изтриете.</value></data>
+  <data name="Manage_PersonalData_Warning" xml:space="preserve"><value>Предупреждение: Изтриването на данните ще премахне перманентно профила ви и не може да бъде възстановено.</value></data>
+  <data name="Manage_DownloadData" xml:space="preserve"><value>Изтегли данните ми</value></data>
+  <data name="Manage_DeleteAccount" xml:space="preserve"><value>Изтрий профила ми</value></data>
+
+  <!-- Manage Delete Account Page -->
+  <data name="Manage_Delete_Title" xml:space="preserve"><value>Изтриване на профил</value></data>
+  <data name="Manage_Delete_Subtitle" xml:space="preserve"><value>Перманентно изтриване на профила</value></data>
+  <data name="Manage_Delete_Warning" xml:space="preserve"><value>Предупреждение: Това ще премахне перманентно профила и всички свързани данни. Действието е необратимо.</value></data>
+  <data name="Manage_Delete_ConfirmPassword" xml:space="preserve"><value>Потвърди паролата</value></data>
+  <data name="Manage_Delete_PasswordPlaceholder" xml:space="preserve"><value>Въведете паролата, за да потвърдите изтриването</value></data>
+  <data name="Manage_Delete_PasswordHint" xml:space="preserve"><value>Нужна е паролата ви, за да потвърдим действието</value></data>
+  <data name="Manage_Delete_Submit" xml:space="preserve"><value>Да, изтрий профила ми</value></data>
+  <data name="Manage_Delete_Permanent" xml:space="preserve"><value>Това действие е перманентно и не може да бъде отменено</value></data>
+
+  <!-- Manage External Logins Page -->
+  <data name="Manage_ExternalLogins_Title" xml:space="preserve"><value>Външни входове</value></data>
+  <data name="Manage_ExternalLogins_Subtitle" xml:space="preserve"><value>Управлявайте свързаните социални профили</value></data>
+  <data name="Manage_ExternalLogins_Connected" xml:space="preserve"><value>Свързани профили</value></data>
+  <data name="Manage_ExternalLogins_Remove" xml:space="preserve"><value>Премахни</value></data>
+  <data name="Manage_ExternalLogins_AddService" xml:space="preserve"><value>Добави друг сервиз</value></data>
+  <data name="Manage_ExternalLogins_AddHint" xml:space="preserve"><value>Свържете друг социален профил за по-лесен вход</value></data>
+
+  <!-- Manage Two-Factor Page -->
+  <data name="Manage_2FA_Title" xml:space="preserve"><value>Двуфакторно удостоверяване (2FA)</value></data>
+  <data name="Manage_2FA_Subtitle" xml:space="preserve"><value>Защитете профила си с допълнително удостоверяване</value></data>
+  <data name="Manage_2FA_NoCodes" xml:space="preserve"><value>Няма останали кодове за възстановяване!</value></data>
+  <data name="Manage_2FA_NoCodesBeforeLink" xml:space="preserve"><value>Трябва да</value></data>
+  <data name="Manage_2FA_NoCodesAfterLink" xml:space="preserve"><value>, преди да влезете с код за възстановяване.</value></data>
+  <data name="Manage_2FA_OneCode" xml:space="preserve"><value>Остава само 1 код за възстановяване!</value></data>
+  <data name="Manage_2FA_OneCodeBeforeLink" xml:space="preserve"><value>Можете да</value></data>
+  <data name="Manage_2FA_OneCodeAfterLink" xml:space="preserve"><value>.</value></data>
+  <data name="Manage_2FA_CodesLeft" xml:space="preserve"><value>Остават {0} кода за възстановяване</value></data>
+  <data name="Manage_2FA_CodesLeftBeforeLink" xml:space="preserve"><value>Препоръчваме да</value></data>
+  <data name="Manage_2FA_CodesLeftAfterLink" xml:space="preserve"><value>.</value></data>
+  <data name="Manage_2FA_GenerateLink" xml:space="preserve"><value>генерирате нов набор кодове</value></data>
+  <data name="Manage_2FA_Status" xml:space="preserve"><value>Статус на 2FA</value></data>
+  <data name="Manage_2FA_Enabled" xml:space="preserve"><value>Двуфакторното удостоверяване е включено</value></data>
+  <data name="Manage_2FA_ResetCodes" xml:space="preserve"><value>Нулирай кодовете за възстановяване</value></data>
+  <data name="Manage_2FA_Disable" xml:space="preserve"><value>Изключи 2FA</value></data>
+  <data name="Manage_2FA_ForgetBrowser" xml:space="preserve"><value>Забрави този браузър</value></data>
+  <data name="Manage_2FA_NotEnabled" xml:space="preserve"><value>Двуфакторното удостоверяване не е включено</value></data>
+  <data name="Manage_2FA_EnableHint" xml:space="preserve"><value>Включете го за допълнителна сигурност на профила.</value></data>
+  <data name="Manage_2FA_AuthenticatorApp" xml:space="preserve"><value>Приложение за удостоверяване</value></data>
+  <data name="Manage_2FA_AddApp" xml:space="preserve"><value>Добави приложение</value></data>
+  <data name="Manage_2FA_ConfigureApp" xml:space="preserve"><value>Конфигурирай приложението</value></data>
+  <data name="Manage_2FA_ResetAuthenticator" xml:space="preserve"><value>Нулирай приложението</value></data>
+  <data name="Manage_2FA_PrivacyRequired" xml:space="preserve"><value>Политиката за поверителност не е приета</value></data>
+  <data name="Manage_2FA_PrivacyHint" xml:space="preserve"><value>Трябва да приемете политиката за поверителност и бисквитки, преди да включите 2FA.</value></data>
+
+  <!-- Manage Enable Authenticator Page -->
+  <data name="Manage_EnableAuth_Title" xml:space="preserve"><value>Настройка на 2FA</value></data>
+  <data name="Manage_EnableAuth_Subtitle" xml:space="preserve"><value>Добавете допълнителна сигурност към профила</value></data>
+  <data name="Manage_EnableAuth_Info" xml:space="preserve"><value>Двуфакторното удостоверяване добавя допълнителен слой сигурност към профила ви.</value></data>
+  <data name="Manage_EnableAuth_Step1" xml:space="preserve"><value>Стъпка 1: Изтеглете приложение за удостоверяване</value></data>
+  <data name="Manage_EnableAuth_Step1Hint" xml:space="preserve"><value>Изтеглете едно от следните приложения:</value></data>
+  <data name="Manage_EnableAuth_Step2" xml:space="preserve"><value>Стъпка 2: Сканирайте QR кода или въведете ключа</value></data>
+  <data name="Manage_EnableAuth_Step2Hint" xml:space="preserve"><value>Сканирайте QR кода с приложението или въведете ключа ръчно:</value></data>
+  <data name="Manage_EnableAuth_ManualKey" xml:space="preserve"><value>Ключ за ръчно въвеждане:</value></data>
+  <data name="Manage_EnableAuth_ManualKeyHint" xml:space="preserve"><value>Интервалите и регистърът не са от значение</value></data>
+  <data name="Manage_EnableAuth_Step3" xml:space="preserve"><value>Стъпка 3: Потвърдете приложението</value></data>
+  <data name="Manage_EnableAuth_Step3Hint" xml:space="preserve"><value>Въведете 6-цифрения код от приложението:</value></data>
+  <data name="Manage_EnableAuth_VerificationCode" xml:space="preserve"><value>Код за потвърждение</value></data>
+  <data name="Manage_EnableAuth_Verify" xml:space="preserve"><value>Потвърди и включи</value></data>
+  <data name="Manage_ResetAuthenticator_Title" xml:space="preserve"><value>Нулиране на ключ за приложение</value></data>
+  <data name="Manage_Disable2fa_Title" xml:space="preserve"><value>Изключване на 2FA</value></data>
+  <data name="Manage_GenerateRecoveryCodes_Title" xml:space="preserve"><value>Генериране на кодове за възстановяване</value></data>
+  <data name="Manage_DownloadData_Title" xml:space="preserve"><value>Изтегляне на данни</value></data>
+  <data name="Manage_ShowRecoveryCodes_Title" xml:space="preserve"><value>Кодове за възстановяване</value></data>
+
+  <!-- Account Messages (code-behind) -->
+  <data name="Msg_StatusErrorPrefix" xml:space="preserve"><value>Грешка</value></data>
+  <data name="Msg_Login_InvalidAttempt" xml:space="preserve"><value>Невалиден опит за вход.</value></data>
+  <data name="Msg_Login2fa_InvalidCode" xml:space="preserve"><value>Невалиден код за удостоверяване.</value></data>
+  <data name="Msg_LoginRecovery_InvalidCode" xml:space="preserve"><value>Невалиден код за възстановяване.</value></data>
+  <data name="Msg_ExternalLogin_ErrorFromProvider" xml:space="preserve"><value>Грешка от външен доставчик: {0}</value></data>
+  <data name="Msg_ExternalLogin_LoadError" xml:space="preserve"><value>Грешка при зареждане на информация за външен вход.</value></data>
+  <data name="Msg_ExternalLogin_ConfirmLoadError" xml:space="preserve"><value>Грешка при зареждане на информация за външен вход по време на потвърждение.</value></data>
+  <data name="Msg_ConfirmEmail_Success" xml:space="preserve"><value>Благодарим ви, че потвърдихте имейла си.</value></data>
+  <data name="Msg_ConfirmEmail_Error" xml:space="preserve"><value>Грешка при потвърждаване на имейла.</value></data>
+  <data name="Msg_ConfirmEmailChange_Error" xml:space="preserve"><value>Грешка при смяна на имейла.</value></data>
+  <data name="Msg_ConfirmEmailChange_UserNameError" xml:space="preserve"><value>Грешка при смяна на потребителското име.</value></data>
+  <data name="Msg_ConfirmEmailChange_Success" xml:space="preserve"><value>Благодарим ви, че потвърдихте смяната на имейла.</value></data>
+  <data name="Msg_ResendEmail_Sent" xml:space="preserve"><value>Изпратихме имейл за потвърждение. Моля, проверете пощата си.</value></data>
+  <data name="Msg_Manage_ProfileUpdated" xml:space="preserve"><value>Профилът ви беше актуализиран.</value></data>
+  <data name="Msg_Manage_PhoneUnexpectedError" xml:space="preserve"><value>Неочаквана грешка при задаване на телефон.</value></data>
+  <data name="Msg_Manage_PasswordChanged" xml:space="preserve"><value>Паролата ви беше сменена.</value></data>
+  <data name="Msg_Manage_PasswordSet" xml:space="preserve"><value>Паролата ви беше зададена.</value></data>
+  <data name="Msg_Manage_EmailUnchanged" xml:space="preserve"><value>Имейлът ви не е променен.</value></data>
+  <data name="Msg_Manage_EmailChangeSent" xml:space="preserve"><value>Изпратихме линк за потвърждение на смяната на имейла. Моля, проверете пощата си.</value></data>
+  <data name="Msg_Manage_EmailVerificationSent" xml:space="preserve"><value>Изпратихме имейл за потвърждение. Моля, проверете пощата си.</value></data>
+  <data name="Msg_Manage_EmailSendFailed" xml:space="preserve"><value>Не успяхме да изпратим имейла за потвърждение. Опитайте по-късно или се свържете с поддръжката.</value></data>
+  <data name="Msg_Manage_DeleteIncorrectPassword" xml:space="preserve"><value>Грешна парола.</value></data>
+  <data name="Msg_Manage_2faDisabled" xml:space="preserve"><value>2FA е изключено. Можете да го включите отново при настройка на приложение за удостоверяване.</value></data>
+  <data name="Msg_Manage_2faBrowserForgotten" xml:space="preserve"><value>Този браузър е забравен. При следващ вход ще бъдете помолени за 2FA код.</value></data>
+  <data name="Msg_Manage_AuthenticatorVerified" xml:space="preserve"><value>Приложението за удостоверяване е потвърдено.</value></data>
+  <data name="Msg_Manage_AuthenticatorInvalidCode" xml:space="preserve"><value>Кодът за потвърждение е невалиден.</value></data>
+  <data name="Msg_Manage_AuthenticatorReset" xml:space="preserve"><value>Ключът на приложението е нулиран. Конфигурирайте приложението с новия ключ.</value></data>
+  <data name="Msg_Manage_RecoveryCodesGenerated" xml:space="preserve"><value>Генерирахте нови кодове за възстановяване.</value></data>
+  <data name="Msg_Manage_ExternalLoginRemoved" xml:space="preserve"><value>Външният вход беше премахнат.</value></data>
+  <data name="Msg_Manage_ExternalLoginNotRemoved" xml:space="preserve"><value>Външният вход не беше премахнат.</value></data>
+  <data name="Msg_Manage_ExternalLoginAdded" xml:space="preserve"><value>Външният вход беше добавен.</value></data>
+  <data name="Msg_Manage_ExternalLoginNotAdded" xml:space="preserve"><value>Външният вход не беше добавен. Външен вход може да се свърже само с един профил.</value></data>
+
   <!-- Sort Options -->
   <data name="Sort_Date" xml:space="preserve"><value>Дата</value></data>
   <data name="Sort_Name" xml:space="preserve"><value>Название</value></data>

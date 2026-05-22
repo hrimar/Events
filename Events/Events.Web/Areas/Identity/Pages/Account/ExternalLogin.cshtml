@@ -1,7 +1,7 @@
 ﻿@page
 @model ExternalLoginModel
 @{
-    ViewData["Title"] = "Complete Registration";
+    ViewData["Title"] = Localizer["ExternalLogin_Title"];
 }
 
 <div class="container py-5">
@@ -12,16 +12,16 @@
                     <div class="text-center mb-4">
                         <i class="fab fa-@Model.ProviderDisplayName.ToLower() fa-3x text-primary mb-3" style="max-width:60px;"></i>
                         <h2 class="fw-bold">@ViewData["Title"]</h2>
-                        <p class="text-muted">Finish connecting your @Model.ProviderDisplayName account</p>
+                        <p class="text-muted">@string.Format(Localizer["ExternalLogin_Subtitle"], Model.ProviderDisplayName)</p>
                     </div>
 
                     <div class="alert alert-info" role="alert">
                         <i class="fas fa-check-circle me-2"></i>
-                        <strong>Success!</strong> You've successfully authenticated with <strong>@Model.ProviderDisplayName</strong>.
+                        <strong>@Localizer["ExternalLogin_Success"]</strong> @string.Format(Localizer["ExternalLogin_AuthenticatedWith"], Model.ProviderDisplayName)
                     </div>
 
                     <p class="text-center text-muted mb-4">
-                        Please enter an email address below to complete your registration.
+                        @Localizer["ExternalLogin_EnterEmail"]
                     </p>
 
                     <form asp-page-handler="Confirmation" asp-route-returnUrl="@Model.ReturnUrl" method="post">
@@ -29,15 +29,15 @@
                         
                         <div class="mb-4">
                             <label asp-for="Input.Email" class="form-label">
-                                <i class="fas fa-envelope me-2"></i>Email Address
+                                <i class="fas fa-envelope me-2"></i>@Localizer["Account_EmailAddress"]
                             </label>
-                            <input asp-for="Input.Email" class="form-control form-control-lg" autocomplete="email" placeholder="name@example.com" />
+                            <input asp-for="Input.Email" class="form-control form-control-lg" autocomplete="email" placeholder="@Localizer["Account_PlaceholderEmail"]" />
                             <span asp-validation-for="Input.Email" class="text-danger"></span>
                         </div>
 
                         <div class="d-grid mb-3">
                             <button type="submit" class="btn btn-primary btn-lg">
-                                <i class="fas fa-user-plus me-2"></i>Complete Registration
+                                <i class="fas fa-user-plus me-2"></i>@Localizer["ExternalLogin_Complete"]
                             </button>
                         </div>
 
@@ -45,7 +45,7 @@
 
                         <div class="text-center">
                             <a asp-page="./Login" class="text-decoration-none">
-                                <i class="fas fa-arrow-left me-1"></i>Back to Login
+                                <i class="fas fa-arrow-left me-1"></i>@Localizer["Account_BackToLogin"]
                             </a>
                         </div>
                     </form>

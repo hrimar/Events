@@ -1,7 +1,7 @@
 ﻿@page
 @model ConfirmEmailModel
 @{
-    ViewData["Title"] = "Confirm Email";
+    ViewData["Title"] = Localizer["ConfirmEmail_Title"];
 }
 
 <div class="container py-5">
@@ -12,7 +12,7 @@
                     <div class="text-center">
                         <i class="fas fa-envelope-circle-check fa-3x text-success mb-3"></i>
                         <h2 class="fw-bold">@ViewData["Title"]</h2>
-                        <p class="text-muted mb-4">Your email is being confirmed</p>
+                        <p class="text-muted mb-4">@Localizer["ConfirmEmail_Subtitle"]</p>
 
                         <div class="mt-4">
                             <partial name="_StatusMessage" model="Model.StatusMessage" />
@@ -22,7 +22,7 @@
 
                         <div class="text-center">
                             <a asp-page="./Login" class="text-decoration-none">
-                                <i class="fas fa-sign-in-alt me-1"></i>Back to Login
+                                <i class="fas fa-sign-in-alt me-1"></i>@Localizer["Account_BackToLogin"]
                             </a>
                         </div>
                     </div>

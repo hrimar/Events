@@ -1,7 +1,7 @@
 ﻿@page
 @model ResendEmailConfirmationModel
 @{
-    ViewData["Title"] = "Resend email confirmation";
+    ViewData["Title"] = Localizer["ResendEmail_Title"];
 }
 
 <div class="container py-5">
@@ -11,8 +11,8 @@
                 <div class="card-body p-5">
                     <div class="text-center mb-4">
                         <i class="fas fa-envelope fa-3x text-info mb-3"></i>
-                        <h2 class="fw-bold">Resend Confirmation</h2>
-                        <p class="text-muted">Enter your email to resend confirmation link</p>
+                        <h2 class="fw-bold">@Localizer["ResendEmail_Heading"]</h2>
+                        <p class="text-muted">@Localizer["ResendEmail_Subtitle"]</p>
                     </div>
 
                     <form method="post">
@@ -20,15 +20,15 @@
                         
                         <div class="mb-4">
                             <label asp-for="Input.Email" class="form-label">
-                                <i class="fas fa-envelope me-2"></i>Email
+                                <i class="fas fa-envelope me-2"></i>@Localizer["Account_Email"]
                             </label>
-                            <input asp-for="Input.Email" class="form-control form-control-lg" aria-required="true" placeholder="name@example.com" />
+                            <input asp-for="Input.Email" class="form-control form-control-lg" aria-required="true" placeholder="@Localizer["Account_PlaceholderEmail"]" />
                             <span asp-validation-for="Input.Email" class="text-danger"></span>
                         </div>
                         
                         <div class="d-grid mb-3">
                             <button type="submit" class="btn btn-info btn-lg text-white">
-                                <i class="fas fa-paper-plane me-2"></i>Resend Confirmation
+                                <i class="fas fa-paper-plane me-2"></i>@Localizer["ResendEmail_Submit"]
                             </button>
                         </div>
                         
@@ -37,7 +37,7 @@
                         <div class="text-center">
                             <p class="mb-0">
                                 <a asp-page="./Login" class="text-decoration-none">
-                                    <i class="fas fa-arrow-left me-1"></i>Back to Login
+                                    <i class="fas fa-arrow-left me-1"></i>@Localizer["Account_BackToLogin"]
                                 </a>
                             </p>
                         </div>

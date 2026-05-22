@@ -1,7 +1,7 @@
 ﻿@page
 @model LoginWith2faModel
 @{
-    ViewData["Title"] = "Two-Factor Authentication";
+    ViewData["Title"] = Localizer["Login2fa_Title"];
 }
 
 <div class="container py-5">
@@ -12,11 +12,11 @@
                     <div class="text-center mb-4">
                         <i class="fas fa-shield-alt fa-3x text-primary mb-3"></i>
                         <h2 class="fw-bold">@ViewData["Title"]</h2>
-                        <p class="text-muted">Enter your authenticator code</p>
+                        <p class="text-muted">@Localizer["Login2fa_Subtitle"]</p>
                     </div>
 
                     <p class="text-center text-muted mb-4">
-                        Your login is protected with an authenticator app. Enter your authenticator code below.
+                        @Localizer["Login2fa_Description"]
                     </p>
 
                     <form method="post" asp-route-returnUrl="@Model.ReturnUrl">
@@ -25,22 +25,22 @@
                         
                         <div class="mb-3">
                             <label asp-for="Input.TwoFactorCode" class="form-label">
-                                <i class="fas fa-key me-2"></i>Authenticator Code
+                                <i class="fas fa-key me-2"></i>@Localizer["Login2fa_Code"]
                             </label>
-                            <input asp-for="Input.TwoFactorCode" class="form-control form-control-lg" autocomplete="off" placeholder="Enter 6-digit code" />
+                            <input asp-for="Input.TwoFactorCode" class="form-control form-control-lg" autocomplete="off" placeholder="@Localizer["Login2fa_PlaceholderCode"]" />
                             <span asp-validation-for="Input.TwoFactorCode" class="text-danger"></span>
                         </div>
                         
                         <div class="form-check mb-4">
                             <input class="form-check-input" asp-for="Input.RememberMachine" />
                             <label class="form-check-label" asp-for="Input.RememberMachine">
-                                @Html.DisplayNameFor(m => m.Input.RememberMachine)
+                                @Localizer["Login2fa_RememberMachine"]
                             </label>
                         </div>
                         
                         <div class="d-grid mb-3">
                             <button type="submit" class="btn btn-primary btn-lg">
-                                <i class="fas fa-sign-in-alt me-2"></i>Verify & Log In
+                                <i class="fas fa-sign-in-alt me-2"></i>@Localizer["Login2fa_Submit"]
                             </button>
                         </div>
 
@@ -49,7 +49,7 @@
                         <div class="text-center">
                             <p class="mb-0">
                                 <a id="recovery-code-login" asp-page="./LoginWithRecoveryCode" asp-route-returnUrl="@Model.ReturnUrl" class="text-decoration-none">
-                                    <i class="fas fa-question-circle me-1"></i>Use recovery code instead
+                                    <i class="fas fa-question-circle me-1"></i>@Localizer["Login2fa_UseRecovery"]
                                 </a>
                             </p>
                         </div>

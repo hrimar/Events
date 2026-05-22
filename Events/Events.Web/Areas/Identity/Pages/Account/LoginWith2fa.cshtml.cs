@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using Events.Models.Entities;
+using Events.Web.Localization;
 
 namespace Events.Web.Areas.Identity.Pages.Account
 {
@@ -20,15 +21,18 @@ namespace Events.Web.Areas.Identity.Pages.Account
         private readonly SignInManager<User> _signInManager;
         private readonly UserManager<User> _userManager;
         private readonly ILogger<LoginWith2faModel> _logger;
+        private readonly IdentityMessages _messages;
 
         public LoginWith2faModel(
             SignInManager<User> signInManager,
             UserManager<User> userManager,
-            ILogger<LoginWith2faModel> logger)
+            ILogger<LoginWith2faModel> logger,
+            IdentityMessages messages)
         {
             _signInManager = signInManager;
             _userManager = userManager;
             _logger = logger;
+            _messages = messages;
         }
 
         /// <summary>
@@ -124,7 +128,7 @@ namespace Events.Web.Areas.Identity.Pages.Account
             else
             {
                 _logger.LogWarning("Invalid authenticator code entered for user with ID '{UserId}'.", user.Id);
-                ModelState.AddModelError(string.Empty, "Invalid authenticator code.");
+                ModelState.AddModelError(string.Empty, _messages.Login2fa_InvalidCode);
                 return Page();
             }
         }

@@ -2,7 +2,7 @@
 @model LoginModel
 
 @{
-    ViewData["Title"] = "Log in";
+    ViewData["Title"] = Localizer["Login_Title"];
 }
 
 <div class="container py-5">
@@ -12,8 +12,8 @@
                 <div class="card-body p-5">
                     <div class="text-center mb-4">
                         <i class="fas fa-user-circle fa-3x text-primary mb-3"></i>
-                        <h2 class="fw-bold">Welcome Back!</h2>
-                        <p class="text-muted">Log in to your account</p>
+                        <h2 class="fw-bold">@Localizer["Login_Welcome"]</h2>
+                        <p class="text-muted">@Localizer["Login_Subtitle"]</p>
                     </div>
 
                     <form id="account" method="post">
@@ -21,30 +21,30 @@
                         
                         <div class="mb-3">
                             <label asp-for="Input.Email" class="form-label">
-                                <i class="fas fa-envelope me-2"></i>Email
+                                <i class="fas fa-envelope me-2"></i>@Localizer["Account_Email"]
                             </label>
-                            <input asp-for="Input.Email" class="form-control form-control-lg" autocomplete="username" aria-required="true" placeholder="name@example.com" />
+                            <input asp-for="Input.Email" class="form-control form-control-lg" autocomplete="username" aria-required="true" placeholder="@Localizer["Account_PlaceholderEmail"]" />
                             <span asp-validation-for="Input.Email" class="text-danger"></span>
                         </div>
                         
                         <div class="mb-3">
                             <label asp-for="Input.Password" class="form-label">
-                                <i class="fas fa-lock me-2"></i>Password
+                                <i class="fas fa-lock me-2"></i>@Localizer["Account_Password"]
                             </label>
-                            <input asp-for="Input.Password" class="form-control form-control-lg" type="password" autocomplete="current-password" aria-required="true" placeholder="Enter your password" />
+                            <input asp-for="Input.Password" class="form-control form-control-lg" type="password" autocomplete="current-password" aria-required="true" placeholder="@Localizer["Account_PlaceholderPassword"]" />
                             <span asp-validation-for="Input.Password" class="text-danger"></span>
                         </div>
                         
                         <div class="form-check mb-3">
                             <input class="form-check-input" asp-for="Input.RememberMe" />
                             <label class="form-check-label" asp-for="Input.RememberMe">
-                                @Html.DisplayNameFor(m => m.Input.RememberMe)
+                                @Localizer["Account_RememberMe"]
                             </label>
                         </div>
                         
                         <div class="d-grid mb-3">
                             <button id="login-submit" type="submit" class="btn btn-primary btn-lg">
-                                <i class="fas fa-sign-in-alt me-2"></i>Log in
+                                <i class="fas fa-sign-in-alt me-2"></i>@Localizer["Login_Submit"]
                             </button>
                         </div>
                         
@@ -53,17 +53,17 @@
                         <div class="text-center">
                             <p class="mb-2">
                                 <a id="forgot-password" asp-page="./ForgotPassword" class="text-decoration-none">
-                                    <i class="fas fa-question-circle me-1"></i>Forgot your password?
+                                    <i class="fas fa-question-circle me-1"></i>@Localizer["Login_ForgotPassword"]
                                 </a>
                             </p>
                             <p class="mb-2">
                                 <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl" class="text-decoration-none">
-                                    <i class="fas fa-user-plus me-1"></i>Register as a new user
+                                    <i class="fas fa-user-plus me-1"></i>@Localizer["Login_RegisterNew"]
                                 </a>
                             </p>
                             <p class="mb-0">
                                 <a id="resend-confirmation" asp-page="./ResendEmailConfirmation" class="text-decoration-none">
-                                    <i class="fas fa-envelope-open-text me-1"></i>Resend email confirmation
+                                    <i class="fas fa-envelope-open-text me-1"></i>@Localizer["Login_ResendConfirmation"]
                                 </a>
                             </p>
                         </div>
@@ -75,12 +75,12 @@
             {
                 <div class="card shadow-sm border-0 mt-4">
                     <div class="card-body p-4">
-                        <h5 class="text-center mb-3">Or log in with</h5>
+                        <h5 class="text-center mb-3">@Localizer["Account_OrWith"]</h5>
                         <form id="external-account" asp-page="./ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl" method="post">
                             <div class="d-grid gap-2">
                                 @foreach (var provider in Model.ExternalLogins!)
                                 {
-                                    <button type="submit" class="btn btn-outline-secondary" name="provider" value="@provider.Name" title="Log in using your @provider.DisplayName account">
+                                    <button type="submit" class="btn btn-outline-secondary" name="provider" value="@provider.Name" title="@provider.DisplayName">
                                         <i class="fab fa-@provider.Name.ToLower() me-2"></i>@provider.DisplayName
                                     </button>
                                 }

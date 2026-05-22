@@ -5,6 +5,7 @@
 using System;
 using System.Threading.Tasks;
 using Events.Models.Entities;
+using Events.Web.Localization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -17,13 +18,18 @@ namespace Events.Web.Areas.Identity.Pages.Account.Manage
         private readonly UserManager<User> _userManager;
         private readonly SignInManager<User> _signInManager;
         private readonly ILogger<TwoFactorAuthenticationModel> _logger;
+        private readonly IdentityMessages _messages;
 
         public TwoFactorAuthenticationModel(
-            UserManager<User> userManager, SignInManager<User> signInManager, ILogger<TwoFactorAuthenticationModel> logger)
+            UserManager<User> userManager,
+            SignInManager<User> signInManager,
+            ILogger<TwoFactorAuthenticationModel> logger,
+            IdentityMessages messages)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _logger = logger;
+            _messages = messages;
         }
 
         /// <summary>
@@ -83,7 +89,7 @@ namespace Events.Web.Areas.Identity.Pages.Account.Manage
             }
 
             await _signInManager.ForgetTwoFactorClientAsync();
-            StatusMessage = "The current browser has been forgotten. When you login again from this browser you will be prompted for your 2fa code.";
+            StatusMessage = _messages.Manage_2faBrowserForgotten;
             return RedirectToPage();
         }
     }

@@ -1,7 +1,7 @@
 ﻿@page
 @model LockoutModel
 @{
-    ViewData["Title"] = "Account Locked";
+    ViewData["Title"] = Localizer["Lockout_Title"];
 }
 
 <div class="container py-5">
@@ -12,18 +12,18 @@
                     <div class="text-center">
                         <i class="fas fa-lock fa-3x text-danger mb-3"></i>
                         <h2 class="fw-bold">@ViewData["Title"]</h2>
-                        <p class="text-muted mb-4">Your account has been temporarily locked for security reasons</p>
+                        <p class="text-muted mb-4">@Localizer["Lockout_Subtitle"]</p>
 
                         <div class="alert alert-warning" role="alert">
                             <i class="fas fa-exclamation-triangle me-2"></i>
-                            <strong>Please try again later.</strong> If you believe this is an error, please contact support.
+                            @Localizer["Lockout_Alert"]
                         </div>
 
                         <hr class="my-4">
 
                         <div class="text-center">
                             <a asp-page="./Login" class="text-decoration-none">
-                                <i class="fas fa-arrow-left me-1"></i>Back to Login
+                                <i class="fas fa-arrow-left me-1"></i>@Localizer["Account_BackToLogin"]
                             </a>
                         </div>
                     </div>

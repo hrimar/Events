@@ -1,7 +1,7 @@
 ﻿@page
 @model DeletePersonalDataModel
 @{
-    ViewData["Title"] = "Delete Account";
+    ViewData["Title"] = Localizer["Manage_Delete_Title"];
     ViewData["ActivePage"] = ManageNavPages.PersonalData;
 }
 
@@ -13,12 +13,12 @@
                     <div class="text-center mb-4">
                         <i class="fas fa-trash-alt fa-3x text-danger mb-3"></i>
                         <h2 class="fw-bold">@ViewData["Title"]</h2>
-                        <p class="text-muted">Permanently delete your account</p>
+                        <p class="text-muted">@Localizer["Manage_Delete_Subtitle"]</p>
                     </div>
 
                     <div class="alert alert-danger" role="alert">
                         <i class="fas fa-exclamation-triangle me-2"></i>
-                        <strong>Warning:</strong> Deleting this data will permanently remove your account and all associated data. This action cannot be undone.
+                        @Localizer["Manage_Delete_Warning"]
                     </div>
 
                     <form id="delete-user" method="post">
@@ -28,22 +28,22 @@
                         {
                             <div class="mb-4">
                                 <label asp-for="Input.Password" class="form-label">
-                                    <i class="fas fa-lock me-2"></i>Confirm Password
+                                    <i class="fas fa-lock me-2"></i>@Localizer["Manage_Delete_ConfirmPassword"]
                                 </label>
-                                <input asp-for="Input.Password" class="form-control form-control-lg" type="password" autocomplete="current-password" aria-required="true" placeholder="Enter your password to confirm deletion" />
+                                <input asp-for="Input.Password" class="form-control form-control-lg" type="password" autocomplete="current-password" aria-required="true" placeholder="@Localizer["Manage_Delete_PasswordPlaceholder"]" />
                                 <span asp-validation-for="Input.Password" class="text-danger"></span>
                                 <small class="text-muted d-block mt-2">
-                                    We need your password to confirm this action
+                                    @Localizer["Manage_Delete_PasswordHint"]
                                 </small>
                             </div>
                         }
                         
                         <div class="d-grid gap-2">
                             <button class="btn btn-danger btn-lg" type="submit">
-                                <i class="fas fa-trash-alt me-2"></i>Yes, Delete My Account
+                                <i class="fas fa-trash-alt me-2"></i>@Localizer["Manage_Delete_Submit"]
                             </button>
                             <a asp-page="./PersonalData" class="btn btn-outline-secondary btn-lg text-decoration-none">
-                                <i class="fas fa-times me-2"></i>Cancel
+                                <i class="fas fa-times me-2"></i>@Localizer["Account_Cancel"]
                             </a>
                         </div>
 
@@ -52,7 +52,7 @@
                         <div class="text-center">
                             <small class="text-muted">
                                 <i class="fas fa-info-circle me-1"></i>
-                                This action is permanent and cannot be reversed
+                                @Localizer["Manage_Delete_Permanent"]
                             </small>
                         </div>
                     </form>

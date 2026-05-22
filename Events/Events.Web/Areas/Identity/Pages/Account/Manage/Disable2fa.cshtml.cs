@@ -5,6 +5,7 @@
 using System;
 using System.Threading.Tasks;
 using Events.Models.Entities;
+using Events.Web.Localization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -16,13 +17,16 @@ namespace Events.Web.Areas.Identity.Pages.Account.Manage
     {
         private readonly UserManager<User> _userManager;
         private readonly ILogger<Disable2faModel> _logger;
+        private readonly IdentityMessages _messages;
 
         public Disable2faModel(
             UserManager<User> userManager,
-            ILogger<Disable2faModel> logger)
+            ILogger<Disable2faModel> logger,
+            IdentityMessages messages)
         {
             _userManager = userManager;
             _logger = logger;
+            _messages = messages;
         }
 
         /// <summary>
@@ -63,7 +67,7 @@ namespace Events.Web.Areas.Identity.Pages.Account.Manage
             }
 
             _logger.LogInformation("User with ID '{UserId}' has disabled 2fa.", _userManager.GetUserId(User));
-            StatusMessage = "2fa has been disabled. You can reenable 2fa when you setup an authenticator app";
+            StatusMessage = _messages.Manage_2faDisabled;
             return RedirectToPage("./TwoFactorAuthentication");
         }
     }

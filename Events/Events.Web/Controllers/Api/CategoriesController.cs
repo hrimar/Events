@@ -45,8 +45,7 @@ public class CategoriesController : ControllerBase
     [ProducesResponseType(typeof(List<SubCategoryDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<List<SubCategoryDto>>> GetSubCategoriesForCategory(
-        string category)
+    public async Task<ActionResult<List<SubCategoryDto>>> GetSubCategoriesForCategory(string category)
     {
         try
         {
@@ -61,7 +60,7 @@ public class CategoriesController : ControllerBase
             }
 
             var subCategories = await _subCategoryRepository.GetByCategoryAsync(parsedCategory);
-            
+
             var result = subCategories
                 .Select(sc => new SubCategoryDto { Id = sc.Id, Name = sc.Name })
                 .OrderBy(sc => sc.Name)

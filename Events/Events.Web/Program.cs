@@ -26,8 +26,21 @@ RegisterServices(builder);
 
 ConfigureLocalization(builder);
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
-builder.Services.AddRazorPages().AddViewLocalization();
-builder.Services.AddControllersWithViews().AddViewLocalization();
+builder.Services.AddRazorPages()
+    .AddViewLocalization()
+    .AddDataAnnotationsLocalization(options =>
+    {
+        options.DataAnnotationLocalizerProvider = (_, factory) =>
+            factory.Create(typeof(Events.Web.Resources.SharedResources));
+    });
+builder.Services.AddControllersWithViews()
+    .AddViewLocalization()
+    .AddDataAnnotationsLocalization(options =>
+    {
+        options.DataAnnotationLocalizerProvider = (_, factory) =>
+            factory.Create(typeof(Events.Web.Resources.SharedResources));
+    });
+builder.Services.AddScoped<Events.Web.Localization.IdentityMessages>();
 
 var app = builder.Build();
 

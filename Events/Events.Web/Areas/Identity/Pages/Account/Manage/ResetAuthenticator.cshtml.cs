@@ -5,6 +5,7 @@
 using System;
 using System.Threading.Tasks;
 using Events.Models.Entities;
+using Events.Web.Localization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -17,15 +18,18 @@ namespace Events.Web.Areas.Identity.Pages.Account.Manage
         private readonly UserManager<User> _userManager;
         private readonly SignInManager<User> _signInManager;
         private readonly ILogger<ResetAuthenticatorModel> _logger;
+        private readonly IdentityMessages _messages;
 
         public ResetAuthenticatorModel(
             UserManager<User> userManager,
             SignInManager<User> signInManager,
-            ILogger<ResetAuthenticatorModel> logger)
+            ILogger<ResetAuthenticatorModel> logger,
+            IdentityMessages messages)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _logger = logger;
+            _messages = messages;
         }
 
         /// <summary>
@@ -60,7 +64,7 @@ namespace Events.Web.Areas.Identity.Pages.Account.Manage
             _logger.LogInformation("User with ID '{UserId}' has reset their authentication app key.", user.Id);
 
             await _signInManager.RefreshSignInAsync(user);
-            StatusMessage = "Your authenticator app key has been reset, you will need to configure your authenticator app using the new key.";
+            StatusMessage = _messages.Manage_AuthenticatorReset;
 
             return RedirectToPage("./EnableAuthenticator");
         }
