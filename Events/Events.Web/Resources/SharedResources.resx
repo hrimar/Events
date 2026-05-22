@@ -119,6 +119,7 @@
   <data name="Details_LoginToSave" xml:space="preserve"><value>Влез за да запазиш</value></data>
   <data name="Details_Share" xml:space="preserve"><value>Сподели</value></data>
   <data name="Details_CopyLink" xml:space="preserve"><value>Копирай линк</value></data>
+  <data name="Details_Date" xml:space="preserve"><value>Дата</value></data>
   <data name="Details_DateAndTime" xml:space="preserve"><value>Дата и час</value></data>
   <data name="Details_Location" xml:space="preserve"><value>Локация</value></data>
   <data name="Details_Status" xml:space="preserve"><value>Статус</value></data>

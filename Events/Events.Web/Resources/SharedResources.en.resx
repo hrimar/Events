@@ -119,6 +119,7 @@
   <data name="Details_LoginToSave" xml:space="preserve"><value>Login to Save</value></data>
   <data name="Details_Share" xml:space="preserve"><value>Share</value></data>
   <data name="Details_CopyLink" xml:space="preserve"><value>Copy Link</value></data>
+  <data name="Details_Date" xml:space="preserve"><value>Date</value></data>
   <data name="Details_DateAndTime" xml:space="preserve"><value>Date &amp; Time</value></data>
   <data name="Details_Location" xml:space="preserve"><value>Location</value></data>
   <data name="Details_Status" xml:space="preserve"><value>Status</value></data>

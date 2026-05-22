@@ -163,8 +163,8 @@
                             <div class="d-flex align-items-center mb-3">
                                 <i class="fas fa-calendar text-primary me-3" style="width: 20px;"></i>
                                 <div>
-                                    <strong>@Localizer["Details_DateAndTime"]</strong><br>
-                                    <span class="text-muted">@Model.FormattedDate at @Model.FormattedTime</span>
+                                    <strong>@Localizer[Model.HasKnownTime ? "Details_DateAndTime" : "Details_Date"]</strong><br>
+                                    <span class="text-muted">@Model.FormattedDate@(Model.HasKnownTime ? " at " + Model.FormattedTime : "")</span>
                                 </div>
                             </div>
                         </div>
@@ -298,7 +298,7 @@
                                         <div class="mt-1">
                                             @foreach(var tag in relatedEvent.Tags.Take(2))
                                             {
-                                                <span class="badge bg-light text-dark me-1" style="font-size: 0.7rem;">@tag</span>
+                                                <span class="badge bg-light text-dark me-1" style="font-size: 0.7rem;">@CategoryLocalizationExtensions.LocalizeTagName(tag, Localizer)</span>
                                             }
                                         </div>
                                     }
