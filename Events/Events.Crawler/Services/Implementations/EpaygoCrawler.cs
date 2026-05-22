@@ -16,21 +16,51 @@ public class EpaygoCrawler : IWebScrapingCrawler
     private static bool _browsersInstalled = false;
     private static readonly object _installLock = new();
 
+    // Known Sofia locations - used as fallback when #address element does not contain "София".
+    // Typographic quotes are normalized to ASCII quotes to avoid compiler and encoding issues.
+    // Both stored values and incoming location text are normalized before comparison via NormalizeQuotes().
+    private static readonly HashSet<string> KnownSofiaLocations = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "Народен театър \"Иван Вазов\"", "Театър \"Българска армия\"", "Сатиричен театър \"Алеко Константинов\"",
+        "Софийска опера и балет", "Музикален театър \"Стефан Македонски\"", "Малък градски театър \"Зад канала\"",
+        "Театър О3", "Сцена Дерида", "Derida Stage", "Университетски театър НБУ", "Театър \"София\"",
+        "НДК", "Топлоцентрала", "Централни хали", "Хеликон Арт", "Софийска градска художествена галерия",
+        "Гьоте-институт България", "Пространство за психология и изкуство", "Поглед.инфо",
+        "Pirotska 5 Event Centre", "Unica by Priceless", "Litex Tower, ет. 2", "К.Е.В.А.", "Строежа",
+        "Кино Люмиер", "Кино Одеон", "Кино \"Влайкова\"", "Kino Cabana",
+        "Bar Singles", "Club SINGLES", "Бар Сингълс", "Mixtape 5", "Club Mixtape 5",
+        "Club Pave", "club FOMO", "клуб Live & Loud", "Клуб Грамофон", "Club OBLK",
+        "Joy Station", "Маймунарника", "Клуб \"Маймунарника\"", "Grindhouse Skateclub",
+        "NUTONE @ Стадион \"Васил Левски\"", "City Stage", "Арена 8888 София",
+        "Спортен комплекс \"Бонсист\"", "Стадион \"Васил Левски\"", "с. Мрамор", "София", "Камерна зала", "Народен театър - сцена Апостол Карамитев"
+    };
+
     // Bulgarian months dictionary - created once, reused for all date parsing
     private static readonly Dictionary<string, int> BulgarianMonths = new(StringComparer.OrdinalIgnoreCase)
     {
-        ["януари"] = 1, ["ян"] = 1,
-        ["февруари"] = 2, ["фев"] = 2,
-        ["март"] = 3, ["мар"] = 3,
-        ["април"] = 4, ["апр"] = 4,
+        ["януари"] = 1,
+        ["ян"] = 1,
+        ["февруари"] = 2,
+        ["фев"] = 2,
+        ["март"] = 3,
+        ["мар"] = 3,
+        ["април"] = 4,
+        ["апр"] = 4,
         ["май"] = 5,
-        ["юни"] = 6, ["юн"] = 6,
-        ["юли"] = 7, ["юл"] = 7,
-        ["август"] = 8, ["авг"] = 8,
-        ["септември"] = 9, ["сеп"] = 9,
-        ["октомври"] = 10, ["окт"] = 10,
-        ["ноември"] = 11, ["ное"] = 11,
-        ["декември"] = 12, ["дек"] = 12
+        ["юни"] = 6,
+        ["юн"] = 6,
+        ["юли"] = 7,
+        ["юл"] = 7,
+        ["август"] = 8,
+        ["авг"] = 8,
+        ["септември"] = 9,
+        ["сеп"] = 9,
+        ["октомври"] = 10,
+        ["окт"] = 10,
+        ["ноември"] = 11,
+        ["ное"] = 11,
+        ["декември"] = 12,
+        ["дек"] = 12
     };
 
     public string SourceName => "epaygo.bg";
@@ -414,7 +444,7 @@ public class EpaygoCrawler : IWebScrapingCrawler
             // Smart name-based pre-filtering: Skip events with other city names in the title
             var likelySofiaEvents = eventsNeedingDetails.Where(e => !IsObviouslyNonSofiaEvent(e)).ToList();
             var skippedNonSofiaCount = eventsNeedingDetails.Count - likelySofiaEvents.Count;
-            
+
             if (skippedNonSofiaCount > 0)
             {
                 _logger.LogInformation("Emaoygo Pre-filtered out {SkippedCount} events based on city names in titles", skippedNonSofiaCount);
@@ -451,26 +481,6 @@ public class EpaygoCrawler : IWebScrapingCrawler
 
                         await Task.Delay(400); // Minimal delay
 
-                        // Extract city from #address element
-                        var addressElement = await page.QuerySelectorAsync("#address");
-                        if (addressElement != null)
-                        {
-                            var addressText = await addressElement.InnerTextAsync();
-                            if (!string.IsNullOrWhiteSpace(addressText))
-                            {
-                                // Check if address contains Sofia
-                                if (addressText.ToLowerInvariant().Contains("софия") || addressText.ToLowerInvariant().Contains("sofia"))
-                                {
-                                    eventDto.City = "София";
-                                }
-                                else
-                                {
-                                    eventDto.City = null;
-                                    _logger.LogDebug("Non-Sofia event: {EventName} at {Address}", eventDto.Name, addressText);
-                                }
-                            }
-                        }
-
                         // Extract location from #address_t element
                         var locationElement = await page.QuerySelectorAsync("#address_t");
                         if (locationElement != null)
@@ -482,8 +492,37 @@ public class EpaygoCrawler : IWebScrapingCrawler
                             }
                         }
 
+                        // Extract city from #address element, with fallback to known Sofia locations
+                        var addressElement = await page.QuerySelectorAsync("#address");
+                        if (addressElement != null)
+                        {
+                            var addressText = await addressElement.InnerTextAsync();
+                            if (!string.IsNullOrWhiteSpace(addressText))
+                            {
+                                if (addressText.ToLowerInvariant().Contains("софия") || addressText.ToLowerInvariant().Contains("sofia") ||
+                                    addressText.ToLowerInvariant().Contains("софийска"))
+                                {
+                                    eventDto.City = "София";
+                                }
+                                else if (!string.IsNullOrWhiteSpace(eventDto.Location)
+                                         && KnownSofiaLocations.Contains(NormalizeQuotes(eventDto.Location)))
+                                {
+                                    // Address does not mention Sofia, but the location is a well-known Sofia venue
+                                    eventDto.City = "София";
+                                    _logger.LogDebug("City resolved to Sofia via known location: {Location} for event: {EventName}",
+                                        eventDto.Location, eventDto.Name);
+                                }
+                                else
+                                {
+                                    eventDto.City = null;
+                                    _logger.LogDebug("Non-Sofia event: {EventName} at {Address}, location: {Location}",
+                                        eventDto.Name, addressText, eventDto.Location ?? "unknown");
+                                }
+                            }
+                        }
+
                         processedDetailCount++;
-                        _logger.LogDebug("Processed event {Count}/{Total}: {EventName} in {City}", 
+                        _logger.LogDebug("Processed event {Count}/{Total}: {EventName} in {City}",
                             processedDetailCount, likelySofiaEvents.Count, eventDto.Name, eventDto.City ?? "Unknown");
                     }
                     catch (Exception ex)
@@ -516,7 +555,7 @@ public class EpaygoCrawler : IWebScrapingCrawler
                 eventDto.City = null; // Will be filtered out in MapEpaygoToStandardDto
             }
 
-            _logger.LogInformation("Successfully processed {EventCount} events from Epaygo ({ProcessedDetails} with full details, {PreFiltered} pre-filtered)", 
+            _logger.LogInformation("Successfully processed {EventCount} events from Epaygo ({ProcessedDetails} with full details, {PreFiltered} pre-filtered)",
                 events.Count, processedDetailCount, nonProcessedEvents.Count);
             return events;
         }
@@ -529,8 +568,8 @@ public class EpaygoCrawler : IWebScrapingCrawler
     private CrawledEventDto? MapEpaygoToStandardDto(EpaygoEventDto epaygoEvent)
     {
         // Filter only Sofia events - early return if not Sofia
-        if (string.IsNullOrEmpty(epaygoEvent.City) || 
-            (!epaygoEvent.City.ToLowerInvariant().Contains("софия") && 
+        if (string.IsNullOrEmpty(epaygoEvent.City) ||
+            (!epaygoEvent.City.ToLowerInvariant().Contains("софия") &&
              !epaygoEvent.City.ToLowerInvariant().Contains("sofia")))
         {
             _logger.LogDebug("Filtering out non-Sofia event: {EventName} in {City}", epaygoEvent.Name, epaygoEvent.City ?? "Unknown");
@@ -574,6 +613,10 @@ public class EpaygoCrawler : IWebScrapingCrawler
         if (string.IsNullOrWhiteSpace(text)) return null;
         return text.Trim().Replace("\n", " ").Replace("\r", "").Replace("  ", " ");
     }
+
+    // Normalizes typographic quotes (\u201E, \u201C, \u201D) to ASCII double quotes
+    // so that KnownSofiaLocations lookup works regardless of the quote style used by the website.
+    private static string NormalizeQuotes(string text) => text.Replace('\u201E', '"').Replace('\u201C', '"').Replace('\u201D', '"');
 
     private DateTime? TryParseEventDate(string? dateText)
     {
@@ -845,7 +888,7 @@ public class EpaygoCrawler : IWebScrapingCrawler
         {
             "велико търново", "veliko tarnovo", "v.turnovo", "в.търново",
             "бургас", "burgas", "летен театър бургас",
-            "варна", "varna", 
+            "варна", "varna",
             "пловдив", "plovdiv",
             "стара загора", "stara zagora",
             "русе", "ruse",
