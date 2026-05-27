@@ -19,7 +19,7 @@ public class SubCategory
 
     public int EnumValue { get; set; } // Maps to enum values 
 
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow; // TODO: Remove default value. EventsDbContext will set this with .HasDefaultValueSql("GETUTCDATE()") to UtcNow when adding a new entity
 
     [Required]
     public int CategoryId { get; set; }

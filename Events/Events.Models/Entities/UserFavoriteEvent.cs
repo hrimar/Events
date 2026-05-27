@@ -24,7 +24,7 @@ public class UserFavoriteEvent
     /// <summary>
     /// Timestamp when the event was added to favorites
     /// </summary>
-    public DateTime AddedAt { get; set; } = DateTime.UtcNow;
+    public DateTime AddedAt { get; set; } = DateTime.UtcNow; // TODO: Remove default value. EventsDbContext will set this with .HasDefaultValueSql("GETUTCDATE()") to UtcNow when adding a new entity
 
     // Navigation properties
     /// <summary>

@@ -49,11 +49,14 @@ public class Event
     public int? SubCategoryId { get; set; }
     public SubCategory? SubCategory { get; set; }
 
+    public int? CanonicalVenueId { get; set; }
+    public CanonicalVenue? CanonicalVenue { get; set; }
+
     public EventStatus Status { get; set; } = EventStatus.Published;
 
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow; // TODO: Remove default value. EventsDbContext will set this with .HasDefaultValueSql("GETUTCDATE()") to UtcNow when adding a new entity
 
-    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow; // TODO: Remove default value. EventsDbContext will set this with .HasDefaultValueSql("GETUTCDATE()") to UtcNow when adding a new entity
 
     [MaxLength(500)]
     public string? SourceUrl { get; set; }
