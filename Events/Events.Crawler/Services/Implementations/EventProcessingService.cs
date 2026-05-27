@@ -16,17 +16,20 @@ public class EventProcessingService : IEventProcessingService
     private readonly IServiceProvider _serviceProvider;
     private readonly IAiTaggingService _aiTaggingService;
     private readonly ISubCategoryService _subCategoryService;
+    private readonly IVenueService _venueService;
     private readonly ILogger<EventProcessingService> _logger;
 
     public EventProcessingService(
         IServiceProvider serviceProvider,
         IAiTaggingService aiTaggingService,
         ISubCategoryService subCategoryService,
+        IVenueService venueService,
         ILogger<EventProcessingService> logger)
     {
         _serviceProvider = serviceProvider;
         _aiTaggingService = aiTaggingService;
         _subCategoryService = subCategoryService;
+        _venueService = venueService;
         _logger = logger;
     }
 
@@ -165,7 +168,7 @@ public class EventProcessingService : IEventProcessingService
     {
         if (string.IsNullOrEmpty(crawledEvent.Name))
         {
-            var fallbackEvent = MapToEntity(crawledEvent, null, null);
+            var fallbackEvent = MapToEntity(crawledEvent, null, null, null);
             return (fallbackEvent, new List<string>());
         }
 
@@ -189,28 +192,35 @@ public class EventProcessingService : IEventProcessingService
                 subCategoryId = await GetSubCategoryIdAsync(category.Value, suggestedSubCategory);
             }
 
-            var eventEntity = MapToEntity(crawledEvent, category, subCategoryId);
+            // Venue lookup is inside the cancellation scope — if DB is slow, the timeout protects the crawler
+            var canonicalVenueId = await _venueService
+                .FindCanonicalVenueIdAsync(crawledEvent.Location)
+                .WaitAsync(cts.Token);
 
-            _logger.LogInformation("Comprehensively processed '{EventName}': Category={Category}, SubCategory={SubCategory}, Tags=[{Tags}]",
-                crawledEvent.Name, category?.ToString() ?? "None", suggestedSubCategory ?? "None", string.Join(", ", tags));
+            var eventEntity = MapToEntity(crawledEvent, category, subCategoryId, canonicalVenueId);
+
+            _logger.LogInformation(
+                "Comprehensively processed '{EventName}': Category={Category}, SubCategory={SubCategory}, Tags=[{Tags}], VenueId={VenueId}",
+                crawledEvent.Name, category?.ToString() ?? "None", suggestedSubCategory ?? "None",
+                string.Join(", ", tags), canonicalVenueId?.ToString() ?? "unmapped");
 
             return (eventEntity, tags);
         }
         catch (OperationCanceledException)
         {
             _logger.LogWarning("AI comprehensive processing timeout for event {EventName}, using fallback", crawledEvent.Name);
-            var fallbackEvent = MapToEntity(crawledEvent, null, null);
+            var fallbackEvent = MapToEntity(crawledEvent, null, null, null);
             return (fallbackEvent, new List<string>());
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "AI comprehensive processing failed for event {EventName}, using fallback", crawledEvent.Name);
-            var fallbackEvent = MapToEntity(crawledEvent, null, null);
+            var fallbackEvent = MapToEntity(crawledEvent, null, null, null);
             return (fallbackEvent, new List<string>());
         }
     }
 
-    private Event MapToEntity(CrawledEventDto crawledEvent, EventCategory? category, int? subCategoryId)
+    private Event MapToEntity(CrawledEventDto crawledEvent, EventCategory? category, int? subCategoryId, int? canonicalVenueId)
     {
         var categoryId = category.HasValue ? (int)category.Value : 11; // Default to Undefined
 
@@ -229,6 +239,7 @@ public class EventProcessingService : IEventProcessingService
             IsFree = crawledEvent.IsFree || crawledEvent.Price == 0,
             CategoryId = categoryId,
             SubCategoryId = subCategoryId,
+            CanonicalVenueId = canonicalVenueId,
             Status = DetermineEventStatus(category, crawledEvent.StartDate),
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
