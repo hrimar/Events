@@ -1,4 +1,6 @@
 using Events.Data.Repositories.Interfaces;
+using Events.Data.Repositories.Interfaces;
+using Events.Models.DTOs;
 using Events.Models.Entities;
 using Events.Services.Helpers;
 using Events.Services.Interfaces;
@@ -23,9 +25,19 @@ public class VenueService : IVenueService
 
     public async Task<IEnumerable<CanonicalVenue>> GetAllAsync() => await _repository.GetAllAsync();
 
+    public async Task<IEnumerable<VenueWithStatsDto>> GetAllWithStatsAsync() =>
+        await _repository.GetAllWithStatsAsync();
+
+    public async Task<IEnumerable<UnmappedLocationDto>> GetUnmappedLocationsAsync() =>
+        await _repository.GetUnmappedLocationsAsync();
+
     public async Task<CanonicalVenue> CreateAsync(CanonicalVenue venue) => await _repository.AddAsync(venue);
 
     public async Task<CanonicalVenue> UpdateAsync(CanonicalVenue venue) => await _repository.UpdateAsync(venue);
+
+    public async Task DeleteAsync(int id) => await _repository.DeleteAsync(id);
+
+    public async Task DeleteAliasAsync(int aliasId) => await _repository.DeleteAliasAsync(aliasId);
 
     public async Task<int?> FindCanonicalVenueIdAsync(string? rawLocation)
     {

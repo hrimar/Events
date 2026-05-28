@@ -1,6 +1,8 @@
 using Events.Data.Context;
 using Events.Data.Repositories.Interfaces;
+using Events.Models.DTOs;
 using Events.Models.Entities;
+using Events.Models.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace Events.Data.Repositories.Implementations;
@@ -73,5 +75,59 @@ public class VenueRepository : IVenueRepository
         _context.VenueAliases.Add(alias);
         await _context.SaveChangesAsync();
         return alias;
+    }
+
+    public async Task DeleteAsync(int id)
+    {
+        var venue = await _context.CanonicalVenues.FindAsync(id);
+        if (venue == null)
+            throw new KeyNotFoundException($"Venue with ID {id} was not found.");
+
+        _context.CanonicalVenues.Remove(venue);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task DeleteAliasAsync(int aliasId)
+    {
+        var alias = await _context.VenueAliases.FindAsync(aliasId);
+        if (alias == null)
+            throw new KeyNotFoundException($"Venue alias with ID {aliasId} was not found.");
+
+        _context.VenueAliases.Remove(alias);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task<IEnumerable<VenueWithStatsDto>> GetAllWithStatsAsync()
+    {
+        var now = DateTime.UtcNow;
+
+        return await _context.CanonicalVenues
+            .Select(v => new VenueWithStatsDto
+            {
+                Id = v.Id,
+                Name = v.Name,
+                ShortName = v.ShortName,
+                Slug = v.Slug,
+                City = v.City,
+                AliasCount = v.Aliases.Count,
+                UpcomingEventsCount = v.Events.Count(e => e.Date >= now && e.Status == EventStatus.Published),
+                TotalEventsCount = v.Events.Count()
+            })
+            .OrderBy(v => v.Name)
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<UnmappedLocationDto>> GetUnmappedLocationsAsync()
+    {
+        return await _context.Events
+            .Where(e => e.CanonicalVenueId == null && e.Location != string.Empty)
+            .GroupBy(e => e.Location)
+            .Select(g => new UnmappedLocationDto
+            {
+                Location = g.Key,
+                EventCount = g.Count()
+            })
+            .OrderByDescending(x => x.EventCount)
+            .ToListAsync();
     }
 }

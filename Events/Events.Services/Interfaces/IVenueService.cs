@@ -1,4 +1,6 @@
 using Events.Models.Entities;
+using Events.Models.DTOs;
+using Events.Models.Entities;
 
 namespace Events.Services.Interfaces;
 
@@ -7,8 +9,11 @@ public interface IVenueService
     Task<CanonicalVenue?> GetByIdAsync(int id);
     Task<CanonicalVenue?> GetBySlugAsync(string slug);
     Task<IEnumerable<CanonicalVenue>> GetAllAsync();
+    Task<IEnumerable<VenueWithStatsDto>> GetAllWithStatsAsync();
+    Task<IEnumerable<UnmappedLocationDto>> GetUnmappedLocationsAsync();
     Task<CanonicalVenue> CreateAsync(CanonicalVenue venue);
     Task<CanonicalVenue> UpdateAsync(CanonicalVenue venue);
+    Task DeleteAsync(int id);
 
     // Normalizes the raw location string and looks up a matching canonical venue.
     // Returns the canonical venue ID if found, or null if no alias match exists.
@@ -20,4 +25,5 @@ public interface IVenueService
 
     // Normalizes the raw alias string and adds it as a VenueAlias for the given venue.
     Task<VenueAlias> AddAliasAsync(int venueId, string rawAliasString);
+    Task DeleteAliasAsync(int aliasId);
 }

@@ -389,4 +389,27 @@ public class EventRepository : IEventRepository
             throw new InvalidOperationException("Error during bulk update of events", ex);
         }
     }
+
+    public async Task<int> UpdateCanonicalVenueByLocationAsync(string location, int canonicalVenueId)
+    {
+        try
+        {
+            var events = await _context.Events
+                .Where(e => e.Location == location)
+                .ToListAsync();
+
+            foreach (var ev in events)
+            {
+                ev.CanonicalVenueId = canonicalVenueId;
+                ev.UpdatedAt = DateTime.UtcNow;
+            }
+
+            await _context.SaveChangesAsync();
+            return events.Count;
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException($"Error updating canonical venue for location '{location}'", ex);
+        }
+    }
 }

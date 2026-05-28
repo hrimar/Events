@@ -1,0 +1,106 @@
+@model Events.Web.Models.Admin.AdminUnmappedLocationsViewModel
+@{
+    ViewData["Title"] = "Unmapped locations";
+}
+
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h1 class="h3 mb-0">Unmapped locations</h1>
+        <p class="text-muted mb-0">
+            Location strings from crawlers not yet linked to a canonical venue.
+        </p>
+    </div>
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-1"></i>Back to venues
+    </a>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card stat-card border-start border-4 border-warning">
+            <div class="card-body">
+                <small class="text-muted">Unmapped location strings</small>
+                <h3 class="mb-0">@Model.Items.Count</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stat-card border-start border-4 border-danger">
+            <div class="card-body">
+                <small class="text-muted">Events without venue</small>
+                <h3 class="mb-0">@Model.TotalUnmappedEvents</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (!Model.Items.Any())
+{
+    <div class="card shadow-sm">
+        <div class="card-body text-center py-5 text-muted">
+            <i class="fas fa-check-circle fa-2x mb-3 text-success"></i>
+            <p class="mb-0">All locations are mapped. Great job!</p>
+        </div>
+    </div>
+}
+else
+{
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Raw location string</th>
+                        <th class="text-center" style="width: 100px;">Events</th>
+                        <th style="width: 320px;">Map to venue</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Items)
+                    {
+                        <tr>
+                            <td class="align-middle">
+                                <span class="fw-semibold">@item.Location</span>
+                            </td>
+                            <td class="text-center align-middle">
+                                <span class="badge bg-warning text-dark">@item.EventCount</span>
+                            </td>
+                            <td class="align-middle">
+                                <form asp-action="MapLocation" method="post"
+                                      class="d-flex gap-2 align-items-center">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="location" value="@item.Location" />
+                                    <select name="venueId" class="form-select form-select-sm" required>
+                                        <option value="">-- Select venue --</option>
+                                        @foreach (var option in Model.VenueOptions)
+                                        {
+                                            <option value="@option.Value">@option.Text</option>
+                                        }
+                                    </select>
+                                    <button type="submit" class="btn btn-sm btn-success text-nowrap">
+                                        <i class="fas fa-link me-1"></i>Map
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
