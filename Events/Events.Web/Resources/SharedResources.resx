@@ -709,6 +709,7 @@
 
   <!-- Venues -->
   <data name="Venue_Home" xml:space="preserve"><value>Начало</value></data>
+  <data name="Venue_SeoTitleSuffix" xml:space="preserve"><value>Събития, концерти, програма | Go Sofia</value></data>
   <data name="Venue_UpcomingEvents" xml:space="preserve"><value>Предстоящи събития</value></data>
   <data name="Venue_EventsAtVenue" xml:space="preserve"><value>Предстоящи събития на този адрес</value></data>
   <data name="Venue_NoEvents" xml:space="preserve"><value>Няма предстоящи обявени събития.</value></data>

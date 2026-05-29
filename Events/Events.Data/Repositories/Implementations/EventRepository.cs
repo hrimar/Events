@@ -22,6 +22,7 @@ public class EventRepository : IEventRepository
         return await _context.Events
             .Include(e => e.Category)
             .Include(e => e.SubCategory)
+            .Include(e => e.CanonicalVenue)
             .Include(e => e.EventTags)
             .ThenInclude(et => et.Tag)
             .FirstOrDefaultAsync(e => e.Id == id);
@@ -218,6 +219,7 @@ public class EventRepository : IEventRepository
         return await _context.Events
             .Include(e => e.Category)
             .Include(e => e.SubCategory)
+            .Include(e => e.CanonicalVenue)
             .Include(e => e.EventTags)
             .ThenInclude(et => et.Tag)
             .Where(e => e.IsFeatured && e.Status == EventStatus.Published && e.Date >= DateTime.UtcNow)
@@ -230,6 +232,7 @@ public class EventRepository : IEventRepository
     {
         return await _context.Events
             .Include(e => e.Category)
+            .Include(e => e.CanonicalVenue)
             .Include(e => e.EventTags)
             .ThenInclude(et => et.Tag)
             .Where(e => e.Status == EventStatus.Published && e.Date >= DateTime.UtcNow)

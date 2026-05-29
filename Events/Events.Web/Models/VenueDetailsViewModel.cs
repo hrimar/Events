@@ -18,6 +18,7 @@ public class VenueDetailsViewModel
     public int? Capacity { get; set; }
     public bool HasMap => Latitude.HasValue && Longitude.HasValue;
     public IReadOnlyList<EventViewModel> UpcomingEvents { get; set; } = Array.Empty<EventViewModel>();
+    public string JsonLd { get; set; } = string.Empty;
 
     // Preformatted coordinate strings for OpenStreetMap embed URL (InvariantCulture, dot separator)
     public string LatStr => Latitude.HasValue

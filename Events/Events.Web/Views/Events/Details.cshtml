@@ -174,7 +174,16 @@
                                 <i class="fas fa-map-marker-alt text-primary me-3" style="width: 20px;"></i>
                                 <div>
                                     <strong>@Localizer["Details_Location"]</strong><br>
-                                    <span class="text-muted">@Model.Location</span>
+                                    @if (!string.IsNullOrEmpty(Model.VenueSlug))
+                                    {
+                                        <a asp-area="" asp-controller="Venues" asp-action="Details"
+                                           asp-route-slug="@Model.VenueSlug"
+                                           class="text-muted text-decoration-none">@Model.Location</a>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">@Model.Location</span>
+                                    }
                                 </div>
                             </div>
                         </div>

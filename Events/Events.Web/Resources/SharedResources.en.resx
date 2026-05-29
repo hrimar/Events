@@ -709,6 +709,7 @@
 
   <!-- Venues -->
   <data name="Venue_Home" xml:space="preserve"><value>Home</value></data>
+  <data name="Venue_SeoTitleSuffix" xml:space="preserve"><value>Events, concerts, programme | Go Sofia</value></data>
   <data name="Venue_UpcomingEvents" xml:space="preserve"><value>Upcoming events</value></data>
   <data name="Venue_EventsAtVenue" xml:space="preserve"><value>Upcoming events at this venue</value></data>
   <data name="Venue_NoEvents" xml:space="preserve"><value>No upcoming events announced.</value></data>

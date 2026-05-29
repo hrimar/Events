@@ -3,8 +3,9 @@
 @using Microsoft.Extensions.Localization
 @inject IStringLocalizer<SharedResources> Localizer
 @{
+    ViewData["PageTitle"] = Model.Name + " — " + Localizer["Venue_SeoTitleSuffix"];
     ViewData["Title"] = Model.Name;
-    ViewData["MetaDescription"] = Model.Description ?? $"{Localizer["Venue_UpcomingEvents"]}: {Model.Name}.";
+    ViewData["MetaDescription"] = Model.Description ?? $"{Localizer["Venue_EventsAtVenue"]}: {Model.Name}";
     ViewData["OgTitle"] = Model.Name + " — Go Sofia";
     ViewData["OgImageUrl"] = Model.PhotoUrl ?? string.Empty;
     var currentUrl = $"{Context.Request.Scheme}://{Context.Request.Host}{Context.Request.Path}";
@@ -185,3 +186,10 @@
         }
     </div>
 </div>
+
+@section Scripts {
+    @if (!string.IsNullOrEmpty(Model.JsonLd))
+    {
+        <script type="application/ld+json">@Html.Raw(Model.JsonLd)</script>
+    }
+}
