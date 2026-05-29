@@ -263,6 +263,11 @@ static void ConfigureHttpPipeline(WebApplication app)
     app.UseAuthorization();
 
     app.MapControllerRoute(
+        name: "venue-details",
+        pattern: "venues/{slug}",
+        defaults: new { controller = "Venues", action = "Details" });
+
+    app.MapControllerRoute(
         name: "admin",
         pattern: "{area:exists}/{controller=Dashboard}/{action=Index}/{id?}");
 

@@ -25,6 +25,8 @@ public class EventViewModel
     public string? CategoryName { get; set; }
     public string? SubCategoryName { get; set; }
     public EventStatus Status { get; set; }
+    public int? CanonicalVenueId { get; set; }
+    public string? VenueSlug { get; set; }
     public List<string> Tags { get; set; } = new();
     
     public string ShortDescription => Description?.Length > 150
@@ -55,6 +57,8 @@ public class EventViewModel
             CategoryName = eventEntity.Category?.Name,
             SubCategoryName = eventEntity.SubCategory?.Name,
             Status = eventEntity.Status,
+            CanonicalVenueId = eventEntity.CanonicalVenueId,
+            VenueSlug = eventEntity.CanonicalVenue?.Slug,
             Tags = eventEntity.EventTags?.Select(et => et.Tag.Name).ToList() ?? new List<string>()
         };
     }

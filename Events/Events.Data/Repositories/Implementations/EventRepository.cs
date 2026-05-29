@@ -67,6 +67,7 @@ public class EventRepository : IEventRepository
         var query = _context.Events
             .Include(e => e.Category)
             .Include(e => e.SubCategory)
+            .Include(e => e.CanonicalVenue)
             .Include(e => e.EventTags)
             .ThenInclude(et => et.Tag)
             .AsQueryable();
@@ -118,6 +119,7 @@ public class EventRepository : IEventRepository
         var query = _context.Events
             .Include(e => e.Category)
             .Include(e => e.SubCategory)
+            .Include(e => e.CanonicalVenue)
             .Include(e => e.EventTags)
             .ThenInclude(et => et.Tag)
             .AsQueryable();

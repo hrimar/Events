@@ -707,4 +707,17 @@
   <data name="Sort_Category" xml:space="preserve"><value>Категория</value></data>
   <data name="Sort_Subcategory" xml:space="preserve"><value>Подкатегория</value></data>
 
+  <!-- Venues -->
+  <data name="Venue_Home" xml:space="preserve"><value>Начало</value></data>
+  <data name="Venue_UpcomingEvents" xml:space="preserve"><value>Предстоящи събития</value></data>
+  <data name="Venue_EventsAtVenue" xml:space="preserve"><value>Предстоящи събития на този адрес</value></data>
+  <data name="Venue_NoEvents" xml:space="preserve"><value>Няма предстоящи обявени събития.</value></data>
+  <data name="Venue_Capacity" xml:space="preserve"><value>Капацитет</value></data>
+  <data name="Venue_OfficialSite" xml:space="preserve"><value>Официален сайт</value></data>
+  <data name="Venue_AllEvents" xml:space="preserve"><value>Всички събития</value></data>
+  <data name="Venue_Location" xml:space="preserve"><value>Локация</value></data>
+  <data name="Venue_Details" xml:space="preserve"><value>Детайли</value></data>
+  <data name="Venue_Free" xml:space="preserve"><value>Безплатно</value></data>
+  <data name="Venue_Tickets" xml:space="preserve"><value>Билети</value></data>
+
 </root>

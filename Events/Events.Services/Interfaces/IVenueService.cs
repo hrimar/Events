@@ -1,6 +1,5 @@
 using Events.Models.Entities;
 using Events.Models.DTOs;
-using Events.Models.Entities;
 
 namespace Events.Services.Interfaces;
 
@@ -11,6 +10,7 @@ public interface IVenueService
     Task<IEnumerable<CanonicalVenue>> GetAllAsync();
     Task<IEnumerable<VenueWithStatsDto>> GetAllWithStatsAsync();
     Task<IEnumerable<UnmappedLocationDto>> GetUnmappedLocationsAsync();
+    Task<IEnumerable<Event>> GetUpcomingEventsByVenueAsync(int venueId);
     Task<CanonicalVenue> CreateAsync(CanonicalVenue venue);
     Task<CanonicalVenue> UpdateAsync(CanonicalVenue venue);
     Task DeleteAsync(int id);

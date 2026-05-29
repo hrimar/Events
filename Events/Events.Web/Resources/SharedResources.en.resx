@@ -707,4 +707,17 @@
   <data name="Sort_Category" xml:space="preserve"><value>Category</value></data>
   <data name="Sort_Subcategory" xml:space="preserve"><value>Subcategory</value></data>
 
+  <!-- Venues -->
+  <data name="Venue_Home" xml:space="preserve"><value>Home</value></data>
+  <data name="Venue_UpcomingEvents" xml:space="preserve"><value>Upcoming events</value></data>
+  <data name="Venue_EventsAtVenue" xml:space="preserve"><value>Upcoming events at this venue</value></data>
+  <data name="Venue_NoEvents" xml:space="preserve"><value>No upcoming events announced.</value></data>
+  <data name="Venue_Capacity" xml:space="preserve"><value>Capacity</value></data>
+  <data name="Venue_OfficialSite" xml:space="preserve"><value>Official website</value></data>
+  <data name="Venue_AllEvents" xml:space="preserve"><value>All events</value></data>
+  <data name="Venue_Location" xml:space="preserve"><value>Location</value></data>
+  <data name="Venue_Details" xml:space="preserve"><value>Details</value></data>
+  <data name="Venue_Free" xml:space="preserve"><value>Free</value></data>
+  <data name="Venue_Tickets" xml:space="preserve"><value>Tickets</value></data>
+
 </root>

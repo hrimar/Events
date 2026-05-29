@@ -21,6 +21,21 @@
     
     <!-- Open Graph meta tags for better social sharing -->
     @await RenderSectionAsync("MetaTags", required: false)
+    @if (ViewData["MetaDescription"] != null)
+    {
+        <meta name="description" content="@ViewData["MetaDescription"]" />
+        <meta property="og:title" content="@(ViewData["OgTitle"] ?? ViewData["Title"])" />
+        <meta property="og:description" content="@ViewData["MetaDescription"]" />
+        @if (!string.IsNullOrEmpty(ViewData["OgImageUrl"]?.ToString()))
+        {
+            <meta property="og:image" content="@ViewData["OgImageUrl"]" />
+        }
+        @if (!string.IsNullOrEmpty(ViewData["OgUrl"]?.ToString()))
+        {
+            <meta property="og:url" content="@ViewData["OgUrl"]" />
+        }
+        <meta property="og:type" content="website" />
+    }
     @await RenderSectionAsync("Styles", required: false)
 </head>
 

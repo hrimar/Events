@@ -130,4 +130,19 @@ public class VenueRepository : IVenueRepository
             .OrderByDescending(x => x.EventCount)
             .ToListAsync();
     }
+
+    public async Task<IEnumerable<Event>> GetUpcomingEventsByVenueAsync(int venueId)
+    {
+        var now = DateTime.UtcNow;
+
+        return await _context.Events
+            .Include(e => e.Category)
+            .Include(e => e.SubCategory)
+            .Include(e => e.CanonicalVenue)
+            .Include(e => e.EventTags)
+            .ThenInclude(et => et.Tag)
+            .Where(e => e.CanonicalVenueId == venueId && e.Status == EventStatus.Published && e.Date >= now)
+            .OrderBy(e => e.Date)
+            .ToListAsync();
+    }
 }

@@ -1,5 +1,4 @@
 using Events.Data.Repositories.Interfaces;
-using Events.Data.Repositories.Interfaces;
 using Events.Models.DTOs;
 using Events.Models.Entities;
 using Events.Services.Helpers;
@@ -30,6 +29,9 @@ public class VenueService : IVenueService
 
     public async Task<IEnumerable<UnmappedLocationDto>> GetUnmappedLocationsAsync() =>
         await _repository.GetUnmappedLocationsAsync();
+
+    public async Task<IEnumerable<Event>> GetUpcomingEventsByVenueAsync(int venueId) =>
+        await _repository.GetUpcomingEventsByVenueAsync(venueId);
 
     public async Task<CanonicalVenue> CreateAsync(CanonicalVenue venue) => await _repository.AddAsync(venue);
 

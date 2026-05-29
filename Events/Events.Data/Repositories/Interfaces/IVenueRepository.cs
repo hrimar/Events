@@ -25,4 +25,7 @@ public interface IVenueRepository
 
     // Returns distinct unmapped location strings grouped by count, ordered by EventCount desc
     Task<IEnumerable<UnmappedLocationDto>> GetUnmappedLocationsAsync();
+
+    // Returns upcoming published events for a given venue, ordered by date
+    Task<IEnumerable<Event>> GetUpcomingEventsByVenueAsync(int venueId);
 }
