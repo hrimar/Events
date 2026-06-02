@@ -3,8 +3,10 @@
 @using Microsoft.Extensions.Localization
 @inject IStringLocalizer<SharedResources> Localizer
 @{
-    var bgCulture = new System.Globalization.CultureInfo("bg-BG");
-    var calDayNames = new[] { "??", "??", "??", "??", "??", "??", "??" };
+    var displayCulture = System.Globalization.CultureInfo.CurrentCulture;
+    // Reorder from Sun-first to Mon-first (ISO)
+    var allDayNames = displayCulture.DateTimeFormat.AbbreviatedDayNames; // [Sun, Mon, Tue, Wed, Thu, Fri, Sat]
+    var calDayNames = new[] { allDayNames[1], allDayNames[2], allDayNames[3], allDayNames[4], allDayNames[5], allDayNames[6], allDayNames[0] };
 }
 
 <section class="py-4 bg-white border-top">
@@ -66,10 +68,10 @@
                                         }
                                         else
                                         {
-                                            @day.Date.ToString("dddd", bgCulture)
+                                            @day.Date.ToString("dddd", displayCulture)
                                         }
                                     </div>
-                                    <small class="opacity-75">@day.Date.ToString("d MMM", bgCulture)</small>
+                                    <small class="opacity-75">@day.Date.ToString("d MMM", displayCulture)</small>
                                 </div>
                                 <div class="card-body p-2" style="max-height:340px; overflow-y:auto;">
                                     @if (!day.Events.Any())
