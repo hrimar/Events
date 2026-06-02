@@ -12,9 +12,6 @@ namespace Events.Web.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly int _maxFeaturedEventsCount = 18;
-        private const int RecommendedEventsDaysAhead = 10;
-
         private readonly ILogger<HomeController> _logger;
         private readonly IEventService _eventService;
         private readonly ITagService _tagService;
@@ -39,21 +36,102 @@ namespace Events.Web.Controllers
         {
             try
             {
-                // Get only featured events for homepage - no pagination needed
-                var featuredEvents = await _eventService.GetFeaturedEventsAsync(_maxFeaturedEventsCount);
+                var today = DateTime.Today;
+                var weekEnd = today.AddDays(6);
 
-                // TotalEvents: all published events from today onwards
-                var totalEvents = await _eventService.GetEventsCountInRangeAsync(DateTime.Today, DateTime.MaxValue, EventStatus.Published);
+                // Single DB query for all 7-day data
+                var weekEvents = await _eventService.GetEventsByDateRangeAsync(today, weekEnd);
+                var publishedEvents = EventViewModel.FromEntities(
+                    weekEvents.Where(e => e.Status == EventStatus.Published).OrderBy(e => e.Date))
+                    .ToList();
 
-                // TodayEvents: all published events for today only
-                var todayEvents = await _eventService.GetEventsCountInRangeAsync(DateTime.Today, DateTime.Today, EventStatus.Published);
+                var localizedCategories = EventsPageViewModel.GetAvailableCategories(_localizer);
 
-                // Next 7 days: all published events from today to today+6 (inclusive)
-                var next7DaysEvents = await _eventService.GetEventsCountInRangeAsync(DateTime.Today, DateTime.Today.AddDays(6), EventStatus.Published);
+                // Tab 1: By day
+                var byDay = Enumerable.Range(0, 7).Select(offset =>
+                {
+                    var date = today.AddDays(offset);
+                    return new DayEventsViewModel
+                    {
+                        Date = date,
+                        Events = publishedEvents.Where(e => e.Date.Date == date).ToList()
+                    };
+                }).ToList();
 
-                var eventViewModels = EventViewModel.FromEntities(featuredEvents);
+                // Tab 2: By category - only categories that have events
+                var byCategory = localizedCategories
+                    .Select(cat => new CategoryEventsViewModel
+                    {
+                        CategoryKey = cat.Value,
+                        DisplayName = cat.DisplayName,
+                        IconClass = cat.IconClass,
+                        Events = publishedEvents
+                            .Where(e => string.Equals(e.CategoryName, cat.Value, StringComparison.OrdinalIgnoreCase))
+                            .ToList()
+                    })
+                    .Where(c => c.Events.Any())
+                    .ToList();
 
-                // Load saved events only for authenticated users
+                // Tab 3: Weekend (Fri–Sun)
+                var dayOfWeek = (int)today.DayOfWeek; // 0=Sun,1=Mon,...,5=Fri,6=Sat
+                var daysToFriday = dayOfWeek switch
+                {
+                    0 => 5,  // Sun ? next Fri
+                    1 => 4,  // Mon ? next Fri
+                    2 => 3,  // Tue ? next Fri
+                    3 => 2,  // Wed ? next Fri
+                    4 => 1,  // Thu ? next Fri
+                    5 => 0,  // Fri ? this Fri
+                    6 => 0,  // Sat ? already weekend (use today)
+                    _ => 0
+                };
+                // If Sat/Sun ? current weekend starts last Fri; if Fri ? today
+                var weekendStart = dayOfWeek == 0
+                    ? today.AddDays(-2)   // Sun ? Fri was 2 days ago
+                    : dayOfWeek == 6
+                        ? today.AddDays(-1) // Sat ? Fri was yesterday
+                        : today.AddDays(daysToFriday);
+                var weekendEnd = weekendStart.AddDays(2); // Fri+2 = Sun
+
+                // Fetch weekend events separately if weekend extends beyond 7-day window
+                List<EventViewModel> weekendEvents;
+                if (weekendEnd <= weekEnd)
+                {
+                    weekendEvents = publishedEvents
+                        .Where(e => e.Date.Date >= weekendStart && e.Date.Date <= weekendEnd)
+                        .ToList();
+                }
+                else
+                {
+                    var extraEvents = await _eventService.GetEventsByDateRangeAsync(weekEnd.AddDays(1), weekendEnd);
+                    weekendEvents = publishedEvents
+                        .Where(e => e.Date.Date >= weekendStart && e.Date.Date <= weekendEnd)
+                        .Concat(EventViewModel.FromEntities(
+                            extraEvents.Where(e => e.Status == EventStatus.Published)))
+                        .OrderBy(e => e.Date)
+                        .ToList();
+                }
+
+                // Tab 4: Calendar counts for current month
+                var calendarCounts = publishedEvents
+                    .GroupBy(e => e.Date.Date)
+                    .ToDictionary(g => g.Key, g => g.Count());
+
+                var weeklyEvents = new WeeklyEventsViewModel
+                {
+                    ByDay = byDay,
+                    ByCategory = byCategory,
+                    WeekendEvents = weekendEvents,
+                    CalendarCounts = calendarCounts,
+                    CalendarMonth = today
+                };
+
+                // Stats
+                var totalEvents = await _eventService.GetEventsCountInRangeAsync(today, DateTime.MaxValue, EventStatus.Published);
+                var todayEvents = await _eventService.GetEventsCountInRangeAsync(today, today, EventStatus.Published);
+                var next7DaysEvents = publishedEvents.Count;
+
+                // Saved + Recommended (authenticated users only)
                 var savedEvents = new List<EventViewModel>();
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
                 if (!string.IsNullOrEmpty(userId))
@@ -66,7 +144,6 @@ namespace Events.Web.Controllers
                         .ToList();
                 }
 
-                // Recommended events: next 10 days, same categories/subcategories as saved events
                 var recommendedEvents = new List<EventViewModel>();
                 if (savedEvents.Any())
                 {
@@ -82,31 +159,18 @@ namespace Events.Web.Controllers
 
                     var savedEventIds = savedEvents.Select(e => e.Id).ToHashSet();
 
-                    var upcoming = await _eventService.GetEventsByDateRangeAsync(DateTime.Today, DateTime.Today.AddDays(RecommendedEventsDaysAhead));
-
-                    recommendedEvents = EventViewModel.FromEntities(
-                        upcoming
-                            .Where(e => e.Status == EventStatus.Published)
-                            .Where(e => !savedEventIds.Contains(e.Id))
-                            .Where(e => savedCategoryNames.Contains(e.Category?.Name ?? string.Empty)
-                                     || savedSubCategoryNames.Contains(e.SubCategory?.Name ?? string.Empty))
-                            .OrderBy(e => e.Date))
+                    recommendedEvents = publishedEvents
+                        .Where(e => !savedEventIds.Contains(e.Id))
+                        .Where(e => savedCategoryNames.Contains(e.CategoryName ?? string.Empty)
+                                 || savedSubCategoryNames.Contains(e.SubCategoryName ?? string.Empty))
                         .ToList();
                 }
 
-                // Get popular tags for homepage
                 var popularTags = await GetPopularTagsAsync();
-
-                var localizedCategories = EventsPageViewModel.GetAvailableCategories(_localizer);
 
                 var viewModel = new HomePageViewModel
                 {
-                    FeaturedSection = EventsSectionViewModel.CreateFeaturedSection(
-                        events: eventViewModels,
-                        categories: localizedCategories,
-                        title: _localizer["Home_FeaturedEvents"],
-                        viewAllText: _localizer["Home_ViewAllEvents"],
-                        viewAllUrl: Url.Action("Index", "Events")!),
+                    WeeklyEvents = weeklyEvents,
                     SavedSection = EventsSectionViewModel.CreateSavedSection(
                         events: savedEvents,
                         categories: localizedCategories,
@@ -127,12 +191,7 @@ namespace Events.Web.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error loading home page");
-
-                var emptyViewModel = new HomePageViewModel
-                {
-                    PopularTags = new List<TagViewModel>()
-                };
-                return View(emptyViewModel);
+                return View(new HomePageViewModel());
             }
         }
 

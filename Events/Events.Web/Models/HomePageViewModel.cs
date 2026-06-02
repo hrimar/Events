@@ -2,7 +2,7 @@ namespace Events.Web.Models;
 
 public class HomePageViewModel
 {
-    public EventsSectionViewModel FeaturedSection { get; set; } = new();
+    public WeeklyEventsViewModel WeeklyEvents { get; set; } = new();
     public EventsSectionViewModel SavedSection { get; set; } = new();
     public EventsSectionViewModel RecommendedSection { get; set; } = new();
     public int TotalEvents { get; set; }

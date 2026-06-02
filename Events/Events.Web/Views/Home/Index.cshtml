@@ -94,7 +94,7 @@
 } *@
 
 <!-- Featured Events -->
-@await Html.PartialAsync("_EventsSection", Model.FeaturedSection)
+@await Html.PartialAsync("_WeeklyEvents", Model.WeeklyEvents)
 
 <!-- Saved Events (authenticated users with saved events only) -->
 @if((User.Identity?.IsAuthenticated ?? false) && Model.SavedSection.Events.Any())

@@ -1,0 +1,304 @@
+﻿@model Events.Web.Models.WeeklyEventsViewModel
+@using Events.Web.Resources
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<SharedResources> Localizer
+@{
+    var bgCulture = new System.Globalization.CultureInfo("bg-BG");
+    var calDayNames = new[] { "??", "??", "??", "??", "??", "??", "??" };
+}
+
+<section class="py-4 bg-white border-top">
+    <div class="container">
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="h4 mb-0">
+                <i class="fas fa-calendar-week text-primary me-2"></i>@Localizer["Home_WeeklySectionTitle"]
+            </h2>
+            <a asp-controller="Events" asp-action="Index"
+               asp-route-fromDate="@DateTime.Today.ToString("yyyy-MM-dd")"
+               class="btn btn-sm btn-outline-primary">
+                <i class="fas fa-list me-1"></i>@Localizer["Home_ViewAllEvents"]
+            </a>
+        </div>
+
+        <!-- Tab Navigation -->
+        <ul class="nav nav-tabs mb-3" id="weeklyTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="tab-day-btn" data-bs-toggle="tab"
+                        data-bs-target="#tab-day" type="button" role="tab">
+                    <i class="fas fa-sun me-1"></i>@Localizer["Home_TabByDay"]
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tab-cat-btn" data-bs-toggle="tab"
+                        data-bs-target="#tab-cat" type="button" role="tab">
+                    <i class="fas fa-layer-group me-1"></i>@Localizer["Home_TabByCategory"]
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tab-weekend-btn" data-bs-toggle="tab"
+                        data-bs-target="#tab-weekend" type="button" role="tab">
+                    <i class="fas fa-umbrella-beach me-1"></i>@Localizer["Home_TabWeekend"]
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tab-cal-btn" data-bs-toggle="tab"
+                        data-bs-target="#tab-cal" type="button" role="tab">
+                    <i class="fas fa-calendar-alt me-1"></i>@Localizer["Home_TabCalendar"]
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="weeklyTabsContent">
+
+            <!-- TAB 1: By Day -->
+            <div class="tab-pane fade show active" id="tab-day" role="tabpanel">
+                <div style="display:flex; gap:0.75rem; overflow-x:auto; padding-bottom:0.5rem; scroll-snap-type:x mandatory;">
+                    @foreach (var day in Model.ByDay)
+                    {
+                        <div style="min-width:210px; max-width:210px; scroll-snap-align:start; flex-shrink:0;">
+                            <div class="card h-100 border-@(day.IsToday ? "primary" : "light") shadow-sm">
+                                <div class="card-header py-2 @(day.IsToday ? "bg-primary text-white" : "bg-light") text-center">
+                                    <div class="fw-bold text-capitalize">
+                                        @if (day.IsToday)
+                                        {
+                                            @Localizer["Home_Today"]
+                                        }
+                                        else
+                                        {
+                                            @day.Date.ToString("dddd", bgCulture)
+                                        }
+                                    </div>
+                                    <small class="opacity-75">@day.Date.ToString("d MMM", bgCulture)</small>
+                                </div>
+                                <div class="card-body p-2" style="max-height:340px; overflow-y:auto;">
+                                    @if (!day.Events.Any())
+                                    {
+                                        <p class="text-muted text-center small mt-3">@Localizer["Home_NoEventsForDay"]</p>
+                                    }
+                                    else
+                                    {
+                                        @foreach (var ev in day.Events.Take(6))
+                                        {
+                                            <a asp-controller="Events" asp-action="Details" asp-route-id="@ev.Id"
+                                               class="text-decoration-none d-block mb-2">
+                                                <div class="d-flex gap-2 align-items-start p-1 rounded">
+                                                    <img src="@ev.DefaultImage" alt="@ev.Name"
+                                                         style="width:44px;height:44px;object-fit:cover;border-radius:4px;flex-shrink:0;"
+                                                         onerror="this.src='/images/default_event_image.jpeg'">
+                                                    <div style="min-width:0;">
+                                                        <div class="text-dark small fw-semibold text-truncate">@ev.Name</div>
+                                                        @if (ev.HasKnownTime)
+                                                        {
+                                                            <div class="text-muted" style="font-size:0.75rem;">@ev.FormattedTime</div>
+                                                        }
+                                                        @if (ev.IsFree)
+                                                        {
+                                                            <span class="badge bg-success" style="font-size:0.65rem;">@Localizer["Home_Free"]</span>
+                                                        }
+                                                    </div>
+                                                </div>
+                                            </a>
+                                        }
+                                        @if (day.Events.Count > 6)
+                                        {
+                                            <a asp-controller="Events" asp-action="Index"
+                                               asp-route-fromDate="@day.Date.ToString("yyyy-MM-dd")"
+                                               asp-route-toDate="@day.Date.ToString("yyyy-MM-dd")"
+                                               class="btn btn-sm btn-outline-secondary w-100 mt-1"
+                                               style="font-size:0.75rem;">
+                                                +@(day.Events.Count - 6) @Localizer["Events_More"]
+                                            </a>
+                                        }
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- TAB 2: By Category -->
+            <div class="tab-pane fade" id="tab-cat" role="tabpanel">
+                @if (!Model.ByCategory.Any())
+                {
+                    <p class="text-muted text-center py-4">@Localizer["Home_NoEventsForDay"]</p>
+                }
+                else
+                {
+                    @foreach (var cat in Model.ByCategory)
+                    {
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h5 class="mb-0">
+                                    <i class="@cat.IconClass me-2 text-primary"></i>@cat.DisplayName
+                                    <span class="badge bg-secondary ms-1" style="font-size:0.75rem;">@cat.Events.Count</span>
+                                </h5>
+                                <a asp-controller="Events" asp-action="Index"
+                                   asp-route-category="@cat.CategoryKey"
+                                   asp-route-fromDate="@DateTime.Today.ToString("yyyy-MM-dd")"
+                                   class="btn btn-sm btn-outline-secondary">
+                                    @Localizer["Home_ViewAllCategory"]
+                                </a>
+                            </div>
+                            <div style="display:flex; gap:0.75rem; overflow-x:auto; padding-bottom:0.5rem;">
+                                @foreach (var ev in cat.Events.Take(8))
+                                {
+                                    <div style="min-width:175px; max-width:175px; flex-shrink:0;">
+                                        <a asp-controller="Events" asp-action="Details" asp-route-id="@ev.Id"
+                                           class="text-decoration-none">
+                                            <div class="card shadow-sm h-100 border-0">
+                                                <img src="@ev.DefaultImage" alt="@ev.Name"
+                                                     style="height:100px;object-fit:cover;border-radius:4px 4px 0 0;"
+                                                     onerror="this.src='/images/default_event_image.jpeg'">
+                                                <div class="card-body p-2">
+                                                    <div class="text-dark small fw-semibold text-truncate">@ev.Name</div>
+                                                    <div class="text-muted" style="font-size:0.75rem;">
+                                                        @ev.FormattedDate@(ev.HasKnownTime ? " · " + ev.FormattedTime : "")
+                                                    </div>
+                                                    @if (ev.IsFree)
+                                                    {
+                                                        <span class="badge bg-success" style="font-size:0.65rem;">@Localizer["Home_Free"]</span>
+                                                    }
+                                                </div>
+                                            </div>
+                                        </a>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+
+            <!-- TAB 3: Wekend -->
+            <div class="tab-pane fade" id="tab-weekend" role="tabpanel">
+                @if (!Model.WeekendEvents.Any())
+                {
+                    <div class="text-center py-5 text-muted">
+                        <i class="fas fa-umbrella-beach fa-2x mb-3"></i>
+                        <p>@Localizer["Home_NoWeekendEvents"]</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="row row-cols-1 row-cols-md-2 g-3">
+                        @foreach (var ev in Model.WeekendEvents)
+                        {
+                            <div class="col">
+                                <div class="card event-card h-100 shadow-sm border-0">
+                                    <a asp-controller="Events" asp-action="Details" asp-route-id="@ev.Id"
+                                       class="text-decoration-none">
+                                        <div class="event-image-container">
+                                            <img src="@ev.DefaultImage" alt="@ev.Name"
+                                                 class="event-image-full"
+                                                 onerror="this.src='/images/default_event_image.jpeg'">
+                                            @if (ev.IsFree)
+                                            {
+                                                <div class="event-price event-free">@Localizer["Home_Free"]</div>
+                                            }
+                                        </div>
+                                    </a>
+                                    <div class="card-body d-flex flex-column">
+                                        <h6 class="event-title">
+                                            <a asp-controller="Events" asp-action="Details" asp-route-id="@ev.Id"
+                                               class="text-decoration-none text-dark">@ev.Name</a>
+                                        </h6>
+                                        <div class="text-muted small">
+                                            <i class="fas fa-calendar me-1"></i>
+                                            @ev.FormattedDate@(ev.HasKnownTime ? " · " + ev.FormattedTime : "")
+                                        </div>
+                                        <div class="text-muted small mt-1">
+                                            <i class="fas fa-map-marker-alt me-1"></i>
+                                            @if (!string.IsNullOrEmpty(ev.VenueSlug))
+                                            {
+                                                <a asp-area="" asp-controller="Venues" asp-action="Details"
+                                                   asp-route-slug="@ev.VenueSlug"
+                                                   class="text-muted text-decoration-none">@ev.Location</a>
+                                            }
+                                            else
+                                            {
+                                                @ev.Location
+                                            }
+                                        </div>
+                                    </div>
+                                    <div class="card-footer bg-transparent border-0 pt-0">
+                                        <div class="d-flex justify-content-between">
+                                            <a asp-controller="Events" asp-action="Details" asp-route-id="@ev.Id"
+                                               class="btn btn-outline-primary btn-sm">
+                                                <i class="fas fa-info-circle me-1"></i>@Localizer["Home_Details"]
+                                            </a>
+                                            @if (ev.HasTicketUrl)
+                                            {
+                                                <a href="@ev.TicketUrl" target="_blank" class="btn btn-primary btn-sm">
+                                                    <i class="fas fa-ticket-alt me-1"></i>@Localizer["Home_BuyTickets"]
+                                                </a>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+
+            <!-- TAB 4: Calendar -->
+            <div class="tab-pane fade" id="tab-cal" role="tabpanel">
+                @{
+                    var calToday = Model.CalendarMonth;
+                    var firstDay = new DateTime(calToday.Year, calToday.Month, 1);
+                    var lastDay = new DateTime(calToday.Year, calToday.Month,
+                        DateTime.DaysInMonth(calToday.Year, calToday.Month));
+                    int startOffset = ((int)firstDay.DayOfWeek + 6) % 7; // ISO: Mon=0
+                    var calStart = firstDay.AddDays(-startOffset);
+                    int totalCells = (int)Math.Ceiling((startOffset + lastDay.Day) / 7.0) * 7;
+                }
+                <div class="table-responsive">
+                    <table class="table table-bordered text-center mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                @foreach (var dn in calDayNames)
+                                {
+                                    <th class="py-1" style="font-size:0.8rem;">@dn</th>
+                                }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (int cell = 0; cell < totalCells; cell += 7)
+                            {
+                                <tr>
+                                    @for (int col = 0; col < 7; col++)
+                                    {
+                                        var cellDate = calStart.AddDays(cell + col);
+                                        var isCurrentMonth = cellDate.Month == calToday.Month;
+                                        var isTodayCell = cellDate.Date == DateTime.Today;
+                                        var count = Model.CalendarCounts.GetValueOrDefault(cellDate.Date, 0);
+                                        <td class="p-1 @(isTodayCell ? "table-primary" : "") @(!isCurrentMonth ? "text-muted" : "")"
+                                            style="min-width:40px; height:52px; vertical-align:top; font-size:0.85rem;">
+                                            @if (isCurrentMonth && count > 0)
+                                            {
+                                                <a asp-controller="Events" asp-action="Index"
+                                                   asp-route-fromDate="@cellDate.ToString("yyyy-MM-dd")"
+                                                   asp-route-toDate="@cellDate.ToString("yyyy-MM-dd")"
+                                                   class="text-decoration-none d-flex flex-column align-items-center">
+                                                    <span>@cellDate.Day</span>
+                                                    <span class="badge bg-primary" style="font-size:0.65rem;">@count</span>
+                                                </a>
+                                            }
+                                            else
+                                            {
+                                                <span>@(isCurrentMonth ? cellDate.Day.ToString() : "")</span>
+                                            }
+                                        </td>
+                                    }
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>

@@ -67,6 +67,17 @@
   <data name="Home_TodayEvents" xml:space="preserve"><value>Today's Events</value></data>
   <data name="Home_Next7Days" xml:space="preserve"><value>Next 7 Days</value></data>
 
+  <!-- Home Page - Weekly Section -->
+  <data name="Home_WeeklySectionTitle" xml:space="preserve"><value>This week in Sofia</value></data>
+  <data name="Home_TabByDay" xml:space="preserve"><value>By day</value></data>
+  <data name="Home_TabByCategory" xml:space="preserve"><value>By category</value></data>
+  <data name="Home_TabWeekend" xml:space="preserve"><value>Weekend</value></data>
+  <data name="Home_TabCalendar" xml:space="preserve"><value>Calendar</value></data>
+  <data name="Home_NoEventsForDay" xml:space="preserve"><value>No events announced</value></data>
+  <data name="Home_NoWeekendEvents" xml:space="preserve"><value>No events announced for this weekend</value></data>
+  <data name="Home_ViewAllCategory" xml:space="preserve"><value>View all</value></data>
+  <data name="Home_Today" xml:space="preserve"><value>Today</value></data>
+
   <!-- Events Index Page - Filters -->
   <data name="PageTitle_AllEvents" xml:space="preserve"><value>All Events</value></data>
   <data name="PageTitle_FreeEvents" xml:space="preserve"><value>Free Events</value></data>

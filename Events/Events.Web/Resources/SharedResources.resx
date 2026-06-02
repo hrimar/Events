@@ -67,6 +67,17 @@
   <data name="Home_TodayEvents" xml:space="preserve"><value>Събития днес</value></data>
   <data name="Home_Next7Days" xml:space="preserve"><value>Следващите 7 дни</value></data>
 
+  <!-- Home Page - Weekly Section -->
+  <data name="Home_WeeklySectionTitle" xml:space="preserve"><value>Тази седмица в София</value></data>
+  <data name="Home_TabByDay" xml:space="preserve"><value>По ден</value></data>
+  <data name="Home_TabByCategory" xml:space="preserve"><value>По категория</value></data>
+  <data name="Home_TabWeekend" xml:space="preserve"><value>Уикенд</value></data>
+  <data name="Home_TabCalendar" xml:space="preserve"><value>Календар</value></data>
+  <data name="Home_NoEventsForDay" xml:space="preserve"><value>Няма обявени събития</value></data>
+  <data name="Home_NoWeekendEvents" xml:space="preserve"><value>Няма обявени събития за този уикенд</value></data>
+  <data name="Home_ViewAllCategory" xml:space="preserve"><value>Виж всички</value></data>
+  <data name="Home_Today" xml:space="preserve"><value>Днес</value></data>
+
   <!-- Events Index Page - Filters -->
   <data name="PageTitle_AllEvents" xml:space="preserve"><value>Всички събития</value></data>
   <data name="PageTitle_FreeEvents" xml:space="preserve"><value>Безплатни събития</value></data>

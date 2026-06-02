@@ -321,8 +321,7 @@ public class VenuesController : Controller
             // Bulk update all existing events with this location
             var updatedCount = await _eventRepository.UpdateCanonicalVenueByLocationAsync(location, venueId);
 
-            TempData["SuccessMessage"] =
-                $"Location '{location}' mapped successfully. {updatedCount} event(s) updated.";
+            TempData["SuccessMessage"] = $"Location '{location}' mapped successfully. {updatedCount} event(s) updated.";
         }
         catch (ArgumentException ex)
         {
