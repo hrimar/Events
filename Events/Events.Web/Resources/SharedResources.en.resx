@@ -215,6 +215,8 @@
   <data name="Privacy_S10_Title" xml:space="preserve"><value>10. Changes to This Policy</value></data>
   <data name="Privacy_S10_Text" xml:space="preserve"><value>This policy may be updated from time to time. We recommend reviewing it periodically.</value></data>
   <data name="Privacy_S11_Title" xml:space="preserve"><value>11. Contact</value></data>
+  <data name="Privacy_S11_Text" xml:space="preserve"><value>If you have any questions regarding this policy:</value></data>
+  
   <!-- Categories -->
   <data name="Category_Music" xml:space="preserve"><value>Music</value></data>
   <data name="Category_Art" xml:space="preserve"><value>Art &amp; Culture</value></data>

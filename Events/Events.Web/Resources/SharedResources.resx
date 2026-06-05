@@ -1,17 +1,96 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
-  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-              xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
     <xsd:element name="root" msdata:IsDataSet="true">
       <xsd:complexType>
         <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
           <xsd:element name="data">
             <xsd:complexType>
               <xsd:sequence>
                 <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
               </xsd:sequence>
-              <xsd:attribute name="name" use="required" type="xsd:string" />
-              <xsd:attribute name="space" form="qualified" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="resheader">
@@ -19,725 +98,1853 @@
               <xsd:sequence>
                 <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
               </xsd:sequence>
-              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" use="required" />
             </xsd:complexType>
           </xsd:element>
         </xsd:choice>
       </xsd:complexType>
     </xsd:element>
   </xsd:schema>
-  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
-  <resheader name="version"><value>2.0</value></resheader>
-  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
-  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
-
-  <!-- Navigation -->
-  <data name="Nav_Home" xml:space="preserve"><value>Начало</value></data>
-  <data name="Nav_AllEvents" xml:space="preserve"><value>Всички събития</value></data>
-  <data name="Nav_Categories" xml:space="preserve"><value>Категории</value></data>
-  <data name="Nav_AdminPanel" xml:space="preserve"><value>Админ панел</value></data>
-  <data name="Nav_SearchPlaceholder" xml:space="preserve"><value>Търси събития или #тагове...</value></data>
-  <data name="Nav_SearchPlaceholderMobile" xml:space="preserve"><value>Търси събития...</value></data>
-
-  <!-- Footer -->
-  <data name="Footer_AboutUs" xml:space="preserve"><value>За нас</value></data>
-  <data name="Footer_PrivacyPolicy" xml:space="preserve"><value>Политика за поверителност</value></data>
-  <data name="Footer_ContactUs" xml:space="preserve"><value>Контакти</value></data>
-  <data name="Footer_Tagline" xml:space="preserve"><value>Вашият портал за събития</value></data>
-  <data name="Footer_FollowUs" xml:space="preserve"><value>Последвайте ни</value></data>
-
-  <!-- Home Page - Hero -->
-  <data name="Home_HeroTitle" xml:space="preserve"><value>Открийте най-добрите събития в София</value></data>
-  <data name="Home_HeroSubtitle" xml:space="preserve"><value>Концерти, театър, спорт и много повече. Намерете следващото си незабравимо преживяване!</value></data>
-  <data name="Home_BrowseAll" xml:space="preserve"><value>Всички събития</value></data>
-  <data name="Home_FreeEvents" xml:space="preserve"><value>Безплатни събития</value></data>
-
-  <!-- Home Page - Sections -->
-  <data name="Home_BrowseByCategory" xml:space="preserve"><value>Разгледай по категория</value></data>
-  <data name="Home_FeaturedEvents" xml:space="preserve"><value>Препоръчани събития</value></data>
-  <data name="Home_ViewAllEvents" xml:space="preserve"><value>Виж всички събития</value></data>
-  <data name="Home_SavedEvents" xml:space="preserve"><value>Запазени събития</value></data>
-  <data name="Home_RecommendedEvents" xml:space="preserve"><value>Препоръчани събития</value></data>
-  <data name="Home_Details" xml:space="preserve"><value>Детайли</value></data>
-  <data name="Home_BuyTickets" xml:space="preserve"><value>Купи билети</value></data>
-  <data name="Home_Free" xml:space="preserve"><value>Безплатно</value></data>
-
-  <!-- Home Page - Statistics -->
-  <data name="Home_TotalEvents" xml:space="preserve"><value>Общо събития</value></data>
-  <data name="Home_TodayEvents" xml:space="preserve"><value>Събития днес</value></data>
-  <data name="Home_Next7Days" xml:space="preserve"><value>Следващите 7 дни</value></data>
-
-  <!-- Home Page - Weekly Section -->
-  <data name="Home_WeeklySectionTitle" xml:space="preserve"><value>Тази седмица в София</value></data>
-  <data name="Home_TabByDay" xml:space="preserve"><value>По ден</value></data>
-  <data name="Home_TabByCategory" xml:space="preserve"><value>По категория</value></data>
-  <data name="Home_TabWeekend" xml:space="preserve"><value>Уикенд</value></data>
-  <data name="Home_TabCalendar" xml:space="preserve"><value>Календар</value></data>
-  <data name="Home_NoEventsForDay" xml:space="preserve"><value>Няма обявени събития</value></data>
-  <data name="Home_NoWeekendEvents" xml:space="preserve"><value>Няма обявени събития за този уикенд</value></data>
-  <data name="Home_ViewAllCategory" xml:space="preserve"><value>Виж всички</value></data>
-  <data name="Home_Today" xml:space="preserve"><value>Днес</value></data>
-  <data name="Home_ThisWeek" xml:space="preserve"><value>Тази седмица</value></data>
-  <data name="Home_UpcomingSectionTitle" xml:space="preserve"><value>Предстоящо в София</value></data>
-
-  <!-- Events Index Page - Filters -->
-  <data name="PageTitle_AllEvents" xml:space="preserve"><value>Всички събития</value></data>
-  <data name="PageTitle_FreeEvents" xml:space="preserve"><value>Безплатни събития</value></data>
-  <data name="PageTitle_SearchResults" xml:space="preserve"><value>Резултати от търсене</value></data>
-  <data name="PageTitle_Events" xml:space="preserve"><value>Събития</value></data>
-  <data name="Events_Category" xml:space="preserve"><value>Категория</value></data>
-  <data name="Events_AllCategories" xml:space="preserve"><value>Всички категории</value></data>
-  <data name="Events_Subcategory" xml:space="preserve"><value>Подкатегория</value></data>
-  <data name="Events_AllSubcategories" xml:space="preserve"><value>Всички подкатегории</value></data>
-  <data name="Events_SelectCategoryFirst" xml:space="preserve"><value>Изберете категория</value></data>
-  <data name="Events_Price" xml:space="preserve"><value>Цена</value></data>
-  <data name="Events_AllEvents" xml:space="preserve"><value>Всички събития</value></data>
-  <data name="Events_FreeOnly" xml:space="preserve"><value>Само безплатни</value></data>
-  <data name="Events_PaidOnly" xml:space="preserve"><value>Само платени</value></data>
-  <data name="Events_FromDate" xml:space="preserve"><value>От дата</value></data>
-  <data name="Events_ToDate" xml:space="preserve"><value>До дата</value></data>
-  <data name="Events_PopularTags" xml:space="preserve"><value>Популярни тагове</value></data>
-  <data name="Events_BrowseTags" xml:space="preserve"><value>Разгледай тагове</value></data>
-  <data name="Events_SelectedTags" xml:space="preserve"><value>Избрани тагове:</value></data>
-  <data name="Events_ClearAll" xml:space="preserve"><value>Изчисти</value></data>
-  <data name="Events_Tags" xml:space="preserve"><value>Тагове</value></data>
-  <data name="Events_ActiveFilters" xml:space="preserve"><value>Активни филтри:</value></data>
-  <data name="Events_FilterCategory" xml:space="preserve"><value>Категория:</value></data>
-  <data name="Events_FilterSubCategory" xml:space="preserve"><value>Подкатегория:</value></data>
-  <data name="Events_FilterFreeEvents" xml:space="preserve"><value>Безплатни събития</value></data>
-  <data name="Events_FilterPaidEvents" xml:space="preserve"><value>Платени събития</value></data>
-  <data name="Events_FilterSearch" xml:space="preserve"><value>Търсене:</value></data>
-  <data name="Events_SortBy" xml:space="preserve"><value>Сортирай по:</value></data>
-  <data name="Events_View" xml:space="preserve"><value>Изглед:</value></data>
-  <data name="Events_FilteredResults" xml:space="preserve"><value>Филтрирани резултати</value></data>
-  <data name="Events_Tag" xml:space="preserve"><value>Таг</value></data>
-  <data name="Events_Showing" xml:space="preserve"><value>Показват се</value></data>
-  <data name="Events_Of" xml:space="preserve"><value>от</value></data>
-  <data name="Events_NoEventsFound" xml:space="preserve"><value>Няма намерени събития</value></data>
-  <data name="Events_NoEventsHint" xml:space="preserve"><value>Опитайте да промените критериите за търсене или разгледайте всички събития.</value></data>
-  <data name="Events_ViewAllEvents" xml:space="preserve"><value>Виж всички събития</value></data>
-  <data name="Events_Previous" xml:space="preserve"><value>Предишна</value></data>
-  <data name="Events_Next" xml:space="preserve"><value>Следваща</value></data>
-  <data name="Events_More" xml:space="preserve"><value>още</value></data>
-  <data name="Events_Details" xml:space="preserve"><value>Детайли</value></data>
-  <data name="Events_BuyTickets" xml:space="preserve"><value>Купи билети</value></data>
-  <data name="Events_Free" xml:space="preserve"><value>Безплатно</value></data>
-
-  <!-- Events Details Page -->
-  <data name="Details_Home" xml:space="preserve"><value>Начало</value></data>
-  <data name="Details_Events" xml:space="preserve"><value>Събития</value></data>
-  <data name="Details_EventTags" xml:space="preserve"><value>Тагове на събитието</value></data>
-  <data name="Details_FindSimilar" xml:space="preserve"><value>Намери подобни</value></data>
-  <data name="Details_Save" xml:space="preserve"><value>Запази</value></data>
-  <data name="Details_LoginToSave" xml:space="preserve"><value>Влез за да запазиш</value></data>
-  <data name="Details_Share" xml:space="preserve"><value>Сподели</value></data>
-  <data name="Details_CopyLink" xml:space="preserve"><value>Копирай линк</value></data>
-  <data name="Details_Date" xml:space="preserve"><value>Дата</value></data>
-  <data name="Details_DateAndTime" xml:space="preserve"><value>Дата и час</value></data>
-  <data name="Details_Location" xml:space="preserve"><value>Локация</value></data>
-  <data name="Details_Status" xml:space="preserve"><value>Статус</value></data>
-  <data name="Details_AboutEvent" xml:space="preserve"><value>За събитието</value></data>
-  <data name="Details_MoreCategoryEvents" xml:space="preserve"><value>Още събития от</value></data>
-  <data name="Details_EventsIn" xml:space="preserve"><value>Събития в</value></data>
-  <data name="Details_MoreFreeEvents" xml:space="preserve"><value>Още безплатни събития</value></data>
-  <data name="Details_BuyTickets" xml:space="preserve"><value>Купи билети</value></data>
-  <data name="Details_TicketRedirect" xml:space="preserve"><value>Ще бъдете пренасочени към официалния сайт за билети</value></data>
-  <data name="Details_TicketNotAvailable" xml:space="preserve"><value>Информация за билети не е налична</value></data>
-  <data name="Details_YouMightLike" xml:space="preserve"><value>Може да харесате</value></data>
-  <data name="Details_ViewAllCategoryEvents" xml:space="preserve"><value>Виж всички от</value></data>
-  <data name="Details_Free" xml:space="preserve"><value>Безплатно</value></data>
-  <data name="Details_LinkCopied" xml:space="preserve"><value>Линкът е копиран!</value></data>
-  <data name="Details_LinkCopyFailed" xml:space="preserve"><value>Неуспешно копиране на линк</value></data>
-
-  <!-- About Us Page -->
-  <data name="AboutUs_Title" xml:space="preserve"><value>За нас</value></data>
-  <data name="AboutUs_Heading" xml:space="preserve"><value>За Go Sofia</value></data>
-  <data name="AboutUs_P1" xml:space="preserve"><value>Създадохме Go Sofia с една ясна цел – да направим откриването на събития в София по-лесно, по-удобно и по-достъпно. В динамичен град като София всеки ден се случват концерти, фестивали, изложби, спектакли, семейни събития и още много интересни инициативи, но тази информация често е разпръсната на различни места и трудно достига до хората навреме.</value></data>
-  <data name="AboutUs_P2" xml:space="preserve"><value>С go-sofia.com искаме да съберем на едно място информация за събитията в града, така че жителите на София и посетителите на града да могат по-лесно да откриват какво се случва около тях. Нашата идея е да помогнем на повече хора да намират събития, които отговарят на интересите им, и да планират по-лесно свободното си време в София.</value></data>
-  <data name="AboutUs_P3" xml:space="preserve"><value>Вярваме, че когато достъпът до такава информация е по-лесен, градът става по-жив, по-свързан и по-интересен както за хората, които живеят тук, така и за тези, които го посещават.</value></data>
-  <data name="AboutUs_AdvertiseHeading" xml:space="preserve"><value>Реклама при нас</value></data>
-  <data name="AboutUs_AdvertiseText" xml:space="preserve"><value>Ако сте организатор и искате да включите свое събитие в платформата или да го популяризирате пред по-широка аудитория, можете да се свържете с нас за възможностите за реклама и представяне на адрес:</value></data>
-
-  <!-- Privacy Policy Page -->
-  <data name="Privacy_Title" xml:space="preserve"><value>Политика за поверителност</value></data>
-  <data name="Privacy_Subtitle" xml:space="preserve"><value>на go-sofia.com</value></data>
-  <data name="Privacy_S1_Title" xml:space="preserve"><value>1. Администратор на лични данни</value></data>
-  <data name="Privacy_S1_Text" xml:space="preserve"><value>Настоящият уебсайт се управлява от физическо лице (наричано по-долу „Администратор"). За контакт относно обработката на лични данни:</value></data>
-  <data name="Privacy_S2_Title" xml:space="preserve"><value>2. Какви данни събираме</value></data>
-  <data name="Privacy_S2_Intro" xml:space="preserve"><value>При използване на сайта може да събираме следните лични данни:</value></data>
-  <data name="Privacy_S2_Item1" xml:space="preserve"><value>Имейл адрес (задължителен при регистрация)</value></data>
-  <data name="Privacy_S2_Item2" xml:space="preserve"><value>Телефонен номер (по желание на потребителя)</value></data>
-  <data name="Privacy_S2_WebsiteNote" xml:space="preserve"><value>Сайтът:</value></data>
-  <data name="Privacy_S2_DoNot1" xml:space="preserve"><value>НЕ събира реални имена</value></data>
-  <data name="Privacy_S2_DoNot2" xml:space="preserve"><value>НЕ съхранява история на използване</value></data>
-  <data name="Privacy_S2_DoNot3" xml:space="preserve"><value>НЕ събира IP адреси за идентификация</value></data>
-  <data name="Privacy_S2_DoNot4" xml:space="preserve"><value>НЕ извършва профилиране</value></data>
-  <data name="Privacy_S3_Title" xml:space="preserve"><value>3. Цели на обработката</value></data>
-  <data name="Privacy_S3_Intro" xml:space="preserve"><value>Събираме и използваме личните данни за следните цели:</value></data>
-  <data name="Privacy_S3_Item1" xml:space="preserve"><value>Създаване и управление на потребителски акаунт</value></data>
-  <data name="Privacy_S3_Item2" xml:space="preserve"><value>Осигуряване на функционалности на платформата (запазване на харесани събития)</value></data>
-  <data name="Privacy_S3_Item3" xml:space="preserve"><value>Предоставяне на персонализирани препоръки за събития</value></data>
-  <data name="Privacy_S3_Item4" xml:space="preserve"><value>Изпращане на системни имейли (напр. регистрация, възстановяване на парола)</value></data>
-  <data name="Privacy_S3_Item5" xml:space="preserve"><value>Изпращане на информация за нови събития (само при наличие на съгласие)</value></data>
-  <data name="Privacy_S4_Title" xml:space="preserve"><value>4. Правно основание</value></data>
-  <data name="Privacy_S4_Intro" xml:space="preserve"><value>Обработката на лични данни се извършва на следните основания:</value></data>
-  <data name="Privacy_S4_Item1" xml:space="preserve"><value>Изпълнение на договор – за създаване и поддръжка на акаунт</value></data>
-  <data name="Privacy_S4_Item2" xml:space="preserve"><value>Съгласие – при бъдещо изпращане на маркетингови съобщения</value></data>
-  <data name="Privacy_S4_Item3" xml:space="preserve"><value>Легитимен интерес – за подобряване на услугата и препоръките</value></data>
-  <data name="Privacy_S5_Title" xml:space="preserve"><value>5. Съхранение на данните</value></data>
-  <data name="Privacy_S5_Intro" xml:space="preserve"><value>Личните данни се съхраняват:</value></data>
-  <data name="Privacy_S5_Item1" xml:space="preserve"><value>Докато съществува потребителският акаунт</value></data>
-  <data name="Privacy_S5_Item2" xml:space="preserve"><value>До изричното им изтриване от потребителя</value></data>
-  <data name="Privacy_S5_UserRights" xml:space="preserve"><value>Потребителят има възможност по всяко време да:</value></data>
-  <data name="Privacy_S5_UserRight1" xml:space="preserve"><value>изтегли своите данни</value></data>
-  <data name="Privacy_S5_UserRight2" xml:space="preserve"><value>изтрие своя акаунт (и всички свързани данни)</value></data>
-  <data name="Privacy_S6_Title" xml:space="preserve"><value>6. Споделяне на данни с трети страни</value></data>
-  <data name="Privacy_S6_Intro" xml:space="preserve"><value>Личните данни могат да бъдат обработвани от:</value></data>
-  <data name="Privacy_S6_Item1" xml:space="preserve"><value>Хостинг доставчик (Microsoft Azure - в рамките на ЕС)</value></data>
-  <data name="Privacy_S6_Item2" xml:space="preserve"><value>Услуга за изпращане на имейли (само за системни съобщения)</value></data>
-  <data name="Privacy_S6_Note" xml:space="preserve"><value>Данните НЕ се продават и НЕ се предоставят за маркетингови цели на трети страни.</value></data>
-  <data name="Privacy_S7_Title" xml:space="preserve"><value>7. Бисквитки и аналитични инструменти</value></data>
-  <data name="Privacy_S7_Intro" xml:space="preserve"><value>Сайтът може да използва бисквитки (cookies) за:</value></data>
-  <data name="Privacy_S7_Item1" xml:space="preserve"><value>нормалното функциониране на платформата</value></data>
-  <data name="Privacy_S7_Item2" xml:space="preserve"><value>анализ на използването (напр. Google Analytics)</value></data>
-  <data name="Privacy_S7_Note" xml:space="preserve"><value>При използване на аналитични инструменти, те ще бъдат конфигурирани в съответствие с приложимите изисквания за защита на данните.</value></data>
-  <data name="Privacy_S8_Title" xml:space="preserve"><value>8. Права на потребителите</value></data>
-  <data name="Privacy_S8_Intro" xml:space="preserve"><value>Съгласно GDPR, имате право да:</value></data>
-  <data name="Privacy_S8_Item1" xml:space="preserve"><value>получите достъп до вашите данни</value></data>
-  <data name="Privacy_S8_Item2" xml:space="preserve"><value>коригирате неточни данни</value></data>
-  <data name="Privacy_S8_Item3" xml:space="preserve"><value>изтриете данните си („право да бъдеш забравен")</value></data>
-  <data name="Privacy_S8_Item4" xml:space="preserve"><value>ограничите обработката</value></data>
-  <data name="Privacy_S8_Item5" xml:space="preserve"><value>възразите срещу обработката</value></data>
-  <data name="Privacy_S8_Item6" xml:space="preserve"><value>получите копие от данните си</value></data>
-  <data name="Privacy_S8_Note" xml:space="preserve"><value>Можете да упражните тези права чрез настройките на профила или чрез контакт с администратора.</value></data>
-  <data name="Privacy_S9_Title" xml:space="preserve"><value>9. Сигурност</value></data>
-  <data name="Privacy_S9_Text" xml:space="preserve"><value>Предприемаме разумни технически и организационни мерки за защита на личните данни срещу неоторизиран достъп, загуба или злоупотреба.</value></data>
-  <data name="Privacy_S10_Title" xml:space="preserve"><value>10. Промени в тази политика</value></data>
-  <data name="Privacy_S10_Text" xml:space="preserve"><value>Настоящата политика може да бъде актуализирана периодично. Препоръчваме да я преглеждате редовно.</value></data>
-  <data name="Privacy_S11_Title" xml:space="preserve"><value>11. Контакт</value></data>
-  <!-- Categories -->
-  <data name="Category_Music" xml:space="preserve"><value>Музика</value></data>
-  <data name="Category_Art" xml:space="preserve"><value>Изкуство и Култура</value></data>
-  <data name="Category_Business" xml:space="preserve"><value>Бизнес</value></data>
-  <data name="Category_Sports" xml:space="preserve"><value>Спорт</value></data>
-  <data name="Category_Theatre" xml:space="preserve"><value>Театър</value></data>
-  <data name="Category_Cinema" xml:space="preserve"><value>Кино</value></data>
-  <data name="Category_Festivals" xml:space="preserve"><value>Фестивали</value></data>
-  <data name="Category_Exhibitions" xml:space="preserve"><value>Изложби</value></data>
-  <data name="Category_Conferences" xml:space="preserve"><value>Конференции</value></data>
-  <data name="Category_Workshops" xml:space="preserve"><value>Уъркшопи</value></data>
-
-  <!-- Music SubCategories -->
-  <data name="SubCategory_Pop" xml:space="preserve"><value>Поп</value></data>
-  <data name="SubCategory_Rock" xml:space="preserve"><value>Рок</value></data>
-  <data name="SubCategory_HipHop" xml:space="preserve"><value>Хип Хоп</value></data>
-  <data name="SubCategory_Rap" xml:space="preserve"><value>Рап</value></data>
-  <data name="SubCategory_Jazz" xml:space="preserve"><value>Джаз</value></data>
-  <data name="SubCategory_Blues" xml:space="preserve"><value>Блус</value></data>
-  <data name="SubCategory_Classical" xml:space="preserve"><value>Класическа музика</value></data>
-  <data name="SubCategory_Folk" xml:space="preserve"><value>Фолк</value></data>
-  <data name="SubCategory_TraditionalBulgarian" xml:space="preserve"><value>Традиционна българска музика</value></data>
-  <data name="SubCategory_EDM" xml:space="preserve"><value>EDM</value></data>
-  <data name="SubCategory_Techno" xml:space="preserve"><value>Техно</value></data>
-  <data name="SubCategory_House" xml:space="preserve"><value>Хаус</value></data>
-  <data name="SubCategory_DrumBass" xml:space="preserve"><value>Драм &amp; Бас</value></data>
-  <data name="SubCategory_Trance" xml:space="preserve"><value>Транс</value></data>
-  <data name="SubCategory_Reggae" xml:space="preserve"><value>Реге</value></data>
-  <data name="SubCategory_RB" xml:space="preserve"><value>R&amp;B</value></data>
-  <data name="SubCategory_Metal" xml:space="preserve"><value>Метъл</value></data>
-  <data name="SubCategory_Indie" xml:space="preserve"><value>Инди</value></data>
-  <data name="SubCategory_Acoustic" xml:space="preserve"><value>Акустична музика</value></data>
-  <data name="SubCategory_Alternative" xml:space="preserve"><value>Алтернативна музика</value></data>
-  <data name="SubCategory_Punk" xml:space="preserve"><value>Пънк</value></data>
-  <data name="SubCategory_Soul" xml:space="preserve"><value>Соул</value></data>
-  <data name="SubCategory_Chillout" xml:space="preserve"><value>Чилаут</value></data>
-  <data name="SubCategory_Experimental" xml:space="preserve"><value>Експериментална</value></data>
-  <data name="SubCategory_Choir" xml:space="preserve"><value>Хор</value></data>
-  <data name="SubCategory_WorldMusic" xml:space="preserve"><value>World Music</value></data>
-
-  <!-- Art SubCategories -->
-  <data name="SubCategory_Painting" xml:space="preserve"><value>Живопис</value></data>
-  <data name="SubCategory_Sculpture" xml:space="preserve"><value>Скулптура</value></data>
-  <data name="SubCategory_Photography" xml:space="preserve"><value>Фотография</value></data>
-  <data name="SubCategory_DigitalArt" xml:space="preserve"><value>Дигитално изкуство</value></data>
-  <data name="SubCategory_StreetArt" xml:space="preserve"><value>Улично изкуство</value></data>
-  <data name="SubCategory_Graffiti" xml:space="preserve"><value>Графити</value></data>
-  <data name="SubCategory_Illustration" xml:space="preserve"><value>Илюстрация</value></data>
-  <data name="SubCategory_PerformanceArt" xml:space="preserve"><value>Пърформанс</value></data>
-  <data name="SubCategory_InstallationArt" xml:space="preserve"><value>Инсталация</value></data>
-  <data name="SubCategory_ContemporaryArt" xml:space="preserve"><value>Съвременно изкуство</value></data>
-  <data name="SubCategory_VisualArts" xml:space="preserve"><value>Визуални изкуства</value></data>
-  <data name="SubCategory_MixedMedia" xml:space="preserve"><value>Смесена техника</value></data>
-  <data name="SubCategory_ConceptualArt" xml:space="preserve"><value>Концептуално изкуство</value></data>
-
-  <!-- Business SubCategories -->
-  <data name="SubCategory_NetworkingEvents" xml:space="preserve"><value>Нетуъркинг събития</value></data>
-  <data name="SubCategory_Startups" xml:space="preserve"><value>Стартъпи</value></data>
-  <data name="SubCategory_Entrepreneurship" xml:space="preserve"><value>Предприемачество</value></data>
-  <data name="SubCategory_Marketing" xml:space="preserve"><value>Маркетинг</value></data>
-  <data name="SubCategory_Sales" xml:space="preserve"><value>Продажби</value></data>
-  <data name="SubCategory_Leadership" xml:space="preserve"><value>Лидерство</value></data>
-  <data name="SubCategory_Finance" xml:space="preserve"><value>Финанси</value></data>
-  <data name="SubCategory_RealEstate" xml:space="preserve"><value>Недвижими имоти</value></data>
-  <data name="SubCategory_Investment" xml:space="preserve"><value>Инвестиции</value></data>
-  <data name="SubCategory_ECommerce" xml:space="preserve"><value>Е-търговия</value></data>
-  <data name="SubCategory_Innovation" xml:space="preserve"><value>Иновации</value></data>
-  <data name="SubCategory_Technology" xml:space="preserve"><value>Технологии</value></data>
-  <data name="SubCategory_HRManagement" xml:space="preserve"><value>Управление на човешки ресурси</value></data>
-  <data name="SubCategory_BusinessStrategy" xml:space="preserve"><value>Бизнес стратегия</value></data>
-  <data name="SubCategory_ProductDevelopment" xml:space="preserve"><value>Разработка на продукти</value></data>
-
-  <!-- Sports SubCategories -->
-  <data name="SubCategory_Football" xml:space="preserve"><value>Футбол</value></data>
-  <data name="SubCategory_Basketball" xml:space="preserve"><value>Баскетбол</value></data>
-  <data name="SubCategory_Volleyball" xml:space="preserve"><value>Волейбол</value></data>
-  <data name="SubCategory_Tennis" xml:space="preserve"><value>Тенис</value></data>
-  <data name="SubCategory_Athletics" xml:space="preserve"><value>Лека атлетика</value></data>
-  <data name="SubCategory_Swimming" xml:space="preserve"><value>Плуване</value></data>
-  <data name="SubCategory_Running" xml:space="preserve"><value>Бягане</value></data>
-  <data name="SubCategory_Cycling" xml:space="preserve"><value>Колоездене</value></data>
-  <data name="SubCategory_Boxing" xml:space="preserve"><value>Бокс</value></data>
-  <data name="SubCategory_MMA" xml:space="preserve"><value>MMA</value></data>
-  <data name="SubCategory_Wrestling" xml:space="preserve"><value>Борба</value></data>
-  <data name="SubCategory_Weightlifting" xml:space="preserve"><value>Вдигане на тежести</value></data>
-  <data name="SubCategory_CrossFit" xml:space="preserve"><value>Кросфит</value></data>
-  <data name="SubCategory_Yoga" xml:space="preserve"><value>Йога</value></data>
-  <data name="SubCategory_Fitness" xml:space="preserve"><value>Фитнес</value></data>
-  <data name="SubCategory_Hiking" xml:space="preserve"><value>Планинарство</value></data>
-  <data name="SubCategory_Climbing" xml:space="preserve"><value>Катерене</value></data>
-  <data name="SubCategory_Skiing" xml:space="preserve"><value>Ски</value></data>
-  <data name="SubCategory_Snowboarding" xml:space="preserve"><value>Сноуборд</value></data>
-  <data name="SubCategory_Motocross" xml:space="preserve"><value>Мотокрос</value></data>
-  <data name="SubCategory_eSports" xml:space="preserve"><value>Е-спорт</value></data>
-  <data name="SubCategory_TableTennis" xml:space="preserve"><value>Тенис на маса</value></data>
-  <data name="SubCategory_Badminton" xml:space="preserve"><value>Бадминтон</value></data>
-  <data name="SubCategory_Golf" xml:space="preserve"><value>Голф</value></data>
-  <data name="SubCategory_DanceSport" xml:space="preserve"><value>Спортни танци</value></data>
-
-  <!-- Theatre SubCategories -->
-  <data name="SubCategory_Drama" xml:space="preserve"><value>Драма</value></data>
-  <data name="SubCategory_Comedy" xml:space="preserve"><value>Комедия</value></data>
-  <data name="SubCategory_MusicalTheatre" xml:space="preserve"><value>Мюзикъл</value></data>
-  <data name="SubCategory_Tragedy" xml:space="preserve"><value>Трагедия</value></data>
-  <data name="SubCategory_ExperimentalTheatre" xml:space="preserve"><value>Експериментален театър</value></data>
-  <data name="SubCategory_PuppetTheatre" xml:space="preserve"><value>Куклен театър</value></data>
-  <data name="SubCategory_Improvisation" xml:space="preserve"><value>Импровизация</value></data>
-  <data name="SubCategory_StreetTheatre" xml:space="preserve"><value>Уличен театър</value></data>
-  <data name="SubCategory_Monodrama" xml:space="preserve"><value>Монодрама</value></data>
-  <data name="SubCategory_ChildrensTheatre" xml:space="preserve"><value>Детски театър</value></data>
-  <data name="SubCategory_StandupComedy" xml:space="preserve"><value>Стендъп комедия</value></data>
-
-  <!-- Cinema SubCategories -->
-  <data name="SubCategory_FeatureFilms" xml:space="preserve"><value>Игрални филми</value></data>
-  <data name="SubCategory_ShortFilms" xml:space="preserve"><value>Кратки филми</value></data>
-  <data name="SubCategory_Documentaries" xml:space="preserve"><value>Документални филми</value></data>
-  <data name="SubCategory_Animation" xml:space="preserve"><value>Анимация</value></data>
-  <data name="SubCategory_IndependentCinema" xml:space="preserve"><value>Независимо кино</value></data>
-  <data name="SubCategory_BulgarianCinema" xml:space="preserve"><value>Българско кино</value></data>
-  <data name="SubCategory_InternationalCinema" xml:space="preserve"><value>Международно кино</value></data>
-  <data name="SubCategory_FilmPremieres" xml:space="preserve"><value>Филмови премиери</value></data>
-  <data name="SubCategory_StudentFilms" xml:space="preserve"><value>Студентски филми</value></data>
-  <data name="SubCategory_FilmFestivals" xml:space="preserve"><value>Филмови фестивали</value></data>
-
-  <!-- Festivals SubCategories -->
-  <data name="SubCategory_MusicFestivals" xml:space="preserve"><value>Музикални фестивали</value></data>
-  <data name="SubCategory_ArtFestivals" xml:space="preserve"><value>Арт фестивали</value></data>
-  <data name="SubCategory_FoodAndWineFestivals" xml:space="preserve"><value>Фестивали за храна и вино</value></data>
-  <data name="SubCategory_CulturalFestivals" xml:space="preserve"><value>Културни фестивали</value></data>
-  <data name="SubCategory_FolkloreFestivals" xml:space="preserve"><value>Фолклорни фестивали</value></data>
-  <data name="SubCategory_StreetFestivals" xml:space="preserve"><value>Улични фестивали</value></data>
-  <data name="SubCategory_SummerFestivals" xml:space="preserve"><value>Летни фестивали</value></data>
-  <data name="SubCategory_LightFestivals" xml:space="preserve"><value>Фестивали на светлината</value></data>
-  <data name="SubCategory_CraftBeerFestivals" xml:space="preserve"><value>Фестивали на крафт бира</value></data>
-  <data name="SubCategory_EcoFestivals" xml:space="preserve"><value>Еко фестивали</value></data>
-  <data name="SubCategory_DanceFestivals" xml:space="preserve"><value>Танцови фестивали</value></data>
-  <data name="SubCategory_TechFestivals" xml:space="preserve"><value>Технологични фестивали</value></data>
-
-  <!-- Exhibitions SubCategories -->
-  <data name="SubCategory_ArtExhibitions" xml:space="preserve"><value>Художествени изложби</value></data>
-  <data name="SubCategory_PhotographyExhibitions" xml:space="preserve"><value>Фотографски изложби</value></data>
-  <data name="SubCategory_HistoricalExhibitions" xml:space="preserve"><value>Исторически изложби</value></data>
-  <data name="SubCategory_ScienceExhibitions" xml:space="preserve"><value>Научни изложби</value></data>
-  <data name="SubCategory_TechnologyExhibitions" xml:space="preserve"><value>Технологични изложби</value></data>
-  <data name="SubCategory_AutomotiveExhibitions" xml:space="preserve"><value>Автомобилни изложения</value></data>
-  <data name="SubCategory_DesignExhibitions" xml:space="preserve"><value>Дизайн изложби</value></data>
-  <data name="SubCategory_CulturalHeritageExhibitions" xml:space="preserve"><value>Изложби за културно наследство</value></data>
-  <data name="SubCategory_EducationalExhibitions" xml:space="preserve"><value>Образователни изложби</value></data>
-  <data name="SubCategory_CraftExhibitions" xml:space="preserve"><value>Занаятчийски изложби</value></data>
-
-  <!-- Conferences SubCategories -->
-  <data name="SubCategory_TechConferences" xml:space="preserve"><value>Технологични конференции</value></data>
-  <data name="SubCategory_BusinessConferences" xml:space="preserve"><value>Бизнес конференции</value></data>
-  <data name="SubCategory_StartupConferences" xml:space="preserve"><value>Стартъп конференции</value></data>
-  <data name="SubCategory_AcademicConferences" xml:space="preserve"><value>Академични конференции</value></data>
-  <data name="SubCategory_MarketingConferences" xml:space="preserve"><value>Маркетинг конференции</value></data>
-  <data name="SubCategory_ScienceConferences" xml:space="preserve"><value>Научни конференции</value></data>
-  <data name="SubCategory_HealthAndMedicineConferences" xml:space="preserve"><value>Конференции по здравеопазване</value></data>
-  <data name="SubCategory_AIAndInnovationConferences" xml:space="preserve"><value>Конференции за AI и иновации</value></data>
-  <data name="SubCategory_ITSecurityConferences" xml:space="preserve"><value>Конференции по IT сигурност</value></data>
-  <data name="SubCategory_EnvironmentalConferences" xml:space="preserve"><value>Екологични конференции</value></data>
-  <data name="SubCategory_HRConferences" xml:space="preserve"><value>HR конференции</value></data>
-
-  <!-- Workshops SubCategories -->
-  <data name="SubCategory_ArtWorkshops" xml:space="preserve"><value>Арт уъркшопи</value></data>
-  <data name="SubCategory_MusicWorkshops" xml:space="preserve"><value>Музикални уъркшопи</value></data>
-  <data name="SubCategory_DanceWorkshops" xml:space="preserve"><value>Танцови уъркшопи</value></data>
-  <data name="SubCategory_PhotographyWorkshops" xml:space="preserve"><value>Фото уъркшопи</value></data>
-  <data name="SubCategory_CookingWorkshops" xml:space="preserve"><value>Кулинарни уъркшопи</value></data>
-  <data name="SubCategory_CraftWorkshops" xml:space="preserve"><value>Занаятчийски уъркшопи</value></data>
-  <data name="SubCategory_StartupAndEntrepreneurshipWorkshops" xml:space="preserve"><value>Стартъп и предприемачески уъркшопи</value></data>
-  <data name="SubCategory_PersonalDevelopmentWorkshops" xml:space="preserve"><value>Уъркшопи за личностно развитие</value></data>
-  <data name="SubCategory_CodingWorkshops" xml:space="preserve"><value>Уъркшопи по програмиране</value></data>
-  <data name="SubCategory_LanguageWorkshops" xml:space="preserve"><value>Езикови уъркшопи</value></data>
-  <data name="SubCategory_TheatreWorkshops" xml:space="preserve"><value>Театрални уъркшопи</value></data>
-  <data name="SubCategory_YogaAndWellnessWorkshops" xml:space="preserve"><value>Йога и уелнес уъркшопи</value></data>
-  <data name="SubCategory_MarketingWorkshops" xml:space="preserve"><value>Маркетинг уъркшопи</value></data>
-
-  <!-- Shared Other -->
-  <data name="SubCategory_Other" xml:space="preserve"><value>Друго</value></data>
-
-  <!-- Event Status -->
-  <data name="EventStatus_Draft" xml:space="preserve"><value>Чернова</value></data>
-  <data name="EventStatus_Published" xml:space="preserve"><value>Публикувано</value></data>
-  <data name="EventStatus_Cancelled" xml:space="preserve"><value>Отменено</value></data>
-  <data name="EventStatus_Postponed" xml:space="preserve"><value>Отложено</value></data>
-  <data name="EventStatus_SoldOut" xml:space="preserve"><value>Разпродадено</value></data>
-
-  <!-- Event Tags (approved master list) -->
-  <data name="Tag_FamilyFriendly" xml:space="preserve"><value>За семейството</value></data>
-  <data name="Tag_ForKids" xml:space="preserve"><value>За деца</value></data>
-  <data name="Tag_Beginners" xml:space="preserve"><value>За начинаещи</value></data>
-  <data name="Tag_Professionals" xml:space="preserve"><value>За професионалисти</value></data>
-  <data name="Tag_Students" xml:space="preserve"><value>За студенти</value></data>
-  <data name="Tag_AdultsOnly" xml:space="preserve"><value>Само за възрастни</value></data>
-  <data name="Tag_Live" xml:space="preserve"><value>На живо</value></data>
-  <data name="Tag_Outdoor" xml:space="preserve"><value>На открито</value></data>
-  <data name="Tag_Indoor" xml:space="preserve"><value>На закрито</value></data>
-  <data name="Tag_Networking" xml:space="preserve"><value>Нетуъркинг</value></data>
-  <data name="Tag_HandsOn" xml:space="preserve"><value>Практическо</value></data>
-  <data name="Tag_Interactive" xml:space="preserve"><value>Интерактивно</value></data>
-  <data name="Tag_BulgarianCulture" xml:space="preserve"><value>Българска култура</value></data>
-  <data name="Tag_LocalArtists" xml:space="preserve"><value>Местни артисти</value></data>
-  <data name="Tag_InternationalGuests" xml:space="preserve"><value>Международни гости</value></data>
-  <data name="Tag_Traditional" xml:space="preserve"><value>Традиционно</value></data>
-  <data name="Tag_Contemporary" xml:space="preserve"><value>Съвременно</value></data>
-  <data name="Tag_EnglishFriendly" xml:space="preserve"><value>На английски</value></data>
-  <data name="Tag_Seasonal" xml:space="preserve"><value>Сезонно</value></data>
-  <data name="Tag_HolidaySpecial" xml:space="preserve"><value>Празнично</value></data>
-
-  <!-- Account Navigation -->
-  <data name="Nav_Register" xml:space="preserve"><value>Регистрация</value></data>
-  <data name="Nav_Login" xml:space="preserve"><value>Вход</value></data>
-  <data name="Nav_Logout" xml:space="preserve"><value>Изход</value></data>
-  <data name="Nav_Manage" xml:space="preserve"><value>Управление на профила</value></data>
-
-  <!-- Account - Shared -->
-  <data name="Account_Email" xml:space="preserve"><value>Имейл</value></data>
-  <data name="Account_Password" xml:space="preserve"><value>Парола</value></data>
-  <data name="Account_NewPassword" xml:space="preserve"><value>Нова парола</value></data>
-  <data name="Account_ConfirmPassword" xml:space="preserve"><value>Потвърди паролата</value></data>
-  <data name="Account_ConfirmNewPassword" xml:space="preserve"><value>Потвърди новата парола</value></data>
-  <data name="Account_CurrentPassword" xml:space="preserve"><value>Текуща парола</value></data>
-  <data name="Account_EmailAddress" xml:space="preserve"><value>Имейл адрес</value></data>
-  <data name="Account_RememberMe" xml:space="preserve"><value>Запомни ме</value></data>
-  <data name="Account_PlaceholderEmail" xml:space="preserve"><value>name@example.com</value></data>
-  <data name="Account_PlaceholderPassword" xml:space="preserve"><value>Въведете паролата си</value></data>
-  <data name="Account_PlaceholderNewPassword" xml:space="preserve"><value>Изберете силна парола</value></data>
-  <data name="Account_PlaceholderConfirmPassword" xml:space="preserve"><value>Потвърдете паролата</value></data>
-  <data name="Account_BackToLogin" xml:space="preserve"><value>Обратно към вход</value></data>
-  <data name="Account_BackToHome" xml:space="preserve"><value>Към началото</value></data>
-  <data name="Account_BackToProfile" xml:space="preserve"><value>Обратно към профила</value></data>
-  <data name="Account_Back" xml:space="preserve"><value>Назад</value></data>
-  <data name="Account_Cancel" xml:space="preserve"><value>Отказ</value></data>
-  <data name="Account_OrWith" xml:space="preserve"><value>Или с</value></data>
-  <data name="Account_OrRegisterWith" xml:space="preserve"><value>Или регистрирайте се с</value></data>
-  <data name="Account_Close" xml:space="preserve"><value>Затвори</value></data>
-
-  <!-- Login Page -->
-  <data name="Login_Title" xml:space="preserve"><value>Вход</value></data>
-  <data name="Login_Welcome" xml:space="preserve"><value>Добре дошли отново!</value></data>
-  <data name="Login_Subtitle" xml:space="preserve"><value>Влезте в профила си</value></data>
-  <data name="Login_Submit" xml:space="preserve"><value>Вход</value></data>
-  <data name="Login_ForgotPassword" xml:space="preserve"><value>Забравена парола?</value></data>
-  <data name="Login_RegisterNew" xml:space="preserve"><value>Регистрирайте се</value></data>
-  <data name="Login_ResendConfirmation" xml:space="preserve"><value>Изпрати отново потвърждение по имейл</value></data>
-
-  <!-- Register Page -->
-  <data name="Register_Title" xml:space="preserve"><value>Регистрация</value></data>
-  <data name="Register_Heading" xml:space="preserve"><value>Създайте профил</value></data>
-  <data name="Register_Subtitle" xml:space="preserve"><value>Регистрация в Sofia Events</value></data>
-  <data name="Register_Submit" xml:space="preserve"><value>Регистрация</value></data>
-  <data name="Register_PasswordHint" xml:space="preserve"><value>Паролата трябва да е поне 8 символа и да съдържа главни, малки букви, цифра и специален знак</value></data>
-  <data name="Register_HasAccount" xml:space="preserve"><value>Вече имате профил?</value></data>
-  <data name="Register_LoginHere" xml:space="preserve"><value>Влезте тук</value></data>
-
-  <!-- Forgot Password Page -->
-  <data name="ForgotPassword_Title" xml:space="preserve"><value>Забравена парола?</value></data>
-  <data name="ForgotPassword_Heading" xml:space="preserve"><value>Забравена парола?</value></data>
-  <data name="ForgotPassword_Subtitle" xml:space="preserve"><value>Въведете имейла си, за да получите линк за нулиране</value></data>
-  <data name="ForgotPassword_Submit" xml:space="preserve"><value>Изпрати линк за нулиране</value></data>
-  <data name="ForgotPasswordConfirm_Title" xml:space="preserve"><value>Линкът е изпратен</value></data>
-  <data name="ForgotPasswordConfirm_Heading" xml:space="preserve"><value>Проверете имейла си</value></data>
-  <data name="ForgotPasswordConfirm_Lead" xml:space="preserve"><value>Изпратихме линк за нулиране на паролата на вашия имейл адрес.</value></data>
-  <data name="ForgotPasswordConfirm_Hint" xml:space="preserve"><value>Моля, проверете входящата си поща и следвайте линка. Ако не виждате имейла, проверете папката за спам.</value></data>
-
-  <!-- Reset Password Page -->
-  <data name="ResetPassword_Title" xml:space="preserve"><value>Нулиране на парола</value></data>
-  <data name="ResetPassword_Heading" xml:space="preserve"><value>Нулиране на парола</value></data>
-  <data name="ResetPassword_Subtitle" xml:space="preserve"><value>Въведете новата си парола</value></data>
-  <data name="ResetPassword_Submit" xml:space="preserve"><value>Нулирай паролата</value></data>
-  <data name="ResetPasswordConfirm_Title" xml:space="preserve"><value>Паролата е нулирана</value></data>
-  <data name="ResetPasswordConfirm_Heading" xml:space="preserve"><value>Паролата е нулирана успешно!</value></data>
-  <data name="ResetPasswordConfirm_Lead" xml:space="preserve"><value>Паролата ви беше нулирана успешно.</value></data>
-  <data name="ResetPasswordConfirm_Hint" xml:space="preserve"><value>Вече можете да влезете с новата си парола.</value></data>
-  <data name="ResetPasswordConfirm_LoginNow" xml:space="preserve"><value>Влезте сега</value></data>
-
-  <!-- Register Confirmation Page -->
-  <data name="RegisterConfirm_Title" xml:space="preserve"><value>Успешна регистрация</value></data>
-  <data name="RegisterConfirm_Heading" xml:space="preserve"><value>Регистрацията е успешна!</value></data>
-  <data name="RegisterConfirm_DevMode" xml:space="preserve"><value>Режим за разработка:</value></data>
-  <data name="RegisterConfirm_DevEmailNotConfigured" xml:space="preserve"><value>Имейл изпращачът не е конфигуриран.</value></data>
-  <data name="RegisterConfirm_DevClickLink" xml:space="preserve"><value>Натиснете линка по-долу, за да потвърдите профила:</value></data>
-  <data name="RegisterConfirm_ConfirmAccount" xml:space="preserve"><value>Потвърди профила</value></data>
-  <data name="RegisterConfirm_GoToLogin" xml:space="preserve"><value>Към вход</value></data>
-  <data name="RegisterConfirm_DevDocs" xml:space="preserve"><value>Вижте тази документация за настройка на реален имейл изпращач.</value></data>
-  <data name="RegisterConfirm_CheckEmail" xml:space="preserve"><value>Моля, проверете имейла си, за да потвърдите профила.</value></data>
-  <data name="RegisterConfirm_SentLink" xml:space="preserve"><value>Изпратихме линк за потвърждение на вашия имейл адрес. Следвайте линка в имейла, за да активирате профила.</value></data>
-
-  <!-- Resend Email Confirmation Page -->
-  <data name="ResendEmail_Title" xml:space="preserve"><value>Изпрати отново потвърждение</value></data>
-  <data name="ResendEmail_Heading" xml:space="preserve"><value>Изпрати отново потвърждение</value></data>
-  <data name="ResendEmail_Subtitle" xml:space="preserve"><value>Въведете имейла си, за да получите нов линк за потвърждение</value></data>
-  <data name="ResendEmail_Submit" xml:space="preserve"><value>Изпрати потвърждение</value></data>
-
-  <!-- Confirm Email Page -->
-  <data name="ConfirmEmail_Title" xml:space="preserve"><value>Потвърждение на имейл</value></data>
-  <data name="ConfirmEmail_Subtitle" xml:space="preserve"><value>Имейлът ви се потвърждава</value></data>
-  <data name="ConfirmEmailChange_Title" xml:space="preserve"><value>Потвърждение на смяна на имейл</value></data>
-  <data name="ConfirmEmailChange_Subtitle" xml:space="preserve"><value>Потвърждавате новия си имейл адрес</value></data>
-
-  <!-- Access Denied Page -->
-  <data name="AccessDenied_Title" xml:space="preserve"><value>Достъпът е отказан</value></data>
-  <data name="AccessDenied_Subtitle" xml:space="preserve"><value>Нямате права за достъп до този ресурс</value></data>
-  <data name="AccessDenied_Alert" xml:space="preserve"><value>Ако смятате, че това е грешка, моля свържете се с администратора.</value></data>
-  <data name="AccessDenied_Login" xml:space="preserve"><value>Вход</value></data>
-
-  <!-- Lockout Page -->
-  <data name="Lockout_Title" xml:space="preserve"><value>Профилът е заключен</value></data>
-  <data name="Lockout_Subtitle" xml:space="preserve"><value>Профилът ви е временно заключен поради съображения за сигурност</value></data>
-  <data name="Lockout_Alert" xml:space="preserve"><value>Моля, опитайте отново по-късно. Ако смятате, че това е грешка, свържете се с поддръжката.</value></data>
-
-  <!-- External Login Page -->
-  <data name="ExternalLogin_Title" xml:space="preserve"><value>Довършете регистрацията</value></data>
-  <data name="ExternalLogin_Subtitle" xml:space="preserve"><value>Довършете свързването на профила ви с {0}</value></data>
-  <data name="ExternalLogin_Success" xml:space="preserve"><value>Успех!</value></data>
-  <data name="ExternalLogin_AuthenticatedWith" xml:space="preserve"><value>Успешно се удостоверихте с {0}.</value></data>
-  <data name="ExternalLogin_EnterEmail" xml:space="preserve"><value>Моля, въведете имейл адрес по-долу, за да довършите регистрацията.</value></data>
-  <data name="ExternalLogin_Complete" xml:space="preserve"><value>Довърши регистрацията</value></data>
-
-  <!-- Two-Factor Login Pages -->
-  <data name="Login2fa_Title" xml:space="preserve"><value>Двуфакторно удостоверяване</value></data>
-  <data name="Login2fa_Subtitle" xml:space="preserve"><value>Въведете кода от приложението за удостоверяване</value></data>
-  <data name="Login2fa_Description" xml:space="preserve"><value>Входът ви е защитен с приложение за удостоверяване. Въведете 6-цифрения код по-долу.</value></data>
-  <data name="Login2fa_Code" xml:space="preserve"><value>Код за удостоверяване</value></data>
-  <data name="Login2fa_PlaceholderCode" xml:space="preserve"><value>Въведете 6-цифрен код</value></data>
-  <data name="Login2fa_RememberMachine" xml:space="preserve"><value>Запомни това устройство</value></data>
-  <data name="Login2fa_Submit" xml:space="preserve"><value>Потвърди и влез</value></data>
-  <data name="Login2fa_UseRecovery" xml:space="preserve"><value>Използвай код за възстановяване</value></data>
-  <data name="LoginRecovery_Title" xml:space="preserve"><value>Вход с код за възстановяване</value></data>
-  <data name="LoginRecovery_Subtitle" xml:space="preserve"><value>Използвайте код за възстановяване за достъп до профила</value></data>
-  <data name="LoginRecovery_Alert" xml:space="preserve"><value>Заявихте вход с код за възстановяване. Този вход няма да бъде запомнен, докато не въведете код от приложението или не изключите 2FA.</value></data>
-  <data name="LoginRecovery_Code" xml:space="preserve"><value>Код за възстановяване</value></data>
-  <data name="LoginRecovery_Placeholder" xml:space="preserve"><value>Въведете кода за възстановяване</value></data>
-  <data name="LoginRecovery_Hint" xml:space="preserve"><value>Кодовете за възстановяване са дълги буквено-цифрови кодове, получени при активиране на 2FA</value></data>
-
-  <!-- Logout Page -->
-  <data name="Logout_Title" xml:space="preserve"><value>Изход</value></data>
-  <data name="Logout_ReadyToLeave" xml:space="preserve"><value>Готови да излезете?</value></data>
-  <data name="Logout_Prompt" xml:space="preserve"><value>Натиснете бутона по-долу, за да излезете от профила си</value></data>
-  <data name="Logout_GoBack" xml:space="preserve"><value>Назад</value></data>
-  <data name="Logout_SuccessTitle" xml:space="preserve"><value>Успешен изход</value></data>
-  <data name="Logout_LoginAgain" xml:space="preserve"><value>Влезте отново</value></data>
-  <data name="Logout_Submit" xml:space="preserve"><value>Изход</value></data>
-  <data name="Logout_Success" xml:space="preserve"><value>Успешно излязохте от профила си.</value></data>
-  <data name="Logout_ReturnHome" xml:space="preserve"><value>Към началото</value></data>
-
-  <!-- Manage Navigation -->
-  <data name="Manage_Nav_Profile" xml:space="preserve"><value>Профил</value></data>
-  <data name="Manage_Nav_Email" xml:space="preserve"><value>Имейл</value></data>
-  <data name="Manage_Nav_Password" xml:space="preserve"><value>Парола</value></data>
-  <data name="Manage_Nav_ExternalLogins" xml:space="preserve"><value>Външни входове</value></data>
-  <data name="Manage_Nav_TwoFactor" xml:space="preserve"><value>Двуфакторно удостоверяване</value></data>
-  <data name="Manage_Nav_PersonalData" xml:space="preserve"><value>Лични данни</value></data>
-
-  <!-- Manage Profile Page -->
-  <data name="Manage_Profile_Title" xml:space="preserve"><value>Настройки на профила</value></data>
-  <data name="Manage_Profile_Subtitle" xml:space="preserve"><value>Актуализирайте информацията в профила си</value></data>
-  <data name="Manage_Username" xml:space="preserve"><value>Потребителско име</value></data>
-  <data name="Manage_UsernamePlaceholder" xml:space="preserve"><value>Вашето потребителско име</value></data>
-  <data name="Manage_UsernameHint" xml:space="preserve"><value>Потребителското име не може да се променя</value></data>
-  <data name="Manage_Phone" xml:space="preserve"><value>Телефон</value></data>
-  <data name="Manage_PhonePlaceholder" xml:space="preserve"><value>Въведете телефон (по избор)</value></data>
-  <data name="Manage_SaveChanges" xml:space="preserve"><value>Запази промените</value></data>
-
-  <!-- Manage Email Page -->
-  <data name="Manage_Email_Title" xml:space="preserve"><value>Смяна на имейл</value></data>
-  <data name="Manage_Email_Subtitle" xml:space="preserve"><value>Актуализирайте имейл адреса си</value></data>
-  <data name="Manage_CurrentEmail" xml:space="preserve"><value>Текущ имейл</value></data>
-  <data name="Manage_CurrentEmailPlaceholder" xml:space="preserve"><value>Текущият ви имейл</value></data>
-  <data name="Manage_EmailVerified" xml:space="preserve"><value>Потвърден</value></data>
-  <data name="Manage_EmailUnverified" xml:space="preserve"><value>Непотвърден</value></data>
-  <data name="Manage_SendVerification" xml:space="preserve"><value>Изпрати имейл за потвърждение</value></data>
-  <data name="Manage_NewEmail" xml:space="preserve"><value>Нов имейл адрес</value></data>
-  <data name="Manage_NewEmailPlaceholder" xml:space="preserve"><value>Въведете новия имейл адрес</value></data>
-  <data name="Manage_ChangeEmail" xml:space="preserve"><value>Смени имейла</value></data>
-
-  <!-- Manage Password Page -->
-  <data name="Manage_Password_Title" xml:space="preserve"><value>Смяна на парола</value></data>
-  <data name="Manage_Password_Subtitle" xml:space="preserve"><value>Актуализирайте паролата си</value></data>
-  <data name="Manage_Password_CurrentPlaceholder" xml:space="preserve"><value>Въведете текущата парола</value></data>
-  <data name="Manage_Password_NewPlaceholder" xml:space="preserve"><value>Въведете новата парола</value></data>
-  <data name="Manage_Password_ConfirmPlaceholder" xml:space="preserve"><value>Потвърдете новата парола</value></data>
-  <data name="Manage_UpdatePassword" xml:space="preserve"><value>Актуализирай паролата</value></data>
-
-  <!-- Manage Set Password Page -->
-  <data name="Manage_SetPassword_Title" xml:space="preserve"><value>Задай парола</value></data>
-  <data name="Manage_SetPassword_Heading" xml:space="preserve"><value>Задайте парола</value></data>
-  <data name="Manage_SetPassword_Info" xml:space="preserve"><value>Нямате локална парола за този сайт. Добавете локален профил, за да влизате без външен вход.</value></data>
-  <data name="Manage_SetPassword_Submit" xml:space="preserve"><value>Задай парола</value></data>
-
-  <!-- Manage Personal Data Page -->
-  <data name="Manage_PersonalData_Title" xml:space="preserve"><value>Лични данни</value></data>
-  <data name="Manage_PersonalData_Subtitle" xml:space="preserve"><value>Управлявайте личната си информация</value></data>
-  <data name="Manage_PersonalData_Info" xml:space="preserve"><value>Вашите данни: Профилът съдържа лични данни, които сте предоставили. Тази страница ви позволява да ги изтеглите или изтриете.</value></data>
-  <data name="Manage_PersonalData_Warning" xml:space="preserve"><value>Предупреждение: Изтриването на данните ще премахне перманентно профила ви и не може да бъде възстановено.</value></data>
-  <data name="Manage_DownloadData" xml:space="preserve"><value>Изтегли данните ми</value></data>
-  <data name="Manage_DeleteAccount" xml:space="preserve"><value>Изтрий профила ми</value></data>
-
-  <!-- Manage Delete Account Page -->
-  <data name="Manage_Delete_Title" xml:space="preserve"><value>Изтриване на профил</value></data>
-  <data name="Manage_Delete_Subtitle" xml:space="preserve"><value>Перманентно изтриване на профила</value></data>
-  <data name="Manage_Delete_Warning" xml:space="preserve"><value>Предупреждение: Това ще премахне перманентно профила и всички свързани данни. Действието е необратимо.</value></data>
-  <data name="Manage_Delete_ConfirmPassword" xml:space="preserve"><value>Потвърди паролата</value></data>
-  <data name="Manage_Delete_PasswordPlaceholder" xml:space="preserve"><value>Въведете паролата, за да потвърдите изтриването</value></data>
-  <data name="Manage_Delete_PasswordHint" xml:space="preserve"><value>Нужна е паролата ви, за да потвърдим действието</value></data>
-  <data name="Manage_Delete_Submit" xml:space="preserve"><value>Да, изтрий профила ми</value></data>
-  <data name="Manage_Delete_Permanent" xml:space="preserve"><value>Това действие е перманентно и не може да бъде отменено</value></data>
-
-  <!-- Manage External Logins Page -->
-  <data name="Manage_ExternalLogins_Title" xml:space="preserve"><value>Външни входове</value></data>
-  <data name="Manage_ExternalLogins_Subtitle" xml:space="preserve"><value>Управлявайте свързаните социални профили</value></data>
-  <data name="Manage_ExternalLogins_Connected" xml:space="preserve"><value>Свързани профили</value></data>
-  <data name="Manage_ExternalLogins_Remove" xml:space="preserve"><value>Премахни</value></data>
-  <data name="Manage_ExternalLogins_AddService" xml:space="preserve"><value>Добави друг сервиз</value></data>
-  <data name="Manage_ExternalLogins_AddHint" xml:space="preserve"><value>Свържете друг социален профил за по-лесен вход</value></data>
-
-  <!-- Manage Two-Factor Page -->
-  <data name="Manage_2FA_Title" xml:space="preserve"><value>Двуфакторно удостоверяване (2FA)</value></data>
-  <data name="Manage_2FA_Subtitle" xml:space="preserve"><value>Защитете профила си с допълнително удостоверяване</value></data>
-  <data name="Manage_2FA_NoCodes" xml:space="preserve"><value>Няма останали кодове за възстановяване!</value></data>
-  <data name="Manage_2FA_NoCodesBeforeLink" xml:space="preserve"><value>Трябва да</value></data>
-  <data name="Manage_2FA_NoCodesAfterLink" xml:space="preserve"><value>, преди да влезете с код за възстановяване.</value></data>
-  <data name="Manage_2FA_OneCode" xml:space="preserve"><value>Остава само 1 код за възстановяване!</value></data>
-  <data name="Manage_2FA_OneCodeBeforeLink" xml:space="preserve"><value>Можете да</value></data>
-  <data name="Manage_2FA_OneCodeAfterLink" xml:space="preserve"><value>.</value></data>
-  <data name="Manage_2FA_CodesLeft" xml:space="preserve"><value>Остават {0} кода за възстановяване</value></data>
-  <data name="Manage_2FA_CodesLeftBeforeLink" xml:space="preserve"><value>Препоръчваме да</value></data>
-  <data name="Manage_2FA_CodesLeftAfterLink" xml:space="preserve"><value>.</value></data>
-  <data name="Manage_2FA_GenerateLink" xml:space="preserve"><value>генерирате нов набор кодове</value></data>
-  <data name="Manage_2FA_Status" xml:space="preserve"><value>Статус на 2FA</value></data>
-  <data name="Manage_2FA_Enabled" xml:space="preserve"><value>Двуфакторното удостоверяване е включено</value></data>
-  <data name="Manage_2FA_ResetCodes" xml:space="preserve"><value>Нулирай кодовете за възстановяване</value></data>
-  <data name="Manage_2FA_Disable" xml:space="preserve"><value>Изключи 2FA</value></data>
-  <data name="Manage_2FA_ForgetBrowser" xml:space="preserve"><value>Забрави този браузър</value></data>
-  <data name="Manage_2FA_NotEnabled" xml:space="preserve"><value>Двуфакторното удостоверяване не е включено</value></data>
-  <data name="Manage_2FA_EnableHint" xml:space="preserve"><value>Включете го за допълнителна сигурност на профила.</value></data>
-  <data name="Manage_2FA_AuthenticatorApp" xml:space="preserve"><value>Приложение за удостоверяване</value></data>
-  <data name="Manage_2FA_AddApp" xml:space="preserve"><value>Добави приложение</value></data>
-  <data name="Manage_2FA_ConfigureApp" xml:space="preserve"><value>Конфигурирай приложението</value></data>
-  <data name="Manage_2FA_ResetAuthenticator" xml:space="preserve"><value>Нулирай приложението</value></data>
-  <data name="Manage_2FA_PrivacyRequired" xml:space="preserve"><value>Политиката за поверителност не е приета</value></data>
-  <data name="Manage_2FA_PrivacyHint" xml:space="preserve"><value>Трябва да приемете политиката за поверителност и бисквитки, преди да включите 2FA.</value></data>
-
-  <!-- Manage Enable Authenticator Page -->
-  <data name="Manage_EnableAuth_Title" xml:space="preserve"><value>Настройка на 2FA</value></data>
-  <data name="Manage_EnableAuth_Subtitle" xml:space="preserve"><value>Добавете допълнителна сигурност към профила</value></data>
-  <data name="Manage_EnableAuth_Info" xml:space="preserve"><value>Двуфакторното удостоверяване добавя допълнителен слой сигурност към профила ви.</value></data>
-  <data name="Manage_EnableAuth_Step1" xml:space="preserve"><value>Стъпка 1: Изтеглете приложение за удостоверяване</value></data>
-  <data name="Manage_EnableAuth_Step1Hint" xml:space="preserve"><value>Изтеглете едно от следните приложения:</value></data>
-  <data name="Manage_EnableAuth_Step2" xml:space="preserve"><value>Стъпка 2: Сканирайте QR кода или въведете ключа</value></data>
-  <data name="Manage_EnableAuth_Step2Hint" xml:space="preserve"><value>Сканирайте QR кода с приложението или въведете ключа ръчно:</value></data>
-  <data name="Manage_EnableAuth_ManualKey" xml:space="preserve"><value>Ключ за ръчно въвеждане:</value></data>
-  <data name="Manage_EnableAuth_ManualKeyHint" xml:space="preserve"><value>Интервалите и регистърът не са от значение</value></data>
-  <data name="Manage_EnableAuth_Step3" xml:space="preserve"><value>Стъпка 3: Потвърдете приложението</value></data>
-  <data name="Manage_EnableAuth_Step3Hint" xml:space="preserve"><value>Въведете 6-цифрения код от приложението:</value></data>
-  <data name="Manage_EnableAuth_VerificationCode" xml:space="preserve"><value>Код за потвърждение</value></data>
-  <data name="Manage_EnableAuth_Verify" xml:space="preserve"><value>Потвърди и включи</value></data>
-  <data name="Manage_ResetAuthenticator_Title" xml:space="preserve"><value>Нулиране на ключ за приложение</value></data>
-  <data name="Manage_Disable2fa_Title" xml:space="preserve"><value>Изключване на 2FA</value></data>
-  <data name="Manage_GenerateRecoveryCodes_Title" xml:space="preserve"><value>Генериране на кодове за възстановяване</value></data>
-  <data name="Manage_DownloadData_Title" xml:space="preserve"><value>Изтегляне на данни</value></data>
-  <data name="Manage_ShowRecoveryCodes_Title" xml:space="preserve"><value>Кодове за възстановяване</value></data>
-
-  <!-- Account Messages (code-behind) -->
-  <data name="Msg_StatusErrorPrefix" xml:space="preserve"><value>Грешка</value></data>
-  <data name="Msg_Login_InvalidAttempt" xml:space="preserve"><value>Невалиден опит за вход.</value></data>
-  <data name="Msg_Login2fa_InvalidCode" xml:space="preserve"><value>Невалиден код за удостоверяване.</value></data>
-  <data name="Msg_LoginRecovery_InvalidCode" xml:space="preserve"><value>Невалиден код за възстановяване.</value></data>
-  <data name="Msg_ExternalLogin_ErrorFromProvider" xml:space="preserve"><value>Грешка от външен доставчик: {0}</value></data>
-  <data name="Msg_ExternalLogin_LoadError" xml:space="preserve"><value>Грешка при зареждане на информация за външен вход.</value></data>
-  <data name="Msg_ExternalLogin_ConfirmLoadError" xml:space="preserve"><value>Грешка при зареждане на информация за външен вход по време на потвърждение.</value></data>
-  <data name="Msg_ConfirmEmail_Success" xml:space="preserve"><value>Благодарим ви, че потвърдихте имейла си.</value></data>
-  <data name="Msg_ConfirmEmail_Error" xml:space="preserve"><value>Грешка при потвърждаване на имейла.</value></data>
-  <data name="Msg_ConfirmEmailChange_Error" xml:space="preserve"><value>Грешка при смяна на имейла.</value></data>
-  <data name="Msg_ConfirmEmailChange_UserNameError" xml:space="preserve"><value>Грешка при смяна на потребителското име.</value></data>
-  <data name="Msg_ConfirmEmailChange_Success" xml:space="preserve"><value>Благодарим ви, че потвърдихте смяната на имейла.</value></data>
-  <data name="Msg_ResendEmail_Sent" xml:space="preserve"><value>Изпратихме имейл за потвърждение. Моля, проверете пощата си.</value></data>
-  <data name="Msg_Manage_ProfileUpdated" xml:space="preserve"><value>Профилът ви беше актуализиран.</value></data>
-  <data name="Msg_Manage_PhoneUnexpectedError" xml:space="preserve"><value>Неочаквана грешка при задаване на телефон.</value></data>
-  <data name="Msg_Manage_PasswordChanged" xml:space="preserve"><value>Паролата ви беше сменена.</value></data>
-  <data name="Msg_Manage_PasswordSet" xml:space="preserve"><value>Паролата ви беше зададена.</value></data>
-  <data name="Msg_Manage_EmailUnchanged" xml:space="preserve"><value>Имейлът ви не е променен.</value></data>
-  <data name="Msg_Manage_EmailChangeSent" xml:space="preserve"><value>Изпратихме линк за потвърждение на смяната на имейла. Моля, проверете пощата си.</value></data>
-  <data name="Msg_Manage_EmailVerificationSent" xml:space="preserve"><value>Изпратихме имейл за потвърждение. Моля, проверете пощата си.</value></data>
-  <data name="Msg_Manage_EmailSendFailed" xml:space="preserve"><value>Не успяхме да изпратим имейла за потвърждение. Опитайте по-късно или се свържете с поддръжката.</value></data>
-  <data name="Msg_Manage_DeleteIncorrectPassword" xml:space="preserve"><value>Грешна парола.</value></data>
-  <data name="Msg_Manage_2faDisabled" xml:space="preserve"><value>2FA е изключено. Можете да го включите отново при настройка на приложение за удостоверяване.</value></data>
-  <data name="Msg_Manage_2faBrowserForgotten" xml:space="preserve"><value>Този браузър е забравен. При следващ вход ще бъдете помолени за 2FA код.</value></data>
-  <data name="Msg_Manage_AuthenticatorVerified" xml:space="preserve"><value>Приложението за удостоверяване е потвърдено.</value></data>
-  <data name="Msg_Manage_AuthenticatorInvalidCode" xml:space="preserve"><value>Кодът за потвърждение е невалиден.</value></data>
-  <data name="Msg_Manage_AuthenticatorReset" xml:space="preserve"><value>Ключът на приложението е нулиран. Конфигурирайте приложението с новия ключ.</value></data>
-  <data name="Msg_Manage_RecoveryCodesGenerated" xml:space="preserve"><value>Генерирахте нови кодове за възстановяване.</value></data>
-  <data name="Msg_Manage_ExternalLoginRemoved" xml:space="preserve"><value>Външният вход беше премахнат.</value></data>
-  <data name="Msg_Manage_ExternalLoginNotRemoved" xml:space="preserve"><value>Външният вход не беше премахнат.</value></data>
-  <data name="Msg_Manage_ExternalLoginAdded" xml:space="preserve"><value>Външният вход беше добавен.</value></data>
-  <data name="Msg_Manage_ExternalLoginNotAdded" xml:space="preserve"><value>Външният вход не беше добавен. Външен вход може да се свърже само с един профил.</value></data>
-
-  <!-- Sort Options -->
-  <data name="Sort_Date" xml:space="preserve"><value>Дата</value></data>
-  <data name="Sort_Name" xml:space="preserve"><value>Название</value></data>
-  <data name="Sort_Price" xml:space="preserve"><value>Цена</value></data>
-  <data name="Sort_Category" xml:space="preserve"><value>Категория</value></data>
-  <data name="Sort_Subcategory" xml:space="preserve"><value>Подкатегория</value></data>
-
-  <!-- Venues -->
-  <data name="Venue_Home" xml:space="preserve"><value>Начало</value></data>
-  <data name="Venue_SeoTitleSuffix" xml:space="preserve"><value>Събития, концерти, програма | Go Sofia</value></data>
-  <data name="Venue_UpcomingEvents" xml:space="preserve"><value>Предстоящи събития</value></data>
-  <data name="Venue_EventsAtVenue" xml:space="preserve"><value>Предстоящи събития на този адрес</value></data>
-  <data name="Venue_NoEvents" xml:space="preserve"><value>Няма предстоящи обявени събития.</value></data>
-  <data name="Venue_Capacity" xml:space="preserve"><value>Капацитет</value></data>
-  <data name="Venue_OfficialSite" xml:space="preserve"><value>Официален сайт</value></data>
-  <data name="Venue_AllEvents" xml:space="preserve"><value>Всички събития</value></data>
-  <data name="Venue_Location" xml:space="preserve"><value>Локация</value></data>
-  <data name="Venue_Details" xml:space="preserve"><value>Детайли</value></data>
-  <data name="Venue_Free" xml:space="preserve"><value>Безплатно</value></data>
-  <data name="Venue_Tickets" xml:space="preserve"><value>Билети</value></data>
-  <data name="Venue_IndexTitle" xml:space="preserve"><value>Места за събития</value></data>
-  <data name="Venue_IndexSubtitle" xml:space="preserve"><value>Открийте концертни зали, театри, арени и други места за събития в София</value></data>
-  <data name="Venue_SearchPlaceholder" xml:space="preserve"><value>Търсене по име на място...</value></data>
-  <data name="Venue_UpcomingEventsCount" xml:space="preserve"><value>предстоящи събития</value></data>
-  <data name="Venue_NoVenuesFound" xml:space="preserve"><value>Няма намерени места.</value></data>
-  <data name="Venue_BrowseVenues" xml:space="preserve"><value>Места</value></data>
-
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Nav_Home" xml:space="preserve">
+    <value>Начало</value>
+  </data>
+  <data name="Nav_AllEvents" xml:space="preserve">
+    <value>Всички събития</value>
+  </data>
+  <data name="Nav_Categories" xml:space="preserve">
+    <value>Категории</value>
+  </data>
+  <data name="Nav_AdminPanel" xml:space="preserve">
+    <value>Админ панел</value>
+  </data>
+  <data name="Nav_SearchPlaceholder" xml:space="preserve">
+    <value>Търси събития или #тагове...</value>
+  </data>
+  <data name="Nav_SearchPlaceholderMobile" xml:space="preserve">
+    <value>Търси събития...</value>
+  </data>
+  <data name="Footer_AboutUs" xml:space="preserve">
+    <value>За нас</value>
+  </data>
+  <data name="Footer_PrivacyPolicy" xml:space="preserve">
+    <value>Политика за поверителност</value>
+  </data>
+  <data name="Footer_ContactUs" xml:space="preserve">
+    <value>Контакти</value>
+  </data>
+  <data name="Footer_Tagline" xml:space="preserve">
+    <value>Вашият портал за събития</value>
+  </data>
+  <data name="Footer_FollowUs" xml:space="preserve">
+    <value>Последвайте ни</value>
+  </data>
+  <data name="Home_HeroTitle" xml:space="preserve">
+    <value>Открийте най-добрите събития в София</value>
+  </data>
+  <data name="Home_HeroSubtitle" xml:space="preserve">
+    <value>Концерти, театър, спорт и много повече. Намерете следващото си незабравимо преживяване!</value>
+  </data>
+  <data name="Home_BrowseAll" xml:space="preserve">
+    <value>Всички събития</value>
+  </data>
+  <data name="Home_FreeEvents" xml:space="preserve">
+    <value>Безплатни събития</value>
+  </data>
+  <data name="Home_BrowseByCategory" xml:space="preserve">
+    <value>Разгледай по категория</value>
+  </data>
+  <data name="Home_FeaturedEvents" xml:space="preserve">
+    <value>Препоръчани събития</value>
+  </data>
+  <data name="Home_ViewAllEvents" xml:space="preserve">
+    <value>Виж всички събития</value>
+  </data>
+  <data name="Home_SavedEvents" xml:space="preserve">
+    <value>Запазени събития</value>
+  </data>
+  <data name="Home_RecommendedEvents" xml:space="preserve">
+    <value>Препоръчани събития</value>
+  </data>
+  <data name="Home_Details" xml:space="preserve">
+    <value>Детайли</value>
+  </data>
+  <data name="Home_BuyTickets" xml:space="preserve">
+    <value>Купи билети</value>
+  </data>
+  <data name="Home_Free" xml:space="preserve">
+    <value>Безплатно</value>
+  </data>
+  <data name="Home_TotalEvents" xml:space="preserve">
+    <value>Общо събития</value>
+  </data>
+  <data name="Home_TodayEvents" xml:space="preserve">
+    <value>Събития днес</value>
+  </data>
+  <data name="Home_Next7Days" xml:space="preserve">
+    <value>Следващите 7 дни</value>
+  </data>
+  <data name="Home_WeeklySectionTitle" xml:space="preserve">
+    <value>Тази седмица в София</value>
+  </data>
+  <data name="Home_TabByDay" xml:space="preserve">
+    <value>По ден</value>
+  </data>
+  <data name="Home_TabByCategory" xml:space="preserve">
+    <value>По категория</value>
+  </data>
+  <data name="Home_TabWeekend" xml:space="preserve">
+    <value>Уикенд</value>
+  </data>
+  <data name="Home_TabCalendar" xml:space="preserve">
+    <value>Календар</value>
+  </data>
+  <data name="Home_NoEventsForDay" xml:space="preserve">
+    <value>Няма обявени събития</value>
+  </data>
+  <data name="Home_NoWeekendEvents" xml:space="preserve">
+    <value>Няма обявени събития за този уикенд</value>
+  </data>
+  <data name="Home_ViewAllCategory" xml:space="preserve">
+    <value>Виж всички</value>
+  </data>
+  <data name="Home_Today" xml:space="preserve">
+    <value>Днес</value>
+  </data>
+  <data name="Home_ThisWeek" xml:space="preserve">
+    <value>Тази седмица</value>
+  </data>
+  <data name="Home_UpcomingSectionTitle" xml:space="preserve">
+    <value>Предстоящо в София</value>
+  </data>
+  <data name="PageTitle_AllEvents" xml:space="preserve">
+    <value>Всички събития</value>
+  </data>
+  <data name="PageTitle_FreeEvents" xml:space="preserve">
+    <value>Безплатни събития</value>
+  </data>
+  <data name="PageTitle_SearchResults" xml:space="preserve">
+    <value>Резултати от търсене</value>
+  </data>
+  <data name="PageTitle_Events" xml:space="preserve">
+    <value>Събития</value>
+  </data>
+  <data name="Events_Category" xml:space="preserve">
+    <value>Категория</value>
+  </data>
+  <data name="Events_AllCategories" xml:space="preserve">
+    <value>Всички категории</value>
+  </data>
+  <data name="Events_Subcategory" xml:space="preserve">
+    <value>Подкатегория</value>
+  </data>
+  <data name="Events_AllSubcategories" xml:space="preserve">
+    <value>Всички подкатегории</value>
+  </data>
+  <data name="Events_SelectCategoryFirst" xml:space="preserve">
+    <value>Изберете категория</value>
+  </data>
+  <data name="Events_Price" xml:space="preserve">
+    <value>Цена</value>
+  </data>
+  <data name="Events_AllEvents" xml:space="preserve">
+    <value>Всички събития</value>
+  </data>
+  <data name="Events_FreeOnly" xml:space="preserve">
+    <value>Само безплатни</value>
+  </data>
+  <data name="Events_PaidOnly" xml:space="preserve">
+    <value>Само платени</value>
+  </data>
+  <data name="Events_FromDate" xml:space="preserve">
+    <value>От дата</value>
+  </data>
+  <data name="Events_ToDate" xml:space="preserve">
+    <value>До дата</value>
+  </data>
+  <data name="Events_PopularTags" xml:space="preserve">
+    <value>Популярни тагове</value>
+  </data>
+  <data name="Events_BrowseTags" xml:space="preserve">
+    <value>Разгледай тагове</value>
+  </data>
+  <data name="Events_SelectedTags" xml:space="preserve">
+    <value>Избрани тагове:</value>
+  </data>
+  <data name="Events_ClearAll" xml:space="preserve">
+    <value>Изчисти</value>
+  </data>
+  <data name="Events_Tags" xml:space="preserve">
+    <value>Тагове</value>
+  </data>
+  <data name="Events_ActiveFilters" xml:space="preserve">
+    <value>Активни филтри:</value>
+  </data>
+  <data name="Events_FilterCategory" xml:space="preserve">
+    <value>Категория:</value>
+  </data>
+  <data name="Events_FilterSubCategory" xml:space="preserve">
+    <value>Подкатегория:</value>
+  </data>
+  <data name="Events_FilterFreeEvents" xml:space="preserve">
+    <value>Безплатни събития</value>
+  </data>
+  <data name="Events_FilterPaidEvents" xml:space="preserve">
+    <value>Платени събития</value>
+  </data>
+  <data name="Events_FilterSearch" xml:space="preserve">
+    <value>Търсене:</value>
+  </data>
+  <data name="Events_SortBy" xml:space="preserve">
+    <value>Сортирай по:</value>
+  </data>
+  <data name="Events_View" xml:space="preserve">
+    <value>Изглед:</value>
+  </data>
+  <data name="Events_FilteredResults" xml:space="preserve">
+    <value>Филтрирани резултати</value>
+  </data>
+  <data name="Events_Tag" xml:space="preserve">
+    <value>Таг</value>
+  </data>
+  <data name="Events_Showing" xml:space="preserve">
+    <value>Показват се</value>
+  </data>
+  <data name="Events_Of" xml:space="preserve">
+    <value>от</value>
+  </data>
+  <data name="Events_NoEventsFound" xml:space="preserve">
+    <value>Няма намерени събития</value>
+  </data>
+  <data name="Events_NoEventsHint" xml:space="preserve">
+    <value>Опитайте да промените критериите за търсене или разгледайте всички събития.</value>
+  </data>
+  <data name="Events_ViewAllEvents" xml:space="preserve">
+    <value>Виж всички събития</value>
+  </data>
+  <data name="Events_Previous" xml:space="preserve">
+    <value>Предишна</value>
+  </data>
+  <data name="Events_Next" xml:space="preserve">
+    <value>Следваща</value>
+  </data>
+  <data name="Events_More" xml:space="preserve">
+    <value>още</value>
+  </data>
+  <data name="Events_Details" xml:space="preserve">
+    <value>Детайли</value>
+  </data>
+  <data name="Events_BuyTickets" xml:space="preserve">
+    <value>Купи билети</value>
+  </data>
+  <data name="Events_Free" xml:space="preserve">
+    <value>Безплатно</value>
+  </data>
+  <data name="Details_Home" xml:space="preserve">
+    <value>Начало</value>
+  </data>
+  <data name="Details_Events" xml:space="preserve">
+    <value>Събития</value>
+  </data>
+  <data name="Details_EventTags" xml:space="preserve">
+    <value>Тагове на събитието</value>
+  </data>
+  <data name="Details_FindSimilar" xml:space="preserve">
+    <value>Намери подобни</value>
+  </data>
+  <data name="Details_Save" xml:space="preserve">
+    <value>Запази</value>
+  </data>
+  <data name="Details_LoginToSave" xml:space="preserve">
+    <value>Влез за да запазиш</value>
+  </data>
+  <data name="Details_Share" xml:space="preserve">
+    <value>Сподели</value>
+  </data>
+  <data name="Details_CopyLink" xml:space="preserve">
+    <value>Копирай линк</value>
+  </data>
+  <data name="Details_Date" xml:space="preserve">
+    <value>Дата</value>
+  </data>
+  <data name="Details_DateAndTime" xml:space="preserve">
+    <value>Дата и час</value>
+  </data>
+  <data name="Details_Location" xml:space="preserve">
+    <value>Локация</value>
+  </data>
+  <data name="Details_Status" xml:space="preserve">
+    <value>Статус</value>
+  </data>
+  <data name="Details_AboutEvent" xml:space="preserve">
+    <value>За събитието</value>
+  </data>
+  <data name="Details_MoreCategoryEvents" xml:space="preserve">
+    <value>Още събития от</value>
+  </data>
+  <data name="Details_EventsIn" xml:space="preserve">
+    <value>Събития в</value>
+  </data>
+  <data name="Details_MoreFreeEvents" xml:space="preserve">
+    <value>Още безплатни събития</value>
+  </data>
+  <data name="Details_BuyTickets" xml:space="preserve">
+    <value>Купи билети</value>
+  </data>
+  <data name="Details_TicketRedirect" xml:space="preserve">
+    <value>Ще бъдете пренасочени към официалния сайт за билети</value>
+  </data>
+  <data name="Details_TicketNotAvailable" xml:space="preserve">
+    <value>Информация за билети не е налична</value>
+  </data>
+  <data name="Details_YouMightLike" xml:space="preserve">
+    <value>Може да харесате</value>
+  </data>
+  <data name="Details_ViewAllCategoryEvents" xml:space="preserve">
+    <value>Виж всички от</value>
+  </data>
+  <data name="Details_Free" xml:space="preserve">
+    <value>Безплатно</value>
+  </data>
+  <data name="Details_LinkCopied" xml:space="preserve">
+    <value>Линкът е копиран!</value>
+  </data>
+  <data name="Details_LinkCopyFailed" xml:space="preserve">
+    <value>Неуспешно копиране на линк</value>
+  </data>
+  <data name="AboutUs_Title" xml:space="preserve">
+    <value>За нас</value>
+  </data>
+  <data name="AboutUs_Heading" xml:space="preserve">
+    <value>За Go Sofia</value>
+  </data>
+  <data name="AboutUs_P1" xml:space="preserve">
+    <value>Създадохме Go Sofia с една ясна цел – да направим откриването на събития в София по-лесно, по-удобно и по-достъпно. В динамичен град като София всеки ден се случват концерти, фестивали, изложби, спектакли, семейни събития и още много интересни инициативи, но тази информация често е разпръсната на различни места и трудно достига до хората навреме.</value>
+  </data>
+  <data name="AboutUs_P2" xml:space="preserve">
+    <value>С go-sofia.com искаме да съберем на едно място информация за събитията в града, така че жителите на София и посетителите на града да могат по-лесно да откриват какво се случва около тях. Нашата идея е да помогнем на повече хора да намират събития, които отговарят на интересите им, и да планират по-лесно свободното си време в София.</value>
+  </data>
+  <data name="AboutUs_P3" xml:space="preserve">
+    <value>Вярваме, че когато достъпът до такава информация е по-лесен, градът става по-жив, по-свързан и по-интересен както за хората, които живеят тук, така и за тези, които го посещават.</value>
+  </data>
+  <data name="AboutUs_AdvertiseHeading" xml:space="preserve">
+    <value>Реклама при нас</value>
+  </data>
+  <data name="AboutUs_AdvertiseText" xml:space="preserve">
+    <value>Ако сте организатор и искате да включите свое събитие в платформата или да го популяризирате пред по-широка аудитория, можете да се свържете с нас за възможностите за реклама и представяне на адрес:</value>
+  </data>
+  <data name="Privacy_Title" xml:space="preserve">
+    <value>Политика за поверителност</value>
+  </data>
+  <data name="Privacy_Subtitle" xml:space="preserve">
+    <value>на go-sofia.com</value>
+  </data>
+  <data name="Privacy_S1_Title" xml:space="preserve">
+    <value>1. Администратор на лични данни</value>
+  </data>
+  <data name="Privacy_S1_Text" xml:space="preserve">
+    <value>Настоящият уебсайт се управлява от физическо лице (наричано по-долу „Администратор"). За контакт относно обработката на лични данни:</value>
+  </data>
+  <data name="Privacy_S2_Title" xml:space="preserve">
+    <value>2. Какви данни събираме</value>
+  </data>
+  <data name="Privacy_S2_Intro" xml:space="preserve">
+    <value>При използване на сайта може да събираме следните лични данни:</value>
+  </data>
+  <data name="Privacy_S2_Item1" xml:space="preserve">
+    <value>Имейл адрес (задължителен при регистрация)</value>
+  </data>
+  <data name="Privacy_S2_Item2" xml:space="preserve">
+    <value>Телефонен номер (по желание на потребителя)</value>
+  </data>
+  <data name="Privacy_S2_WebsiteNote" xml:space="preserve">
+    <value>Сайтът:</value>
+  </data>
+  <data name="Privacy_S2_DoNot1" xml:space="preserve">
+    <value>НЕ събира реални имена</value>
+  </data>
+  <data name="Privacy_S2_DoNot2" xml:space="preserve">
+    <value>НЕ съхранява история на използване</value>
+  </data>
+  <data name="Privacy_S2_DoNot3" xml:space="preserve">
+    <value>НЕ събира IP адреси за идентификация</value>
+  </data>
+  <data name="Privacy_S2_DoNot4" xml:space="preserve">
+    <value>НЕ извършва профилиране</value>
+  </data>
+  <data name="Privacy_S3_Title" xml:space="preserve">
+    <value>3. Цели на обработката</value>
+  </data>
+  <data name="Privacy_S3_Intro" xml:space="preserve">
+    <value>Събираме и използваме личните данни за следните цели:</value>
+  </data>
+  <data name="Privacy_S3_Item1" xml:space="preserve">
+    <value>Създаване и управление на потребителски акаунт</value>
+  </data>
+  <data name="Privacy_S3_Item2" xml:space="preserve">
+    <value>Осигуряване на функционалности на платформата (запазване на харесани събития)</value>
+  </data>
+  <data name="Privacy_S3_Item3" xml:space="preserve">
+    <value>Предоставяне на персонализирани препоръки за събития</value>
+  </data>
+  <data name="Privacy_S3_Item4" xml:space="preserve">
+    <value>Изпращане на системни имейли (напр. регистрация, възстановяване на парола)</value>
+  </data>
+  <data name="Privacy_S3_Item5" xml:space="preserve">
+    <value>Изпращане на информация за нови събития (само при наличие на съгласие)</value>
+  </data>
+  <data name="Privacy_S4_Title" xml:space="preserve">
+    <value>4. Правно основание</value>
+  </data>
+  <data name="Privacy_S4_Intro" xml:space="preserve">
+    <value>Обработката на лични данни се извършва на следните основания:</value>
+  </data>
+  <data name="Privacy_S4_Item1" xml:space="preserve">
+    <value>Изпълнение на договор – за създаване и поддръжка на акаунт</value>
+  </data>
+  <data name="Privacy_S4_Item2" xml:space="preserve">
+    <value>Съгласие – при бъдещо изпращане на маркетингови съобщения</value>
+  </data>
+  <data name="Privacy_S4_Item3" xml:space="preserve">
+    <value>Легитимен интерес – за подобряване на услугата и препоръките</value>
+  </data>
+  <data name="Privacy_S5_Title" xml:space="preserve">
+    <value>5. Съхранение на данните</value>
+  </data>
+  <data name="Privacy_S5_Intro" xml:space="preserve">
+    <value>Личните данни се съхраняват:</value>
+  </data>
+  <data name="Privacy_S5_Item1" xml:space="preserve">
+    <value>Докато съществува потребителският акаунт</value>
+  </data>
+  <data name="Privacy_S5_Item2" xml:space="preserve">
+    <value>До изричното им изтриване от потребителя</value>
+  </data>
+  <data name="Privacy_S5_UserRights" xml:space="preserve">
+    <value>Потребителят има възможност по всяко време да:</value>
+  </data>
+  <data name="Privacy_S5_UserRight1" xml:space="preserve">
+    <value>изтегли своите данни</value>
+  </data>
+  <data name="Privacy_S5_UserRight2" xml:space="preserve">
+    <value>изтрие своя акаунт (и всички свързани данни)</value>
+  </data>
+  <data name="Privacy_S6_Title" xml:space="preserve">
+    <value>6. Споделяне на данни с трети страни</value>
+  </data>
+  <data name="Privacy_S6_Intro" xml:space="preserve">
+    <value>Личните данни могат да бъдат обработвани от:</value>
+  </data>
+  <data name="Privacy_S6_Item1" xml:space="preserve">
+    <value>Хостинг доставчик (Microsoft Azure - в рамките на ЕС)</value>
+  </data>
+  <data name="Privacy_S6_Item2" xml:space="preserve">
+    <value>Услуга за изпращане на имейли (само за системни съобщения)</value>
+  </data>
+  <data name="Privacy_S6_Note" xml:space="preserve">
+    <value>Данните НЕ се продават и НЕ се предоставят за маркетингови цели на трети страни.</value>
+  </data>
+  <data name="Privacy_S7_Title" xml:space="preserve">
+    <value>7. Бисквитки и аналитични инструменти</value>
+  </data>
+  <data name="Privacy_S7_Intro" xml:space="preserve">
+    <value>Сайтът може да използва бисквитки (cookies) за:</value>
+  </data>
+  <data name="Privacy_S7_Item1" xml:space="preserve">
+    <value>нормалното функциониране на платформата</value>
+  </data>
+  <data name="Privacy_S7_Item2" xml:space="preserve">
+    <value>анализ на използването (напр. Google Analytics)</value>
+  </data>
+  <data name="Privacy_S7_Note" xml:space="preserve">
+    <value>При използване на аналитични инструменти, те ще бъдат конфигурирани в съответствие с приложимите изисквания за защита на данните.</value>
+  </data>
+  <data name="Privacy_S8_Title" xml:space="preserve">
+    <value>8. Права на потребителите</value>
+  </data>
+  <data name="Privacy_S8_Intro" xml:space="preserve">
+    <value>Съгласно GDPR, имате право да:</value>
+  </data>
+  <data name="Privacy_S8_Item1" xml:space="preserve">
+    <value>получите достъп до вашите данни</value>
+  </data>
+  <data name="Privacy_S8_Item2" xml:space="preserve">
+    <value>коригирате неточни данни</value>
+  </data>
+  <data name="Privacy_S8_Item3" xml:space="preserve">
+    <value>изтриете данните си („право да бъдеш забравен")</value>
+  </data>
+  <data name="Privacy_S8_Item4" xml:space="preserve">
+    <value>ограничите обработката</value>
+  </data>
+  <data name="Privacy_S8_Item5" xml:space="preserve">
+    <value>възразите срещу обработката</value>
+  </data>
+  <data name="Privacy_S8_Item6" xml:space="preserve">
+    <value>получите копие от данните си</value>
+  </data>
+  <data name="Privacy_S8_Note" xml:space="preserve">
+    <value>Можете да упражните тези права чрез настройките на профила или чрез контакт с администратора.</value>
+  </data>
+  <data name="Privacy_S9_Title" xml:space="preserve">
+    <value>9. Сигурност</value>
+  </data>
+  <data name="Privacy_S9_Text" xml:space="preserve">
+    <value>Предприемаме разумни технически и организационни мерки за защита на личните данни срещу неоторизиран достъп, загуба или злоупотреба.</value>
+  </data>
+  <data name="Privacy_S10_Title" xml:space="preserve">
+    <value>10. Промени в тази политика</value>
+  </data>
+  <data name="Privacy_S10_Text" xml:space="preserve">
+    <value>Настоящата политика може да бъде актуализирана периодично. Препоръчваме да я преглеждате редовно.</value>
+  </data>
+  <data name="Privacy_S11_Title" xml:space="preserve">
+    <value>11. Контакт</value>
+  </data>
+  <data name="Privacy_S11_Text" xml:space="preserve">
+    <value>Ако имате някакви въпроси относно тази политика:</value>
+  </data>
+  <data name="Category_Music" xml:space="preserve">
+    <value>Музика</value>
+  </data>
+  <data name="Category_Art" xml:space="preserve">
+    <value>Изкуство и Култура</value>
+  </data>
+  <data name="Category_Business" xml:space="preserve">
+    <value>Бизнес</value>
+  </data>
+  <data name="Category_Sports" xml:space="preserve">
+    <value>Спорт</value>
+  </data>
+  <data name="Category_Theatre" xml:space="preserve">
+    <value>Театър</value>
+  </data>
+  <data name="Category_Cinema" xml:space="preserve">
+    <value>Кино</value>
+  </data>
+  <data name="Category_Festivals" xml:space="preserve">
+    <value>Фестивали</value>
+  </data>
+  <data name="Category_Exhibitions" xml:space="preserve">
+    <value>Изложби</value>
+  </data>
+  <data name="Category_Conferences" xml:space="preserve">
+    <value>Конференции</value>
+  </data>
+  <data name="Category_Workshops" xml:space="preserve">
+    <value>Уъркшопи</value>
+  </data>
+  <data name="SubCategory_Pop" xml:space="preserve">
+    <value>Поп</value>
+  </data>
+  <data name="SubCategory_Rock" xml:space="preserve">
+    <value>Рок</value>
+  </data>
+  <data name="SubCategory_HipHop" xml:space="preserve">
+    <value>Хип Хоп</value>
+  </data>
+  <data name="SubCategory_Rap" xml:space="preserve">
+    <value>Рап</value>
+  </data>
+  <data name="SubCategory_Jazz" xml:space="preserve">
+    <value>Джаз</value>
+  </data>
+  <data name="SubCategory_Blues" xml:space="preserve">
+    <value>Блус</value>
+  </data>
+  <data name="SubCategory_Classical" xml:space="preserve">
+    <value>Класическа музика</value>
+  </data>
+  <data name="SubCategory_Folk" xml:space="preserve">
+    <value>Фолк</value>
+  </data>
+  <data name="SubCategory_TraditionalBulgarian" xml:space="preserve">
+    <value>Традиционна българска музика</value>
+  </data>
+  <data name="SubCategory_EDM" xml:space="preserve">
+    <value>EDM</value>
+  </data>
+  <data name="SubCategory_Techno" xml:space="preserve">
+    <value>Техно</value>
+  </data>
+  <data name="SubCategory_House" xml:space="preserve">
+    <value>Хаус</value>
+  </data>
+  <data name="SubCategory_DrumBass" xml:space="preserve">
+    <value>Драм &amp; Бас</value>
+  </data>
+  <data name="SubCategory_Trance" xml:space="preserve">
+    <value>Транс</value>
+  </data>
+  <data name="SubCategory_Reggae" xml:space="preserve">
+    <value>Реге</value>
+  </data>
+  <data name="SubCategory_RB" xml:space="preserve">
+    <value>R&amp;B</value>
+  </data>
+  <data name="SubCategory_Metal" xml:space="preserve">
+    <value>Метъл</value>
+  </data>
+  <data name="SubCategory_Indie" xml:space="preserve">
+    <value>Инди</value>
+  </data>
+  <data name="SubCategory_Acoustic" xml:space="preserve">
+    <value>Акустична музика</value>
+  </data>
+  <data name="SubCategory_Alternative" xml:space="preserve">
+    <value>Алтернативна музика</value>
+  </data>
+  <data name="SubCategory_Punk" xml:space="preserve">
+    <value>Пънк</value>
+  </data>
+  <data name="SubCategory_Soul" xml:space="preserve">
+    <value>Соул</value>
+  </data>
+  <data name="SubCategory_Chillout" xml:space="preserve">
+    <value>Чилаут</value>
+  </data>
+  <data name="SubCategory_Experimental" xml:space="preserve">
+    <value>Експериментална</value>
+  </data>
+  <data name="SubCategory_Choir" xml:space="preserve">
+    <value>Хор</value>
+  </data>
+  <data name="SubCategory_WorldMusic" xml:space="preserve">
+    <value>World Music</value>
+  </data>
+  <data name="SubCategory_Painting" xml:space="preserve">
+    <value>Живопис</value>
+  </data>
+  <data name="SubCategory_Sculpture" xml:space="preserve">
+    <value>Скулптура</value>
+  </data>
+  <data name="SubCategory_Photography" xml:space="preserve">
+    <value>Фотография</value>
+  </data>
+  <data name="SubCategory_DigitalArt" xml:space="preserve">
+    <value>Дигитално изкуство</value>
+  </data>
+  <data name="SubCategory_StreetArt" xml:space="preserve">
+    <value>Улично изкуство</value>
+  </data>
+  <data name="SubCategory_Graffiti" xml:space="preserve">
+    <value>Графити</value>
+  </data>
+  <data name="SubCategory_Illustration" xml:space="preserve">
+    <value>Илюстрация</value>
+  </data>
+  <data name="SubCategory_PerformanceArt" xml:space="preserve">
+    <value>Пърформанс</value>
+  </data>
+  <data name="SubCategory_InstallationArt" xml:space="preserve">
+    <value>Инсталация</value>
+  </data>
+  <data name="SubCategory_ContemporaryArt" xml:space="preserve">
+    <value>Съвременно изкуство</value>
+  </data>
+  <data name="SubCategory_VisualArts" xml:space="preserve">
+    <value>Визуални изкуства</value>
+  </data>
+  <data name="SubCategory_MixedMedia" xml:space="preserve">
+    <value>Смесена техника</value>
+  </data>
+  <data name="SubCategory_ConceptualArt" xml:space="preserve">
+    <value>Концептуално изкуство</value>
+  </data>
+  <data name="SubCategory_NetworkingEvents" xml:space="preserve">
+    <value>Нетуъркинг събития</value>
+  </data>
+  <data name="SubCategory_Startups" xml:space="preserve">
+    <value>Стартъпи</value>
+  </data>
+  <data name="SubCategory_Entrepreneurship" xml:space="preserve">
+    <value>Предприемачество</value>
+  </data>
+  <data name="SubCategory_Marketing" xml:space="preserve">
+    <value>Маркетинг</value>
+  </data>
+  <data name="SubCategory_Sales" xml:space="preserve">
+    <value>Продажби</value>
+  </data>
+  <data name="SubCategory_Leadership" xml:space="preserve">
+    <value>Лидерство</value>
+  </data>
+  <data name="SubCategory_Finance" xml:space="preserve">
+    <value>Финанси</value>
+  </data>
+  <data name="SubCategory_RealEstate" xml:space="preserve">
+    <value>Недвижими имоти</value>
+  </data>
+  <data name="SubCategory_Investment" xml:space="preserve">
+    <value>Инвестиции</value>
+  </data>
+  <data name="SubCategory_ECommerce" xml:space="preserve">
+    <value>Е-търговия</value>
+  </data>
+  <data name="SubCategory_Innovation" xml:space="preserve">
+    <value>Иновации</value>
+  </data>
+  <data name="SubCategory_Technology" xml:space="preserve">
+    <value>Технологии</value>
+  </data>
+  <data name="SubCategory_HRManagement" xml:space="preserve">
+    <value>Управление на човешки ресурси</value>
+  </data>
+  <data name="SubCategory_BusinessStrategy" xml:space="preserve">
+    <value>Бизнес стратегия</value>
+  </data>
+  <data name="SubCategory_ProductDevelopment" xml:space="preserve">
+    <value>Разработка на продукти</value>
+  </data>
+  <data name="SubCategory_Football" xml:space="preserve">
+    <value>Футбол</value>
+  </data>
+  <data name="SubCategory_Basketball" xml:space="preserve">
+    <value>Баскетбол</value>
+  </data>
+  <data name="SubCategory_Volleyball" xml:space="preserve">
+    <value>Волейбол</value>
+  </data>
+  <data name="SubCategory_Tennis" xml:space="preserve">
+    <value>Тенис</value>
+  </data>
+  <data name="SubCategory_Athletics" xml:space="preserve">
+    <value>Лека атлетика</value>
+  </data>
+  <data name="SubCategory_Swimming" xml:space="preserve">
+    <value>Плуване</value>
+  </data>
+  <data name="SubCategory_Running" xml:space="preserve">
+    <value>Бягане</value>
+  </data>
+  <data name="SubCategory_Cycling" xml:space="preserve">
+    <value>Колоездене</value>
+  </data>
+  <data name="SubCategory_Boxing" xml:space="preserve">
+    <value>Бокс</value>
+  </data>
+  <data name="SubCategory_MMA" xml:space="preserve">
+    <value>MMA</value>
+  </data>
+  <data name="SubCategory_Wrestling" xml:space="preserve">
+    <value>Борба</value>
+  </data>
+  <data name="SubCategory_Weightlifting" xml:space="preserve">
+    <value>Вдигане на тежести</value>
+  </data>
+  <data name="SubCategory_CrossFit" xml:space="preserve">
+    <value>Кросфит</value>
+  </data>
+  <data name="SubCategory_Yoga" xml:space="preserve">
+    <value>Йога</value>
+  </data>
+  <data name="SubCategory_Fitness" xml:space="preserve">
+    <value>Фитнес</value>
+  </data>
+  <data name="SubCategory_Hiking" xml:space="preserve">
+    <value>Планинарство</value>
+  </data>
+  <data name="SubCategory_Climbing" xml:space="preserve">
+    <value>Катерене</value>
+  </data>
+  <data name="SubCategory_Skiing" xml:space="preserve">
+    <value>Ски</value>
+  </data>
+  <data name="SubCategory_Snowboarding" xml:space="preserve">
+    <value>Сноуборд</value>
+  </data>
+  <data name="SubCategory_Motocross" xml:space="preserve">
+    <value>Мотокрос</value>
+  </data>
+  <data name="SubCategory_eSports" xml:space="preserve">
+    <value>Е-спорт</value>
+  </data>
+  <data name="SubCategory_TableTennis" xml:space="preserve">
+    <value>Тенис на маса</value>
+  </data>
+  <data name="SubCategory_Badminton" xml:space="preserve">
+    <value>Бадминтон</value>
+  </data>
+  <data name="SubCategory_Golf" xml:space="preserve">
+    <value>Голф</value>
+  </data>
+  <data name="SubCategory_DanceSport" xml:space="preserve">
+    <value>Спортни танци</value>
+  </data>
+  <data name="SubCategory_Drama" xml:space="preserve">
+    <value>Драма</value>
+  </data>
+  <data name="SubCategory_Comedy" xml:space="preserve">
+    <value>Комедия</value>
+  </data>
+  <data name="SubCategory_MusicalTheatre" xml:space="preserve">
+    <value>Мюзикъл</value>
+  </data>
+  <data name="SubCategory_Tragedy" xml:space="preserve">
+    <value>Трагедия</value>
+  </data>
+  <data name="SubCategory_ExperimentalTheatre" xml:space="preserve">
+    <value>Експериментален театър</value>
+  </data>
+  <data name="SubCategory_PuppetTheatre" xml:space="preserve">
+    <value>Куклен театър</value>
+  </data>
+  <data name="SubCategory_Improvisation" xml:space="preserve">
+    <value>Импровизация</value>
+  </data>
+  <data name="SubCategory_StreetTheatre" xml:space="preserve">
+    <value>Уличен театър</value>
+  </data>
+  <data name="SubCategory_Monodrama" xml:space="preserve">
+    <value>Монодрама</value>
+  </data>
+  <data name="SubCategory_ChildrensTheatre" xml:space="preserve">
+    <value>Детски театър</value>
+  </data>
+  <data name="SubCategory_StandupComedy" xml:space="preserve">
+    <value>Стендъп комедия</value>
+  </data>
+  <data name="SubCategory_FeatureFilms" xml:space="preserve">
+    <value>Игрални филми</value>
+  </data>
+  <data name="SubCategory_ShortFilms" xml:space="preserve">
+    <value>Кратки филми</value>
+  </data>
+  <data name="SubCategory_Documentaries" xml:space="preserve">
+    <value>Документални филми</value>
+  </data>
+  <data name="SubCategory_Animation" xml:space="preserve">
+    <value>Анимация</value>
+  </data>
+  <data name="SubCategory_IndependentCinema" xml:space="preserve">
+    <value>Независимо кино</value>
+  </data>
+  <data name="SubCategory_BulgarianCinema" xml:space="preserve">
+    <value>Българско кино</value>
+  </data>
+  <data name="SubCategory_InternationalCinema" xml:space="preserve">
+    <value>Международно кино</value>
+  </data>
+  <data name="SubCategory_FilmPremieres" xml:space="preserve">
+    <value>Филмови премиери</value>
+  </data>
+  <data name="SubCategory_StudentFilms" xml:space="preserve">
+    <value>Студентски филми</value>
+  </data>
+  <data name="SubCategory_FilmFestivals" xml:space="preserve">
+    <value>Филмови фестивали</value>
+  </data>
+  <data name="SubCategory_MusicFestivals" xml:space="preserve">
+    <value>Музикални фестивали</value>
+  </data>
+  <data name="SubCategory_ArtFestivals" xml:space="preserve">
+    <value>Арт фестивали</value>
+  </data>
+  <data name="SubCategory_FoodAndWineFestivals" xml:space="preserve">
+    <value>Фестивали за храна и вино</value>
+  </data>
+  <data name="SubCategory_CulturalFestivals" xml:space="preserve">
+    <value>Културни фестивали</value>
+  </data>
+  <data name="SubCategory_FolkloreFestivals" xml:space="preserve">
+    <value>Фолклорни фестивали</value>
+  </data>
+  <data name="SubCategory_StreetFestivals" xml:space="preserve">
+    <value>Улични фестивали</value>
+  </data>
+  <data name="SubCategory_SummerFestivals" xml:space="preserve">
+    <value>Летни фестивали</value>
+  </data>
+  <data name="SubCategory_LightFestivals" xml:space="preserve">
+    <value>Фестивали на светлината</value>
+  </data>
+  <data name="SubCategory_CraftBeerFestivals" xml:space="preserve">
+    <value>Фестивали на крафт бира</value>
+  </data>
+  <data name="SubCategory_EcoFestivals" xml:space="preserve">
+    <value>Еко фестивали</value>
+  </data>
+  <data name="SubCategory_DanceFestivals" xml:space="preserve">
+    <value>Танцови фестивали</value>
+  </data>
+  <data name="SubCategory_TechFestivals" xml:space="preserve">
+    <value>Технологични фестивали</value>
+  </data>
+  <data name="SubCategory_ArtExhibitions" xml:space="preserve">
+    <value>Художествени изложби</value>
+  </data>
+  <data name="SubCategory_PhotographyExhibitions" xml:space="preserve">
+    <value>Фотографски изложби</value>
+  </data>
+  <data name="SubCategory_HistoricalExhibitions" xml:space="preserve">
+    <value>Исторически изложби</value>
+  </data>
+  <data name="SubCategory_ScienceExhibitions" xml:space="preserve">
+    <value>Научни изложби</value>
+  </data>
+  <data name="SubCategory_TechnologyExhibitions" xml:space="preserve">
+    <value>Технологични изложби</value>
+  </data>
+  <data name="SubCategory_AutomotiveExhibitions" xml:space="preserve">
+    <value>Автомобилни изложения</value>
+  </data>
+  <data name="SubCategory_DesignExhibitions" xml:space="preserve">
+    <value>Дизайн изложби</value>
+  </data>
+  <data name="SubCategory_CulturalHeritageExhibitions" xml:space="preserve">
+    <value>Изложби за културно наследство</value>
+  </data>
+  <data name="SubCategory_EducationalExhibitions" xml:space="preserve">
+    <value>Образователни изложби</value>
+  </data>
+  <data name="SubCategory_CraftExhibitions" xml:space="preserve">
+    <value>Занаятчийски изложби</value>
+  </data>
+  <data name="SubCategory_TechConferences" xml:space="preserve">
+    <value>Технологични конференции</value>
+  </data>
+  <data name="SubCategory_BusinessConferences" xml:space="preserve">
+    <value>Бизнес конференции</value>
+  </data>
+  <data name="SubCategory_StartupConferences" xml:space="preserve">
+    <value>Стартъп конференции</value>
+  </data>
+  <data name="SubCategory_AcademicConferences" xml:space="preserve">
+    <value>Академични конференции</value>
+  </data>
+  <data name="SubCategory_MarketingConferences" xml:space="preserve">
+    <value>Маркетинг конференции</value>
+  </data>
+  <data name="SubCategory_ScienceConferences" xml:space="preserve">
+    <value>Научни конференции</value>
+  </data>
+  <data name="SubCategory_HealthAndMedicineConferences" xml:space="preserve">
+    <value>Конференции по здравеопазване</value>
+  </data>
+  <data name="SubCategory_AIAndInnovationConferences" xml:space="preserve">
+    <value>Конференции за AI и иновации</value>
+  </data>
+  <data name="SubCategory_ITSecurityConferences" xml:space="preserve">
+    <value>Конференции по IT сигурност</value>
+  </data>
+  <data name="SubCategory_EnvironmentalConferences" xml:space="preserve">
+    <value>Екологични конференции</value>
+  </data>
+  <data name="SubCategory_HRConferences" xml:space="preserve">
+    <value>HR конференции</value>
+  </data>
+  <data name="SubCategory_ArtWorkshops" xml:space="preserve">
+    <value>Арт уъркшопи</value>
+  </data>
+  <data name="SubCategory_MusicWorkshops" xml:space="preserve">
+    <value>Музикални уъркшопи</value>
+  </data>
+  <data name="SubCategory_DanceWorkshops" xml:space="preserve">
+    <value>Танцови уъркшопи</value>
+  </data>
+  <data name="SubCategory_PhotographyWorkshops" xml:space="preserve">
+    <value>Фото уъркшопи</value>
+  </data>
+  <data name="SubCategory_CookingWorkshops" xml:space="preserve">
+    <value>Кулинарни уъркшопи</value>
+  </data>
+  <data name="SubCategory_CraftWorkshops" xml:space="preserve">
+    <value>Занаятчийски уъркшопи</value>
+  </data>
+  <data name="SubCategory_StartupAndEntrepreneurshipWorkshops" xml:space="preserve">
+    <value>Стартъп и предприемачески уъркшопи</value>
+  </data>
+  <data name="SubCategory_PersonalDevelopmentWorkshops" xml:space="preserve">
+    <value>Уъркшопи за личностно развитие</value>
+  </data>
+  <data name="SubCategory_CodingWorkshops" xml:space="preserve">
+    <value>Уъркшопи по програмиране</value>
+  </data>
+  <data name="SubCategory_LanguageWorkshops" xml:space="preserve">
+    <value>Езикови уъркшопи</value>
+  </data>
+  <data name="SubCategory_TheatreWorkshops" xml:space="preserve">
+    <value>Театрални уъркшопи</value>
+  </data>
+  <data name="SubCategory_YogaAndWellnessWorkshops" xml:space="preserve">
+    <value>Йога и уелнес уъркшопи</value>
+  </data>
+  <data name="SubCategory_MarketingWorkshops" xml:space="preserve">
+    <value>Маркетинг уъркшопи</value>
+  </data>
+  <data name="SubCategory_Other" xml:space="preserve">
+    <value>Друго</value>
+  </data>
+  <data name="EventStatus_Draft" xml:space="preserve">
+    <value>Чернова</value>
+  </data>
+  <data name="EventStatus_Published" xml:space="preserve">
+    <value>Публикувано</value>
+  </data>
+  <data name="EventStatus_Cancelled" xml:space="preserve">
+    <value>Отменено</value>
+  </data>
+  <data name="EventStatus_Postponed" xml:space="preserve">
+    <value>Отложено</value>
+  </data>
+  <data name="EventStatus_SoldOut" xml:space="preserve">
+    <value>Разпродадено</value>
+  </data>
+  <data name="Tag_FamilyFriendly" xml:space="preserve">
+    <value>За семейството</value>
+  </data>
+  <data name="Tag_ForKids" xml:space="preserve">
+    <value>За деца</value>
+  </data>
+  <data name="Tag_Beginners" xml:space="preserve">
+    <value>За начинаещи</value>
+  </data>
+  <data name="Tag_Professionals" xml:space="preserve">
+    <value>За професионалисти</value>
+  </data>
+  <data name="Tag_Students" xml:space="preserve">
+    <value>За студенти</value>
+  </data>
+  <data name="Tag_AdultsOnly" xml:space="preserve">
+    <value>Само за възрастни</value>
+  </data>
+  <data name="Tag_Live" xml:space="preserve">
+    <value>На живо</value>
+  </data>
+  <data name="Tag_Outdoor" xml:space="preserve">
+    <value>На открито</value>
+  </data>
+  <data name="Tag_Indoor" xml:space="preserve">
+    <value>На закрито</value>
+  </data>
+  <data name="Tag_Networking" xml:space="preserve">
+    <value>Нетуъркинг</value>
+  </data>
+  <data name="Tag_HandsOn" xml:space="preserve">
+    <value>Практическо</value>
+  </data>
+  <data name="Tag_Interactive" xml:space="preserve">
+    <value>Интерактивно</value>
+  </data>
+  <data name="Tag_BulgarianCulture" xml:space="preserve">
+    <value>Българска култура</value>
+  </data>
+  <data name="Tag_LocalArtists" xml:space="preserve">
+    <value>Местни артисти</value>
+  </data>
+  <data name="Tag_InternationalGuests" xml:space="preserve">
+    <value>Международни гости</value>
+  </data>
+  <data name="Tag_Traditional" xml:space="preserve">
+    <value>Традиционно</value>
+  </data>
+  <data name="Tag_Contemporary" xml:space="preserve">
+    <value>Съвременно</value>
+  </data>
+  <data name="Tag_EnglishFriendly" xml:space="preserve">
+    <value>На английски</value>
+  </data>
+  <data name="Tag_Seasonal" xml:space="preserve">
+    <value>Сезонно</value>
+  </data>
+  <data name="Tag_HolidaySpecial" xml:space="preserve">
+    <value>Празнично</value>
+  </data>
+  <data name="Nav_Register" xml:space="preserve">
+    <value>Регистрация</value>
+  </data>
+  <data name="Nav_Login" xml:space="preserve">
+    <value>Вход</value>
+  </data>
+  <data name="Nav_Logout" xml:space="preserve">
+    <value>Изход</value>
+  </data>
+  <data name="Nav_Manage" xml:space="preserve">
+    <value>Управление на профила</value>
+  </data>
+  <data name="Account_Email" xml:space="preserve">
+    <value>Имейл</value>
+  </data>
+  <data name="Account_Password" xml:space="preserve">
+    <value>Парола</value>
+  </data>
+  <data name="Account_NewPassword" xml:space="preserve">
+    <value>Нова парола</value>
+  </data>
+  <data name="Account_ConfirmPassword" xml:space="preserve">
+    <value>Потвърди паролата</value>
+  </data>
+  <data name="Account_ConfirmNewPassword" xml:space="preserve">
+    <value>Потвърди новата парола</value>
+  </data>
+  <data name="Account_CurrentPassword" xml:space="preserve">
+    <value>Текуща парола</value>
+  </data>
+  <data name="Account_EmailAddress" xml:space="preserve">
+    <value>Имейл адрес</value>
+  </data>
+  <data name="Account_RememberMe" xml:space="preserve">
+    <value>Запомни ме</value>
+  </data>
+  <data name="Account_PlaceholderEmail" xml:space="preserve">
+    <value>name@example.com</value>
+  </data>
+  <data name="Account_PlaceholderPassword" xml:space="preserve">
+    <value>Въведете паролата си</value>
+  </data>
+  <data name="Account_PlaceholderNewPassword" xml:space="preserve">
+    <value>Изберете силна парола</value>
+  </data>
+  <data name="Account_PlaceholderConfirmPassword" xml:space="preserve">
+    <value>Потвърдете паролата</value>
+  </data>
+  <data name="Account_BackToLogin" xml:space="preserve">
+    <value>Обратно към вход</value>
+  </data>
+  <data name="Account_BackToHome" xml:space="preserve">
+    <value>Към началото</value>
+  </data>
+  <data name="Account_BackToProfile" xml:space="preserve">
+    <value>Обратно към профила</value>
+  </data>
+  <data name="Account_Back" xml:space="preserve">
+    <value>Назад</value>
+  </data>
+  <data name="Account_Cancel" xml:space="preserve">
+    <value>Отказ</value>
+  </data>
+  <data name="Account_OrWith" xml:space="preserve">
+    <value>Или с</value>
+  </data>
+  <data name="Account_OrRegisterWith" xml:space="preserve">
+    <value>Или регистрирайте се с</value>
+  </data>
+  <data name="Account_Close" xml:space="preserve">
+    <value>Затвори</value>
+  </data>
+  <data name="Login_Title" xml:space="preserve">
+    <value>Вход</value>
+  </data>
+  <data name="Login_Welcome" xml:space="preserve">
+    <value>Добре дошли отново!</value>
+  </data>
+  <data name="Login_Subtitle" xml:space="preserve">
+    <value>Влезте в профила си</value>
+  </data>
+  <data name="Login_Submit" xml:space="preserve">
+    <value>Вход</value>
+  </data>
+  <data name="Login_ForgotPassword" xml:space="preserve">
+    <value>Забравена парола?</value>
+  </data>
+  <data name="Login_RegisterNew" xml:space="preserve">
+    <value>Регистрирайте се</value>
+  </data>
+  <data name="Login_ResendConfirmation" xml:space="preserve">
+    <value>Изпрати отново потвърждение по имейл</value>
+  </data>
+  <data name="Register_Title" xml:space="preserve">
+    <value>Регистрация</value>
+  </data>
+  <data name="Register_Heading" xml:space="preserve">
+    <value>Създайте профил</value>
+  </data>
+  <data name="Register_Subtitle" xml:space="preserve">
+    <value>Регистрация в Sofia Events</value>
+  </data>
+  <data name="Register_Submit" xml:space="preserve">
+    <value>Регистрация</value>
+  </data>
+  <data name="Register_PasswordHint" xml:space="preserve">
+    <value>Паролата трябва да е поне 8 символа и да съдържа главни, малки букви, цифра и специален знак</value>
+  </data>
+  <data name="Register_HasAccount" xml:space="preserve">
+    <value>Вече имате профил?</value>
+  </data>
+  <data name="Register_LoginHere" xml:space="preserve">
+    <value>Влезте тук</value>
+  </data>
+  <data name="ForgotPassword_Title" xml:space="preserve">
+    <value>Забравена парола?</value>
+  </data>
+  <data name="ForgotPassword_Heading" xml:space="preserve">
+    <value>Забравена парола?</value>
+  </data>
+  <data name="ForgotPassword_Subtitle" xml:space="preserve">
+    <value>Въведете имейла си, за да получите линк за нулиране</value>
+  </data>
+  <data name="ForgotPassword_Submit" xml:space="preserve">
+    <value>Изпрати линк за нулиране</value>
+  </data>
+  <data name="ForgotPasswordConfirm_Title" xml:space="preserve">
+    <value>Линкът е изпратен</value>
+  </data>
+  <data name="ForgotPasswordConfirm_Heading" xml:space="preserve">
+    <value>Проверете имейла си</value>
+  </data>
+  <data name="ForgotPasswordConfirm_Lead" xml:space="preserve">
+    <value>Изпратихме линк за нулиране на паролата на вашия имейл адрес.</value>
+  </data>
+  <data name="ForgotPasswordConfirm_Hint" xml:space="preserve">
+    <value>Моля, проверете входящата си поща и следвайте линка. Ако не виждате имейла, проверете папката за спам.</value>
+  </data>
+  <data name="ResetPassword_Title" xml:space="preserve">
+    <value>Нулиране на парола</value>
+  </data>
+  <data name="ResetPassword_Heading" xml:space="preserve">
+    <value>Нулиране на парола</value>
+  </data>
+  <data name="ResetPassword_Subtitle" xml:space="preserve">
+    <value>Въведете новата си парола</value>
+  </data>
+  <data name="ResetPassword_Submit" xml:space="preserve">
+    <value>Нулирай паролата</value>
+  </data>
+  <data name="ResetPasswordConfirm_Title" xml:space="preserve">
+    <value>Паролата е нулирана</value>
+  </data>
+  <data name="ResetPasswordConfirm_Heading" xml:space="preserve">
+    <value>Паролата е нулирана успешно!</value>
+  </data>
+  <data name="ResetPasswordConfirm_Lead" xml:space="preserve">
+    <value>Паролата ви беше нулирана успешно.</value>
+  </data>
+  <data name="ResetPasswordConfirm_Hint" xml:space="preserve">
+    <value>Вече можете да влезете с новата си парола.</value>
+  </data>
+  <data name="ResetPasswordConfirm_LoginNow" xml:space="preserve">
+    <value>Влезте сега</value>
+  </data>
+  <data name="RegisterConfirm_Title" xml:space="preserve">
+    <value>Успешна регистрация</value>
+  </data>
+  <data name="RegisterConfirm_Heading" xml:space="preserve">
+    <value>Регистрацията е успешна!</value>
+  </data>
+  <data name="RegisterConfirm_DevMode" xml:space="preserve">
+    <value>Режим за разработка:</value>
+  </data>
+  <data name="RegisterConfirm_DevEmailNotConfigured" xml:space="preserve">
+    <value>Имейл изпращачът не е конфигуриран.</value>
+  </data>
+  <data name="RegisterConfirm_DevClickLink" xml:space="preserve">
+    <value>Натиснете линка по-долу, за да потвърдите профила:</value>
+  </data>
+  <data name="RegisterConfirm_ConfirmAccount" xml:space="preserve">
+    <value>Потвърди профила</value>
+  </data>
+  <data name="RegisterConfirm_GoToLogin" xml:space="preserve">
+    <value>Към вход</value>
+  </data>
+  <data name="RegisterConfirm_DevDocs" xml:space="preserve">
+    <value>Вижте тази документация за настройка на реален имейл изпращач.</value>
+  </data>
+  <data name="RegisterConfirm_CheckEmail" xml:space="preserve">
+    <value>Моля, проверете имейла си, за да потвърдите профила.</value>
+  </data>
+  <data name="RegisterConfirm_SentLink" xml:space="preserve">
+    <value>Изпратихме линк за потвърждение на вашия имейл адрес. Следвайте линка в имейла, за да активирате профила.</value>
+  </data>
+  <data name="ResendEmail_Title" xml:space="preserve">
+    <value>Изпрати отново потвърждение</value>
+  </data>
+  <data name="ResendEmail_Heading" xml:space="preserve">
+    <value>Изпрати отново потвърждение</value>
+  </data>
+  <data name="ResendEmail_Subtitle" xml:space="preserve">
+    <value>Въведете имейла си, за да получите нов линк за потвърждение</value>
+  </data>
+  <data name="ResendEmail_Submit" xml:space="preserve">
+    <value>Изпрати потвърждение</value>
+  </data>
+  <data name="ConfirmEmail_Title" xml:space="preserve">
+    <value>Потвърждение на имейл</value>
+  </data>
+  <data name="ConfirmEmail_Subtitle" xml:space="preserve">
+    <value>Имейлът ви се потвърждава</value>
+  </data>
+  <data name="ConfirmEmailChange_Title" xml:space="preserve">
+    <value>Потвърждение на смяна на имейл</value>
+  </data>
+  <data name="ConfirmEmailChange_Subtitle" xml:space="preserve">
+    <value>Потвърждавате новия си имейл адрес</value>
+  </data>
+  <data name="AccessDenied_Title" xml:space="preserve">
+    <value>Достъпът е отказан</value>
+  </data>
+  <data name="AccessDenied_Subtitle" xml:space="preserve">
+    <value>Нямате права за достъп до този ресурс</value>
+  </data>
+  <data name="AccessDenied_Alert" xml:space="preserve">
+    <value>Ако смятате, че това е грешка, моля свържете се с администратора.</value>
+  </data>
+  <data name="AccessDenied_Login" xml:space="preserve">
+    <value>Вход</value>
+  </data>
+  <data name="Lockout_Title" xml:space="preserve">
+    <value>Профилът е заключен</value>
+  </data>
+  <data name="Lockout_Subtitle" xml:space="preserve">
+    <value>Профилът ви е временно заключен поради съображения за сигурност</value>
+  </data>
+  <data name="Lockout_Alert" xml:space="preserve">
+    <value>Моля, опитайте отново по-късно. Ако смятате, че това е грешка, свържете се с поддръжката.</value>
+  </data>
+  <data name="ExternalLogin_Title" xml:space="preserve">
+    <value>Довършете регистрацията</value>
+  </data>
+  <data name="ExternalLogin_Subtitle" xml:space="preserve">
+    <value>Довършете свързването на профила ви с {0}</value>
+  </data>
+  <data name="ExternalLogin_Success" xml:space="preserve">
+    <value>Успех!</value>
+  </data>
+  <data name="ExternalLogin_AuthenticatedWith" xml:space="preserve">
+    <value>Успешно се удостоверихте с {0}.</value>
+  </data>
+  <data name="ExternalLogin_EnterEmail" xml:space="preserve">
+    <value>Моля, въведете имейл адрес по-долу, за да довършите регистрацията.</value>
+  </data>
+  <data name="ExternalLogin_Complete" xml:space="preserve">
+    <value>Довърши регистрацията</value>
+  </data>
+  <data name="Login2fa_Title" xml:space="preserve">
+    <value>Двуфакторно удостоверяване</value>
+  </data>
+  <data name="Login2fa_Subtitle" xml:space="preserve">
+    <value>Въведете кода от приложението за удостоверяване</value>
+  </data>
+  <data name="Login2fa_Description" xml:space="preserve">
+    <value>Входът ви е защитен с приложение за удостоверяване. Въведете 6-цифрения код по-долу.</value>
+  </data>
+  <data name="Login2fa_Code" xml:space="preserve">
+    <value>Код за удостоверяване</value>
+  </data>
+  <data name="Login2fa_PlaceholderCode" xml:space="preserve">
+    <value>Въведете 6-цифрен код</value>
+  </data>
+  <data name="Login2fa_RememberMachine" xml:space="preserve">
+    <value>Запомни това устройство</value>
+  </data>
+  <data name="Login2fa_Submit" xml:space="preserve">
+    <value>Потвърди и влез</value>
+  </data>
+  <data name="Login2fa_UseRecovery" xml:space="preserve">
+    <value>Използвай код за възстановяване</value>
+  </data>
+  <data name="LoginRecovery_Title" xml:space="preserve">
+    <value>Вход с код за възстановяване</value>
+  </data>
+  <data name="LoginRecovery_Subtitle" xml:space="preserve">
+    <value>Използвайте код за възстановяване за достъп до профила</value>
+  </data>
+  <data name="LoginRecovery_Alert" xml:space="preserve">
+    <value>Заявихте вход с код за възстановяване. Този вход няма да бъде запомнен, докато не въведете код от приложението или не изключите 2FA.</value>
+  </data>
+  <data name="LoginRecovery_Code" xml:space="preserve">
+    <value>Код за възстановяване</value>
+  </data>
+  <data name="LoginRecovery_Placeholder" xml:space="preserve">
+    <value>Въведете кода за възстановяване</value>
+  </data>
+  <data name="LoginRecovery_Hint" xml:space="preserve">
+    <value>Кодовете за възстановяване са дълги буквено-цифрови кодове, получени при активиране на 2FA</value>
+  </data>
+  <data name="Logout_Title" xml:space="preserve">
+    <value>Изход</value>
+  </data>
+  <data name="Logout_ReadyToLeave" xml:space="preserve">
+    <value>Готови да излезете?</value>
+  </data>
+  <data name="Logout_Prompt" xml:space="preserve">
+    <value>Натиснете бутона по-долу, за да излезете от профила си</value>
+  </data>
+  <data name="Logout_GoBack" xml:space="preserve">
+    <value>Назад</value>
+  </data>
+  <data name="Logout_SuccessTitle" xml:space="preserve">
+    <value>Успешен изход</value>
+  </data>
+  <data name="Logout_LoginAgain" xml:space="preserve">
+    <value>Влезте отново</value>
+  </data>
+  <data name="Logout_Submit" xml:space="preserve">
+    <value>Изход</value>
+  </data>
+  <data name="Logout_Success" xml:space="preserve">
+    <value>Успешно излязохте от профила си.</value>
+  </data>
+  <data name="Logout_ReturnHome" xml:space="preserve">
+    <value>Към началото</value>
+  </data>
+  <data name="Manage_Nav_Profile" xml:space="preserve">
+    <value>Профил</value>
+  </data>
+  <data name="Manage_Nav_Email" xml:space="preserve">
+    <value>Имейл</value>
+  </data>
+  <data name="Manage_Nav_Password" xml:space="preserve">
+    <value>Парола</value>
+  </data>
+  <data name="Manage_Nav_ExternalLogins" xml:space="preserve">
+    <value>Външни входове</value>
+  </data>
+  <data name="Manage_Nav_TwoFactor" xml:space="preserve">
+    <value>Двуфакторно удостоверяване</value>
+  </data>
+  <data name="Manage_Nav_PersonalData" xml:space="preserve">
+    <value>Лични данни</value>
+  </data>
+  <data name="Manage_Profile_Title" xml:space="preserve">
+    <value>Настройки на профила</value>
+  </data>
+  <data name="Manage_Profile_Subtitle" xml:space="preserve">
+    <value>Актуализирайте информацията в профила си</value>
+  </data>
+  <data name="Manage_Username" xml:space="preserve">
+    <value>Потребителско име</value>
+  </data>
+  <data name="Manage_UsernamePlaceholder" xml:space="preserve">
+    <value>Вашето потребителско име</value>
+  </data>
+  <data name="Manage_UsernameHint" xml:space="preserve">
+    <value>Потребителското име не може да се променя</value>
+  </data>
+  <data name="Manage_Phone" xml:space="preserve">
+    <value>Телефон</value>
+  </data>
+  <data name="Manage_PhonePlaceholder" xml:space="preserve">
+    <value>Въведете телефон (по избор)</value>
+  </data>
+  <data name="Manage_SaveChanges" xml:space="preserve">
+    <value>Запази промените</value>
+  </data>
+  <data name="Manage_Email_Title" xml:space="preserve">
+    <value>Смяна на имейл</value>
+  </data>
+  <data name="Manage_Email_Subtitle" xml:space="preserve">
+    <value>Актуализирайте имейл адреса си</value>
+  </data>
+  <data name="Manage_CurrentEmail" xml:space="preserve">
+    <value>Текущ имейл</value>
+  </data>
+  <data name="Manage_CurrentEmailPlaceholder" xml:space="preserve">
+    <value>Текущият ви имейл</value>
+  </data>
+  <data name="Manage_EmailVerified" xml:space="preserve">
+    <value>Потвърден</value>
+  </data>
+  <data name="Manage_EmailUnverified" xml:space="preserve">
+    <value>Непотвърден</value>
+  </data>
+  <data name="Manage_SendVerification" xml:space="preserve">
+    <value>Изпрати имейл за потвърждение</value>
+  </data>
+  <data name="Manage_NewEmail" xml:space="preserve">
+    <value>Нов имейл адрес</value>
+  </data>
+  <data name="Manage_NewEmailPlaceholder" xml:space="preserve">
+    <value>Въведете новия имейл адрес</value>
+  </data>
+  <data name="Manage_ChangeEmail" xml:space="preserve">
+    <value>Смени имейла</value>
+  </data>
+  <data name="Manage_Password_Title" xml:space="preserve">
+    <value>Смяна на парола</value>
+  </data>
+  <data name="Manage_Password_Subtitle" xml:space="preserve">
+    <value>Актуализирайте паролата си</value>
+  </data>
+  <data name="Manage_Password_CurrentPlaceholder" xml:space="preserve">
+    <value>Въведете текущата парола</value>
+  </data>
+  <data name="Manage_Password_NewPlaceholder" xml:space="preserve">
+    <value>Въведете новата парола</value>
+  </data>
+  <data name="Manage_Password_ConfirmPlaceholder" xml:space="preserve">
+    <value>Потвърдете новата парола</value>
+  </data>
+  <data name="Manage_UpdatePassword" xml:space="preserve">
+    <value>Актуализирай паролата</value>
+  </data>
+  <data name="Manage_SetPassword_Title" xml:space="preserve">
+    <value>Задай парола</value>
+  </data>
+  <data name="Manage_SetPassword_Heading" xml:space="preserve">
+    <value>Задайте парола</value>
+  </data>
+  <data name="Manage_SetPassword_Info" xml:space="preserve">
+    <value>Нямате локална парола за този сайт. Добавете локален профил, за да влизате без външен вход.</value>
+  </data>
+  <data name="Manage_SetPassword_Submit" xml:space="preserve">
+    <value>Задай парола</value>
+  </data>
+  <data name="Manage_PersonalData_Title" xml:space="preserve">
+    <value>Лични данни</value>
+  </data>
+  <data name="Manage_PersonalData_Subtitle" xml:space="preserve">
+    <value>Управлявайте личната си информация</value>
+  </data>
+  <data name="Manage_PersonalData_Info" xml:space="preserve">
+    <value>Вашите данни: Профилът съдържа лични данни, които сте предоставили. Тази страница ви позволява да ги изтеглите или изтриете.</value>
+  </data>
+  <data name="Manage_PersonalData_Warning" xml:space="preserve">
+    <value>Предупреждение: Изтриването на данните ще премахне перманентно профила ви и не може да бъде възстановено.</value>
+  </data>
+  <data name="Manage_DownloadData" xml:space="preserve">
+    <value>Изтегли данните ми</value>
+  </data>
+  <data name="Manage_DeleteAccount" xml:space="preserve">
+    <value>Изтрий профила ми</value>
+  </data>
+  <data name="Manage_Delete_Title" xml:space="preserve">
+    <value>Изтриване на профил</value>
+  </data>
+  <data name="Manage_Delete_Subtitle" xml:space="preserve">
+    <value>Перманентно изтриване на профила</value>
+  </data>
+  <data name="Manage_Delete_Warning" xml:space="preserve">
+    <value>Предупреждение: Това ще премахне перманентно профила и всички свързани данни. Действието е необратимо.</value>
+  </data>
+  <data name="Manage_Delete_ConfirmPassword" xml:space="preserve">
+    <value>Потвърди паролата</value>
+  </data>
+  <data name="Manage_Delete_PasswordPlaceholder" xml:space="preserve">
+    <value>Въведете паролата, за да потвърдите изтриването</value>
+  </data>
+  <data name="Manage_Delete_PasswordHint" xml:space="preserve">
+    <value>Нужна е паролата ви, за да потвърдим действието</value>
+  </data>
+  <data name="Manage_Delete_Submit" xml:space="preserve">
+    <value>Да, изтрий профила ми</value>
+  </data>
+  <data name="Manage_Delete_Permanent" xml:space="preserve">
+    <value>Това действие е перманентно и не може да бъде отменено</value>
+  </data>
+  <data name="Manage_ExternalLogins_Title" xml:space="preserve">
+    <value>Външни входове</value>
+  </data>
+  <data name="Manage_ExternalLogins_Subtitle" xml:space="preserve">
+    <value>Управлявайте свързаните социални профили</value>
+  </data>
+  <data name="Manage_ExternalLogins_Connected" xml:space="preserve">
+    <value>Свързани профили</value>
+  </data>
+  <data name="Manage_ExternalLogins_Remove" xml:space="preserve">
+    <value>Премахни</value>
+  </data>
+  <data name="Manage_ExternalLogins_AddService" xml:space="preserve">
+    <value>Добави друг сервиз</value>
+  </data>
+  <data name="Manage_ExternalLogins_AddHint" xml:space="preserve">
+    <value>Свържете друг социален профил за по-лесен вход</value>
+  </data>
+  <data name="Manage_2FA_Title" xml:space="preserve">
+    <value>Двуфакторно удостоверяване (2FA)</value>
+  </data>
+  <data name="Manage_2FA_Subtitle" xml:space="preserve">
+    <value>Защитете профила си с допълнително удостоверяване</value>
+  </data>
+  <data name="Manage_2FA_NoCodes" xml:space="preserve">
+    <value>Няма останали кодове за възстановяване!</value>
+  </data>
+  <data name="Manage_2FA_NoCodesBeforeLink" xml:space="preserve">
+    <value>Трябва да</value>
+  </data>
+  <data name="Manage_2FA_NoCodesAfterLink" xml:space="preserve">
+    <value>, преди да влезете с код за възстановяване.</value>
+  </data>
+  <data name="Manage_2FA_OneCode" xml:space="preserve">
+    <value>Остава само 1 код за възстановяване!</value>
+  </data>
+  <data name="Manage_2FA_OneCodeBeforeLink" xml:space="preserve">
+    <value>Можете да</value>
+  </data>
+  <data name="Manage_2FA_OneCodeAfterLink" xml:space="preserve">
+    <value>.</value>
+  </data>
+  <data name="Manage_2FA_CodesLeft" xml:space="preserve">
+    <value>Остават {0} кода за възстановяване</value>
+  </data>
+  <data name="Manage_2FA_CodesLeftBeforeLink" xml:space="preserve">
+    <value>Препоръчваме да</value>
+  </data>
+  <data name="Manage_2FA_CodesLeftAfterLink" xml:space="preserve">
+    <value>.</value>
+  </data>
+  <data name="Manage_2FA_GenerateLink" xml:space="preserve">
+    <value>генерирате нов набор кодове</value>
+  </data>
+  <data name="Manage_2FA_Status" xml:space="preserve">
+    <value>Статус на 2FA</value>
+  </data>
+  <data name="Manage_2FA_Enabled" xml:space="preserve">
+    <value>Двуфакторното удостоверяване е включено</value>
+  </data>
+  <data name="Manage_2FA_ResetCodes" xml:space="preserve">
+    <value>Нулирай кодовете за възстановяване</value>
+  </data>
+  <data name="Manage_2FA_Disable" xml:space="preserve">
+    <value>Изключи 2FA</value>
+  </data>
+  <data name="Manage_2FA_ForgetBrowser" xml:space="preserve">
+    <value>Забрави този браузър</value>
+  </data>
+  <data name="Manage_2FA_NotEnabled" xml:space="preserve">
+    <value>Двуфакторното удостоверяване не е включено</value>
+  </data>
+  <data name="Manage_2FA_EnableHint" xml:space="preserve">
+    <value>Включете го за допълнителна сигурност на профила.</value>
+  </data>
+  <data name="Manage_2FA_AuthenticatorApp" xml:space="preserve">
+    <value>Приложение за удостоверяване</value>
+  </data>
+  <data name="Manage_2FA_AddApp" xml:space="preserve">
+    <value>Добави приложение</value>
+  </data>
+  <data name="Manage_2FA_ConfigureApp" xml:space="preserve">
+    <value>Конфигурирай приложението</value>
+  </data>
+  <data name="Manage_2FA_ResetAuthenticator" xml:space="preserve">
+    <value>Нулирай приложението</value>
+  </data>
+  <data name="Manage_2FA_PrivacyRequired" xml:space="preserve">
+    <value>Политиката за поверителност не е приета</value>
+  </data>
+  <data name="Manage_2FA_PrivacyHint" xml:space="preserve">
+    <value>Трябва да приемете политиката за поверителност и бисквитки, преди да включите 2FA.</value>
+  </data>
+  <data name="Manage_EnableAuth_Title" xml:space="preserve">
+    <value>Настройка на 2FA</value>
+  </data>
+  <data name="Manage_EnableAuth_Subtitle" xml:space="preserve">
+    <value>Добавете допълнителна сигурност към профила</value>
+  </data>
+  <data name="Manage_EnableAuth_Info" xml:space="preserve">
+    <value>Двуфакторното удостоверяване добавя допълнителен слой сигурност към профила ви.</value>
+  </data>
+  <data name="Manage_EnableAuth_Step1" xml:space="preserve">
+    <value>Стъпка 1: Изтеглете приложение за удостоверяване</value>
+  </data>
+  <data name="Manage_EnableAuth_Step1Hint" xml:space="preserve">
+    <value>Изтеглете едно от следните приложения:</value>
+  </data>
+  <data name="Manage_EnableAuth_Step2" xml:space="preserve">
+    <value>Стъпка 2: Сканирайте QR кода или въведете ключа</value>
+  </data>
+  <data name="Manage_EnableAuth_Step2Hint" xml:space="preserve">
+    <value>Сканирайте QR кода с приложението или въведете ключа ръчно:</value>
+  </data>
+  <data name="Manage_EnableAuth_ManualKey" xml:space="preserve">
+    <value>Ключ за ръчно въвеждане:</value>
+  </data>
+  <data name="Manage_EnableAuth_ManualKeyHint" xml:space="preserve">
+    <value>Интервалите и регистърът не са от значение</value>
+  </data>
+  <data name="Manage_EnableAuth_Step3" xml:space="preserve">
+    <value>Стъпка 3: Потвърдете приложението</value>
+  </data>
+  <data name="Manage_EnableAuth_Step3Hint" xml:space="preserve">
+    <value>Въведете 6-цифрения код от приложението:</value>
+  </data>
+  <data name="Manage_EnableAuth_VerificationCode" xml:space="preserve">
+    <value>Код за потвърждение</value>
+  </data>
+  <data name="Manage_EnableAuth_Verify" xml:space="preserve">
+    <value>Потвърди и включи</value>
+  </data>
+  <data name="Manage_ResetAuthenticator_Title" xml:space="preserve">
+    <value>Нулиране на ключ за приложение</value>
+  </data>
+  <data name="Manage_Disable2fa_Title" xml:space="preserve">
+    <value>Изключване на 2FA</value>
+  </data>
+  <data name="Manage_GenerateRecoveryCodes_Title" xml:space="preserve">
+    <value>Генериране на кодове за възстановяване</value>
+  </data>
+  <data name="Manage_DownloadData_Title" xml:space="preserve">
+    <value>Изтегляне на данни</value>
+  </data>
+  <data name="Manage_ShowRecoveryCodes_Title" xml:space="preserve">
+    <value>Кодове за възстановяване</value>
+  </data>
+  <data name="Msg_StatusErrorPrefix" xml:space="preserve">
+    <value>Грешка</value>
+  </data>
+  <data name="Msg_Login_InvalidAttempt" xml:space="preserve">
+    <value>Невалиден опит за вход.</value>
+  </data>
+  <data name="Msg_Login2fa_InvalidCode" xml:space="preserve">
+    <value>Невалиден код за удостоверяване.</value>
+  </data>
+  <data name="Msg_LoginRecovery_InvalidCode" xml:space="preserve">
+    <value>Невалиден код за възстановяване.</value>
+  </data>
+  <data name="Msg_ExternalLogin_ErrorFromProvider" xml:space="preserve">
+    <value>Грешка от външен доставчик: {0}</value>
+  </data>
+  <data name="Msg_ExternalLogin_LoadError" xml:space="preserve">
+    <value>Грешка при зареждане на информация за външен вход.</value>
+  </data>
+  <data name="Msg_ExternalLogin_ConfirmLoadError" xml:space="preserve">
+    <value>Грешка при зареждане на информация за външен вход по време на потвърждение.</value>
+  </data>
+  <data name="Msg_ConfirmEmail_Success" xml:space="preserve">
+    <value>Благодарим ви, че потвърдихте имейла си.</value>
+  </data>
+  <data name="Msg_ConfirmEmail_Error" xml:space="preserve">
+    <value>Грешка при потвърждаване на имейла.</value>
+  </data>
+  <data name="Msg_ConfirmEmailChange_Error" xml:space="preserve">
+    <value>Грешка при смяна на имейла.</value>
+  </data>
+  <data name="Msg_ConfirmEmailChange_UserNameError" xml:space="preserve">
+    <value>Грешка при смяна на потребителското име.</value>
+  </data>
+  <data name="Msg_ConfirmEmailChange_Success" xml:space="preserve">
+    <value>Благодарим ви, че потвърдихте смяната на имейла.</value>
+  </data>
+  <data name="Msg_ResendEmail_Sent" xml:space="preserve">
+    <value>Изпратихме имейл за потвърждение. Моля, проверете пощата си.</value>
+  </data>
+  <data name="Msg_Manage_ProfileUpdated" xml:space="preserve">
+    <value>Профилът ви беше актуализиран.</value>
+  </data>
+  <data name="Msg_Manage_PhoneUnexpectedError" xml:space="preserve">
+    <value>Неочаквана грешка при задаване на телефон.</value>
+  </data>
+  <data name="Msg_Manage_PasswordChanged" xml:space="preserve">
+    <value>Паролата ви беше сменена.</value>
+  </data>
+  <data name="Msg_Manage_PasswordSet" xml:space="preserve">
+    <value>Паролата ви беше зададена.</value>
+  </data>
+  <data name="Msg_Manage_EmailUnchanged" xml:space="preserve">
+    <value>Имейлът ви не е променен.</value>
+  </data>
+  <data name="Msg_Manage_EmailChangeSent" xml:space="preserve">
+    <value>Изпратихме линк за потвърждение на смяната на имейла. Моля, проверете пощата си.</value>
+  </data>
+  <data name="Msg_Manage_EmailVerificationSent" xml:space="preserve">
+    <value>Изпратихме имейл за потвърждение. Моля, проверете пощата си.</value>
+  </data>
+  <data name="Msg_Manage_EmailSendFailed" xml:space="preserve">
+    <value>Не успяхме да изпратим имейла за потвърждение. Опитайте по-късно или се свържете с поддръжката.</value>
+  </data>
+  <data name="Msg_Manage_DeleteIncorrectPassword" xml:space="preserve">
+    <value>Грешна парола.</value>
+  </data>
+  <data name="Msg_Manage_2faDisabled" xml:space="preserve">
+    <value>2FA е изключено. Можете да го включите отново при настройка на приложение за удостоверяване.</value>
+  </data>
+  <data name="Msg_Manage_2faBrowserForgotten" xml:space="preserve">
+    <value>Този браузър е забравен. При следващ вход ще бъдете помолени за 2FA код.</value>
+  </data>
+  <data name="Msg_Manage_AuthenticatorVerified" xml:space="preserve">
+    <value>Приложението за удостоверяване е потвърдено.</value>
+  </data>
+  <data name="Msg_Manage_AuthenticatorInvalidCode" xml:space="preserve">
+    <value>Кодът за потвърждение е невалиден.</value>
+  </data>
+  <data name="Msg_Manage_AuthenticatorReset" xml:space="preserve">
+    <value>Ключът на приложението е нулиран. Конфигурирайте приложението с новия ключ.</value>
+  </data>
+  <data name="Msg_Manage_RecoveryCodesGenerated" xml:space="preserve">
+    <value>Генерирахте нови кодове за възстановяване.</value>
+  </data>
+  <data name="Msg_Manage_ExternalLoginRemoved" xml:space="preserve">
+    <value>Външният вход беше премахнат.</value>
+  </data>
+  <data name="Msg_Manage_ExternalLoginNotRemoved" xml:space="preserve">
+    <value>Външният вход не беше премахнат.</value>
+  </data>
+  <data name="Msg_Manage_ExternalLoginAdded" xml:space="preserve">
+    <value>Външният вход беше добавен.</value>
+  </data>
+  <data name="Msg_Manage_ExternalLoginNotAdded" xml:space="preserve">
+    <value>Външният вход не беше добавен. Външен вход може да се свърже само с един профил.</value>
+  </data>
+  <data name="Sort_Date" xml:space="preserve">
+    <value>Дата</value>
+  </data>
+  <data name="Sort_Name" xml:space="preserve">
+    <value>Название</value>
+  </data>
+  <data name="Sort_Price" xml:space="preserve">
+    <value>Цена</value>
+  </data>
+  <data name="Sort_Category" xml:space="preserve">
+    <value>Категория</value>
+  </data>
+  <data name="Sort_Subcategory" xml:space="preserve">
+    <value>Подкатегория</value>
+  </data>
+  <data name="Venue_Home" xml:space="preserve">
+    <value>Начало</value>
+  </data>
+  <data name="Venue_SeoTitleSuffix" xml:space="preserve">
+    <value>Събития, концерти, програма | Go Sofia</value>
+  </data>
+  <data name="Venue_UpcomingEvents" xml:space="preserve">
+    <value>Предстоящи събития</value>
+  </data>
+  <data name="Venue_EventsAtVenue" xml:space="preserve">
+    <value>Предстоящи събития на този адрес</value>
+  </data>
+  <data name="Venue_NoEvents" xml:space="preserve">
+    <value>Няма предстоящи обявени събития.</value>
+  </data>
+  <data name="Venue_Capacity" xml:space="preserve">
+    <value>Капацитет</value>
+  </data>
+  <data name="Venue_OfficialSite" xml:space="preserve">
+    <value>Официален сайт</value>
+  </data>
+  <data name="Venue_AllEvents" xml:space="preserve">
+    <value>Всички събития</value>
+  </data>
+  <data name="Venue_Location" xml:space="preserve">
+    <value>Локация</value>
+  </data>
+  <data name="Venue_Details" xml:space="preserve">
+    <value>Детайли</value>
+  </data>
+  <data name="Venue_Free" xml:space="preserve">
+    <value>Безплатно</value>
+  </data>
+  <data name="Venue_Tickets" xml:space="preserve">
+    <value>Билети</value>
+  </data>
+  <data name="Venue_IndexTitle" xml:space="preserve">
+    <value>Места за събития</value>
+  </data>
+  <data name="Venue_IndexSubtitle" xml:space="preserve">
+    <value>Открийте концертни зали, театри, арени и други места за събития в София</value>
+  </data>
+  <data name="Venue_SearchPlaceholder" xml:space="preserve">
+    <value>Търсене по име на място...</value>
+  </data>
+  <data name="Venue_UpcomingEventsCount" xml:space="preserve">
+    <value>предстоящи събития</value>
+  </data>
+  <data name="Venue_NoVenuesFound" xml:space="preserve">
+    <value>Няма намерени места.</value>
+  </data>
+  <data name="Venue_BrowseVenues" xml:space="preserve">
+    <value>Места</value>
+  </data>
+  <data name="Privacy_S11_Text" xml:space="preserve">
+    <value>Ако имате някакви въпроси относно тази политика:</value>
+  </data>
 </root>
