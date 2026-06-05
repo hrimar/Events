@@ -54,9 +54,9 @@ public class Event
 
     public EventStatus Status { get; set; } = EventStatus.Published;
 
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow; // TODO: Remove default value. EventsDbContext will set this with .HasDefaultValueSql("GETUTCDATE()") to UtcNow when adding a new entity
+    public DateTime CreatedAt { get; set; }
 
-    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow; // TODO: Remove default value. EventsDbContext will set this with .HasDefaultValueSql("GETUTCDATE()") to UtcNow when adding a new entity
+    public DateTime UpdatedAt { get; set; }
 
     [MaxLength(500)]
     public string? SourceUrl { get; set; }

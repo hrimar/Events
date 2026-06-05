@@ -7,6 +7,8 @@ namespace Events.Data.Context;
 
 public class EventsDbContext : IdentityDbContext<User>
 {
+    private static readonly DateTime SeedDate = new DateTime(2026, 1, 23, 0, 0, 0, DateTimeKind.Utc);
+
     public EventsDbContext(DbContextOptions<EventsDbContext> options)
         : base(options)
     {
@@ -68,8 +70,7 @@ public class EventsDbContext : IdentityDbContext<User>
             entity.HasIndex(sc => sc.CategoryId);
 
             // Set database default for CreatedAt
-            entity.Property(sc => sc.CreatedAt)
-                .HasDefaultValueSql("GETUTCDATE()");
+            entity.Property(sc => sc.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
 
             // Configure Category relationship
             entity.HasOne(sc => sc.Category)
@@ -161,7 +162,8 @@ public class EventsDbContext : IdentityDbContext<User>
                 Description = GetMusicSubCategoryDescription(musicSub),
                 ParentCategory = EventCategory.Music,
                 CategoryId = 1,
-                EnumValue = (int)musicSub
+                EnumValue = (int)musicSub,
+                CreatedAt = SeedDate
             });
         }
 
@@ -175,7 +177,8 @@ public class EventsDbContext : IdentityDbContext<User>
                 Description = GetArtSubCategoryDescription(artSub),
                 ParentCategory = EventCategory.Art,
                 CategoryId = 2,
-                EnumValue = (int)artSub
+                EnumValue = (int)artSub,
+                CreatedAt = SeedDate
             });
         }
 
@@ -189,7 +192,8 @@ public class EventsDbContext : IdentityDbContext<User>
                 Description = GetBusinessSubCategoryDescription(businessSub),
                 ParentCategory = EventCategory.Business,
                 CategoryId = 3,
-                EnumValue = (int)businessSub
+                EnumValue = (int)businessSub,
+                CreatedAt = SeedDate
             });
         }
 
@@ -203,7 +207,8 @@ public class EventsDbContext : IdentityDbContext<User>
                 Description = GetSportsSubCategoryDescription(sportsSub),
                 ParentCategory = EventCategory.Sports,
                 CategoryId = 4,
-                EnumValue = (int)sportsSub
+                EnumValue = (int)sportsSub,
+                CreatedAt = SeedDate
             });
         }
 
@@ -217,7 +222,8 @@ public class EventsDbContext : IdentityDbContext<User>
                 Description = GetTheatreSubCategoryDescription(theatreSub),
                 ParentCategory = EventCategory.Theatre,
                 CategoryId = 5,
-                EnumValue = (int)theatreSub
+                EnumValue = (int)theatreSub,
+                CreatedAt = SeedDate
             });
         }
 
@@ -231,7 +237,8 @@ public class EventsDbContext : IdentityDbContext<User>
                 Description = GetCinemaSubCategoryDescription(cinemaSub),
                 ParentCategory = EventCategory.Cinema,
                 CategoryId = 6,
-                EnumValue = (int)cinemaSub
+                EnumValue = (int)cinemaSub,
+                CreatedAt = SeedDate
             });
         }
 
@@ -245,7 +252,8 @@ public class EventsDbContext : IdentityDbContext<User>
                 Description = GetFestivalsSubCategoryDescription(festivalsSub),
                 ParentCategory = EventCategory.Festivals,
                 CategoryId = 7,
-                EnumValue = (int)festivalsSub
+                EnumValue = (int)festivalsSub,
+                CreatedAt = SeedDate
             });
         }
 
@@ -259,7 +267,8 @@ public class EventsDbContext : IdentityDbContext<User>
                 Description = GetExhibitionsSubCategoryDescription(exhibitionsSub),
                 ParentCategory = EventCategory.Exhibitions,
                 CategoryId = 8,
-                EnumValue = (int)exhibitionsSub
+                EnumValue = (int)exhibitionsSub,
+                CreatedAt = SeedDate
             });
         }
 
@@ -273,7 +282,8 @@ public class EventsDbContext : IdentityDbContext<User>
                 Description = GetConferencesSubCategoryDescription(conferencesSub),
                 ParentCategory = EventCategory.Conferences,
                 CategoryId = 9,
-                EnumValue = (int)conferencesSub
+                EnumValue = (int)conferencesSub,
+                CreatedAt = SeedDate
             });
         }
 
@@ -287,7 +297,8 @@ public class EventsDbContext : IdentityDbContext<User>
                 Description = GetWorkshopsSubCategoryDescription(workshopsSub),
                 ParentCategory = EventCategory.Workshops,
                 CategoryId = 10,
-                EnumValue = (int)workshopsSub
+                EnumValue = (int)workshopsSub,
+                CreatedAt = SeedDate
             });
         }
 
@@ -540,6 +551,7 @@ public class EventsDbContext : IdentityDbContext<User>
             entity.Property(t => t.Description).HasMaxLength(500);
             entity.HasIndex(t => t.Name).IsUnique();
         });
+
     }
 
     private static void ConfigureEventTagEntity(ModelBuilder modelBuilder)
@@ -569,8 +581,7 @@ public class EventsDbContext : IdentityDbContext<User>
             entity.HasIndex(c => c.CategoryType).IsUnique();
 
             // Set database default for CreatedAt
-            entity.Property(c => c.CreatedAt)
-                .HasDefaultValueSql("GETUTCDATE()");
+            entity.Property(c => c.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
         });
     }
 
@@ -592,8 +603,7 @@ public class EventsDbContext : IdentityDbContext<User>
                 .HasForeignKey(u => u.EventId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            entity.Property(u => u.AddedAt)
-                .HasDefaultValueSql("GETUTCDATE()");
+            entity.Property(u => u.AddedAt).HasDefaultValueSql("GETUTCDATE()");
 
             entity.HasIndex(u => u.UserId);
             entity.HasIndex(u => u.EventId);
@@ -603,17 +613,17 @@ public class EventsDbContext : IdentityDbContext<User>
     private static void SeedCategories(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Category>().HasData(
-            new Category { Id = 1, Name = "Music", CategoryType = EventCategory.Music, Description = "Musical events and concerts" },
-            new Category { Id = 2, Name = "Art", CategoryType = EventCategory.Art, Description = "Art exhibitions and shows" },
-            new Category { Id = 3, Name = "Business", CategoryType = EventCategory.Business, Description = "Business conferences and networking" },
-            new Category { Id = 4, Name = "Sports", CategoryType = EventCategory.Sports, Description = "Sports events and competitions" },
-            new Category { Id = 5, Name = "Theatre", CategoryType = EventCategory.Theatre, Description = "Theatre performances and plays" },
-            new Category { Id = 6, Name = "Cinema", CategoryType = EventCategory.Cinema, Description = "Movie screenings and film festivals" },
-            new Category { Id = 7, Name = "Festivals", CategoryType = EventCategory.Festivals, Description = "Various festivals and celebrations" },
-            new Category { Id = 8, Name = "Exhibitions", CategoryType = EventCategory.Exhibitions, Description = "Exhibitions and displays" },
-            new Category { Id = 9, Name = "Conferences", CategoryType = EventCategory.Conferences, Description = "Professional conferences and seminars" },
-            new Category { Id = 10, Name = "Workshops", CategoryType = EventCategory.Workshops, Description = "Educational workshops and training" },
-            new Category { Id = 11, Name = "Undefined", CategoryType = EventCategory.Undefined, Description = "Events pending categorization" }
+            new Category { Id = 1, Name = "Music", CategoryType = EventCategory.Music, CreatedAt = SeedDate, Description = "Musical events and concerts" },
+            new Category { Id = 2, Name = "Art", CategoryType = EventCategory.Art, CreatedAt = SeedDate, Description = "Art exhibitions and shows" },
+            new Category { Id = 3, Name = "Business", CategoryType = EventCategory.Business, CreatedAt = SeedDate, Description = "Business conferences and networking" },
+            new Category { Id = 4, Name = "Sports", CategoryType = EventCategory.Sports, CreatedAt = SeedDate, Description = "Sports events and competitions" },
+            new Category { Id = 5, Name = "Theatre", CategoryType = EventCategory.Theatre, CreatedAt = SeedDate, Description = "Theatre performances and plays" },
+            new Category { Id = 6, Name = "Cinema", CategoryType = EventCategory.Cinema, CreatedAt = SeedDate, Description = "Movie screenings and film festivals" },
+            new Category { Id = 7, Name = "Festivals", CategoryType = EventCategory.Festivals, CreatedAt = SeedDate, Description = "Various festivals and celebrations" },
+            new Category { Id = 8, Name = "Exhibitions", CategoryType = EventCategory.Exhibitions, CreatedAt = SeedDate, Description = "Exhibitions and displays" },
+            new Category { Id = 9, Name = "Conferences", CategoryType = EventCategory.Conferences, CreatedAt = SeedDate, Description = "Professional conferences and seminars" },
+            new Category { Id = 10, Name = "Workshops", CategoryType = EventCategory.Workshops, CreatedAt = SeedDate, Description = "Educational workshops and training" },
+            new Category { Id = 11, Name = "Undefined", CategoryType = EventCategory.Undefined, CreatedAt = SeedDate, Description = "Events pending categorization" }
         );
     }
 }

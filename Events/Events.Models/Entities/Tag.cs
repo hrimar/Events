@@ -16,7 +16,7 @@ public class Tag
 
     public EventCategory? Category { get; set; }
 
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow; // TODO: Remove default value. EventsDbContext will set this with .HasDefaultValueSql("GETUTCDATE()") to UtcNow when adding a new entity
+    public DateTime CreatedAt { get; set; }
 
     public virtual ICollection<EventTag> EventTags { get; set; } = new List<EventTag>();
 }
