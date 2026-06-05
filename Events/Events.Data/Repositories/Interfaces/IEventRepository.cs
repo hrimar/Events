@@ -42,4 +42,11 @@ public interface IEventRepository
     /// Batch update multiple events with a single SaveChanges call for optimal performance.
     /// </summary>
     Task<int> BulkUpdateAsync(IEnumerable<Event> events);
+
+    /// <summary>
+    /// Updates CanonicalVenueId for all events matching the given raw location string.
+    /// Used by admin when mapping an unmapped location to a canonical venue.
+    /// Returns the number of events updated.
+    /// </summary>
+    Task<int> UpdateCanonicalVenueByLocationAsync(string location, int canonicalVenueId);
 }

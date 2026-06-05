@@ -65,6 +65,8 @@ public class UserFavoriteEventRepository : IUserFavoriteEventRepository
             .Include(u => u.Event)
                 .ThenInclude(e => e.SubCategory)
             .Include(u => u.Event)
+                .ThenInclude(e => e.CanonicalVenue)
+            .Include(u => u.Event)
                 .ThenInclude(e => e.EventTags)
                     .ThenInclude(et => et.Tag)
             .OrderByDescending(u => u.AddedAt)

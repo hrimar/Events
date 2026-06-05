@@ -18,6 +18,8 @@ public class EventsDbContext : IdentityDbContext<User>
     public DbSet<Category> Categories { get; set; }
     public DbSet<SubCategory> SubCategories { get; set; }
     public DbSet<UserFavoriteEvent> UserFavoriteEvents { get; set; }
+    public DbSet<CanonicalVenue> CanonicalVenues { get; set; }
+    public DbSet<VenueAlias> VenueAliases { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -81,9 +83,59 @@ public class EventsDbContext : IdentityDbContext<User>
         ConfigureCategoryEntity(modelBuilder);
         ConfigureUserFavoriteEventEntity(modelBuilder);
         ConfigureUserEntity(modelBuilder);
+        ConfigureCanonicalVenueEntity(modelBuilder);
+        ConfigureVenueAliasEntity(modelBuilder);
 
         SeedCategories(modelBuilder);
         SeedSubCategories(modelBuilder);
+    }
+
+    private static void ConfigureCanonicalVenueEntity(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<CanonicalVenue>(entity =>
+        {
+            entity.HasKey(v => v.Id);
+            entity.Property(v => v.Name).IsRequired().HasMaxLength(200);
+            entity.Property(v => v.ShortName).HasMaxLength(50);
+            entity.Property(v => v.Slug).IsRequired().HasMaxLength(100);
+            entity.Property(v => v.Address).HasMaxLength(300);
+            entity.Property(v => v.City).IsRequired().HasMaxLength(100).HasDefaultValue("");
+            entity.Property(v => v.Latitude).HasColumnType("decimal(9,6)");
+            entity.Property(v => v.Longitude).HasColumnType("decimal(9,6)");
+            entity.Property(v => v.Description).HasMaxLength(2000);
+            entity.Property(v => v.PhotoUrl).HasMaxLength(500);
+            entity.Property(v => v.WebsiteUrl).HasMaxLength(500);
+
+            entity.HasIndex(v => v.Slug).IsUnique();
+
+            entity.Property(v => v.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+            entity.Property(v => v.UpdatedAt).HasDefaultValueSql("GETUTCDATE()");
+
+            // Configure Event relationship
+            entity.HasMany(v => v.Events)
+                .WithOne(e => e.CanonicalVenue)
+                .HasForeignKey(e => e.CanonicalVenueId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+    }
+
+    private static void ConfigureVenueAliasEntity(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<VenueAlias>(entity =>
+        {
+            entity.HasKey(a => a.Id);
+            entity.Property(a => a.AliasString).IsRequired().HasMaxLength(300);
+            entity.Property(a => a.NormalizedString).IsRequired().HasMaxLength(300);
+
+            entity.HasIndex(a => a.NormalizedString);
+
+            entity.Property(a => a.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+
+            entity.HasOne(a => a.CanonicalVenue)
+                .WithMany(v => v.Aliases)
+                .HasForeignKey(a => a.CanonicalVenueId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
     }
 
     private static void ConfigureUserEntity(ModelBuilder modelBuilder)

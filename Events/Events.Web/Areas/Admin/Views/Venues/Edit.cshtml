@@ -1,0 +1,168 @@
+@model Events.Web.Models.Admin.AdminVenueFormViewModel
+@{
+    ViewData["Title"] = "Edit venue";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-0">Edit venue</h1>
+        <p class="text-muted mb-0">@Model.Name</p>
+    </div>
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-1"></i>Back to list
+    </a>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-header"><strong>Venue details</strong></div>
+            <div class="card-body">
+                <form asp-action="Edit" asp-route-id="@Model.Id" method="post" novalidate>
+                    @Html.AntiForgeryToken()
+                    <input asp-for="Id" type="hidden" />
+
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label asp-for="Name" class="form-label"></label>
+                            <input asp-for="Name" class="form-control" />
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="ShortName" class="form-label"></label>
+                            <input asp-for="ShortName" class="form-control" />
+                            <span asp-validation-for="ShortName" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="Slug" class="form-label"></label>
+                            <input asp-for="Slug" class="form-control" />
+                            <div class="form-text">Used in the URL: /venues/<strong>@Model.Slug</strong></div>
+                            <span asp-validation-for="Slug" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="City" class="form-label"></label>
+                            <input asp-for="City" class="form-control" />
+                            <span asp-validation-for="City" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-12">
+                            <label asp-for="Address" class="form-label"></label>
+                            <input asp-for="Address" class="form-control" />
+                            <span asp-validation-for="Address" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label asp-for="Latitude" class="form-label"></label>
+                            <input asp-for="Latitude" class="form-control" />
+                            <span asp-validation-for="Latitude" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-3">
+                            <label asp-for="Longitude" class="form-label"></label>
+                            <input asp-for="Longitude" class="form-control" />
+                            <span asp-validation-for="Longitude" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-3">
+                            <label asp-for="Capacity" class="form-label"></label>
+                            <input asp-for="Capacity" class="form-control" />
+                            <span asp-validation-for="Capacity" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-3">
+                            <label asp-for="WebsiteUrl" class="form-label"></label>
+                            <input asp-for="WebsiteUrl" class="form-control" />
+                            <span asp-validation-for="WebsiteUrl" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-12">
+                            <label asp-for="PhotoUrl" class="form-label"></label>
+                            <input asp-for="PhotoUrl" class="form-control" />
+                            <span asp-validation-for="PhotoUrl" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-12">
+                            <label asp-for="Description" class="form-label"></label>
+                            <textarea asp-for="Description" class="form-control" rows="4"></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>Save changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <strong>Location aliases</strong>
+                <span class="badge bg-primary">@Model.ExistingAliases.Count</span>
+            </div>
+            <div class="card-body">
+                <form asp-action="AddAlias" method="post" class="mb-3">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="venueId" value="@Model.Id" />
+                    <div class="input-group">
+                        <input type="text" name="aliasString" class="form-control form-control-sm"
+                               placeholder="Raw location string..." required />
+                        <button type="submit" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                </form>
+
+                @if (!Model.ExistingAliases.Any())
+                {
+                    <p class="text-muted small mb-0">No aliases yet.</p>
+                }
+                else
+                {
+                    <ul class="list-group list-group-flush">
+                        @foreach (var alias in Model.ExistingAliases)
+                        {
+                            <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-start">
+                                <div>
+                                    <div class="small fw-semibold">@alias.AliasString</div>
+                                    <code class="text-muted" style="font-size: 0.75rem;">@alias.NormalizedString</code>
+                                </div>
+                                <form asp-action="RemoveAlias" method="post" class="ms-2"
+                                      onsubmit="return confirm('Remove this alias?');">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="aliasId" value="@alias.Id" />
+                                    <input type="hidden" name="venueId" value="@Model.Id" />
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </form>
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

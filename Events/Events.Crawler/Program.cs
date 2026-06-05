@@ -53,11 +53,13 @@ var host = new HostBuilder()
         services.AddScoped<IEventTagRepository, EventTagRepository>(); // Bulk operations repository
         services.AddScoped<ICategoryRepository, CategoryRepository>();
         services.AddScoped<ISubCategoryRepository, SubCategoryRepository>();
+        services.AddScoped<IVenueRepository, VenueRepository>();
 
         // Core services
         services.AddScoped<IEventService, EventService>();
         services.AddScoped<ISubCategoryService, SubCategoryService>();
         services.AddScoped<ITagService, TagService>();
+        services.AddScoped<IVenueService, VenueService>();
 
         // Crawler services
         services.AddScoped<ICrawlerService, CrawlerService>();
@@ -71,12 +73,12 @@ var host = new HostBuilder()
         });
 
         // Crawler strategies
-        services.AddScoped<IEventCrawlerStrategy, BiletBgApiCrawler>();  // via HttpClient
-        services.AddScoped<IEventCrawlerStrategy, TicketStationCrawler>(); // via Playwright
-        services.AddScoped<IEventCrawlerStrategy, EpaygoCrawler>();       // via Playwright
-        services.AddScoped<IEventCrawlerStrategy, EventimCrawler>();      // via Playwright & AJAX
-        services.AddScoped<IEventCrawlerStrategy, NdkCrawler>();          // via Playwright
-        services.AddScoped<IEventCrawlerStrategy, EntaseCrawler>();       // via Playwright
+        services.AddScoped<IEventCrawlerStrategy, BiletBgApiCrawler>();    // via HttpClient ~ 7 min for the first invocation locally
+        services.AddScoped<IEventCrawlerStrategy, TicketStationCrawler>(); // via Playwright optimized cralwer ~ 7 min for the first invocation
+        services.AddScoped<IEventCrawlerStrategy, EpaygoCrawler>();        // via Playwright ~ 10 min for the first invocation
+        services.AddScoped<IEventCrawlerStrategy, EventimCrawler>();       // via Playwright & AJAX ~ 7 min for the first invocation
+        services.AddScoped<IEventCrawlerStrategy, NdkCrawler>();           // via Playwright ~ 0.5 min for the first invocation
+        services.AddScoped<IEventCrawlerStrategy, EntaseCrawler>();        // via Playwright ~ 1.8 min for the first invocation
 
         System.Diagnostics.Trace.WriteLine("Services configured successfully");
     })

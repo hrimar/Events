@@ -19,7 +19,7 @@ public class Category
     [MaxLength(500)]
     public string? DefaultImageUrl { get; set; }
 
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow; // TODO: Remove default value. EventsDbContext will set this with .HasDefaultValueSql("GETUTCDATE()") to UtcNow when adding a new entity
 
     public ICollection<SubCategory> SubCategories { get; set; } = new List<SubCategory>();
     public ICollection<Event> Events { get; set; } = new List<Event>();

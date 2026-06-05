@@ -67,6 +67,17 @@
   <data name="Home_TodayEvents" xml:space="preserve"><value>Събития днес</value></data>
   <data name="Home_Next7Days" xml:space="preserve"><value>Следващите 7 дни</value></data>
 
+  <!-- Home Page - Weekly Section -->
+  <data name="Home_WeeklySectionTitle" xml:space="preserve"><value>Тази седмица в София</value></data>
+  <data name="Home_TabByDay" xml:space="preserve"><value>По ден</value></data>
+  <data name="Home_TabByCategory" xml:space="preserve"><value>По категория</value></data>
+  <data name="Home_TabWeekend" xml:space="preserve"><value>Уикенд</value></data>
+  <data name="Home_TabCalendar" xml:space="preserve"><value>Календар</value></data>
+  <data name="Home_NoEventsForDay" xml:space="preserve"><value>Няма обявени събития</value></data>
+  <data name="Home_NoWeekendEvents" xml:space="preserve"><value>Няма обявени събития за този уикенд</value></data>
+  <data name="Home_ViewAllCategory" xml:space="preserve"><value>Виж всички</value></data>
+  <data name="Home_Today" xml:space="preserve"><value>Днес</value></data>
+
   <!-- Events Index Page - Filters -->
   <data name="PageTitle_AllEvents" xml:space="preserve"><value>Всички събития</value></data>
   <data name="PageTitle_FreeEvents" xml:space="preserve"><value>Безплатни събития</value></data>
@@ -706,5 +717,19 @@
   <data name="Sort_Price" xml:space="preserve"><value>Цена</value></data>
   <data name="Sort_Category" xml:space="preserve"><value>Категория</value></data>
   <data name="Sort_Subcategory" xml:space="preserve"><value>Подкатегория</value></data>
+
+  <!-- Venues -->
+  <data name="Venue_Home" xml:space="preserve"><value>Начало</value></data>
+  <data name="Venue_SeoTitleSuffix" xml:space="preserve"><value>Събития, концерти, програма | Go Sofia</value></data>
+  <data name="Venue_UpcomingEvents" xml:space="preserve"><value>Предстоящи събития</value></data>
+  <data name="Venue_EventsAtVenue" xml:space="preserve"><value>Предстоящи събития на този адрес</value></data>
+  <data name="Venue_NoEvents" xml:space="preserve"><value>Няма предстоящи обявени събития.</value></data>
+  <data name="Venue_Capacity" xml:space="preserve"><value>Капацитет</value></data>
+  <data name="Venue_OfficialSite" xml:space="preserve"><value>Официален сайт</value></data>
+  <data name="Venue_AllEvents" xml:space="preserve"><value>Всички събития</value></data>
+  <data name="Venue_Location" xml:space="preserve"><value>Локация</value></data>
+  <data name="Venue_Details" xml:space="preserve"><value>Детайли</value></data>
+  <data name="Venue_Free" xml:space="preserve"><value>Безплатно</value></data>
+  <data name="Venue_Tickets" xml:space="preserve"><value>Билети</value></data>
 
 </root>

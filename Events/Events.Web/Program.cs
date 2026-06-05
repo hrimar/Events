@@ -39,6 +39,12 @@ builder.Services.AddControllersWithViews()
     {
         options.DataAnnotationLocalizerProvider = (_, factory) =>
             factory.Create(typeof(Events.Web.Resources.SharedResources));
+    })
+    .AddMvcOptions(options =>
+    {
+        // Insert before the default decimal binder so dot-separated decimals (e.g. coordinates)
+        // are parsed correctly regardless of the active request culture (bg uses comma by default).
+        options.ModelBinderProviders.Insert(0, new InvariantDecimalModelBinderProvider());
     });
 builder.Services.AddScoped<Events.Web.Localization.IdentityMessages>();
 
@@ -175,6 +181,7 @@ static void RegisterServices(WebApplicationBuilder builder)
     builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
     builder.Services.AddScoped<ISubCategoryRepository, SubCategoryRepository>();
     builder.Services.AddScoped<IUserFavoriteEventRepository, UserFavoriteEventRepository>();
+    builder.Services.AddScoped<IVenueRepository, VenueRepository>();
 
     // Services
     builder.Services.AddScoped<IEventService, EventService>();
@@ -182,6 +189,7 @@ static void RegisterServices(WebApplicationBuilder builder)
     builder.Services.AddScoped<IUserFavoriteEventService, UserFavoriteEventService>();
     builder.Services.AddScoped<IAdminUserService, AdminUserService>();
     builder.Services.AddScoped<IEventFilterOptionsBuilder, EventFilterOptionsBuilder>();
+    builder.Services.AddScoped<IVenueService, VenueService>();
 }
 
 static async Task InitializeDatabaseAsync(WebApplication app)
@@ -253,6 +261,11 @@ static void ConfigureHttpPipeline(WebApplication app)
     app.UseRouting();
     app.UseAuthentication();
     app.UseAuthorization();
+
+    app.MapControllerRoute(
+        name: "venue-details",
+        pattern: "venues/{slug}",
+        defaults: new { controller = "Venues", action = "Details" });
 
     app.MapControllerRoute(
         name: "admin",

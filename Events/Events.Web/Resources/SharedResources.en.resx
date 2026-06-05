@@ -67,6 +67,17 @@
   <data name="Home_TodayEvents" xml:space="preserve"><value>Today's Events</value></data>
   <data name="Home_Next7Days" xml:space="preserve"><value>Next 7 Days</value></data>
 
+  <!-- Home Page - Weekly Section -->
+  <data name="Home_WeeklySectionTitle" xml:space="preserve"><value>This week in Sofia</value></data>
+  <data name="Home_TabByDay" xml:space="preserve"><value>By day</value></data>
+  <data name="Home_TabByCategory" xml:space="preserve"><value>By category</value></data>
+  <data name="Home_TabWeekend" xml:space="preserve"><value>Weekend</value></data>
+  <data name="Home_TabCalendar" xml:space="preserve"><value>Calendar</value></data>
+  <data name="Home_NoEventsForDay" xml:space="preserve"><value>No events announced</value></data>
+  <data name="Home_NoWeekendEvents" xml:space="preserve"><value>No events announced for this weekend</value></data>
+  <data name="Home_ViewAllCategory" xml:space="preserve"><value>View all</value></data>
+  <data name="Home_Today" xml:space="preserve"><value>Today</value></data>
+
   <!-- Events Index Page - Filters -->
   <data name="PageTitle_AllEvents" xml:space="preserve"><value>All Events</value></data>
   <data name="PageTitle_FreeEvents" xml:space="preserve"><value>Free Events</value></data>
@@ -706,5 +717,19 @@
   <data name="Sort_Price" xml:space="preserve"><value>Price</value></data>
   <data name="Sort_Category" xml:space="preserve"><value>Category</value></data>
   <data name="Sort_Subcategory" xml:space="preserve"><value>Subcategory</value></data>
+
+  <!-- Venues -->
+  <data name="Venue_Home" xml:space="preserve"><value>Home</value></data>
+  <data name="Venue_SeoTitleSuffix" xml:space="preserve"><value>Events, concerts, programme | Go Sofia</value></data>
+  <data name="Venue_UpcomingEvents" xml:space="preserve"><value>Upcoming events</value></data>
+  <data name="Venue_EventsAtVenue" xml:space="preserve"><value>Upcoming events at this venue</value></data>
+  <data name="Venue_NoEvents" xml:space="preserve"><value>No upcoming events announced.</value></data>
+  <data name="Venue_Capacity" xml:space="preserve"><value>Capacity</value></data>
+  <data name="Venue_OfficialSite" xml:space="preserve"><value>Official website</value></data>
+  <data name="Venue_AllEvents" xml:space="preserve"><value>All events</value></data>
+  <data name="Venue_Location" xml:space="preserve"><value>Location</value></data>
+  <data name="Venue_Details" xml:space="preserve"><value>Details</value></data>
+  <data name="Venue_Free" xml:space="preserve"><value>Free</value></data>
+  <data name="Venue_Tickets" xml:space="preserve"><value>Tickets</value></data>
 
 </root>

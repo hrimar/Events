@@ -22,6 +22,7 @@ public class EventRepository : IEventRepository
         return await _context.Events
             .Include(e => e.Category)
             .Include(e => e.SubCategory)
+            .Include(e => e.CanonicalVenue)
             .Include(e => e.EventTags)
             .ThenInclude(et => et.Tag)
             .FirstOrDefaultAsync(e => e.Id == id);
@@ -67,6 +68,7 @@ public class EventRepository : IEventRepository
         var query = _context.Events
             .Include(e => e.Category)
             .Include(e => e.SubCategory)
+            .Include(e => e.CanonicalVenue)
             .Include(e => e.EventTags)
             .ThenInclude(et => et.Tag)
             .AsQueryable();
@@ -118,6 +120,7 @@ public class EventRepository : IEventRepository
         var query = _context.Events
             .Include(e => e.Category)
             .Include(e => e.SubCategory)
+            .Include(e => e.CanonicalVenue)
             .Include(e => e.EventTags)
             .ThenInclude(et => et.Tag)
             .AsQueryable();
@@ -216,6 +219,7 @@ public class EventRepository : IEventRepository
         return await _context.Events
             .Include(e => e.Category)
             .Include(e => e.SubCategory)
+            .Include(e => e.CanonicalVenue)
             .Include(e => e.EventTags)
             .ThenInclude(et => et.Tag)
             .Where(e => e.IsFeatured && e.Status == EventStatus.Published && e.Date >= DateTime.UtcNow)
@@ -228,6 +232,7 @@ public class EventRepository : IEventRepository
     {
         return await _context.Events
             .Include(e => e.Category)
+            .Include(e => e.CanonicalVenue)
             .Include(e => e.EventTags)
             .ThenInclude(et => et.Tag)
             .Where(e => e.Status == EventStatus.Published && e.Date >= DateTime.UtcNow)
@@ -387,6 +392,29 @@ public class EventRepository : IEventRepository
         catch (Exception ex)
         {
             throw new InvalidOperationException("Error during bulk update of events", ex);
+        }
+    }
+
+    public async Task<int> UpdateCanonicalVenueByLocationAsync(string location, int canonicalVenueId)
+    {
+        try
+        {
+            var events = await _context.Events
+                .Where(e => e.Location == location)
+                .ToListAsync();
+
+            foreach (var ev in events)
+            {
+                ev.CanonicalVenueId = canonicalVenueId;
+                ev.UpdatedAt = DateTime.UtcNow;
+            }
+
+            await _context.SaveChangesAsync();
+            return events.Count;
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException($"Error updating canonical venue for location '{location}'", ex);
         }
     }
 }
