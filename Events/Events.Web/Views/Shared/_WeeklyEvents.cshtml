@@ -4,23 +4,46 @@
 @inject IStringLocalizer<SharedResources> Localizer
 @{
     var displayCulture = System.Globalization.CultureInfo.CurrentCulture;
-    // Reorder from Sun-first to Mon-first (ISO)
-    var allDayNames = displayCulture.DateTimeFormat.AbbreviatedDayNames; // [Sun, Mon, Tue, Wed, Thu, Fri, Sat]
+    var allDayNames = displayCulture.DateTimeFormat.AbbreviatedDayNames;
     var calDayNames = new[] { allDayNames[1], allDayNames[2], allDayNames[3], allDayNames[4], allDayNames[5], allDayNames[6], allDayNames[0] };
+    var prevFrom = Model.FromDate.AddDays(-7).ToString("yyyy-MM-dd");
+    var nextFrom = Model.FromDate.AddDays(7).ToString("yyyy-MM-dd");
+    var todayFrom = DateTime.Today.ToString("yyyy-MM-dd");
+    var isCurrentWeek = Model.FromDate.Date == DateTime.Today.Date;
+    var periodLabel = Model.FromDate.ToString("d MMM", displayCulture) + " – " + Model.ToDate.ToString("d MMM yyyy", displayCulture);
+    var sectionTitle = isCurrentWeek ? Localizer["Home_WeeklySectionTitle"].Value : Localizer["Home_UpcomingSectionTitle"].Value;
 }
 
-<section class="py-4 bg-white border-top">
+<section class="py-4 bg-white border-top" id="weekly-events-section">
     <div class="container">
 
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h2 class="h4 mb-0">
-                <i class="fas fa-calendar-week text-primary me-2"></i>@Localizer["Home_WeeklySectionTitle"]
+                <i class="fas fa-calendar-week text-primary me-2"></i>@sectionTitle
             </h2>
             <a asp-controller="Events" asp-action="Index"
-               asp-route-fromDate="@DateTime.Today.ToString("yyyy-MM-dd")"
+               asp-route-fromDate="@Model.FromDate.ToString("yyyy-MM-dd")"
+               asp-route-toDate="@Model.ToDate.ToString("yyyy-MM-dd")"
                class="btn btn-sm btn-outline-primary">
                 <i class="fas fa-list me-1"></i>@Localizer["Home_ViewAllEvents"]
             </a>
+        </div>
+
+        <!-- Period Navigator -->
+        <div class="d-flex align-items-center justify-content-center gap-2 mb-3">
+            <button class="btn btn-sm btn-outline-secondary week-nav-btn" data-from="@prevFrom">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <span class="fw-semibold text-center" style="min-width:200px;">@periodLabel</span>
+            <button class="btn btn-sm btn-outline-secondary week-nav-btn" data-from="@nextFrom">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+            @if (!isCurrentWeek)
+            {
+                <button class="btn btn-sm btn-outline-primary week-nav-btn ms-2" data-from="@todayFrom">
+                    <i class="fas fa-home me-1"></i>@Localizer["Home_ThisWeek"]
+                </button>
+            }
         </div>
 
         <!-- Tab Navigation -->
@@ -138,7 +161,8 @@
                                 </h5>
                                 <a asp-controller="Events" asp-action="Index"
                                    asp-route-category="@cat.CategoryKey"
-                                   asp-route-fromDate="@DateTime.Today.ToString("yyyy-MM-dd")"
+                                   asp-route-fromDate="@Model.FromDate.ToString("yyyy-MM-dd")"
+                                   asp-route-toDate="@Model.ToDate.ToString("yyyy-MM-dd")"
                                    class="btn btn-sm btn-outline-secondary">
                                     @Localizer["Home_ViewAllCategory"]
                                 </a>
@@ -248,59 +272,123 @@
             <!-- TAB 4: Calendar -->
             <div class="tab-pane fade" id="tab-cal" role="tabpanel">
                 @{
-                    var calToday = Model.CalendarMonth;
-                    var firstDay = new DateTime(calToday.Year, calToday.Month, 1);
-                    var lastDay = new DateTime(calToday.Year, calToday.Month,
-                        DateTime.DaysInMonth(calToday.Year, calToday.Month));
-                    int startOffset = ((int)firstDay.DayOfWeek + 6) % 7; // ISO: Mon=0
-                    var calStart = firstDay.AddDays(-startOffset);
-                    int totalCells = (int)Math.Ceiling((startOffset + lastDay.Day) / 7.0) * 7;
+                    var showTwoMonths = Model.FromDate.Year != Model.ToDate.Year
+                                     || Model.FromDate.Month != Model.ToDate.Month;
+                    var monthsToRender = new List<DateTime>
+                    {
+                        new DateTime(Model.FromDate.Year, Model.FromDate.Month, 1)
+                    };
+                    if (showTwoMonths)
+                        monthsToRender.Add(new DateTime(Model.ToDate.Year, Model.ToDate.Month, 1));
                 }
-                <div class="table-responsive">
-                    <table class="table table-bordered text-center mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                @foreach (var dn in calDayNames)
-                                {
-                                    <th class="py-1" style="font-size:0.8rem;">@dn</th>
-                                }
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @for (int cell = 0; cell < totalCells; cell += 7)
-                            {
-                                <tr>
-                                    @for (int col = 0; col < 7; col++)
-                                    {
-                                        var cellDate = calStart.AddDays(cell + col);
-                                        var isCurrentMonth = cellDate.Month == calToday.Month;
-                                        var isTodayCell = cellDate.Date == DateTime.Today;
-                                        var count = Model.CalendarCounts.GetValueOrDefault(cellDate.Date, 0);
-                                        <td class="p-1 @(isTodayCell ? "table-primary" : "") @(!isCurrentMonth ? "text-muted" : "")"
-                                            style="min-width:40px; height:52px; vertical-align:top; font-size:0.85rem;">
-                                            @if (isCurrentMonth && count > 0)
+                <div class="row g-3">
+                    @foreach (var monthStart in monthsToRender)
+                    {
+                        var mLastDay = new DateTime(monthStart.Year, monthStart.Month,
+                            DateTime.DaysInMonth(monthStart.Year, monthStart.Month));
+                        int mStartOffset = ((int)monthStart.DayOfWeek + 6) % 7; // ISO: Mon=0
+                        var mCalStart = monthStart.AddDays(-mStartOffset);
+                        int mTotalCells = (int)Math.Ceiling((mStartOffset + mLastDay.Day) / 7.0) * 7;
+
+                        <div class="@(showTwoMonths ? "col-md-6" : "col-12")">
+                            <div class="text-center fw-semibold mb-2 text-capitalize">
+                                @monthStart.ToString("MMMM yyyy", displayCulture)
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-bordered text-center mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            @foreach (var dn in calDayNames)
                                             {
-                                                <a asp-controller="Events" asp-action="Index"
-                                                   asp-route-fromDate="@cellDate.ToString("yyyy-MM-dd")"
-                                                   asp-route-toDate="@cellDate.ToString("yyyy-MM-dd")"
-                                                   class="text-decoration-none d-flex flex-column align-items-center">
-                                                    <span>@cellDate.Day</span>
-                                                    <span class="badge bg-primary" style="font-size:0.65rem;">@count</span>
-                                                </a>
+                                                <th class="py-1" style="font-size:0.8rem;">@dn</th>
                                             }
-                                            else
-                                            {
-                                                <span>@(isCurrentMonth ? cellDate.Day.ToString() : "")</span>
-                                            }
-                                        </td>
-                                    }
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @for (int cell = 0; cell < mTotalCells; cell += 7)
+                                        {
+                                            <tr>
+                                                @for (int col = 0; col < 7; col++)
+                                                {
+                                                    var cellDate = mCalStart.AddDays(cell + col);
+                                                    var isCurrentMonth = cellDate.Month == monthStart.Month;
+                                                    var isTodayCell = cellDate.Date == DateTime.Today;
+                                                    var isInPeriod = isCurrentMonth
+                                                        && cellDate.Date >= Model.FromDate.Date
+                                                        && cellDate.Date <= Model.ToDate.Date;
+                                                    var count = Model.CalendarCounts.GetValueOrDefault(cellDate.Date, 0);
+                                                    var tdClass = isTodayCell      ? "table-primary"
+                                                                : isInPeriod       ? "bg-primary bg-opacity-10"
+                                                                : !isCurrentMonth  ? "text-muted opacity-50"
+                                                                : "";
+                                                    <td class="p-1 @tdClass"
+                                                        style="min-width:40px; height:52px; vertical-align:top; font-size:0.85rem;">
+                                                        @if (isCurrentMonth && count > 0)
+                                                        {
+                                                            <a asp-controller="Events" asp-action="Index"
+                                                               asp-route-fromDate="@cellDate.ToString("yyyy-MM-dd")"
+                                                               asp-route-toDate="@cellDate.ToString("yyyy-MM-dd")"
+                                                               class="text-decoration-none d-flex flex-column align-items-center">
+                                                                <span>@cellDate.Day</span>
+                                                                <span class="badge bg-primary" style="font-size:0.65rem;">@count</span>
+                                                            </a>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span>@(isCurrentMonth ? cellDate.Day.ToString() : "")</span>
+                                                        }
+                                                    </td>
+                                                }
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    }
                 </div>
             </div>
 
         </div>
     </div>
 </section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Keep active tab between reloads when navigating weeks
+    const ACTIVE_TAB_KEY = 'weeklyActiveTab';
+
+    document.addEventListener('click', function (e) {
+        const btn = e.target.closest('.week-nav-btn');
+        if (!btn) return;
+
+        const fromDate = btn.dataset.from;
+        const section = document.getElementById('weekly-events-section');
+        if (!section || !fromDate) return;
+        
+        // Keep current active tab
+        const activeTab = document.querySelector('#weeklyTabs .nav-link.active');
+        if (activeTab) sessionStorage.setItem(ACTIVE_TAB_KEY, activeTab.dataset.bsTarget);
+
+        section.style.opacity = '0.5';
+        section.style.pointerEvents = 'none';
+
+        fetch(`/Home/WeeklyEventsPartial?fromDate=${fromDate}`)
+            .then(r => r.text())
+            .then(html => {
+                section.outerHTML = html;
+
+                // Restore active tab
+                const savedTab = sessionStorage.getItem(ACTIVE_TAB_KEY);
+                if (savedTab) {
+                    const tabBtn = document.querySelector(`[data-bs-target="${savedTab}"]`);
+                    if (tabBtn) new bootstrap.Tab(tabBtn).show();
+                }
+            })
+            .catch(() => {
+                section.style.opacity = '1';
+                section.style.pointerEvents = '';
+            });
+    });
+});
+</script>

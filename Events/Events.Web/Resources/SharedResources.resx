@@ -77,6 +77,8 @@
   <data name="Home_NoWeekendEvents" xml:space="preserve"><value>Няма обявени събития за този уикенд</value></data>
   <data name="Home_ViewAllCategory" xml:space="preserve"><value>Виж всички</value></data>
   <data name="Home_Today" xml:space="preserve"><value>Днес</value></data>
+  <data name="Home_ThisWeek" xml:space="preserve"><value>Тази седмица</value></data>
+  <data name="Home_UpcomingSectionTitle" xml:space="preserve"><value>Предстоящо в София</value></data>
 
   <!-- Events Index Page - Filters -->
   <data name="PageTitle_AllEvents" xml:space="preserve"><value>Всички събития</value></data>

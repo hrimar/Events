@@ -7,6 +7,8 @@ public class WeeklyEventsViewModel
     public List<EventViewModel> WeekendEvents { get; set; } = new();
     public Dictionary<DateTime, int> CalendarCounts { get; set; } = new();
     public DateTime CalendarMonth { get; set; } = DateTime.Today;
+    public DateTime FromDate { get; set; } = DateTime.Today;
+    public DateTime ToDate { get; set; } = DateTime.Today.AddDays(6);
 }
 
 public class DayEventsViewModel
