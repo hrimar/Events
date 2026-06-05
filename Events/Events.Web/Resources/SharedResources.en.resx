@@ -733,5 +733,11 @@
   <data name="Venue_Details" xml:space="preserve"><value>Details</value></data>
   <data name="Venue_Free" xml:space="preserve"><value>Free</value></data>
   <data name="Venue_Tickets" xml:space="preserve"><value>Tickets</value></data>
+  <data name="Venue_IndexTitle" xml:space="preserve"><value>Venues</value></data>
+  <data name="Venue_IndexSubtitle" xml:space="preserve"><value>Discover concert halls, theatres, arenas and other event venues in Sofia</value></data>
+  <data name="Venue_SearchPlaceholder" xml:space="preserve"><value>Search by venue name...</value></data>
+  <data name="Venue_UpcomingEventsCount" xml:space="preserve"><value>upcoming events</value></data>
+  <data name="Venue_NoVenuesFound" xml:space="preserve"><value>No venues found.</value></data>
+  <data name="Venue_BrowseVenues" xml:space="preserve"><value>Venues</value></data>
 
 </root>

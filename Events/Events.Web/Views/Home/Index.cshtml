@@ -21,6 +21,9 @@
                     <a asp-action="Index" asp-controller="Events" class="btn btn-light">
                         <i class="fas fa-search me-2"></i>@Localizer["Home_BrowseAll"]
                     </a>
+                    <a asp-action="Index" asp-controller="Venues" class="btn btn-outline-light">
+                        <i class="fas fa-map-marker-alt me-2"></i>@Localizer["Venue_BrowseVenues"]
+                    </a>
                     <a asp-action="Index" asp-controller="Events" asp-route-free="true" class="btn btn-success">
                         <i class="fas fa-gift me-2"></i>@Localizer["Home_FreeEvents"]
                     </a>

@@ -1,0 +1,110 @@
+@model IEnumerable<Events.Web.Models.VenueListItemViewModel>
+@using Events.Web.Resources
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<SharedResources> Localizer
+@{
+    ViewData["Title"] = Localizer["Venue_IndexTitle"];
+    var search = ViewBag.Search as string;
+}
+
+<section class="bg-primary text-white py-3">
+    <div class="container">
+        <h1 class="h3 fw-bold mb-1">
+            <i class="fas fa-map-marker-alt me-2"></i>@Localizer["Venue_IndexTitle"]
+        </h1>
+        <p class="mb-0 opacity-75">@Localizer["Venue_IndexSubtitle"]</p>
+    </div>
+</section>
+
+<section class="py-4">
+    <div class="container">
+
+        <!-- Search -->
+        <form method="get" class="mb-4">
+            <div class="input-group" style="max-width:420px;">
+                <input type="text" class="form-control" name="search"
+                       value="@search"
+                       placeholder="@Localizer["Venue_SearchPlaceholder"]" />
+                <button class="btn btn-primary" type="submit">
+                    <i class="fas fa-search"></i>
+                </button>
+                @if (!string.IsNullOrWhiteSpace(search))
+                {
+                    <a asp-action="Index" class="btn btn-outline-secondary">
+                        <i class="fas fa-times"></i>
+                    </a>
+                }
+            </div>
+        </form>
+
+        @if (!Model.Any())
+        {
+            <div class="text-center py-5 text-muted">
+                <i class="fas fa-map-marker-alt fa-3x mb-3 opacity-50"></i>
+                <p>@Localizer["Venue_NoVenuesFound"]</p>
+            </div>
+        }
+        else
+        {
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                @foreach (var venue in Model)
+                {
+                    <div class="col">
+                        <a asp-action="Details" asp-route-slug="@venue.Slug"
+                           class="text-decoration-none">
+                            <div class="card h-100 shadow-sm border-0 venue-card">
+                                @if (!string.IsNullOrEmpty(venue.PhotoUrl))
+                                {
+                                    <img src="@venue.PhotoUrl" alt="@venue.DisplayName"
+                                         class="card-img-top"
+                                         style="height:160px; object-fit:cover;"
+                                         onerror="this.style.display='none'">
+                                }
+                                else
+                                {
+                                    <div class="bg-light d-flex align-items-center justify-content-center"
+                                         style="height:160px;">
+                                        <i class="fas fa-map-marker-alt fa-3x text-muted opacity-50"></i>
+                                    </div>
+                                }
+                                <div class="card-body">
+                                    <h5 class="card-title text-dark mb-1">@venue.DisplayName</h5>
+                                    @if (!string.IsNullOrEmpty(venue.ShortName))
+                                    {
+                                        <span class="badge bg-secondary mb-2">@venue.ShortName</span>
+                                    }
+                                    @if (!string.IsNullOrEmpty(venue.City))
+                                    {
+                                        <div class="text-muted small">
+                                            <i class="fas fa-city me-1"></i>@venue.City
+                                        </div>
+                                    }
+                                </div>
+                                @if (venue.UpcomingEventsCount > 0)
+                                {
+                                    <div class="card-footer bg-transparent border-0 pt-0">
+                                        <span class="badge bg-primary">
+                                            @venue.UpcomingEventsCount @Localizer["Venue_UpcomingEventsCount"]
+                                        </span>
+                                    </div>
+                                }
+                            </div>
+                        </a>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</section>
+
+@section Styles {
+    <style>
+        .venue-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .venue-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12) !important;
+        }
+    </style>
+}

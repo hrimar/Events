@@ -1,7 +1,9 @@
 using Events.Models.Entities;
 using Events.Services.Interfaces;
 using Events.Web.Models;
+using Events.Web.Resources;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
 using System.Text.Json;
 
 namespace Events.Web.Controllers;
@@ -10,11 +12,52 @@ public class VenuesController : Controller
 {
     private readonly IVenueService _venueService;
     private readonly ILogger<VenuesController> _logger;
+    private readonly IStringLocalizer<SharedResources> _localizer;
 
-    public VenuesController(IVenueService venueService, ILogger<VenuesController> logger)
+    public VenuesController(IVenueService venueService, ILogger<VenuesController> logger, IStringLocalizer<SharedResources> localizer)
     {
         _venueService = venueService;
         _logger = logger;
+        _localizer = localizer;
+    }
+
+    public async Task<IActionResult> Index(string? search = null)
+    {
+        try
+        {
+            var venues = await _venueService.GetAllWithStatsAsync();
+
+            var viewModels = venues
+                .Select(v => new VenueListItemViewModel
+                {
+                    Slug = v.Slug,
+                    Name = v.Name,
+                    NameEn = v.NameEn ?? string.Empty,
+                    ShortName = v.ShortName,
+                    City = v.City,
+                    UpcomingEventsCount = v.UpcomingEventsCount
+                })
+                .OrderBy(v => v.DisplayName)
+                .ToList();
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                viewModels = viewModels
+                    .Where(v => v.Name.Contains(search, StringComparison.OrdinalIgnoreCase)
+                             || v.NameEn.Contains(search, StringComparison.OrdinalIgnoreCase)
+                             || (v.ShortName != null && v.ShortName.Contains(search, StringComparison.OrdinalIgnoreCase)))
+                    .ToList();
+            }
+
+            ViewBag.Search = search;
+            ViewData["Title"] = _localizer["Venue_IndexTitle"].Value;
+            return View(viewModels);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error loading venues index");
+            return View(new List<VenueListItemViewModel>());
+        }
     }
 
     public async Task<IActionResult> Details(string slug)

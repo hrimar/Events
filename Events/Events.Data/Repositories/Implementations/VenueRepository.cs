@@ -106,6 +106,7 @@ public class VenueRepository : IVenueRepository
             {
                 Id = v.Id,
                 Name = v.Name,
+                NameEn = v.NameEn,
                 ShortName = v.ShortName,
                 Slug = v.Slug,
                 City = v.City,
