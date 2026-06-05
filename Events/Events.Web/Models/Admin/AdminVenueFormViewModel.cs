@@ -8,8 +8,13 @@ public class AdminVenueFormViewModel
 
     [Required]
     [StringLength(200)]
-    [Display(Name = "Full Name")]
+    [Display(Name = "Full Name (BG)")]
     public string Name { get; set; } = string.Empty;
+
+    [Required]
+    [StringLength(200)]
+    [Display(Name = "Full Name (EN)")]
+    public string NameEn { get; set; } = string.Empty;
 
     [StringLength(50)]
     [Display(Name = "Short Name")]

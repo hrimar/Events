@@ -16,10 +16,7 @@ public class VenuesController : Controller
     private readonly IEventRepository _eventRepository;
     private readonly ILogger<VenuesController> _logger;
 
-    public VenuesController(
-        IVenueService venueService,
-        IEventRepository eventRepository,
-        ILogger<VenuesController> logger)
+    public VenuesController(IVenueService venueService, IEventRepository eventRepository, ILogger<VenuesController> logger)
     {
         _venueService = venueService;
         _eventRepository = eventRepository;
@@ -88,6 +85,7 @@ public class VenuesController : Controller
             var venue = new CanonicalVenue
             {
                 Name = model.Name,
+                NameEn = model.NameEn,
                 ShortName = model.ShortName,
                 Slug = model.Slug,
                 Address = model.Address,
@@ -125,6 +123,7 @@ public class VenuesController : Controller
             {
                 Id = venue.Id,
                 Name = venue.Name,
+                NameEn = venue.NameEn,
                 ShortName = venue.ShortName,
                 Slug = venue.Slug,
                 Address = venue.Address,
@@ -167,6 +166,7 @@ public class VenuesController : Controller
                 return NotFound();
 
             venue.Name = model.Name;
+            venue.NameEn = model.NameEn;
             venue.ShortName = model.ShortName;
             venue.Slug = model.Slug;
             venue.Address = model.Address;

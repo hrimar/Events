@@ -10,6 +10,10 @@ public class CanonicalVenue
     [MaxLength(200)]
     public string Name { get; set; } = string.Empty;
 
+    [Required]
+    [MaxLength(200)]
+    public string NameEn { get; set; } = string.Empty;
+
     [MaxLength(50)]
     public string? ShortName { get; set; }
 

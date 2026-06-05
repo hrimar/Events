@@ -6,6 +6,7 @@ public class VenueDetailsViewModel
 {
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
+    public string NameEn { get; set; } = string.Empty;
     public string? ShortName { get; set; }
     public string Slug { get; set; } = string.Empty;
     public string? Address { get; set; }
@@ -17,6 +18,7 @@ public class VenueDetailsViewModel
     public string? WebsiteUrl { get; set; }
     public int? Capacity { get; set; }
     public bool HasMap => Latitude.HasValue && Longitude.HasValue;
+    public string DisplayName => CultureInfo.CurrentCulture.TwoLetterISOLanguageName == "en" && !string.IsNullOrEmpty(NameEn) ? NameEn : Name;
     public IReadOnlyList<EventViewModel> UpcomingEvents { get; set; } = Array.Empty<EventViewModel>();
     public string JsonLd { get; set; } = string.Empty;
 

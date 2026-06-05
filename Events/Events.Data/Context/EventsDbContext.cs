@@ -97,6 +97,7 @@ public class EventsDbContext : IdentityDbContext<User>
         {
             entity.HasKey(v => v.Id);
             entity.Property(v => v.Name).IsRequired().HasMaxLength(200);
+            entity.Property(v => v.NameEn).IsRequired().HasMaxLength(200);
             entity.Property(v => v.ShortName).HasMaxLength(50);
             entity.Property(v => v.Slug).IsRequired().HasMaxLength(100);
             entity.Property(v => v.Address).HasMaxLength(300);

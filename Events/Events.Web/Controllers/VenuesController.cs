@@ -35,6 +35,7 @@ public class VenuesController : Controller
         {
             Id = venue.Id,
             Name = venue.Name,
+            NameEn = venue.NameEn,
             ShortName = venue.ShortName,
             Slug = venue.Slug,
             Address = venue.Address,
