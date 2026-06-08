@@ -108,6 +108,7 @@ public class VenueRepository : IVenueRepository
                 Name = v.Name,
                 NameEn = v.NameEn,
                 ShortName = v.ShortName,
+                PhotoUrl = v.PhotoUrl,
                 Slug = v.Slug,
                 City = v.City,
                 AliasCount = v.Aliases.Count,

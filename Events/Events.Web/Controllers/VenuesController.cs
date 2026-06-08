@@ -34,6 +34,7 @@ public class VenuesController : Controller
                     Name = v.Name,
                     NameEn = v.NameEn ?? string.Empty,
                     ShortName = v.ShortName,
+                    PhotoUrl = v.PhotoUrl,
                     City = v.City,
                     UpcomingEventsCount = v.UpcomingEventsCount
                 })
