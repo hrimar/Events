@@ -111,8 +111,8 @@
                                                     <img src="@ev.DefaultImage" alt="@ev.Name"
                                                          style="width:44px;height:44px;object-fit:cover;border-radius:4px;flex-shrink:0;"
                                                          onerror="this.src='/images/default_event_image.jpeg'">
-                                                    <div style="min-width:0;">
-                                                        <div class="text-dark small fw-semibold text-truncate">@ev.Name</div>
+                                                    <div style="min-width:0;">                                                        
+                                                        <div class="text-dark small fw-semibold text-clamp-2">@ev.Name</div>
                                                         @if (ev.HasKnownTime)
                                                         {
                                                             <div class="text-muted" style="font-size:0.75rem;">@ev.FormattedTime</div>

@@ -38,7 +38,7 @@ public class VenuesController : Controller
                     City = v.City,
                     UpcomingEventsCount = v.UpcomingEventsCount
                 })
-                .OrderBy(v => v.DisplayName)
+                .OrderByDescending(v => v.UpcomingEventsCount)
                 .ToList();
 
             if (!string.IsNullOrWhiteSpace(search))
