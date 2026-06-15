@@ -14,7 +14,7 @@
     var sectionTitle = isCurrentWeek ? Localizer["Home_WeeklySectionTitle"].Value : Localizer["Home_UpcomingSectionTitle"].Value;
 }
 
-<section class="py-4 bg-white border-top" id="weekly-events-section">
+<section class="py-4 bg-surface theme-section border-top" id="weekly-events-section">
     <div class="container">
 
         <div class="d-flex justify-content-between align-items-center mb-3">
@@ -34,7 +34,7 @@
             <button class="btn btn-sm btn-outline-secondary week-nav-btn" data-from="@prevFrom">
                 <i class="fas fa-chevron-left"></i>
             </button>
-            <span class="fw-semibold text-center" style="min-width:200px;">@periodLabel</span>
+            <span class="fw-semibold text-body text-center" style="min-width:200px;">@periodLabel</span>
             <button class="btn btn-sm btn-outline-secondary week-nav-btn" data-from="@nextFrom">
                 <i class="fas fa-chevron-right"></i>
             </button>
@@ -112,7 +112,7 @@
                                                          style="width:44px;height:44px;object-fit:cover;border-radius:4px;flex-shrink:0;"
                                                          onerror="this.src='/images/default_event_image.jpeg'">
                                                     <div style="min-width:0;">                                                        
-                                                        <div class="text-dark small fw-semibold text-clamp-2">@ev.Name</div>
+                                                        <div class="text-body small fw-semibold text-clamp-2">@ev.Name</div>
                                                         @if (ev.HasKnownTime)
                                                         {
                                                             <div class="text-muted" style="font-size:0.75rem;">@ev.FormattedTime</div>
@@ -155,7 +155,7 @@
                     {
                         <div class="mb-4">
                             <div class="d-flex justify-content-between align-items-center mb-2">
-                                <h5 class="mb-0">
+                                <h5 class="mb-0 text-body">
                                     <i class="@cat.IconClass me-2 text-primary"></i>@cat.DisplayName
                                     <span class="badge bg-secondary ms-1" style="font-size:0.75rem;">@cat.Events.Count</span>
                                 </h5>
@@ -178,7 +178,7 @@
                                                      style="height:100px;object-fit:cover;border-radius:4px 4px 0 0;"
                                                      onerror="this.src='/images/default_event_image.jpeg'">
                                                 <div class="card-body p-2">
-                                                    <div class="text-dark small fw-semibold text-truncate">@ev.Name</div>
+                                                    <div class="text-body small fw-semibold text-truncate">@ev.Name</div>
                                                     <div class="text-muted" style="font-size:0.75rem;">
                                                         @ev.FormattedDate@(ev.HasKnownTime ? " · " + ev.FormattedTime : "")
                                                     </div>
@@ -228,7 +228,7 @@
                                     <div class="card-body d-flex flex-column">
                                         <h6 class="event-title">
                                             <a asp-controller="Events" asp-action="Details" asp-route-id="@ev.Id"
-                                               class="text-decoration-none text-dark">@ev.Name</a>
+                                               class="text-decoration-none text-body">@ev.Name</a>
                                         </h6>
                                         <div class="text-muted small">
                                             <i class="fas fa-calendar me-1"></i>
@@ -291,7 +291,7 @@
                         int mTotalCells = (int)Math.Ceiling((mStartOffset + mLastDay.Day) / 7.0) * 7;
 
                         <div class="@(showTwoMonths ? "col-md-6" : "col-12")">
-                            <div class="text-center fw-semibold mb-2 text-capitalize">
+                            <div class="text-center fw-semibold mb-2 text-capitalize text-body">
                                 @monthStart.ToString("MMMM yyyy", displayCulture)
                             </div>
                             <div class="table-responsive">

@@ -1,52 +1,56 @@
 /* Dark Theme Variables */
 :root[data-theme="dark"] {
   /* Primary Colors */
-  --primary-color: #0d6efd;
+  --primary-color: #4d9fff;
   --secondary-color: #6c757d;
-  --success-color: #198754;
-  --danger-color: #dc3545;
+  --success-color: #3ecf8e;
+  --danger-color: #f06565;
   --warning-color: #ffc107;
-  --info-color: #0dcaf0;
-  
+  --info-color: #5bc0de;
+
   /* Background Colors */
-  --body-bg: #121212;
-  --content-bg: #1e1e1e;
-  --sidebar-bg: #2d2d2d;
-  --card-bg: #1e1e1e;
-  --navbar-bg: #1e1e1e;
-  --footer-bg: #000000;
-  
+  --body-bg: #0f1419;
+  --content-bg: #1a2332;
+  --sidebar-bg: #243044;
+  --card-bg: #1e2a3b;
+  --navbar-bg: #1a2332;
+  --footer-bg: #0c1017;
+
   /* Text Colors */
-  --text-primary: #ffffff;
-  --text-secondary: #adb5bd;
-  --text-muted: #6c757d;
+  --text-primary: #e8edf4;
+  --text-secondary: #9aa8bc;
+  --text-muted: #6b7a90;
   --text-light: #f8f9fa;
-  
+
   /* Border Colors */
-  --border-color: #495057;
-  --border-light: #343a40;
-  --border-dark: #6c757d;
-  
+  --border-color: #2d3f56;
+  --border-light: #243044;
+  --border-dark: #4a5f7a;
+
   /* Shadows */
-  --shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.3);
-  --shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.5);
-  --shadow-lg: 0 1rem 3rem rgba(0, 0, 0, 0.7);
-  
+  --shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.35);
+  --shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 1rem 3rem rgba(0, 0, 0, 0.55);
+
   /* Event Card Specific */
-  --event-card-bg: #1e1e1e;
-  --event-card-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.3);
-  --event-card-hover-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.5);
-  --event-price-bg: #198754;
-  --event-price-free-bg: #0dcaf0;
-  
+  --event-card-bg: #1e2a3b;
+  --event-card-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.35);
+  --event-card-hover-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.45);
+  --event-price-bg: #3ecf8e;
+  --event-price-free-bg: #5bc0de;
+
   /* Form Elements */
-  --input-bg: #2d2d2d;
-  --input-border: #495057;
-  --input-focus-border: #0d6efd;
-  --input-focus-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
-  
+  --input-bg: #243044;
+  --input-border: #2d3f56;
+  --input-focus-border: #4d9fff;
+  --input-focus-shadow: 0 0 0 0.2rem rgba(77, 159, 255, 0.25);
+
   /* Buttons */
-  --btn-primary-bg: #0d6efd;
+  --btn-primary-bg: #4d9fff;
   --btn-secondary-bg: #6c757d;
-  --btn-outline-border: #0d6efd;
+  --btn-outline-border: #4d9fff;
+
+  /* Interactive surfaces */
+  --hover-bg: rgba(77, 159, 255, 0.08);
+  --dropdown-bg: #1e2a3b;
 }

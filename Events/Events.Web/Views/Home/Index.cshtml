@@ -37,7 +37,7 @@
 </section>
 
 <!-- Quick Category Navigation -->
-<section class="py-2 bg-light">
+<section class="py-2 bg-surface-alt">
     <div class="container">
         <h4 class="text-center mb-3">@Localizer["Home_BrowseByCategory"]</h4>
         <div class="row">
@@ -96,7 +96,7 @@
     </section>
 } *@
 
-<!-- Featured Events -->
+<!-- Weekly Events -->
 @await Html.PartialAsync("_WeeklyEvents", Model.WeeklyEvents)
 
 <!-- Saved Events (authenticated users with saved events only) -->
@@ -112,11 +112,11 @@
 }
 
 <!-- Statistics Section -->
-<section class="bg-light py-2">
+<section class="bg-surface-alt py-2">
     <div class="container">
         <div class="row text-center justify-content-center">
             <div class="col-md-2">
-                <a asp-action="Index" asp-controller="Events" class="text-decoration-none text-dark stat-card">
+                <a asp-action="Index" asp-controller="Events" class="text-decoration-none text-body stat-card">
                     <h3 class="text-primary">@Model.TotalEvents</h3>
                     <p class="text-muted mb-0">@Localizer["Home_TotalEvents"]</p>
                 </a>
@@ -125,7 +125,7 @@
                 <a asp-action="Index" asp-controller="Events"
                    asp-route-fromDate="@DateTime.Today.ToString("yyyy-MM-dd")"
                    asp-route-toDate="@DateTime.Today.ToString("yyyy-MM-dd")"
-                   class="text-decoration-none text-dark stat-card">
+                   class="text-decoration-none text-body stat-card">
                     <h3 class="text-success">@Model.TodayEvents</h3>
                     <p class="text-muted mb-0">@Localizer["Home_TodayEvents"]</p>
                 </a>
@@ -134,7 +134,7 @@
                 <a asp-action="Index" asp-controller="Events"
                    asp-route-fromDate="@DateTime.Today.ToString("yyyy-MM-dd")"
                    asp-route-toDate="@DateTime.Today.AddDays(6).ToString("yyyy-MM-dd")"
-                   class="text-decoration-none text-dark stat-card">
+                   class="text-decoration-none text-body stat-card">
                     <h3 class="text-info">@Model.Next7DaysEvents</h3>
                     <p class="text-muted mb-0">@Localizer["Home_Next7Days"]</p>
                 </a>
@@ -208,9 +208,9 @@
         }
         
         .stat-card:hover {
-            background-color: rgba(0, 0, 0, 0.05);
+            background-color: var(--hover-bg);
             transform: translateY(-4px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            box-shadow: var(--shadow);
         }
         
         .stat-card h3 {

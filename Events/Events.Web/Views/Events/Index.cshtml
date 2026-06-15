@@ -95,7 +95,7 @@
                 </div>
                 
                 <div class="collapse @(Model.SelectedTags.Any() ? "show" : "")" id="tagCloud">
-                    <div class="bg-white p-3 rounded border">
+                    <div class="bg-surface p-3 rounded border">
                         <!-- Selected Tags -->
                         @if(Model.SelectedTags.Any())
                         {
@@ -211,7 +211,7 @@
 </section>
 
 <!-- Sorting and View Options -->
-<div class="bg-white py-3 border-bottom">
+<div class="sorting-bar py-3">
     <div class="container">
         <div class="row align-items-center">
             <div class="col-md-6">
@@ -325,7 +325,7 @@
                             
                             <div class="card-body d-flex flex-column">
                                 <h5 class="event-title">
-                                    <a href="@Url.Action("Details", "Events", new { id = eventItem.Id })" class="text-decoration-none text-dark">
+                                    <a href="@Url.Action("Details", "Events", new { id = eventItem.Id })" class="text-decoration-none text-body">
                                         @eventItem.Name
                                     </a>
                                 </h5>

@@ -33,7 +33,7 @@ public class EventViewModel
         ? Description[..147] + "..."
         : Description ?? "";
 
-    public string DefaultImage => ImageUrl ?? "/images/default-event.jpg";
+    public string DefaultImage => ImageUrl ?? "/images/default_event_image.jpeg";
 
     public bool HasTicketUrl => !string.IsNullOrEmpty(TicketUrl);
 

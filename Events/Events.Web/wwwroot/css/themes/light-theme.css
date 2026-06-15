@@ -49,4 +49,8 @@
   --btn-primary-bg: #007bff;
   --btn-secondary-bg: #6c757d;
   --btn-outline-border: #007bff;
+
+  /* Interactive surfaces */
+  --hover-bg: rgba(0, 0, 0, 0.05);
+  --dropdown-bg: #ffffff;
 }

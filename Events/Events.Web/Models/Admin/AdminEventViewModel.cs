@@ -35,7 +35,7 @@ public class AdminEventViewModel
         ? Description[..97] + "..." 
         : Description ?? "";
 
-    public string DefaultImage => ImageUrl ?? "/images/default-event.jpg";
+    public string DefaultImage => ImageUrl ?? "/images/default_event_image.jpeg";
     public bool HasTicketUrl => !string.IsNullOrEmpty(TicketUrl);
     public bool IsUncategorized => CategoryId == 11; // Undefined category
 
