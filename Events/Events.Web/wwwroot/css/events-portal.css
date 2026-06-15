@@ -685,8 +685,66 @@ footer {
 }
 
 .table-light {
-    background-color: var(--sidebar-bg);
+    --bs-table-bg: var(--sidebar-bg);
+    --bs-table-striped-bg: var(--sidebar-bg);
+    --bs-table-striped-color: var(--text-primary);
+    --bs-table-active-color: var(--text-primary);
+    --bs-table-active-bg: var(--hover-bg);
+    --bs-table-hover-color: var(--text-primary);
+    --bs-table-hover-bg: var(--hover-bg);
+    --bs-table-color: var(--text-primary);
     color: var(--text-primary);
+    border-color: var(--border-color);
+}
+
+/* Weekly calendar — theme-aware headers without overriding day highlights */
+.weekly-calendar-table {
+    --bs-table-color: var(--text-primary);
+    --bs-table-border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+.weekly-calendar-table thead th {
+    --bs-table-bg: var(--sidebar-bg);
+    background-color: var(--sidebar-bg) !important;
+    color: var(--text-primary) !important;
+    font-weight: 600;
+    border-color: var(--border-color) !important;
+    box-shadow: none;
+}
+
+/* Selected week days (Mon–Sun period) */
+.weekly-calendar-table td.calendar-day-in-period {
+    --bs-table-bg: transparent;
+    --bs-table-accent-bg: transparent;
+    background-color: rgba(var(--bs-primary-rgb), 0.12) !important;
+    box-shadow: none !important;
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .weekly-calendar-table td.calendar-day-in-period {
+    background-color: rgba(77, 159, 255, 0.15) !important;
+}
+
+/* Today within the calendar */
+.weekly-calendar-table td.calendar-day-today {
+    --bs-table-bg: transparent;
+    --bs-table-accent-bg: transparent;
+    background-color: rgba(var(--bs-primary-rgb), 0.25) !important;
+    box-shadow: none !important;
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .weekly-calendar-table td.calendar-day-today {
+    background-color: rgba(77, 159, 255, 0.28) !important;
+}
+
+.weekly-calendar-table tbody td a {
+    color: var(--text-primary);
+}
+
+.weekly-calendar-table tbody td a:hover {
+    color: var(--primary-color);
 }
 
 .table-bordered {
@@ -717,11 +775,6 @@ footer {
 
 [data-theme="dark"] .card-header.bg-light {
     background-color: var(--sidebar-bg) !important;
-    color: var(--text-primary);
-}
-
-[data-theme="dark"] .table-primary {
-    background-color: rgba(77, 159, 255, 0.15);
     color: var(--text-primary);
 }
 
