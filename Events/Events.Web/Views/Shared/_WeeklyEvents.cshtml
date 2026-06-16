@@ -81,7 +81,7 @@
                 <div style="display:flex; gap:0.75rem; overflow-x:auto; padding-bottom:0.5rem; scroll-snap-type:x mandatory;">
                     @foreach (var day in Model.ByDay)
                     {
-                        <div style="min-width:210px; max-width:210px; scroll-snap-align:start; flex-shrink:0;">
+                        <div style="min-width:330px; max-width:210px; scroll-snap-align:start; flex-shrink:0;">
                             <div class="card h-100 border-@(day.IsToday ? "primary" : "light") shadow-sm">
                                 <div class="card-header py-2 @(day.IsToday ? "bg-primary text-white" : "bg-surface-alt text-body") text-center">
                                     <div class="fw-bold text-capitalize">
