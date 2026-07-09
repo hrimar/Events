@@ -147,6 +147,16 @@
                                                     </div>
                                                 </a>
                                             }
+                                            @if (day.Events.Count > 10)
+                                            {
+                                                <a asp-controller="Events" asp-action="Index"
+                                                   asp-route-fromDate="@day.Date.ToString("yyyy-MM-dd")"
+                                                   asp-route-toDate="@day.Date.ToString("yyyy-MM-dd")"
+                                                   class="btn btn-sm btn-outline-secondary w-100 mt-1"
+                                                   style="font-size:0.75rem;">
+                                                    +@(day.Events.Count - 10) @Localizer["Events_More"]
+                                                </a>
+                                            }
                                         }
                                     </div>
                                 </div>
