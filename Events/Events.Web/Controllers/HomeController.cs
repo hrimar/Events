@@ -37,15 +37,15 @@ namespace Events.Web.Controllers
             try
             {
                 var today = DateTime.Today;
-                var weekEnd = today.AddDays(6);
+                var dayWindowEnd = today.AddDays(5);
 
                 var localizedCategories = EventsPageViewModel.GetAvailableCategories(_localizer);
-                var weeklyEvents = await BuildWeeklyEventsViewModelAsync(today, weekEnd, localizedCategories);
+                var weeklyEvents = await BuildWeeklyEventsViewModelAsync(today, dayWindowEnd, localizedCategories);
 
                 // Stats
                 var totalEvents = await _eventService.GetEventsCountInRangeAsync(today, DateTime.MaxValue, EventStatus.Published);
                 var todayEvents = await _eventService.GetEventsCountInRangeAsync(today, today, EventStatus.Published);
-                var next7DaysEvents = weeklyEvents.ByDay.Sum(d => d.Events.Count);
+                var next7DaysEvents = await _eventService.GetEventsCountInRangeAsync(today, today.AddDays(6), EventStatus.Published);
 
                 // Saved + Recommended (authenticated users only)
                 var savedEvents = new List<EventViewModel>();
@@ -118,7 +118,7 @@ namespace Events.Web.Controllers
             try
             {
                 var from = (fromDate ?? DateTime.Today).Date;
-                var to = from.AddDays(6);
+                var to = from.AddDays(5);
                 var localizedCategories = EventsPageViewModel.GetAvailableCategories(_localizer);
                 var weeklyEvents = await BuildWeeklyEventsViewModelAsync(from, to, localizedCategories);
                 return PartialView("_WeeklyEvents", weeklyEvents);
@@ -136,15 +136,15 @@ namespace Events.Web.Controllers
             List<CategoryDisplayItem> localizedCategories)
         {
             // Compute weekend bounds first so we can include them in the single DB query.
-            // Rule: if from is Mon–Thu ? next Fri–Sun; if from is Fri ? this Fri–Sun;
-            //       if from is Sat ? last Fri–Sun (Fri+Sat+Sun); if from is Sun ? last Fri–Sun.
+            // Rule: if from is Mon-Thu ? next Fri-Sun; if from is Fri ? this Fri-Sun;
+            //       if from is Sat ? last Fri-Sun (Fri+Sat+Sun); if from is Sun ? last Fri-Sun.
             var dayOfWeek = (int)from.DayOfWeek; // 0=Sun,1=Mon,...,5=Fri,6=Sat
             var weekendStart = dayOfWeek switch
             {
                 0 => from.AddDays(-2),  // Sun ? Fri was 2 days ago
                 6 => from.AddDays(-1),  // Sat ? Fri was yesterday
                 5 => from,              // Fri ? today
-                _ => from.AddDays(5 - dayOfWeek) // Mon–Thu ? next Fri
+                _ => from.AddDays(5 - dayOfWeek) // Mon-Thu ? next Fri
             };
             var weekendEnd = weekendStart.AddDays(2); // always Fri + 2 = Sun
 
@@ -156,7 +156,7 @@ namespace Events.Web.Controllers
             var allFetchedEvents = await _eventService.GetEventsByDateRangeAsync(fetchStart, fetchEnd);
             var allPublished = EventViewModel.FromEntities(allFetchedEvents.Where(e => e.Status == EventStatus.Published).OrderBy(e => e.Date)).ToList();
 
-            // Subset for tabs 1–2: only the selected 7-day window
+            // Subset for tabs 1-2: only the selected 7-day window
             var windowEvents = allPublished.Where(e => e.Date.Date >= from && e.Date.Date <= to).ToList();
 
             // Tab 1: By day
@@ -171,7 +171,7 @@ namespace Events.Web.Controllers
                 };
             }).ToList();
 
-            // Tab 2: By category — only categories with events in the window
+            // Tab 2: By category - only categories with events in the window
             var byCategory = localizedCategories
                 .Select(cat => new CategoryEventsViewModel
                 {
@@ -185,7 +185,7 @@ namespace Events.Web.Controllers
                 .Where(c => c.Events.Any())
                 .ToList();
 
-            // Tab 3: Weekend events — always the correct Fri–Sun regardless of selected window
+            // Tab 3: Weekend events - always the correct Fri-Sun regardless of selected window
             var weekendEvents = allPublished
                 .Where(e => e.Date.Date >= weekendStart && e.Date.Date <= weekendEnd)
                 .ToList();

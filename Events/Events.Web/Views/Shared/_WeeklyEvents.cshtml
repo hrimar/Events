@@ -6,13 +6,30 @@
     var displayCulture = System.Globalization.CultureInfo.CurrentCulture;
     var allDayNames = displayCulture.DateTimeFormat.AbbreviatedDayNames;
     var calDayNames = new[] { allDayNames[1], allDayNames[2], allDayNames[3], allDayNames[4], allDayNames[5], allDayNames[6], allDayNames[0] };
-    var prevFrom = Model.FromDate.AddDays(-7).ToString("yyyy-MM-dd");
-    var nextFrom = Model.FromDate.AddDays(7).ToString("yyyy-MM-dd");
+    const int desktopDayCount = 4;
+    const int mobileDayCount = 6;
+    var prevFromDesktop = Model.FromDate.AddDays(-desktopDayCount).ToString("yyyy-MM-dd");
+    var nextFromDesktop = Model.FromDate.AddDays(desktopDayCount).ToString("yyyy-MM-dd");
+    var prevFromMobile = Model.FromDate.AddDays(-mobileDayCount).ToString("yyyy-MM-dd");
+    var nextFromMobile = Model.FromDate.AddDays(mobileDayCount).ToString("yyyy-MM-dd");
     var todayFrom = DateTime.Today.ToString("yyyy-MM-dd");
     var isCurrentWeek = Model.FromDate.Date == DateTime.Today.Date;
-    var periodLabel = Model.FromDate.ToString("d MMM", displayCulture) + " – " + Model.ToDate.ToString("d MMM yyyy", displayCulture);
+    var desktopPeriodLabel = Model.FromDate.ToString("d MMM", displayCulture) + " – " + Model.FromDate.AddDays(desktopDayCount - 1).ToString("d MMM yyyy", displayCulture);
+    var mobilePeriodLabel = Model.FromDate.ToString("d MMM", displayCulture) + " – " + Model.FromDate.AddDays(mobileDayCount - 1).ToString("d MMM yyyy", displayCulture);
     var sectionTitle = isCurrentWeek ? Localizer["Home_WeeklySectionTitle"].Value : Localizer["Home_UpcomingSectionTitle"].Value;
+
+    var dayList = Model.ByDay;
+    int todayIndex = dayList.FindIndex(d => d.IsToday);
+    int mobileActiveIndex = todayIndex >= 0 ? todayIndex : 0;
 }
+
+<style>
+    .day-chips::-webkit-scrollbar { height: 6px; }
+    .day-chips::-webkit-scrollbar-track { background: transparent; }
+    .day-chips::-webkit-scrollbar-thumb { background: #c7ccd1; border-radius: 3px; }
+    .day-chip.active { background: var(--bs-primary, #1f6feb); border-color: var(--bs-primary, #1f6feb); color: #fff; }
+    .day-chip.active .badge { background: rgba(255,255,255,.25) !important; }
+</style>
 
 <section class="py-4 bg-surface theme-section border-top" id="weekly-events-section">
     <div class="container">
@@ -29,18 +46,19 @@
             </a>
         </div>
 
-        <!-- Period Navigator -->
+        <!-- Period Navigator: desktop/tablet steps 4 days, mobile steps 6 days -->
         <div class="d-flex align-items-center justify-content-center gap-2 mb-3">
-            <button class="btn btn-sm btn-outline-secondary week-nav-btn" data-from="@prevFrom">
+            <button class="btn btn-sm btn-outline-secondary week-nav-btn" data-from-desktop="@prevFromDesktop" data-from-mobile="@prevFromMobile">
                 <i class="fas fa-chevron-left"></i>
             </button>
-            <span class="fw-semibold text-body text-center" style="min-width:200px;">@periodLabel</span>
-            <button class="btn btn-sm btn-outline-secondary week-nav-btn" data-from="@nextFrom">
+            <span class="fw-semibold text-body text-center d-none d-md-inline-block" style="min-width:200px;">@desktopPeriodLabel</span>
+            <span class="fw-semibold text-body text-center d-md-none" style="min-width:200px;">@mobilePeriodLabel</span>
+            <button class="btn btn-sm btn-outline-secondary week-nav-btn" data-from-desktop="@nextFromDesktop" data-from-mobile="@nextFromMobile">
                 <i class="fas fa-chevron-right"></i>
             </button>
             @if (!isCurrentWeek)
             {
-                <button class="btn btn-sm btn-outline-primary week-nav-btn ms-2" data-from="@todayFrom">
+                <button class="btn btn-sm btn-outline-primary week-nav-btn ms-2 d-none d-md-inline-block" data-from-desktop="@todayFrom" data-from-mobile="@todayFrom">
                     <i class="fas fa-home me-1"></i>@Localizer["Home_ThisWeek"]
                 </button>
             }
@@ -78,68 +96,121 @@
 
             <!-- TAB 1: By Day -->
             <div class="tab-pane fade show active" id="tab-day" role="tabpanel">
-                <div style="display:flex; gap:0.75rem; overflow-x:auto; padding-bottom:0.5rem; scroll-snap-type:x mandatory;">
-                    @foreach (var day in Model.ByDay)
-                    {
-                        <div class="col-12 col-md-3 col-lg-2" style="scroll-snap-align:start; flex-shrink:0;">
-                            <div class="card h-100 border-@(day.IsToday ? "primary" : "light") shadow-sm">
-                                <div class="card-header py-2 @(day.IsToday ? "bg-primary text-white" : "bg-surface-alt text-body") text-center">
-                                    <div class="fw-bold text-capitalize">
-                                        @if (day.IsToday)
+
+                <!-- Tablet/Desktop: 4 equal-width day columns (period navigated via the Period Navigator above) -->
+                <div class="d-none d-md-block" data-view="day-desktop">
+                    <div style="display:flex; gap:0.75rem;">
+                        @for (int i = 0; i < Math.Min(4, dayList.Count); i++)
+                        {
+                            var day = dayList[i];
+                            <div style="flex:1 1 0; min-width:0;">
+                                <div class="card h-100 border-@(day.IsToday ? "primary" : "light") shadow-sm">
+                                    <div class="card-header py-2 @(day.IsToday ? "bg-primary text-white" : "bg-surface-alt text-body") text-center">
+                                        <div class="fw-bold text-capitalize">
+                                            @if (day.IsToday)
+                                            {
+                                                @Localizer["Home_Today"]
+                                            }
+                                            else
+                                            {
+                                                @day.Date.ToString("dddd", displayCulture)
+                                            }
+                                        </div>
+                                        <small class="opacity-75">@day.Date.ToString("d MMM", displayCulture)</small>
+                                    </div>
+                                    <div class="card-body p-2" style="max-height:380px; overflow-y:auto;">
+                                        @if (!day.Events.Any())
                                         {
-                                            @Localizer["Home_Today"]
+                                            <p class="text-muted text-center small mt-3">@Localizer["Home_NoEventsForDay"]</p>
                                         }
                                         else
                                         {
-                                            @day.Date.ToString("dddd", displayCulture)
+                                            @foreach (var ev in day.Events.Take(10))
+                                            {
+                                                <a asp-controller="Events" asp-action="Details" asp-route-id="@ev.Id"
+                                                   class="text-decoration-none d-block mb-2">
+                                                    <div class="d-flex gap-2 align-items-start p-1 rounded">
+                                                        <img src="@ev.DefaultImage" alt="@ev.Name"
+                                                             style="width:48px;height:48px;object-fit:cover;border-radius:4px;flex-shrink:0;"
+                                                             onerror="this.src='/images/default_event_image.jpeg'">
+                                                        <div style="min-width:0;">
+                                                            <div class="text-body small fw-semibold text-clamp-2">@ev.Name</div>
+                                                            @if (ev.HasKnownTime)
+                                                            {
+                                                                <div class="text-muted" style="font-size:0.75rem;">@ev.FormattedTime</div>
+                                                            }
+                                                            @if (ev.IsFree)
+                                                            {
+                                                                <span class="badge bg-success" style="font-size:0.65rem;">@Localizer["Home_Free"]</span>
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                </a>
+                                            }
                                         }
                                     </div>
-                                    <small class="opacity-75">@day.Date.ToString("d MMM", displayCulture)</small>
-                                </div>
-                                <div class="card-body p-2" style="max-height:340px; overflow-y:auto;">
-                                    @if (!day.Events.Any())
-                                    {
-                                        <p class="text-muted text-center small mt-3">@Localizer["Home_NoEventsForDay"]</p>
-                                    }
-                                    else
-                                    {
-                                        @foreach (var ev in day.Events.Take(6))
-                                        {
-                                            <a asp-controller="Events" asp-action="Details" asp-route-id="@ev.Id"
-                                               class="text-decoration-none d-block mb-2">
-                                                <div class="d-flex gap-2 align-items-start p-1 rounded">
-                                                    <img src="@ev.DefaultImage" alt="@ev.Name"
-                                                         style="width:44px;height:44px;object-fit:cover;border-radius:4px;flex-shrink:0;"
-                                                         onerror="this.src='/images/default_event_image.jpeg'">
-                                                    <div style="min-width:0;">                                                        
-                                                        <div class="text-body small fw-semibold text-clamp-2">@ev.Name</div>
-                                                        @if (ev.HasKnownTime)
-                                                        {
-                                                            <div class="text-muted" style="font-size:0.75rem;">@ev.FormattedTime</div>
-                                                        }
-                                                        @if (ev.IsFree)
-                                                        {
-                                                            <span class="badge bg-success" style="font-size:0.65rem;">@Localizer["Home_Free"]</span>
-                                                        }
-                                                    </div>
-                                                </div>
-                                            </a>
-                                        }
-                                        @if (day.Events.Count > 6)
-                                        {
-                                            <a asp-controller="Events" asp-action="Index"
-                                               asp-route-fromDate="@day.Date.ToString("yyyy-MM-dd")"
-                                               asp-route-toDate="@day.Date.ToString("yyyy-MM-dd")"
-                                               class="btn btn-sm btn-outline-secondary w-100 mt-1"
-                                               style="font-size:0.75rem;">
-                                                +@(day.Events.Count - 6) @Localizer["Events_More"]
-                                            </a>
-                                        }
-                                    }
                                 </div>
                             </div>
-                        </div>
-                    }
+                        }
+                    </div>
+                </div>
+
+                <!-- Mobile: day chips + single-day event list -->
+                <div class="d-md-none" data-view="day-mobile">
+                    <div class="day-chips" style="display:flex; gap:0.5rem; overflow-x:auto; padding-bottom:0.5rem; scrollbar-width:thin;">
+                        @for (int i = 0; i < dayList.Count; i++)
+                        {
+                            var day = dayList[i];
+                            var isActive = i == mobileActiveIndex;
+                            <div class="day-chip@(isActive ? " active" : "")" data-day-index="@i"
+                                 style="flex:0 0 auto; min-width:56px; padding:6px 8px; border-radius:12px; border:1.5px solid var(--bs-border-color, #e2e6ea); text-align:center; cursor:pointer;">
+                                <div class="small fw-semibold text-capitalize" style="font-size:0.7rem;">
+                                    @(day.IsToday ? Localizer["Home_Today"].Value : day.Date.ToString("ddd", displayCulture))
+                                </div>
+                                <div class="fw-bold" style="font-size:0.95rem;">@day.Date.Day</div>
+                                <span class="badge bg-secondary" style="font-size:0.65rem;">@day.Events.Count</span>
+                            </div>
+                        }
+                    </div>
+                    <div class="day-chip-panels mt-2">
+                        @for (int i = 0; i < dayList.Count; i++)
+                        {
+                            var day = dayList[i];
+                            var isActive = i == mobileActiveIndex;
+                            <div class="day-chip-panel" data-day-index="@i" style="@(isActive ? "" : "display:none;")">
+                                @if (!day.Events.Any())
+                                {
+                                    <p class="text-muted text-center small py-4">@Localizer["Home_NoEventsForDay"]</p>
+                                }
+                                else
+                                {
+                                    @foreach (var ev in day.Events)
+                                    {
+                                        <a asp-controller="Events" asp-action="Details" asp-route-id="@ev.Id"
+                                           class="text-decoration-none d-block mb-2">
+                                            <div class="d-flex gap-2 align-items-center p-2 rounded border">
+                                                <img src="@ev.DefaultImage" alt="@ev.Name"
+                                                     style="width:56px;height:56px;object-fit:cover;border-radius:8px;flex-shrink:0;"
+                                                     onerror="this.src='/images/default_event_image.jpeg'">
+                                                <div style="min-width:0; flex:1 1 auto;">
+                                                    <div class="text-body small fw-semibold text-clamp-2">@ev.Name</div>
+                                                    <div class="text-muted" style="font-size:0.75rem;">@ev.Location</div>
+                                                    @if (ev.HasKnownTime)
+                                                    {
+                                                        <div class="text-primary fw-semibold" style="font-size:0.75rem;">@ev.FormattedTime</div>
+                                                    }
+                                                    @if (ev.IsFree)
+                                                    {
+                                                        <span class="badge bg-success" style="font-size:0.65rem;">@Localizer["Home_Free"]</span>
+                                                    }
+                                                </div>
+                                            </div>
+                                        </a>
+                                    }
+                                }
+                            </div>
+                        }
+                    </div>
                 </div>
             </div>
 
@@ -362,7 +433,8 @@ document.addEventListener('DOMContentLoaded', function () {
         const btn = e.target.closest('.week-nav-btn');
         if (!btn) return;
 
-        const fromDate = btn.dataset.from;
+        const isDesktop = window.matchMedia('(min-width: 768px)').matches;
+        const fromDate = isDesktop ? btn.dataset.fromDesktop : btn.dataset.fromMobile;
         const section = document.getElementById('weekly-events-section');
         if (!section || !fromDate) return;
         
@@ -389,6 +461,21 @@ document.addEventListener('DOMContentLoaded', function () {
                 section.style.opacity = '1';
                 section.style.pointerEvents = '';
             });
+    });
+
+    // Mobile: switch the visible day chip / event list
+    document.addEventListener('click', function (e) {
+        const chip = e.target.closest('.day-chip');
+        if (chip) {
+            const wrapper = chip.closest('[data-view="day-mobile"]');
+            if (!wrapper) return;
+
+            wrapper.querySelectorAll('.day-chip').forEach(c => c.classList.toggle('active', c === chip));
+            const idx = chip.dataset.dayIndex;
+            wrapper.querySelectorAll('.day-chip-panel').forEach(p => {
+                p.style.display = (p.dataset.dayIndex === idx) ? '' : 'none';
+            });
+        }
     });
 });
 </script>
