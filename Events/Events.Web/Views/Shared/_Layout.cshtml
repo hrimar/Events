@@ -65,15 +65,18 @@
             <span class="visually-hidden">Sofia Events</span>
         </a>
         
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        
-        <!-- Mobile Login -->
-        <div class="d-lg-none ms-auto">
-            <partial name="_LoginPartial" />
+        <!-- Mobile/Tablet controls: search toggle + hamburger, kept on a single row with the logo -->
+        <div class="d-flex align-items-center gap-1 d-lg-none">
+            <button class="btn nav-link p-2 navbar-icon-btn" type="button" data-bs-toggle="collapse" data-bs-target="#mobile-search-bar"
+                    aria-expanded="false" aria-controls="mobile-search-bar" aria-label="@Localizer["Nav_SearchPlaceholderMobile"]">
+                <i class="fas fa-search"></i>
+            </button>
+            <button class="btn nav-link p-2 navbar-icon-btn" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <i class="fas fa-bars"></i>
+            </button>
         </div>
-        
+
         <div class="navbar-collapse collapse" id="navbarNav">
             <ul class="navbar-nav me-auto">
                 <li class="nav-item">
@@ -101,6 +104,17 @@
                             </li>
                         }
                     </ul>
+                </li>
+                <!-- Venues and Free Events: only in the mobile/tablet hamburger menu, desktop users reach them via the Home page hero buttons -->
+                <li class="nav-item d-lg-none">
+                    <a class="nav-link" asp-area="" asp-controller="Venues" asp-action="Index">
+                        <i class="fas fa-map-marker-alt me-1"></i>@Localizer["Venue_BrowseVenues"]
+                    </a>
+                </li>
+                <li class="nav-item d-lg-none">
+                    <a class="nav-link" asp-area="" asp-controller="Events" asp-action="Index" asp-route-free="true">
+                        <i class="fas fa-gift me-1"></i>@Localizer["Home_FreeEvents"]
+                    </a>
                 </li>
                 @if (User.IsInRole("Administrator") || User.IsInRole("EventManager"))
                 {
@@ -138,8 +152,8 @@
             <partial name="_LoginPartial" />
         </div>
         
-        <!-- Mobile Search Bar -->
-        <div class="d-lg-none w-100 mt-2 border-top pt-2">
+        <!-- Mobile Search Bar: collapsed by default, expanded via the search icon next to the hamburger -->
+        <div class="collapse d-lg-none w-100 mt-2 border-top pt-2" id="mobile-search-bar">
             <form asp-area="" asp-controller="Events" asp-action="Index" method="get" class="d-flex gap-2">
                 <input class="form-control" type="search" name="search" id="mobile-navbar-search" 
                        placeholder="Search events..." autocomplete="off">
@@ -197,7 +211,12 @@
 $(document).ready(function() {
     initializeSearch('#navbar-search', '#navbar-search-results', false);
     initializeSearch('#mobile-navbar-search', '#mobile-navbar-search-results', true);
-    
+
+    // Focus the mobile search field once it expands after tapping the search icon
+    document.getElementById('mobile-search-bar')?.addEventListener('shown.bs.collapse', function () {
+        document.getElementById('mobile-navbar-search')?.focus();
+    });
+
     function initializeSearch(searchInputSelector, resultsContainerSelector, isMobile) {
         let searchTimeout;
         const searchInput = $(searchInputSelector);
@@ -313,28 +332,44 @@ $(document).ready(function() {
     .navbar-search-item {
         transition: background-color 0.2s ease;
     }
-    
+
+    /* Mobile search/hamburger toggle buttons: no lingering focus ring after a mouse/touch click,
+       keep it for keyboard navigation (accessibility) */
+    .navbar-icon-btn:focus {
+        box-shadow: none;
+    }
+
+    .navbar-icon-btn:focus-visible {
+        box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.25);
+    }
+
     /* Desktop: Login buttons on one line */
     @@media (min-width: 992px) {
         .navbar-nav:last-child {
             flex-direction: row;
         }
     }
-    
-    /* Mobile: Login in navbar-nav should be horizontal */
-    .d-lg-none .navbar-nav {
-        flex-direction: row;
-        gap: 0.5rem;
-    }
-    
-    .d-lg-none .navbar-nav .nav-item {
-        margin-right: 0.5rem;
-    }
-    
-    /* Mobile: Login box styling */
-    .d-lg-none > div .navbar-nav {
-        margin: 0;
-        padding: 0;
+
+    /* Mobile/Tablet hamburger menu: group the nav links, theme/language switchers
+       and login section into visually separated blocks */
+    @@media (max-width: 991.98px) {
+        #navbarNav .navbar-nav.me-auto {
+            border-bottom: 1px solid var(--border-color, rgba(0, 0, 0, 0.08));
+            margin-bottom: 0.5rem;
+            padding-bottom: 0.5rem;
+        }
+
+        #navbarNav > .me-3 {
+            margin: 0.5rem 0 !important;
+        }
+
+        #navbarNav > .navbar-nav:last-child {
+            flex-direction: row;
+            gap: 0.5rem;
+            border-top: 1px solid var(--border-color, rgba(0, 0, 0, 0.08));
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+        }
     }
 
     .footer-link {
