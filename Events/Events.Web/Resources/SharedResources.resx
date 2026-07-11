@@ -150,6 +150,18 @@
   <data name="Footer_FollowUs" xml:space="preserve">
     <value>Последвайте ни</value>
   </data>
+  <data name="Footer_Description" xml:space="preserve">
+    <value>Открий какво се случва в София — концерти, театър, спорт, кино и още, на едно място.</value>
+  </data>
+  <data name="Footer_ExploreHeading" xml:space="preserve">
+    <value>Разглеждай</value>
+  </data>
+  <data name="Footer_InfoHeading" xml:space="preserve">
+    <value>Информация</value>
+  </data>
+  <data name="Footer_Copyright" xml:space="preserve">
+    <value>Всички права запазени.</value>
+  </data>
   <data name="Home_HeroTitle" xml:space="preserve">
     <value>Открийте най-добрите събития в София</value>
   </data>

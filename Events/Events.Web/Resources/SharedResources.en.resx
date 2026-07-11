@@ -45,6 +45,10 @@
   <data name="Footer_ContactUs" xml:space="preserve"><value>Contact Us</value></data>
   <data name="Footer_Tagline" xml:space="preserve"><value>Your events portal</value></data>
   <data name="Footer_FollowUs" xml:space="preserve"><value>Follow us</value></data>
+  <data name="Footer_Description" xml:space="preserve"><value>Discover what's happening in Sofia — concerts, theatre, sports, movies and more, all in one place.</value></data>
+  <data name="Footer_ExploreHeading" xml:space="preserve"><value>Explore</value></data>
+  <data name="Footer_InfoHeading" xml:space="preserve"><value>Information</value></data>
+  <data name="Footer_Copyright" xml:space="preserve"><value>All rights reserved.</value></data>
 
   <!-- Home Page - Hero -->
   <data name="Home_HeroTitle" xml:space="preserve"><value>Discover the Best Events in Sofia</value></data>
