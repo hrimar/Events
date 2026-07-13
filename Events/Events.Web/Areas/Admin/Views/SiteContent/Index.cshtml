@@ -1,0 +1,179 @@
+@model Events.Web.Models.Admin.SiteContentIndexViewModel
+@{
+    ViewData["Title"] = "Site Content";
+    var activeTab = Context.Request.Query["tab"].ToString();
+    if (string.IsNullOrEmpty(activeTab))
+        activeTab = "hero";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-0">Site Content</h1>
+        <p class="text-muted mb-0">Edit Hero text, About Us content and SEO meta for static pages.</p>
+    </div>
+</div>
+
+<ul class="nav nav-tabs mb-4" id="siteContentTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link @(activeTab == "hero" ? "active" : "")" id="hero-tab" data-bs-toggle="tab"
+                data-bs-target="#hero-pane" type="button" role="tab">
+            <i class="fas fa-house me-1"></i>Hero
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link @(activeTab == "about-us" ? "active" : "")" id="about-us-tab" data-bs-toggle="tab"
+                data-bs-target="#about-us-pane" type="button" role="tab">
+            <i class="fas fa-info-circle me-1"></i>About Us
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link @(activeTab == "seo" ? "active" : "")" id="seo-tab" data-bs-toggle="tab"
+                data-bs-target="#seo-pane" type="button" role="tab">
+            <i class="fas fa-magnifying-glass me-1"></i>SEO
+        </button>
+    </li>
+</ul>
+
+<div class="tab-content" id="siteContentTabsContent">
+
+    <!-- Hero tab -->
+    <div class="tab-pane fade @(activeTab == "hero" ? "show active" : "")" id="hero-pane" role="tabpanel">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <form asp-action="SaveHero" method="post" novalidate>
+                    @Html.AntiForgeryToken()
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="Hero.HeroTitleBg" class="form-label"></label>
+                            <input asp-for="Hero.HeroTitleBg" class="form-control" />
+                            <span asp-validation-for="Hero.HeroTitleBg" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Hero.HeroTitleEn" class="form-label"></label>
+                            <input asp-for="Hero.HeroTitleEn" class="form-control" />
+                            <span asp-validation-for="Hero.HeroTitleEn" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Hero.HeroSubtitleBg" class="form-label"></label>
+                            <textarea asp-for="Hero.HeroSubtitleBg" class="form-control" rows="2"></textarea>
+                            <span asp-validation-for="Hero.HeroSubtitleBg" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Hero.HeroSubtitleEn" class="form-label"></label>
+                            <textarea asp-for="Hero.HeroSubtitleEn" class="form-control" rows="2"></textarea>
+                            <span asp-validation-for="Hero.HeroSubtitleEn" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-end mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>Save Hero
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- About Us tab -->
+    <div class="tab-pane fade @(activeTab == "about-us" ? "show active" : "")" id="about-us-pane" role="tabpanel">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <form asp-action="SaveAboutUs" method="post" novalidate id="aboutUsForm">
+                    @Html.AntiForgeryToken()
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <label class="form-label">About Us Content (BG)</label>
+                            <div id="quill-bg" class="bg-white" style="height: 240px;"></div>
+                            <textarea asp-for="AboutUs.AboutUsContentBg" id="AboutUsContentBg" style="display:none"></textarea>
+                            <span asp-validation-for="AboutUs.AboutUsContentBg" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">About Us Content (EN)</label>
+                            <div id="quill-en" class="bg-white" style="height: 240px;"></div>
+                            <textarea asp-for="AboutUs.AboutUsContentEn" id="AboutUsContentEn" style="display:none"></textarea>
+                            <span asp-validation-for="AboutUs.AboutUsContentEn" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-end mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>Save About Us
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- SEO tab -->
+    <div class="tab-pane fade @(activeTab == "seo" ? "show active" : "")" id="seo-pane" role="tabpanel">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <form asp-action="SaveSeo" method="post" novalidate>
+                    @Html.AntiForgeryToken()
+                    <div class="table-responsive">
+                        <table class="table table-bordered align-middle">
+                            <thead>
+                                <tr>
+                                    <th style="min-width:140px;">Page</th>
+                                    <th style="min-width:220px;">Title (BG)</th>
+                                    <th style="min-width:220px;">Title (EN)</th>
+                                    <th style="min-width:260px;">Description (BG)</th>
+                                    <th style="min-width:260px;">Description (EN)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (var i = 0; i < Model.SeoItems.Count; i++)
+                                {
+                                    <tr>
+                                        <td class="fw-medium">
+                                            @Model.SeoItems[i].DisplayName
+                                            <input type="hidden" asp-for="SeoItems[i].PageKey" />
+                                        </td>
+                                        <td><input asp-for="SeoItems[i].TitleBg" class="form-control form-control-sm" /></td>
+                                        <td><input asp-for="SeoItems[i].TitleEn" class="form-control form-control-sm" /></td>
+                                        <td><textarea asp-for="SeoItems[i].DescriptionBg" class="form-control form-control-sm" rows="2"></textarea></td>
+                                        <td><textarea asp-for="SeoItems[i].DescriptionEn" class="form-control form-control-sm" rows="2"></textarea></td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="d-flex justify-content-end mt-3">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>Save SEO Meta
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+@section Styles {
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.6/quill.snow.min.css" />
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.6/quill.min.js"></script>
+    <script>
+        (function () {
+            var toolbarOptions = [['bold'], ['link']];
+
+            var quillBg = new Quill('#quill-bg', { theme: 'snow', modules: { toolbar: toolbarOptions } });
+            var quillEn = new Quill('#quill-en', { theme: 'snow', modules: { toolbar: toolbarOptions } });
+
+            var bgTextarea = document.getElementById('AboutUsContentBg');
+            var enTextarea = document.getElementById('AboutUsContentEn');
+
+            quillBg.root.innerHTML = bgTextarea.value;
+            quillEn.root.innerHTML = enTextarea.value;
+
+            document.getElementById('aboutUsForm').addEventListener('submit', function () {
+                bgTextarea.value = quillBg.root.innerHTML;
+                enTextarea.value = quillEn.root.innerHTML;
+            });
+        })();
+    </script>
+}
