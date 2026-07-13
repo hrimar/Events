@@ -182,6 +182,8 @@ static void RegisterServices(WebApplicationBuilder builder)
     builder.Services.AddScoped<ISubCategoryRepository, SubCategoryRepository>();
     builder.Services.AddScoped<IUserFavoriteEventRepository, UserFavoriteEventRepository>();
     builder.Services.AddScoped<IVenueRepository, VenueRepository>();
+    builder.Services.AddScoped<ISiteContentRepository, SiteContentRepository>();
+    builder.Services.AddScoped<IPageSeoMetaRepository, PageSeoMetaRepository>();
 
     // Services
     builder.Services.AddScoped<IEventService, EventService>();
@@ -190,6 +192,8 @@ static void RegisterServices(WebApplicationBuilder builder)
     builder.Services.AddScoped<IAdminUserService, AdminUserService>();
     builder.Services.AddScoped<IEventFilterOptionsBuilder, EventFilterOptionsBuilder>();
     builder.Services.AddScoped<IVenueService, VenueService>();
+    builder.Services.AddScoped<ISiteContentService, SiteContentService>();
+    builder.Services.AddScoped<ISeoMetaService, SeoMetaService>();
 }
 
 static async Task InitializeDatabaseAsync(WebApplication app)
