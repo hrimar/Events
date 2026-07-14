@@ -1,4 +1,5 @@
 using Events.Data.Repositories.Interfaces;
+using Events.Models;
 using Events.Models.Entities;
 using Events.Models.Enums;
 using Events.Services.Interfaces;
@@ -28,6 +29,7 @@ public class EventsController : Controller
     private readonly IEventService _eventService;
     private readonly ITagService _tagService;
     private readonly ISubCategoryRepository _subCategoryRepository;
+    private readonly ISeoMetaService _seoMetaService;
     private readonly IStringLocalizer<SharedResources> _localizer;
 
     public EventsController(
@@ -35,12 +37,14 @@ public class EventsController : Controller
         IEventService eventService,
         ITagService tagService,
         ISubCategoryRepository subCategoryRepository,
+        ISeoMetaService seoMetaService,
         IStringLocalizer<SharedResources> localizer)
     {
         _logger = logger;
         _eventService = eventService;
         _tagService = tagService;
         _subCategoryRepository = subCategoryRepository;
+        _seoMetaService = seoMetaService;
         _localizer = localizer;
     }
 
@@ -109,6 +113,21 @@ public class EventsController : Controller
             var popularTags = await GetPopularTagsAsync();
 
             var pageTitle = BuildPageTitle(category, free, search);
+            string? pageMetaDescription = null;
+
+            if (!string.IsNullOrWhiteSpace(category) && Enum.TryParse<EventCategory>(category, ignoreCase: true, out var seoCategory))
+            {
+                var seo = await _seoMetaService.GetByKeyAsync(SeoPageKeys.ForCategory(seoCategory));
+                if (seo != null)
+                {
+                    var isEnglish = CultureHelper.IsEnglish();
+                    var seoTitle = seo.LocalizedTitle(isEnglish);
+                    if (!string.IsNullOrWhiteSpace(seoTitle))
+                        pageTitle = seoTitle;
+
+                    pageMetaDescription = seo.LocalizedDescription(isEnglish);
+                }
+            }
 
             var viewModel = new EventsPageViewModel
             {
@@ -126,7 +145,8 @@ public class EventsController : Controller
                 PopularTags = popularTags,
                 SortBy = sortBy,
                 SortOrder = sortOrder,
-                PageTitle = pageTitle
+                PageTitle = pageTitle,
+                PageMetaDescription = pageMetaDescription
             };
 
             viewModel.AvailableSubCategories = await BuildSubCategoryOptionsAsync(category, subCategory);

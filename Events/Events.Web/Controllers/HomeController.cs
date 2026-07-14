@@ -1,7 +1,9 @@
 using System.Diagnostics;
 using System.Security.Claims;
+using Events.Models;
 using Events.Models.Enums;
 using Events.Services.Interfaces;
+using Events.Web.Infrastructure;
 using Events.Web.Localization;
 using Events.Web.Models;
 using Events.Web.Resources;
@@ -16,6 +18,8 @@ namespace Events.Web.Controllers
         private readonly IEventService _eventService;
         private readonly ITagService _tagService;
         private readonly IUserFavoriteEventService _favoriteEventService;
+        private readonly ISiteContentService _siteContentService;
+        private readonly ISeoMetaService _seoMetaService;
         private readonly IStringLocalizer<SharedResources> _localizer;
 
         public HomeController(
@@ -23,12 +27,16 @@ namespace Events.Web.Controllers
             IEventService eventService,
             ITagService tagService,
             IUserFavoriteEventService favoriteEventService,
+            ISiteContentService siteContentService,
+            ISeoMetaService seoMetaService,
             IStringLocalizer<SharedResources> localizer)
         {
             _logger = logger;
             _eventService = eventService;
             _tagService = tagService;
             _favoriteEventService = favoriteEventService;
+            _siteContentService = siteContentService;
+            _seoMetaService = seoMetaService;
             _localizer = localizer;
         }
 
@@ -85,8 +93,15 @@ namespace Events.Web.Controllers
 
                 var popularTags = await GetPopularTagsAsync();
 
+                var isEnglish = CultureHelper.IsEnglish();
+                var siteContent = await _siteContentService.GetAsync();
+                var seo = await _seoMetaService.GetByKeyAsync(SeoPageKeys.Home);
+                ViewData.ApplySeoMeta(seo);
+
                 var viewModel = new HomePageViewModel
                 {
+                    HeroTitle = siteContent.LocalizedHeroTitle(isEnglish),
+                    HeroSubtitle = siteContent.LocalizedHeroSubtitle(isEnglish),
                     WeeklyEvents = weeklyEvents,
                     SavedSection = EventsSectionViewModel.CreateSavedSection(
                         events: savedEvents,
@@ -233,10 +248,21 @@ namespace Events.Web.Controllers
             }
         }
 
-        public IActionResult AboutUs()
+        public async Task<IActionResult> AboutUs()
         {
             ViewData["Title"] = _localizer["AboutUs_Title"];
-            return View();
+
+            var isEnglish = CultureHelper.IsEnglish();
+            var siteContent = await _siteContentService.GetAsync();
+            var seo = await _seoMetaService.GetByKeyAsync(SeoPageKeys.AboutUs);
+            ViewData.ApplySeoMeta(seo);
+
+            var viewModel = new AboutUsPageViewModel
+            {
+                Content = siteContent.LocalizedAboutUsContent(isEnglish)
+            };
+
+            return View(viewModel);
         }
 
         public IActionResult Privacy()

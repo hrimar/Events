@@ -6,6 +6,10 @@
 
 @{
     ViewData["Title"] = Model.PageTitle;
+    if (!string.IsNullOrWhiteSpace(Model.PageMetaDescription))
+    {
+        ViewData["MetaDescription"] = Model.PageMetaDescription;
+    }
 }
 
 <!-- Enhanced Filters Section -->

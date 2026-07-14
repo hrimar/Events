@@ -18,6 +18,7 @@ public class EventsPageViewModel
     public DateTime? FromDate { get; set; }
     public DateTime? ToDate { get; set; }
     public string PageTitle { get; set; } = string.Empty;
+    public string? PageMetaDescription { get; set; }
 
     public List<SelectListItem> AvailableSubCategories { get; set; } = new();
 

@@ -1,3 +1,4 @@
+using Events.Models;
 using Events.Models.Entities;
 using Events.Models.Enums;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -22,6 +23,8 @@ public class EventsDbContext : IdentityDbContext<User>
     public DbSet<UserFavoriteEvent> UserFavoriteEvents { get; set; }
     public DbSet<CanonicalVenue> CanonicalVenues { get; set; }
     public DbSet<VenueAlias> VenueAliases { get; set; }
+    public DbSet<SiteContent> SiteContents { get; set; }
+    public DbSet<PageSeoMeta> PageSeoMetas { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -86,9 +89,13 @@ public class EventsDbContext : IdentityDbContext<User>
         ConfigureUserEntity(modelBuilder);
         ConfigureCanonicalVenueEntity(modelBuilder);
         ConfigureVenueAliasEntity(modelBuilder);
+        ConfigureSiteContentEntity(modelBuilder);
+        ConfigurePageSeoMetaEntity(modelBuilder);
 
         SeedCategories(modelBuilder);
         SeedSubCategories(modelBuilder);
+        SeedSiteContent(modelBuilder);
+        SeedPageSeoMeta(modelBuilder);
     }
 
     private static void ConfigureCanonicalVenueEntity(ModelBuilder modelBuilder)
@@ -137,6 +144,37 @@ public class EventsDbContext : IdentityDbContext<User>
                 .WithMany(v => v.Aliases)
                 .HasForeignKey(a => a.CanonicalVenueId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+    }
+
+    private static void ConfigureSiteContentEntity(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<SiteContent>(entity =>
+        {
+            entity.HasKey(sc => sc.Id);
+            entity.Property(sc => sc.HeroTitleBg).IsRequired().HasMaxLength(200);
+            entity.Property(sc => sc.HeroTitleEn).IsRequired().HasMaxLength(200);
+            entity.Property(sc => sc.HeroSubtitleBg).IsRequired().HasMaxLength(500);
+            entity.Property(sc => sc.HeroSubtitleEn).IsRequired().HasMaxLength(500);
+            entity.Property(sc => sc.AboutUsContentBg).IsRequired();
+            entity.Property(sc => sc.AboutUsContentEn).IsRequired();
+            entity.Property(sc => sc.UpdatedAt).HasDefaultValueSql("GETUTCDATE()");
+        });
+    }
+
+    private static void ConfigurePageSeoMetaEntity(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<PageSeoMeta>(entity =>
+        {
+            entity.HasKey(p => p.Id);
+            entity.Property(p => p.PageKey).IsRequired().HasMaxLength(100);
+            entity.Property(p => p.TitleBg).HasMaxLength(200);
+            entity.Property(p => p.TitleEn).HasMaxLength(200);
+            entity.Property(p => p.DescriptionBg).HasMaxLength(300);
+            entity.Property(p => p.DescriptionEn).HasMaxLength(300);
+            entity.Property(p => p.UpdatedAt).HasDefaultValueSql("GETUTCDATE()");
+
+            entity.HasIndex(p => p.PageKey).IsUnique();
         });
     }
 
@@ -609,6 +647,60 @@ public class EventsDbContext : IdentityDbContext<User>
             entity.HasIndex(u => u.UserId);
             entity.HasIndex(u => u.EventId);
         });
+    }
+
+    private static void SeedSiteContent(ModelBuilder modelBuilder)
+    {
+        // Seeded with the current static Home hero and About Us copy so nothing regresses on deploy;
+        // editable afterwards from the admin "Site Content" screen.
+        modelBuilder.Entity<SiteContent>().HasData(new SiteContent
+        {
+            Id = 1,
+            HeroTitleBg = "Открийте най-добрите събития в София",
+            HeroTitleEn = "Discover the Best Events in Sofia",
+            HeroSubtitleBg = "Концерти, театър, спорт и много повече. Намерете следващото си незабравимо преживяване!",
+            HeroSubtitleEn = "Concerts, theatre, sports, and much more. Find your next amazing experience!",
+            AboutUsContentBg =
+                "<p>Създадохме Go Sofia с една ясна цел – да направим откриването на събития в София по-лесно, по-удобно и по-достъпно. " +
+                "В динамичен град като София всеки ден се случват концерти, фестивали, изложби, спектакли, семейни събития и още много интересни инициативи, " +
+                "но тази информация често е разпръсната на различни места и трудно достига до хората навреме.</p>" +
+                "<p>С go-sofia.com искаме да съберем на едно място информация за събитията в града, така че жителите на София и посетителите на града да могат " +
+                "по-лесно да откриват какво се случва около тях. Нашата идея е да помогнем на повече хора да намират събития, които отговарят на интересите им, " +
+                "и да планират по-лесно свободното си време в София.</p>" +
+                "<p>Вярваме, че когато достъпът до такава информация е по-лесен, градът става по-жив, по-свързан и по-интересен както за хората, които живеят тук, " +
+                "така и за тези, които го посещават.</p>",
+            AboutUsContentEn =
+                "<p>We created Go Sofia with a simple goal: to make discovering events in Sofia easier, more convenient, and more accessible. " +
+                "In a city as active and diverse as Sofia, there are concerts, festivals, exhibitions, performances, family events, and many other activities " +
+                "happening all the time. Yet this information is often scattered across different websites, social media pages, and local sources, making it " +
+                "difficult to find in one place.</p>" +
+                "<p>With go-sofia.com, we aim to bring together useful and up-to-date event information so that both Sofia residents and international visitors " +
+                "can more easily explore what is happening in the city. Our goal is to help people discover events that match their interests and make it easier " +
+                "to enjoy Sofia's cultural and urban life.</p>" +
+                "<p>We believe that when event information is easier to access, the city becomes more open, more connected, and more enjoyable for everyone " +
+                "— whether you live here or are visiting Sofia for a few days.</p>",
+            UpdatedAt = SeedDate
+        });
+    }
+
+    private static void SeedPageSeoMeta(ModelBuilder modelBuilder)
+    {
+        var rows = new List<PageSeoMeta>
+        {
+            new PageSeoMeta { Id = 1, PageKey = SeoPageKeys.Home, UpdatedAt = SeedDate },
+            new PageSeoMeta { Id = 2, PageKey = SeoPageKeys.AboutUs, UpdatedAt = SeedDate }
+        };
+
+        var id = 3;
+        foreach (EventCategory category in Enum.GetValues<EventCategory>())
+        {
+            if (category == EventCategory.Undefined)
+                continue;
+
+            rows.Add(new PageSeoMeta { Id = id++, PageKey = SeoPageKeys.ForCategory(category), UpdatedAt = SeedDate });
+        }
+
+        modelBuilder.Entity<PageSeoMeta>().HasData(rows);
     }
 
     private static void SeedCategories(ModelBuilder modelBuilder)
