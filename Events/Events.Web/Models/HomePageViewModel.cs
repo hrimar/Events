@@ -2,6 +2,8 @@ namespace Events.Web.Models;
 
 public class HomePageViewModel
 {
+    public string HeroTitle { get; set; } = string.Empty;
+    public string HeroSubtitle { get; set; } = string.Empty;
     public WeeklyEventsViewModel WeeklyEvents { get; set; } = new();
     public EventsSectionViewModel SavedSection { get; set; } = new();
     public EventsSectionViewModel RecommendedSection { get; set; } = new();

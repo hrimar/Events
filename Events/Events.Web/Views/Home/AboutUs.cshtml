@@ -1,3 +1,4 @@
+@model Events.Web.Models.AboutUsPageViewModel
 @using Events.Web.Resources
 @using Microsoft.Extensions.Localization
 @inject IStringLocalizer<SharedResources> Localizer
@@ -12,9 +13,7 @@
 
             <h1 class="mb-4">@Localizer["AboutUs_Heading"]</h1>
 
-            <p class="lead">@Localizer["AboutUs_P1"]</p>
-            <p>@Localizer["AboutUs_P2"]</p>
-            <p>@Localizer["AboutUs_P3"]</p>
+            @Html.Raw(Model.Content)
 
             <hr class="my-4" />
 
