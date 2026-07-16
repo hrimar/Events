@@ -174,6 +174,10 @@ static void ConfigureLocalization(WebApplicationBuilder builder)
 
 static void RegisterServices(WebApplicationBuilder builder)
 {
+    // Infrastructure
+    builder.Services.AddHttpContextAccessor();
+    builder.Services.AddScoped<ISiteUrlProvider, SiteUrlProvider>();
+
     // Repositories
     builder.Services.AddScoped<IEventRepository, EventRepository>();
     builder.Services.AddScoped<ITagRepository, TagRepository>();
