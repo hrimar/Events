@@ -1,5 +1,6 @@
 using Events.Models.Entities;
 using Events.Models.Enums;
+using Events.Web.Infrastructure.JsonLd;
 
 namespace Events.Web.Models;
 
@@ -10,7 +11,7 @@ public class EventViewModel
     public DateTime Date { get; set; }
     public TimeSpan? StartTime { get; set; }
     public string FormattedDate => Date.ToString("dd.MM.yyyy");
-    public bool HasKnownTime => StartTime.HasValue ? StartTime.Value != TimeSpan.Zero : Date.TimeOfDay != TimeSpan.Zero;
+    public bool HasKnownTime => EventDateTimeHelper.HasKnownTime(Date, StartTime);
     public string FormattedTime => StartTime?.ToString(@"hh\:mm") ?? Date.ToString("HH:mm");
     public string City { get; set; } = string.Empty;
     public string Location { get; set; } = string.Empty;
