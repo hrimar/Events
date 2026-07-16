@@ -5,28 +5,37 @@
 @inject IStringLocalizer<SharedResources> Localizer
 
 @{
-    ViewData["Title"] = Model.Name;
     var relatedEvents = ViewBag.RelatedEvents as List<Events.Web.Models.EventViewModel> ?? new List<Events.Web.Models.EventViewModel>();
     var isOtherSubCategory = (bool)(ViewBag.IsOtherSubCategory ?? true);
     var currentUrl = $"{Context.Request.Scheme}://{Context.Request.Host}{Context.Request.Path}";
     var fullImageUrl = Model.DefaultImage.StartsWith("http") ? Model.DefaultImage : $"{Context.Request.Scheme}://{Context.Request.Host}{Model.DefaultImage}";
+    var metaDescription = Model.ShortDescription != ""
+        ? Model.ShortDescription
+        : $"Join us for {Model.Name} on {Model.FormattedDate} in {Model.City}";
+
+    // Per-event title/description (not admin-authored PageSeoMeta, which only covers a
+    // fixed small set of static pages - see ISeoMetaService). Mirrors the pattern already
+    // used on Venues/Details.cshtml for the same reason.
+    ViewData["Title"] = Model.Name;
+    ViewData["PageTitle"] = $"{Model.Name} | {Model.Location}, {Model.FormattedDate} | Go Sofia";
+    ViewData["MetaDescription"] = metaDescription;
 }
 
 @section MetaTags {
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="event" />
     <meta property="og:title" content="@Model.Name" />
-    <meta property="og:description" content="@(Model.ShortDescription ?? $"Join us for {Model.Name} on {Model.FormattedDate} in {Model.City}")" />
+    <meta property="og:description" content="@metaDescription" />
     <meta property="og:image" content="@fullImageUrl" />
     <meta property="og:url" content="@currentUrl" />
     <meta property="og:site_name" content="Sofia Events" />
-    
+
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="@Model.Name" />
-    <meta name="twitter:description" content="@(Model.ShortDescription ?? $"Join us for {Model.Name} on {Model.FormattedDate} in {Model.City}")" />
+    <meta name="twitter:description" content="@metaDescription" />
     <meta name="twitter:image" content="@fullImageUrl" />
-    
+
     <!-- Event specific -->
     <meta property="event:start_date" content="@Model.Date.ToString("yyyy-MM-dd")" />
     <meta property="event:location" content="@Model.City, @Model.Location" />
