@@ -70,7 +70,7 @@ public class VenuesController : Controller
         if (venue == null)
             return NotFound();
 
-        var upcomingEvents = await _venueService.GetUpcomingEventsByVenueAsync(venue.Id);
+        var upcomingEvents = (await _venueService.GetUpcomingEventsByVenueAsync(venue.Id)).ToList();
         var eventViewModels = EventViewModel.FromEntities(upcomingEvents).AsReadOnly();
 
         var baseUrl = $"{Request.Scheme}://{Request.Host}";
@@ -91,29 +91,20 @@ public class VenuesController : Controller
             WebsiteUrl = venue.WebsiteUrl,
             Capacity = venue.Capacity,
             UpcomingEvents = eventViewModels,
-            JsonLd = BuildJsonLd(venue, eventViewModels, baseUrl)
+            JsonLd = BuildJsonLd(venue, upcomingEvents, baseUrl)
         };
 
         return View(viewModel);
     }
 
-    private static string BuildJsonLd(CanonicalVenue venue, IReadOnlyList<EventViewModel> events, string baseUrl)
+    private static string BuildJsonLd(CanonicalVenue venue, IReadOnlyList<Event> events, string baseUrl)
     {
         var place = PlaceJsonLdBuilder.BuildPlace(venue);
 
         if (events.Any())
-            place["event"] = events.Select(ev => new Dictionary<string, object?>
-            {
-                ["@type"] = "Event",
-                ["name"] = ev.Name,
-                ["startDate"] = ev.Date.ToString("yyyy-MM-dd"),
-                ["location"] = new Dictionary<string, string>
-                {
-                    ["@type"] = "Place",
-                    ["name"] = venue.Name
-                },
-                ["url"] = $"{baseUrl}/Events/Details/{ev.Id}"
-            }).ToList();
+            place["event"] = events
+                .Select(ev => EventJsonLdBuilder.BuildEvent(ev, baseUrl, includeContext: false))
+                .ToList();
 
         return SafeJsonLdBuilder.Serialize(place);
     }

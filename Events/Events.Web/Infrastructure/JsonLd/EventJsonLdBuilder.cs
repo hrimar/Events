@@ -11,10 +11,17 @@ public static class EventJsonLdBuilder
     private const string DefaultImagePath = "/images/default_event_image.jpeg";
     private const string Currency = "BGN"; // Go Sofia only covers events in Sofia/Bulgaria.
 
-    public static Dictionary<string, object?> BuildEvent(Event eventEntity, string baseUrl)
+    // includeContext controls whether "@context" is emitted - true when this Event is
+    // the root JSON-LD object (event details page), false when nested inside another
+    // schema (e.g. VenuesController's "event" array on the venue's own Place schema).
+    public static Dictionary<string, object?> BuildEvent(Event eventEntity, string baseUrl, bool includeContext = true)
     {
-        var builder = new SafeJsonLdBuilder()
-            .Add("@context", "https://schema.org")
+        var builder = new SafeJsonLdBuilder();
+
+        if (includeContext)
+            builder.Add("@context", "https://schema.org");
+
+        builder
             .Add("@type", "Event")
             .Add("name", eventEntity.Name)
             .Add("startDate", EventDateTimeHelper.ToIso8601StartDate(eventEntity.Date, eventEntity.StartTime))
