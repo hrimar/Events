@@ -19,28 +19,16 @@
     ViewData["Title"] = Model.Name;
     ViewData["PageTitle"] = $"{Model.Name} | {Model.Location}, {Model.FormattedDate} | Go Sofia";
     ViewData["MetaDescription"] = metaDescription;
+    ViewData["OgType"] = "event";
+    ViewData["OgImageUrl"] = fullImageUrl;
+    ViewData["OgUrl"] = currentUrl;
+    ViewData["CanonicalUrl"] = currentUrl;
 }
 
-@section MetaTags {
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="event" />
-    <meta property="og:title" content="@Model.Name" />
-    <meta property="og:description" content="@metaDescription" />
-    <meta property="og:image" content="@fullImageUrl" />
-    <meta property="og:url" content="@currentUrl" />
-    <meta property="og:site_name" content="Sofia Events" />
-
-    <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="@Model.Name" />
-    <meta name="twitter:description" content="@metaDescription" />
-    <meta name="twitter:image" content="@fullImageUrl" />
-
-    <!-- Event specific -->
-    <meta property="event:start_date" content="@Model.Date.ToString("yyyy-MM-dd")" />
-    <meta property="event:location" content="@Model.City, @Model.Location" />
-    @* No price meta at all *@
-}
+@* Open Graph / Twitter Card tags are rendered once, in _Layout.cshtml, driven by the
+   ViewData set above - no per-view MetaTags override here to avoid duplicate og:/twitter:
+   tags. The JSON-LD Event schema below already covers start date/location/etc.,
+   so the old non-standard "event:start_date"/"event:location" meta tags were dropped. *@
 
 <div class="container py-4">
     <!-- Breadcrumb -->
