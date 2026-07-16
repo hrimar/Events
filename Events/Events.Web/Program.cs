@@ -271,6 +271,16 @@ static void ConfigureHttpPipeline(WebApplication app)
     app.UseAuthorization();
 
     app.MapControllerRoute(
+        name: "sitemap",
+        pattern: "sitemap.xml",
+        defaults: new { controller = "Seo", action = "Sitemap" });
+
+    app.MapControllerRoute(
+        name: "robots",
+        pattern: "robots.txt",
+        defaults: new { controller = "Seo", action = "Robots" });
+
+    app.MapControllerRoute(
         name: "venue-details",
         pattern: "venues/{slug}",
         defaults: new { controller = "Venues", action = "Details" });
