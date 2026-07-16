@@ -39,29 +39,31 @@ public class EventViewModel
     public bool HasTicketUrl => !string.IsNullOrEmpty(TicketUrl);
 
     // Factory method for mapping from Entity
-    public static EventViewModel FromEntity(Event eventEntity)
+    public static EventViewModel FromEntity(Event eventEntity) => Populate(new EventViewModel(), eventEntity);
+
+    // Shared entity-to-view-model mapping, so subclasses (e.g. EventDetailsViewModel)
+    // can add their own fields without duplicating this mapping.
+    protected static T Populate<T>(T model, Event eventEntity) where T : EventViewModel
     {
-        return new EventViewModel
-        {
-            Id = eventEntity.Id,
-            Name = eventEntity.Name,
-            Date = eventEntity.Date,
-            StartTime = eventEntity.StartTime,
-            City = eventEntity.City,
-            Location = eventEntity.Location,
-            Description = eventEntity.Description,
-            ImageUrl = eventEntity.ImageUrl,
-            ThumbnailUrl = eventEntity.ThumbnailUrl,
-            TicketUrl = eventEntity.TicketUrl,
-            IsFree = eventEntity.IsFree,
-            //Price = eventEntity.Price,
-            CategoryName = eventEntity.Category?.Name,
-            SubCategoryName = eventEntity.SubCategory?.Name,
-            Status = eventEntity.Status,
-            CanonicalVenueId = eventEntity.CanonicalVenueId,
-            VenueSlug = eventEntity.CanonicalVenue?.Slug,
-            Tags = eventEntity.EventTags?.Select(et => et.Tag.Name).ToList() ?? new List<string>()
-        };
+        model.Id = eventEntity.Id;
+        model.Name = eventEntity.Name;
+        model.Date = eventEntity.Date;
+        model.StartTime = eventEntity.StartTime;
+        model.City = eventEntity.City;
+        model.Location = eventEntity.Location;
+        model.Description = eventEntity.Description;
+        model.ImageUrl = eventEntity.ImageUrl;
+        model.ThumbnailUrl = eventEntity.ThumbnailUrl;
+        model.TicketUrl = eventEntity.TicketUrl;
+        model.IsFree = eventEntity.IsFree;
+        //model.Price = eventEntity.Price;
+        model.CategoryName = eventEntity.Category?.Name;
+        model.SubCategoryName = eventEntity.SubCategory?.Name;
+        model.Status = eventEntity.Status;
+        model.CanonicalVenueId = eventEntity.CanonicalVenueId;
+        model.VenueSlug = eventEntity.CanonicalVenue?.Slug;
+        model.Tags = eventEntity.EventTags?.Select(et => et.Tag.Name).ToList() ?? new List<string>();
+        return model;
     }
 
     // Extension method for bulk mapping

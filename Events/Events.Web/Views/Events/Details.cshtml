@@ -1,4 +1,4 @@
-@model Events.Web.Models.EventViewModel
+@model Events.Web.Models.EventDetailsViewModel
 @using Events.Web.Resources
 @using Events.Web.Localization
 @using Microsoft.Extensions.Localization
@@ -342,6 +342,11 @@
 </div>
 
 @section Scripts {
+    @if (!string.IsNullOrEmpty(Model.JsonLd))
+    {
+        <script type="application/ld+json">@Html.Raw(Model.JsonLd)</script>
+    }
+
     <script src="~/js/favorites.js"></script>
     <script>
         const shareTitle = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Name ?? string.Empty));
