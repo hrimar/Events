@@ -36,4 +36,15 @@ public sealed class SafeJsonLdBuilder
     public Dictionary<string, object?> Build() => _fields;
 
     public static string Serialize(object value) => JsonSerializer.Serialize(value, SerializerOptions);
+
+    // Wraps multiple schema.org objects (built with includeContext: false) into a single
+    // "@graph" document, so a page can emit one <script type="application/ld+json">
+    // instead of one per schema type.
+    public static Dictionary<string, object?> BuildGraph(params object[] nodes)
+    {
+        return new SafeJsonLdBuilder()
+            .Add("@context", "https://schema.org")
+            .Add("@graph", nodes)
+            .Build();
+    }
 }

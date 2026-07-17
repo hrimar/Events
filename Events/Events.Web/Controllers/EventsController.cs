@@ -310,7 +310,11 @@ public class EventsController : Controller
                 return NotFound();
             }
 
-            var jsonLd = SafeJsonLdBuilder.Serialize(EventJsonLdBuilder.BuildEvent(eventEntity, _siteUrlProvider.BaseUrl));
+            var baseUrl = _siteUrlProvider.BaseUrl;
+            var jsonLd = SafeJsonLdBuilder.Serialize(SafeJsonLdBuilder.BuildGraph(
+                EventJsonLdBuilder.BuildEvent(eventEntity, baseUrl, includeContext: false),
+                BreadcrumbJsonLdBuilder.BuildBreadcrumbList(BuildBreadcrumbItems(eventEntity, baseUrl), includeContext: false)));
+
             var viewModel = EventDetailsViewModel.FromEntity(eventEntity, jsonLd);
 
             // EnumValue == OtherSubCategoryEnumValue represents "Other" across all subcategory enums
@@ -372,6 +376,30 @@ public class EventsController : Controller
             _logger.LogError(ex, "Error loading category page for {Category}", category);
             return RedirectToAction(nameof(Index));
         }
+    }
+
+    // Mirrors the visible <nav aria-label="breadcrumb"> markup in Events/Details.cshtml
+    // (Home > Events > [Category] > EventName) so JSON-LD and the on-page trail agree.
+    // The category link uses the "?category=" query filter (Index's working convention,
+    // same as the sitemap - see SeoController) rather than the separate Category action.
+    private List<(string Name, string? Url)> BuildBreadcrumbItems(Event eventEntity, string baseUrl)
+    {
+        var items = new List<(string Name, string? Url)>
+        {
+            (_localizer["Details_Home"].Value, $"{baseUrl}/"),
+            (_localizer["Details_Events"].Value, $"{baseUrl}/Events")
+        };
+
+        if (!string.IsNullOrEmpty(eventEntity.Category?.Name))
+        {
+            items.Add((
+                CategoryLocalizationExtensions.LocalizeCategoryName(eventEntity.Category.Name, _localizer),
+                $"{baseUrl}/Events?category={eventEntity.Category.Name}"));
+        }
+
+        items.Add((eventEntity.Name, null));
+
+        return items;
     }
 
     private string BuildPageTitle(string? category, bool? free, string? search)
