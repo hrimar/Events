@@ -107,7 +107,8 @@ public class VenuesController : Controller
 
     private string BuildJsonLd(CanonicalVenue venue, IReadOnlyList<Event> events, string baseUrl)
     {
-        var place = PlaceJsonLdBuilder.BuildPlace(venue, includeContext: false);
+        var ownPageUrl = $"{baseUrl}/venues/{venue.Slug}";
+        var place = PlaceJsonLdBuilder.BuildPlace(venue, ownPageUrl, includeContext: false);
 
         if (events.Any())
             place["event"] = events

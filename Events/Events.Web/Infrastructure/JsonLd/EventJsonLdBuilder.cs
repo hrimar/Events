@@ -30,7 +30,7 @@ public static class EventJsonLdBuilder
             .AddIfNotEmpty("description", eventEntity.Description)
             .Add("url", $"{baseUrl}/Events/Details/{eventEntity.Id}")
             .Add("image", BuildAbsoluteImageUrl(eventEntity, baseUrl))
-            .Add("location", BuildLocation(eventEntity));
+            .Add("location", BuildLocation(eventEntity, baseUrl));
 
         var offers = BuildOffers(eventEntity);
         if (offers != null)
@@ -41,10 +41,13 @@ public static class EventJsonLdBuilder
         return builder.Build();
     }
 
-    private static Dictionary<string, object?> BuildLocation(Event eventEntity)
+    private static Dictionary<string, object?> BuildLocation(Event eventEntity, string baseUrl)
     {
         if (eventEntity.CanonicalVenue != null)
-            return PlaceJsonLdBuilder.BuildPlace(eventEntity.CanonicalVenue, includeContext: false);
+        {
+            var ownPageUrl = $"{baseUrl}/venues/{eventEntity.CanonicalVenue.Slug}";
+            return PlaceJsonLdBuilder.BuildPlace(eventEntity.CanonicalVenue, ownPageUrl, includeContext: false);
+        }
 
         // No canonical venue matched yet - fall back to the crawled free-text location/city
         // only, rather than fabricating a street address we don't have.
