@@ -1,8 +1,10 @@
 ﻿@using Events.Models.Enums
+@using Events.Web.Infrastructure
 @using Events.Web.Models
 @using Events.Web.Resources
 @using Microsoft.Extensions.Localization
 @inject IStringLocalizer<SharedResources> Localizer
+@inject ISiteUrlProvider SiteUrlProvider
 
 <!-- hreflang alternates are intentionally omitted: bg/en is switched via a cookie
      (LanguageController + CookieRequestCultureProvider), not via distinct per-language
@@ -33,7 +35,7 @@
         })();
     </script>
     <title>@(ViewData["PageTitle"] ?? ViewData["Title"] + " — Sofia Events")</title>
-    <link rel="canonical" href="@(ViewData["CanonicalUrl"] ?? $"{Context.Request.Scheme}://{Context.Request.Host}{Context.Request.Path}")" />
+    <link rel="canonical" href="@(ViewData["CanonicalUrl"] ?? SiteUrlProvider.BuildAbsoluteUrl(Context.Request.Path))" />
 
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
