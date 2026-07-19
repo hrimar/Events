@@ -61,7 +61,13 @@ public class SeoController : Controller
     public IActionResult Robots()
     {
         var baseUrl = _siteUrlProvider.BaseUrl;
-        var content = $"User-agent: *\nAllow: /\n\nSitemap: {baseUrl}/sitemap.xml\n";
+        var content =
+            "User-agent: *\n" +
+            "Allow: /\n" +
+            "Disallow: /Admin/\n" +   // admin area - no SEO value, has its own auth anyway
+            "Disallow: /Identity/\n" + // login/register/manage account pages
+            "Disallow: /api/\n" +     // JSON endpoints, not crawlable pages
+            $"\nSitemap: {baseUrl}/sitemap.xml\n";
 
         return Content(content, "text/plain", Encoding.UTF8);
     }
