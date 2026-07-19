@@ -174,6 +174,10 @@ static void ConfigureLocalization(WebApplicationBuilder builder)
 
 static void RegisterServices(WebApplicationBuilder builder)
 {
+    // Infrastructure
+    builder.Services.AddHttpContextAccessor();
+    builder.Services.AddScoped<ISiteUrlProvider, SiteUrlProvider>();
+
     // Repositories
     builder.Services.AddScoped<IEventRepository, EventRepository>();
     builder.Services.AddScoped<ITagRepository, TagRepository>();
@@ -265,6 +269,16 @@ static void ConfigureHttpPipeline(WebApplication app)
     app.UseRouting();
     app.UseAuthentication();
     app.UseAuthorization();
+
+    app.MapControllerRoute(
+        name: "sitemap",
+        pattern: "sitemap.xml",
+        defaults: new { controller = "Seo", action = "Sitemap" });
+
+    app.MapControllerRoute(
+        name: "robots",
+        pattern: "robots.txt",
+        defaults: new { controller = "Seo", action = "Robots" });
 
     app.MapControllerRoute(
         name: "venue-details",

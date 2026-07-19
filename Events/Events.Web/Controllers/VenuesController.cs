@@ -1,10 +1,12 @@
 using Events.Models.Entities;
 using Events.Services.Interfaces;
+using Events.Web.Infrastructure;
+using Events.Web.Infrastructure.JsonLd;
+using Events.Web.Localization;
 using Events.Web.Models;
 using Events.Web.Resources;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
-using System.Text.Json;
 
 namespace Events.Web.Controllers;
 
@@ -12,12 +14,18 @@ public class VenuesController : Controller
 {
     private readonly IVenueService _venueService;
     private readonly ILogger<VenuesController> _logger;
+    private readonly ISiteUrlProvider _siteUrlProvider;
     private readonly IStringLocalizer<SharedResources> _localizer;
 
-    public VenuesController(IVenueService venueService, ILogger<VenuesController> logger, IStringLocalizer<SharedResources> localizer)
+    public VenuesController(
+        IVenueService venueService,
+        ILogger<VenuesController> logger,
+        ISiteUrlProvider siteUrlProvider,
+        IStringLocalizer<SharedResources> localizer)
     {
         _venueService = venueService;
         _logger = logger;
+        _siteUrlProvider = siteUrlProvider;
         _localizer = localizer;
     }
 
@@ -70,10 +78,10 @@ public class VenuesController : Controller
         if (venue == null)
             return NotFound();
 
-        var upcomingEvents = await _venueService.GetUpcomingEventsByVenueAsync(venue.Id);
+        var upcomingEvents = (await _venueService.GetUpcomingEventsByVenueAsync(venue.Id)).ToList();
         var eventViewModels = EventViewModel.FromEntities(upcomingEvents).AsReadOnly();
 
-        var baseUrl = $"{Request.Scheme}://{Request.Host}";
+        var baseUrl = _siteUrlProvider.BaseUrl;
 
         var viewModel = new VenueDetailsViewModel
         {
@@ -91,57 +99,37 @@ public class VenuesController : Controller
             WebsiteUrl = venue.WebsiteUrl,
             Capacity = venue.Capacity,
             UpcomingEvents = eventViewModels,
-            JsonLd = BuildJsonLd(venue, eventViewModels, baseUrl)
+            JsonLd = BuildJsonLd(venue, upcomingEvents, baseUrl)
         };
 
         return View(viewModel);
     }
 
-    private static string BuildJsonLd(CanonicalVenue venue, IReadOnlyList<EventViewModel> events, string baseUrl)
+    private string BuildJsonLd(CanonicalVenue venue, IReadOnlyList<Event> events, string baseUrl)
     {
-        var place = new Dictionary<string, object?>
-        {
-            ["@context"] = "https://schema.org",
-            ["@type"] = "Place",
-            ["name"] = venue.Name
-        };
-
-        if (!string.IsNullOrEmpty(venue.Description))
-            place["description"] = venue.Description;
-
-        if (!string.IsNullOrEmpty(venue.WebsiteUrl))
-            place["url"] = venue.WebsiteUrl;
-
-        if (!string.IsNullOrEmpty(venue.Address))
-            place["address"] = new Dictionary<string, string>
-            {
-                ["@type"] = "PostalAddress",
-                ["streetAddress"] = venue.Address,
-                ["addressLocality"] = venue.City
-            };
-
-        if (venue.Latitude.HasValue && venue.Longitude.HasValue)
-            place["geo"] = new Dictionary<string, object>
-            {
-                ["@type"] = "GeoCoordinates",
-                ["latitude"] = venue.Latitude.Value,
-                ["longitude"] = venue.Longitude.Value
-            };
+        var ownPageUrl = $"{baseUrl}/venues/{venue.Slug}";
+        var place = PlaceJsonLdBuilder.BuildPlace(venue, ownPageUrl, includeContext: false);
 
         if (events.Any())
-            place["event"] = events.Select(ev => new Dictionary<string, object?>
-            {
-                ["@type"] = "Event",
-                ["name"] = ev.Name,
-                ["startDate"] = ev.Date.ToString("yyyy-MM-dd"),
-                ["location"] = new Dictionary<string, string>
-                {
-                    ["@type"] = "Place",
-                    ["name"] = venue.Name
-                },
-                ["url"] = $"{baseUrl}/Events/Details/{ev.Id}"
-            }).ToList();
+            place["event"] = events
+                .Select(ev => EventJsonLdBuilder.BuildEvent(ev, baseUrl, includeContext: false))
+                .ToList();
 
-        return JsonSerializer.Serialize(place, new JsonSerializerOptions { WriteIndented = false });
+        var breadcrumb = BreadcrumbJsonLdBuilder.BuildBreadcrumbList(BuildBreadcrumbItems(venue, baseUrl), includeContext: false);
+
+        return SafeJsonLdBuilder.Serialize(SafeJsonLdBuilder.BuildGraph(place, breadcrumb));
+    }
+
+    // Mirrors the visible <nav aria-label="breadcrumb"> markup in Venues/Details.cshtml
+    // (Home > VenueName - there is no intermediate "Venues" crumb in that view today).
+    private List<(string Name, string? Url)> BuildBreadcrumbItems(CanonicalVenue venue, string baseUrl)
+    {
+        var displayName = CultureHelper.IsEnglish() && !string.IsNullOrEmpty(venue.NameEn) ? venue.NameEn : venue.Name;
+
+        return new List<(string Name, string? Url)>
+        {
+            (_localizer["Venue_Home"].Value, $"{baseUrl}/"),
+            (displayName, null)
+        };
     }
 }

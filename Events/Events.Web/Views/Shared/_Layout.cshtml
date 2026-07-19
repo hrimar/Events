@@ -1,11 +1,18 @@
 ﻿@using Events.Models.Enums
+@using Events.Web.Infrastructure
 @using Events.Web.Models
 @using Events.Web.Resources
 @using Microsoft.Extensions.Localization
 @inject IStringLocalizer<SharedResources> Localizer
+@inject ISiteUrlProvider SiteUrlProvider
 
+<!-- hreflang alternates are intentionally omitted: bg/en is switched via a cookie
+     (LanguageController + CookieRequestCultureProvider), not via distinct per-language
+     URLs, so there is no separate crawlable URL for hreflang to point to. Emitting
+     hreflang tags that both resolve to the same URL would assert content Google can't
+     actually verify. Revisit only if URL-based localization is introduced. -->
 <!DOCTYPE html>
-<html lang="en">
+<html lang="@System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName">
 <head>
     <!-- Google Analytics tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-NL0QFW80H6"></script>
@@ -28,7 +35,8 @@
         })();
     </script>
     <title>@(ViewData["PageTitle"] ?? ViewData["Title"] + " — Sofia Events")</title>
-    
+    <link rel="canonical" href="@(ViewData["CanonicalUrl"] ?? SiteUrlProvider.BuildAbsoluteUrl(Context.Request.Path))" />
+
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
@@ -37,7 +45,8 @@
     <link rel="stylesheet" href="~/css/themes/dark-theme.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/events-portal.css" asp-append-version="true" />
     
-    <!-- Open Graph meta tags for better social sharing -->
+    <!-- Open Graph / Twitter Card meta tags for social sharing - single source of truth,
+         driven by ViewData so no view needs its own duplicate MetaTags OG block. -->
     @await RenderSectionAsync("MetaTags", required: false)
     @if (ViewData["MetaDescription"] != null)
     {
@@ -52,7 +61,16 @@
         {
             <meta property="og:url" content="@ViewData["OgUrl"]" />
         }
-        <meta property="og:type" content="website" />
+        <meta property="og:type" content="@(ViewData["OgType"] ?? "website")" />
+        <meta property="og:site_name" content="Sofia Events" />
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="@(ViewData["OgTitle"] ?? ViewData["Title"])" />
+        <meta name="twitter:description" content="@ViewData["MetaDescription"]" />
+        @if (!string.IsNullOrEmpty(ViewData["OgImageUrl"]?.ToString()))
+        {
+            <meta name="twitter:image" content="@ViewData["OgImageUrl"]" />
+        }
     }
     @await RenderSectionAsync("Styles", required: false)
 </head>

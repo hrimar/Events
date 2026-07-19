@@ -95,6 +95,11 @@ namespace Events.Web.Controllers
 
                 var isEnglish = CultureHelper.IsEnglish();
                 var siteContent = await _siteContentService.GetAsync();
+
+                // Default title until an admin configures PageSeoMeta for "home" - must be
+                // set here, not in the view, so ApplySeoMeta's admin override isn't clobbered
+                // by an unconditional ViewData["Title"] assignment running after this action.
+                ViewData["Title"] = "Sofia Events - Discover Amazing Events";
                 var seo = await _seoMetaService.GetByKeyAsync(SeoPageKeys.Home);
                 ViewData.ApplySeoMeta(seo);
 

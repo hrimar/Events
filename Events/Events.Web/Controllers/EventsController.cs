@@ -4,6 +4,8 @@ using Events.Models.Entities;
 using Events.Models.Enums;
 using Events.Services.Interfaces;
 using Events.Web.Extensions;
+using Events.Web.Infrastructure;
+using Events.Web.Infrastructure.JsonLd;
 using Events.Web.Localization;
 using Events.Web.Models;
 using Events.Web.Models.DTOs;
@@ -30,6 +32,7 @@ public class EventsController : Controller
     private readonly ITagService _tagService;
     private readonly ISubCategoryRepository _subCategoryRepository;
     private readonly ISeoMetaService _seoMetaService;
+    private readonly ISiteUrlProvider _siteUrlProvider;
     private readonly IStringLocalizer<SharedResources> _localizer;
 
     public EventsController(
@@ -38,6 +41,7 @@ public class EventsController : Controller
         ITagService tagService,
         ISubCategoryRepository subCategoryRepository,
         ISeoMetaService seoMetaService,
+        ISiteUrlProvider siteUrlProvider,
         IStringLocalizer<SharedResources> localizer)
     {
         _logger = logger;
@@ -45,6 +49,7 @@ public class EventsController : Controller
         _tagService = tagService;
         _subCategoryRepository = subCategoryRepository;
         _seoMetaService = seoMetaService;
+        _siteUrlProvider = siteUrlProvider;
         _localizer = localizer;
     }
 
@@ -305,7 +310,12 @@ public class EventsController : Controller
                 return NotFound();
             }
 
-            var viewModel = EventViewModel.FromEntity(eventEntity);
+            var baseUrl = _siteUrlProvider.BaseUrl;
+            var jsonLd = SafeJsonLdBuilder.Serialize(SafeJsonLdBuilder.BuildGraph(
+                EventJsonLdBuilder.BuildEvent(eventEntity, baseUrl, includeContext: false),
+                BreadcrumbJsonLdBuilder.BuildBreadcrumbList(BuildBreadcrumbItems(eventEntity, baseUrl), includeContext: false)));
+
+            var viewModel = EventDetailsViewModel.FromEntity(eventEntity, jsonLd);
 
             // EnumValue == OtherSubCategoryEnumValue represents "Other" across all subcategory enums
             var isOtherSubCategory = eventEntity.SubCategory == null || eventEntity.SubCategory.EnumValue == OtherSubCategoryEnumValue;
@@ -366,6 +376,30 @@ public class EventsController : Controller
             _logger.LogError(ex, "Error loading category page for {Category}", category);
             return RedirectToAction(nameof(Index));
         }
+    }
+
+    // Mirrors the visible <nav aria-label="breadcrumb"> markup in Events/Details.cshtml
+    // (Home > Events > [Category] > EventName) so JSON-LD and the on-page trail agree.
+    // The category link uses the "?category=" query filter (Index's working convention,
+    // same as the sitemap - see SeoController) rather than the separate Category action.
+    private List<(string Name, string? Url)> BuildBreadcrumbItems(Event eventEntity, string baseUrl)
+    {
+        var items = new List<(string Name, string? Url)>
+        {
+            (_localizer["Details_Home"].Value, $"{baseUrl}/"),
+            (_localizer["Details_Events"].Value, $"{baseUrl}/Events")
+        };
+
+        if (!string.IsNullOrEmpty(eventEntity.Category?.Name))
+        {
+            items.Add((
+                CategoryLocalizationExtensions.LocalizeCategoryName(eventEntity.Category.Name, _localizer),
+                $"{baseUrl}/Events?category={eventEntity.Category.Name}"));
+        }
+
+        items.Add((eventEntity.Name, null));
+
+        return items;
     }
 
     private string BuildPageTitle(string? category, bool? free, string? search)
