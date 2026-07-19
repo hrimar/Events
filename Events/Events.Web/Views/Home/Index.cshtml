@@ -4,9 +4,8 @@
 @using Microsoft.Extensions.Localization
 @inject IStringLocalizer<SharedResources> Localizer
 
-@{
-    ViewData["Title"] = "Sofia Events - Discover Amazing Events";
-}
+@* Title/MetaDescription are set in HomeController.Index (default + admin PageSeoMeta
+   override) - not here, so this view doesn't clobber the admin-configured value. *@
 
 <!-- Hero Section (hidden on mobile - its links live in the hamburger menu; keeps focus on Weekly Events) -->
 <section class="bg-primary text-white py-3 d-none d-md-block">
