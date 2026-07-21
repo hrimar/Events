@@ -3,6 +3,8 @@ using Events.Crawler.DTOs.Entase;
 using Events.Crawler.Enums;
 using Events.Crawler.Services.Helpers;
 using Events.Crawler.Services.Interfaces;
+using Humanizer;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Logging;
 using Microsoft.Playwright;
 using System.Diagnostics;
@@ -14,10 +16,10 @@ public class EntaseCrawler : IWebScrapingCrawler
 {
     private const string BaseUrl = "https://www.entase.com";
     private const string EventsListUrl = "https://www.entase.com/?city=София";
-    private const string EventCardSelector = ".productions_grid_item_content";
-    private const string ImageContainerSelector = ".productions_grid_item_cover";
+    private const string EventCardSelector = ".production-card__content"; // old: ".productions_grid_item_content";
+    private const string EventNameSelector = ".production-card__title.line-2"; // old: ".productions_grid_item_title.line-2";
+    private const string ImageContainerSelector = ".production-card__cover"; // old: ".productions_grid_item_cover";
     private const string ImageSelector = "img";
-    private const string EventNameSelector = ".productions_grid_item_title.line-2";
     private const string ProductionDescriptionSelector = "._productiondsc";
     private const string PresentationSelector = "._presentation";
     private const string SpectacleSelector = ".row.events_grid_item.onetime";
@@ -286,7 +288,9 @@ public class EntaseCrawler : IWebScrapingCrawler
         // Navigate to details page to get description and spectacles
         try
         {
-            await page.GotoAsync(cardData.DetailUrl, new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded, Timeout = 30000 });
+            await page.GotoAsync(cardData.DetailUrl, new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded, Timeout = 40000 });
+            // Increased from 3000 to 4000 because of  Microsoft.Playwright.PlaywrightException: 'Page crashed  Call log:  -navigating to "https://www.entase.com/@dktshumen/productions/6a04398677b1fd2da3065655", waiting until "domcontentloaded"'
+
             await Task.Delay(1000);
 
             // Extract description
@@ -602,11 +606,28 @@ public class EntaseCrawler : IWebScrapingCrawler
 
             var months = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
             {
-                ["януари"] = 1, ["фев"] = 2, ["февруари"] = 2, ["март"] = 3, ["мар"] = 3,
-                ["април"] = 4, ["апр"] = 4, ["май"] = 5, ["юни"] = 6, ["юн"] = 6,
-                ["юли"] = 7, ["юл"] = 7, ["август"] = 8, ["авг"] = 8, ["септември"] = 9,
-                ["сеп"] = 9, ["октомври"] = 10, ["окт"] = 10, ["ноември"] = 11, ["ное"] = 11,
-                ["декември"] = 12, ["дек"] = 12
+                ["януари"] = 1,
+                ["фев"] = 2,
+                ["февруари"] = 2,
+                ["март"] = 3,
+                ["мар"] = 3,
+                ["април"] = 4,
+                ["апр"] = 4,
+                ["май"] = 5,
+                ["юни"] = 6,
+                ["юн"] = 6,
+                ["юли"] = 7,
+                ["юл"] = 7,
+                ["август"] = 8,
+                ["авг"] = 8,
+                ["септември"] = 9,
+                ["сеп"] = 9,
+                ["октомври"] = 10,
+                ["окт"] = 10,
+                ["ноември"] = 11,
+                ["ное"] = 11,
+                ["декември"] = 12,
+                ["дек"] = 12
             };
 
             if (!months.TryGetValue(monthText, out int month))
