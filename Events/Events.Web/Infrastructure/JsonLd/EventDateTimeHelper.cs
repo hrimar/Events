@@ -33,6 +33,22 @@ public static class EventDateTimeHelper
         return new DateTimeOffset(localDateTime, offset).ToString("yyyy-MM-ddTHH:mm:sszzz", CultureInfo.InvariantCulture);
     }
 
+    // Whether the event has already happened, as of the current moment in Sofia time.
+    // When the time is known, compares the exact Date+StartTime moment. When only a date
+    // is known, the event is considered past only once that whole calendar day has
+    // elapsed (from the start of the next day) - not from midnight on the event's own
+    // day, which would otherwise mark it "past" before it has even happened.
+    public static bool IsPastEvent(DateTime date, TimeSpan? startTime)
+    {
+        var nowInSofia = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, SofiaTimeZone);
+
+        if (!HasKnownTime(date, startTime))
+            return date.Date.AddDays(1) <= nowInSofia;
+
+        var eventMoment = startTime.HasValue ? date.Date + startTime.Value : date;
+        return eventMoment < nowInSofia;
+    }
+
     private static TimeZoneInfo ResolveSofiaTimeZone()
     {
         try

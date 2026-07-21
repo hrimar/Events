@@ -324,6 +324,10 @@
                                     {
                                     <div class="event-price event-free">@Localizer["Events_Free"]</div>
                                     }
+                                    @if (eventItem.IsPastEvent)
+                                    {
+                                    <div class="event-badge-past">@Localizer["Events_PastEvent"]</div>
+                                    }
                                 </div>
                             </a>
                             

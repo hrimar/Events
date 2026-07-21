@@ -143,6 +143,10 @@
                                                             {
                                                                 <span class="badge bg-success" style="font-size:0.65rem;">@Localizer["Home_Free"]</span>
                                                             }
+                                                            @if (ev.IsPastEvent)
+                                                            {
+                                                                <span class="badge bg-secondary" style="font-size:0.65rem;">@Localizer["Home_PastEvent"]</span>
+                                                            }
                                                         </div>
                                                     </div>
                                                 </a>
@@ -213,6 +217,10 @@
                                                     {
                                                         <span class="badge bg-success" style="font-size:0.65rem;">@Localizer["Home_Free"]</span>
                                                     }
+                                                    @if (ev.IsPastEvent)
+                                                    {
+                                                        <span class="badge bg-secondary" style="font-size:0.65rem;">@Localizer["Home_PastEvent"]</span>
+                                                    }
                                                 </div>
                                             </div>
                                         </a>
@@ -267,6 +275,10 @@
                                                     {
                                                         <span class="badge bg-success" style="font-size:0.65rem;">@Localizer["Home_Free"]</span>
                                                     }
+                                                    @if (ev.IsPastEvent)
+                                                    {
+                                                        <span class="badge bg-secondary" style="font-size:0.65rem;">@Localizer["Home_PastEvent"]</span>
+                                                    }
                                                 </div>
                                             </div>
                                         </a>
@@ -303,6 +315,10 @@
                                             @if (ev.IsFree)
                                             {
                                                 <div class="event-price event-free">@Localizer["Home_Free"]</div>
+                                            }
+                                            @if (ev.IsPastEvent)
+                                            {
+                                                <div class="event-badge-past">@Localizer["Home_PastEvent"]</div>
                                             }
                                         </div>
                                     </a>

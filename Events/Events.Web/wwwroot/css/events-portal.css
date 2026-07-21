@@ -130,6 +130,13 @@
         font-size: 0.9rem;
     }
 
+    .event-badge-past-overlay {
+        top: 10px;
+        left: 10px;
+        padding: 6px 12px;
+        font-size: 0.9rem;
+    }
+
     .event-image-container {
         height: 200px;
     }
@@ -158,6 +165,35 @@
     .event-price-overlay.event-free {
         background: #17a2b8 !important;
     }
+
+/* Past Event badge - mirrors .event-price/.event-price-overlay but positioned on the
+   opposite (left) side, so a past+free event can show both badges without overlapping.
+   Muted gray on purpose: it's a de-emphasis signal, not tied to price semantics. */
+.event-badge-past {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: #6c757d;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-weight: bold;
+    font-size: 14px;
+    z-index: 2;
+}
+
+.event-badge-past-overlay {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background: #6c757d;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 1.1rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
 
 /* Toast notification styles */
 .toast {

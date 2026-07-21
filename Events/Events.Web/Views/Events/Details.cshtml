@@ -66,6 +66,10 @@
                     {
                         <div class="event-price-overlay event-free">@Localizer["Details_Free"]</div>
                     }
+                    @if (Model.IsPastEvent)
+                    {
+                        <div class="event-badge-past-overlay">@Localizer["Details_PastEvent"]</div>
+                    }
                 </div>
 
                 <div class="card-body">
@@ -403,26 +407,6 @@
         
         .event-tags-detailed .badge {
             border: 1px solid rgba(255,255,255,0.2);
-        }
-        
-        .event-detail-image {
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .event-price-overlay {
-            position: absolute;
-            top: 1rem;
-            right: 1rem;
-            background: rgba(0,0,0,0.8);
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            font-weight: bold;
-        }
-        
-        .event-free {
-            background: rgba(40, 167, 69, 0.9) !important;
         }
         
         .border-start {

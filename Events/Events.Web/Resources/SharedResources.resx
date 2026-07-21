@@ -198,6 +198,9 @@
   <data name="Home_Free" xml:space="preserve">
     <value>Безплатно</value>
   </data>
+  <data name="Home_PastEvent" xml:space="preserve">
+    <value>Приключило</value>
+  </data>
   <data name="Home_TotalEvents" xml:space="preserve">
     <value>Общо събития</value>
   </data>
@@ -363,6 +366,9 @@
   <data name="Events_Free" xml:space="preserve">
     <value>Безплатно</value>
   </data>
+  <data name="Events_PastEvent" xml:space="preserve">
+    <value>Приключило</value>
+  </data>
   <data name="Details_Home" xml:space="preserve">
     <value>Начало</value>
   </data>
@@ -428,6 +434,9 @@
   </data>
   <data name="Details_Free" xml:space="preserve">
     <value>Безплатно</value>
+  </data>
+  <data name="Details_PastEvent" xml:space="preserve">
+    <value>Приключило</value>
   </data>
   <data name="Details_LinkCopied" xml:space="preserve">
     <value>Линкът е копиран!</value>
@@ -1273,7 +1282,7 @@
     <value>Създайте профил</value>
   </data>
   <data name="Register_Subtitle" xml:space="preserve">
-    <value>Регистрация в Sofia Events</value>
+    <value>Регистрация в Go-Sofia</value>
   </data>
   <data name="Register_Submit" xml:space="preserve">
     <value>Регистрация</value>

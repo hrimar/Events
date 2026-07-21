@@ -65,6 +65,7 @@
   <data name="Home_Details" xml:space="preserve"><value>Details</value></data>
   <data name="Home_BuyTickets" xml:space="preserve"><value>Buy tickets</value></data>
   <data name="Home_Free" xml:space="preserve"><value>Free</value></data>
+  <data name="Home_PastEvent" xml:space="preserve"><value>Past</value></data>
 
   <!-- Home Page - Statistics -->
   <data name="Home_TotalEvents" xml:space="preserve"><value>Total Events</value></data>
@@ -126,6 +127,7 @@
   <data name="Events_Details" xml:space="preserve"><value>Details</value></data>
   <data name="Events_BuyTickets" xml:space="preserve"><value>Buy tickets</value></data>
   <data name="Events_Free" xml:space="preserve"><value>Free</value></data>
+  <data name="Events_PastEvent" xml:space="preserve"><value>Past</value></data>
 
   <!-- Events Details Page -->
   <data name="Details_Home" xml:space="preserve"><value>Home</value></data>
@@ -150,6 +152,7 @@
   <data name="Details_YouMightLike" xml:space="preserve"><value>You Might Also Like</value></data>
   <data name="Details_ViewAllCategoryEvents" xml:space="preserve"><value>View All</value></data>
   <data name="Details_Free" xml:space="preserve"><value>Free</value></data>
+  <data name="Details_PastEvent" xml:space="preserve"><value>Past event</value></data>
   <data name="Details_LinkCopied" xml:space="preserve"><value>Link copied to clipboard!</value></data>
   <data name="Details_LinkCopyFailed" xml:space="preserve"><value>Failed to copy link</value></data>
 
@@ -471,7 +474,7 @@
   <!-- Register Page -->
   <data name="Register_Title" xml:space="preserve"><value>Register</value></data>
   <data name="Register_Heading" xml:space="preserve"><value>Create account</value></data>
-  <data name="Register_Subtitle" xml:space="preserve"><value>Register for Sofia Events</value></data>
+  <data name="Register_Subtitle" xml:space="preserve"><value>Register for Go-Sofia</value></data>
   <data name="Register_Submit" xml:space="preserve"><value>Register</value></data>
   <data name="Register_PasswordHint" xml:space="preserve"><value>Password must be at least 8 characters and include uppercase, lowercase, a digit, and a special character</value></data>
   <data name="Register_HasAccount" xml:space="preserve"><value>Already have an account?</value></data>

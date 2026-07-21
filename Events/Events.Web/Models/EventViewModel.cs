@@ -12,6 +12,7 @@ public class EventViewModel
     public TimeSpan? StartTime { get; set; }
     public string FormattedDate => Date.ToString("dd.MM.yyyy");
     public bool HasKnownTime => EventDateTimeHelper.HasKnownTime(Date, StartTime);
+    public bool IsPastEvent => EventDateTimeHelper.IsPastEvent(Date, StartTime);
     public string FormattedTime => StartTime?.ToString(@"hh\:mm") ?? Date.ToString("HH:mm");
     public string City { get; set; } = string.Empty;
     public string Location { get; set; } = string.Empty;
