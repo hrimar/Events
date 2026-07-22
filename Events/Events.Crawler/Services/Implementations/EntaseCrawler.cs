@@ -568,7 +568,10 @@ public class EntaseCrawler : IWebScrapingCrawler
     {
         // Even we get Events from Sofia only, we ignore spectacles witch take place out of Sofia
         if (spectacle.Location != null && !spectacle.Location.Contains("София"))
+        {
+            _logger.LogInformation("Skipping non-Sofia spectacle for '{EventName}': Location='{Location}'", entaseEvent.Name, spectacle.Location);
             return null;
+        }
 
         return new CrawledEventDto
         {

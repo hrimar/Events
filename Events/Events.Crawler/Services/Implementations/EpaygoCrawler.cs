@@ -480,7 +480,7 @@ public class EpaygoCrawler : IWebScrapingCrawler
                         await detailPage.GotoAsync(eventDto.TicketUrl, new PageGotoOptions
                         {
                             WaitUntil = WaitUntilState.DOMContentLoaded,
-                            Timeout = 10000 // Further reduced timeout for speed
+                            Timeout = 20000 // Raised from 10000 to tolerate contention from concurrent WebScraping crawlers
                         });
 
                         await Task.Delay(400); // Minimal delay

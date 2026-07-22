@@ -66,9 +66,18 @@ public class CrawlerService : ICrawlerService
         var startTime = DateTime.UtcNow;
         var healthyCrawlers = _crawlers.Where(c => c.IsHealthy() ).ToList(); // && c.CrawlerType == CrawlerType.HttpApi
 
+        // Throttle WebScraping crawlers (each launches its own Chromium process) to avoid
+        // CPU/memory contention when too many browsers run at once in the same container.
+        // HttpApi crawlers don't use a browser, so they run unthrottled.
+        using var webScrapingThrottle = new SemaphoreSlim(2);
+
         // Running all crawlers in parallel instead of sequentially
         var crawlTasks = healthyCrawlers.Select(async crawler =>
         {
+            var isWebScraping = crawler.CrawlerType == CrawlerType.WebScraping;
+            if (isWebScraping)
+                await webScrapingThrottle.WaitAsync();
+
             try
             {
                 _logger.LogInformation("Starting parallel crawl for source: {Source}", crawler.SourceName);
@@ -83,6 +92,11 @@ public class CrawlerService : ICrawlerService
                     Success = false,
                     ErrorMessage = ex.Message
                 };
+            }
+            finally
+            {
+                if (isWebScraping)
+                    webScrapingThrottle.Release();
             }
         });
 
