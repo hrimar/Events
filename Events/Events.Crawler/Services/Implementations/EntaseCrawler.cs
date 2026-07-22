@@ -189,9 +189,13 @@ public class EntaseCrawler : IWebScrapingCrawler
 
             foreach (var cardData in cardDataList)
             {
+                // Use a fresh page per detail navigation instead of reusing the list page.
+                // Reusing one page across dozens of navigations was accumulating renderer
+                // memory and crashing the Chromium process in memory-constrained containers.
+                var detailPage = await browser.NewPageAsync();
                 try
                 {
-                    var eventDto = await ExtractEventDetailsAsync(page, cardData);
+                    var eventDto = await ExtractEventDetailsAsync(detailPage, cardData);
                     if (eventDto != null && eventDto.Spectacles.Any())
                     {
                         events.Add(eventDto);
@@ -200,6 +204,10 @@ public class EntaseCrawler : IWebScrapingCrawler
                 catch (Exception ex)
                 {
                     _logger.LogDebug(ex, "Error extracting event details for {EventName}", cardData.Name);
+                }
+                finally
+                {
+                    await detailPage.CloseAsync();
                 }
             }
 
@@ -288,8 +296,7 @@ public class EntaseCrawler : IWebScrapingCrawler
         // Navigate to details page to get description and spectacles
         try
         {
-            await page.GotoAsync(cardData.DetailUrl, new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded, Timeout = 50000 });
-            // Increased from 3000 to 5000 because of  Microsoft.Playwright.PlaywrightException: 'Page crashed  Call log:  -navigating to "https://www.entase.com/@dktshumen/productions/6a04398677b1fd2da3065655", waiting until "domcontentloaded"'
+            await page.GotoAsync(cardData.DetailUrl, new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded, Timeout = 3000 });
 
             await Task.Delay(1000);
 

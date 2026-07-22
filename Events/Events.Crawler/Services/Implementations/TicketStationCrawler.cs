@@ -273,9 +273,13 @@ public class TicketStationCrawler : IWebScrapingCrawler
                             continue;
                         }
 
+                        // Use a fresh page per detail/booking navigation instead of reusing the
+                        // list page. Reusing one page across many navigations was accumulating
+                        // renderer memory and crashing the Chromium process in containers.
+                        var detailPage = await browser.NewPageAsync();
                         try
                         {
-                            var extracted = await ExtractEventDetailsAsync(page, cardData);
+                            var extracted = await ExtractEventDetailsAsync(detailPage, cardData);
                             foreach (var eventDto in extracted)
                             {
                                 if (!string.IsNullOrEmpty(eventDto.Name))
@@ -288,6 +292,10 @@ public class TicketStationCrawler : IWebScrapingCrawler
                         catch (Exception ex)
                         {
                             _logger.LogWarning(ex, "Error extracting details for: {Name}", cardData.Name);
+                        }
+                        finally
+                        {
+                            await detailPage.CloseAsync();
                         }
                     }
 

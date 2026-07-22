@@ -464,16 +464,20 @@ public class EpaygoCrawler : IWebScrapingCrawler
                 {
                     var eventDto = likelySofiaEvents[i];
 
+                    // Fix null reference warning
+                    if (string.IsNullOrEmpty(eventDto.TicketUrl))
+                    {
+                        _logger.LogWarning("Event {EventName} has null/empty TicketUrl, skipping detail extraction", eventDto.Name);
+                        continue;
+                    }
+
+                    // Use a fresh page per detail navigation instead of reusing the same page
+                    // across all events. Reusing one page across hundreds of navigations was
+                    // accumulating renderer memory and crashing the Chromium process in containers.
+                    var detailPage = await browser.NewPageAsync();
                     try
                     {
-                        // Fix null reference warning
-                        if (string.IsNullOrEmpty(eventDto.TicketUrl))
-                        {
-                            _logger.LogWarning("Event {EventName} has null/empty TicketUrl, skipping detail extraction", eventDto.Name);
-                            continue;
-                        }
-
-                        await page.GotoAsync(eventDto.TicketUrl, new PageGotoOptions
+                        await detailPage.GotoAsync(eventDto.TicketUrl, new PageGotoOptions
                         {
                             WaitUntil = WaitUntilState.DOMContentLoaded,
                             Timeout = 10000 // Further reduced timeout for speed
@@ -482,7 +486,7 @@ public class EpaygoCrawler : IWebScrapingCrawler
                         await Task.Delay(400); // Minimal delay
 
                         // Extract location from #address_t element
-                        var locationElement = await page.QuerySelectorAsync("#address_t");
+                        var locationElement = await detailPage.QuerySelectorAsync("#address_t");
                         if (locationElement != null)
                         {
                             var locationText = await locationElement.InnerTextAsync();
@@ -493,7 +497,7 @@ public class EpaygoCrawler : IWebScrapingCrawler
                         }
 
                         // Extract city from #address element, with fallback to known Sofia locations
-                        var addressElement = await page.QuerySelectorAsync("#address");
+                        var addressElement = await detailPage.QuerySelectorAsync("#address");
                         if (addressElement != null)
                         {
                             var addressText = await addressElement.InnerTextAsync();
@@ -530,6 +534,10 @@ public class EpaygoCrawler : IWebScrapingCrawler
                         _logger.LogWarning(ex, "Error extracting details for event: {EventName} at {TicketUrl}", eventDto.Name, eventDto.TicketUrl);
                         // Still keep the event - will be filtered later if needed
                         processedDetailCount++;
+                    }
+                    finally
+                    {
+                        await detailPage.CloseAsync();
                     }
                 }
 
