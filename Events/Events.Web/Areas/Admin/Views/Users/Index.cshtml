@@ -42,7 +42,7 @@
 </div>
 
 <div class="row g-3 mb-4">
-    <div class="col-md-3">
+    <div class="col-6 col-md-3">
         <div class="card stat-card border-start border-4 border-primary">
             <div class="card-body">
                 <small class="text-muted">Total users</small>
@@ -50,7 +50,7 @@
             </div>
         </div>
     </div>
-    <div class="col-md-3">
+    <div class="col-6 col-md-3">
         <div class="card stat-card border-start border-4 border-success">
             <div class="card-body">
                 <small class="text-muted">Confirmed emails</small>
@@ -58,7 +58,7 @@
             </div>
         </div>
     </div>
-    <div class="col-md-3">
+    <div class="col-6 col-md-3">
         <div class="card stat-card border-start border-4 border-warning">
             <div class="card-body">
                 <small class="text-muted">New this week</small>
@@ -66,7 +66,7 @@
             </div>
         </div>
     </div>
-    <div class="col-md-3">
+    <div class="col-6 col-md-3">
         <div class="card stat-card border-start border-4 border-danger">
             <div class="card-body">
                 <small class="text-muted">Locked accounts</small>
@@ -99,7 +99,7 @@
     <div>
         Showing
         <span class="fw-semibold">@(hasUsers ? pageStart : 0)</span>
-        –
+        -
         <span class="fw-semibold">@(hasUsers ? pageEnd : 0)</span>
         of
         <span class="fw-semibold">@Model.Users.TotalCount</span>
@@ -203,7 +203,7 @@
                                 }
                                 else
                                 {
-                                    <span>—</span>
+                                    <span>-</span>
                                 }
                             </td>
                             <td>
@@ -218,7 +218,7 @@
                                 }
                                 else
                                 {
-                                    <span>—</span>
+                                    <span>-</span>
                                 }
                             </td>
                             <td>
