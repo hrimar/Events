@@ -288,8 +288,8 @@ public class EntaseCrawler : IWebScrapingCrawler
         // Navigate to details page to get description and spectacles
         try
         {
-            await page.GotoAsync(cardData.DetailUrl, new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded, Timeout = 40000 });
-            // Increased from 3000 to 4000 because of  Microsoft.Playwright.PlaywrightException: 'Page crashed  Call log:  -navigating to "https://www.entase.com/@dktshumen/productions/6a04398677b1fd2da3065655", waiting until "domcontentloaded"'
+            await page.GotoAsync(cardData.DetailUrl, new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded, Timeout = 50000 });
+            // Increased from 3000 to 5000 because of  Microsoft.Playwright.PlaywrightException: 'Page crashed  Call log:  -navigating to "https://www.entase.com/@dktshumen/productions/6a04398677b1fd2da3065655", waiting until "domcontentloaded"'
 
             await Task.Delay(1000);
 
