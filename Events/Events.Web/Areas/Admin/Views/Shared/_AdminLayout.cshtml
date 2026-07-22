@@ -47,8 +47,34 @@
                 padding: 1rem;
             }
         }
-        .admin-sidebar.offcanvas-lg {
-            --bs-offcanvas-width: 260px;
+        /* Bootstrap 5.1 has no offcanvas-lg (responsive offcanvas was added in 5.2),
+           so the lg+ "revert to static sidebar" behavior is implemented manually below. */
+        #adminSidebar.offcanvas-start {
+            width: 260px;
+        }
+        @@media (min-width: 992px) {
+            #adminSidebar.offcanvas {
+                position: static;
+                top: auto;
+                bottom: auto;
+                left: auto;
+                z-index: auto;
+                display: block;
+                visibility: visible !important;
+                width: auto;
+                max-width: 100%;
+                transform: none;
+                transition: none;
+                box-shadow: none;
+            }
+            #adminSidebar .offcanvas-header {
+                display: none;
+            }
+            #adminSidebar .offcanvas-body {
+                display: block;
+                padding: 0;
+                overflow-y: visible;
+            }
         }
         .navbar-icon-btn {
             color: #ffffff;
@@ -154,7 +180,7 @@
 <div class="container-fluid">
     <div class="row">
         <!-- Sidebar -->
-        <div class="offcanvas offcanvas-lg offcanvas-start admin-sidebar col-lg-2" tabindex="-1" id="adminSidebar" aria-labelledby="adminSidebarLabel">
+        <div class="offcanvas offcanvas-start admin-sidebar col-lg-2" tabindex="-1" id="adminSidebar" aria-labelledby="adminSidebarLabel">
             <div class="offcanvas-header d-lg-none">
                 <h5 class="offcanvas-title" id="adminSidebarLabel">Admin Menu</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#adminSidebar" aria-label="Close"></button>
