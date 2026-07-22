@@ -47,34 +47,11 @@
                 padding: 1rem;
             }
         }
-        /* Bootstrap 5.1 has no offcanvas-lg (responsive offcanvas was added in 5.2),
-           so the lg+ "revert to static sidebar" behavior is implemented manually below. */
+        /* Bootstrap 5.1 has no offcanvas-lg (responsive offcanvas was added in 5.2), so the
+           sidebar is rendered twice below: a plain static nav for lg+ and a real Bootstrap
+           offcanvas panel (this width applies) for below lg, toggled by the hamburger button. */
         #adminSidebar.offcanvas-start {
             width: 260px;
-        }
-        @@media (min-width: 992px) {
-            #adminSidebar.offcanvas {
-                position: static;
-                top: auto;
-                bottom: auto;
-                left: auto;
-                z-index: auto;
-                display: block;
-                visibility: visible !important;
-                width: auto;
-                max-width: 100%;
-                transform: none;
-                transition: none;
-                box-shadow: none;
-            }
-            #adminSidebar .offcanvas-header {
-                display: none;
-            }
-            #adminSidebar .offcanvas-body {
-                display: block;
-                padding: 0;
-                overflow-y: visible;
-            }
         }
         .navbar-icon-btn {
             color: #ffffff;
@@ -179,75 +156,21 @@
 
 <div class="container-fluid">
     <div class="row">
-        <!-- Sidebar -->
-        <div class="offcanvas offcanvas-start admin-sidebar col-lg-2" tabindex="-1" id="adminSidebar" aria-labelledby="adminSidebarLabel">
-            <div class="offcanvas-header d-lg-none">
+        <!-- Sidebar (lg+ static column) -->
+        <nav class="d-none d-lg-block col-lg-2 admin-sidebar">
+            <div class="position-sticky pt-3">
+                @await Html.PartialAsync("_AdminSidebarNav")
+            </div>
+        </nav>
+
+        <!-- Sidebar (below lg, real Bootstrap offcanvas toggled by the hamburger button) -->
+        <div class="offcanvas offcanvas-start d-lg-none" tabindex="-1" id="adminSidebar" aria-labelledby="adminSidebarLabel">
+            <div class="offcanvas-header">
                 <h5 class="offcanvas-title" id="adminSidebarLabel">Admin Menu</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#adminSidebar" aria-label="Close"></button>
             </div>
-            <div class="offcanvas-body d-block p-0 pt-lg-3">
-                <ul class="nav flex-column">
-                    <li class="nav-item">
-                        <a class="admin-nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Dashboard" ? "active" : "")" 
-                           asp-area="Admin" asp-controller="Dashboard" asp-action="Index">
-                            <i class="fas fa-tachometer-alt me-2"></i>Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="admin-nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Events" && ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")" 
-                           asp-area="Admin" asp-controller="Events" asp-action="Index">
-                            <i class="fas fa-calendar me-2"></i>All Events
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="admin-nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Create" ? "active" : "")" 
-                           asp-area="Admin" asp-controller="Events" asp-action="Create">
-                            <i class="fas fa-plus me-2"></i>Create Event
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="admin-nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Featured" ? "active" : "")" 
-                           asp-area="Admin" asp-controller="Events" asp-action="Featured">
-                            <i class="fas fa-star me-2"></i>Featured Events
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="admin-nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Uncategorized" ? "active" : "")" 
-                           asp-area="Admin" asp-controller="Events" asp-action="Uncategorized">
-                            <i class="fas fa-question-circle me-2"></i>Uncategorized
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="admin-nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Users" ? "active" : "")" 
-                           asp-area="Admin" asp-controller="Users" asp-action="Index">
-                            <i class="fas fa-users me-2"></i>Users
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="admin-nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Tags" ? "active" : "")" 
-                           asp-area="Admin" asp-controller="Tags" asp-action="Index">
-                            <i class="fas fa-tags me-2"></i>Tags
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="admin-nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Venues" && ViewContext.RouteData.Values["action"]?.ToString() != "Unmapped" ? "active" : "")"
-                           asp-area="Admin" asp-controller="Venues" asp-action="Index">
-                            <i class="fas fa-map-marker-alt me-2"></i>Venues
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="admin-nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Unmapped" ? "active" : "")"
-                           asp-area="Admin" asp-controller="Venues" asp-action="Unmapped">
-                            <i class="fas fa-map me-2"></i>Unmapped locations
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="admin-nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "SiteContent" ? "active" : "")"
-                           asp-area="Admin" asp-controller="SiteContent" asp-action="Index">
-                            <i class="fas fa-file-lines me-2"></i>Site Content
-                        </a>
-                    </li>
-                </ul>
+            <div class="offcanvas-body p-0">
+                @await Html.PartialAsync("_AdminSidebarNav")
             </div>
         </div>
 
