@@ -237,11 +237,17 @@ public class TicketStationCrawler : IWebScrapingCrawler
                 try
                 {
                     // Load the main page
-                    await page.GotoAsync(url, new PageGotoOptions
+                    var response = await page.GotoAsync(url, new PageGotoOptions
                     {
                         WaitUntil = WaitUntilState.DOMContentLoaded,
                         Timeout = 60000
                     });
+
+                    // Production always starts from a fresh browser context (no cookies), so the
+                    // GDPR/cookie-consent banner reliably appears and can block the cards from
+                    // becoming visible. Dismiss it before waiting for .item, instead of only later
+                    // inside CollectAllPagesCardDataAsync. Safe to call again there if already dismissed.
+                    await DismissCookieConsentAsync(page);
 
                     // Wait for the item cards to load
                     try
@@ -250,7 +256,10 @@ public class TicketStationCrawler : IWebScrapingCrawler
                     }
                     catch (TimeoutException)
                     {
-                        _logger.LogWarning("TicketStation Timeout waiting for .item elements");
+                        var htmlSnippet = await page.ContentAsync();
+                        _logger.LogWarning(
+                            "TicketStation Timeout waiting for .item elements. Status={Status}, Url={Url}, HtmlSnippet={Snippet}",
+                            response?.Status, page.Url, htmlSnippet.Length > 1000 ? htmlSnippet[..1000] : htmlSnippet);
                         await Task.Delay(5000);
                     }
 
