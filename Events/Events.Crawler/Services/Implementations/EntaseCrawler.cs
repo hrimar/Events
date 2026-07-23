@@ -570,7 +570,13 @@ public class EntaseCrawler : IWebScrapingCrawler
     private CrawledEventDto? MapToStandardDto(EntaseEventDto entaseEvent, EntaseSpectacleDto spectacle)
     {
         // Even we get Events from Sofia only, we ignore spectacles witch take place out of Sofia
-        if (spectacle.Location != null && !spectacle.Location.Contains("София"))
+        // Entase started rendering location text transliterated ("Sofia" instead of "София"),
+        // so match both spellings, case-insensitively.
+        var isSofia = spectacle.Location == null
+            || spectacle.Location.Contains("София")
+            || spectacle.Location.Contains("Sofia", StringComparison.OrdinalIgnoreCase);
+
+        if (!isSofia)
         {
             _logger.LogInformation("Skipping non-Sofia spectacle for '{EventName}': Location='{Location}'", entaseEvent.Name, spectacle.Location);
             return null;

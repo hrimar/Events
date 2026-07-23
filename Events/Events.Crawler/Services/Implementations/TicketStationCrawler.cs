@@ -624,7 +624,9 @@ public class TicketStationCrawler : IWebScrapingCrawler
 
         try
         {
-            await page.WaitForSelectorAsync(".item.ev-radius.mb-3", new PageWaitForSelectorOptions { Timeout = 3000 });
+            // Matches the 8000ms wait used for the same selector on the list page (SnapshotCardDataAsync) —
+            // 3000ms was too tight in production, causing most detail pages to fall back to a stub without a date.
+            await page.WaitForSelectorAsync(".item.ev-radius.mb-3", new PageWaitForSelectorOptions { Timeout = 8000 });
         }
         catch (TimeoutException)
         {
