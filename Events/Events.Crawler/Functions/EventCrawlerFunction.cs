@@ -67,14 +67,14 @@ public class EventCrawlerFunction
 
                 // Aggregate by source after the fact, so the mixed/flat batching above stays
                 // unchanged (same order, same batch boundaries as before per-source reporting existed).
-                var foundBySource = events.GroupBy(e => e.Source).ToDictionary(g => g.Key, g => g.Count());
-
                 foreach (var sourceGroup in allOutcomes.GroupBy(o => o.Source))
                 {
                     var created = sourceGroup.Count(o => o.Type == EventOutcomeType.Created);
                     var updated = sourceGroup.Count(o => o.Type == EventOutcomeType.Updated);
                     var skipped = sourceGroup.Count(o => o.Type == EventOutcomeType.Skipped);
-                    var found = foundBySource.GetValueOrDefault(sourceGroup.Key);
+                    // Raw found count before the crawler's own city filter (e.g. Sofia-only) — from
+                    // CrawlResult.FoundBySource, not the already-filtered Events list used above.
+                    var found = crawlResult.FoundBySource.GetValueOrDefault(sourceGroup.Key);
 
                     _logger.LogInformation(
                         "[{Source}] Completed: Found={Found}, Processed={Processed}, Created={Created}, Updated={Updated}, Skipped={Skipped}",

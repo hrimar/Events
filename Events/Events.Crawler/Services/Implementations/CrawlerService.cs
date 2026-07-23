@@ -117,7 +117,8 @@ public class CrawlerService : ICrawlerService
             EventsProcessed = allResults.Sum(r => r.EventsProcessed),
             EventsSkipped = allResults.Sum(r => r.EventsSkipped),
             Duration = DateTime.UtcNow - startTime,
-            Events = allResults.SelectMany(r => r.Events).ToList()
+            Events = allResults.SelectMany(r => r.Events).ToList(),
+            FoundBySource = allResults.ToDictionary(r => r.Source, r => r.EventsFound)
         };
     }
 

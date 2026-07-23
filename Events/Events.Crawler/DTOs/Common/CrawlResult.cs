@@ -11,4 +11,8 @@ public class CrawlResult
     public int EventsSkipped { get; set; }
     public TimeSpan Duration { get; set; }
     public List<CrawledEventDto> Events { get; set; } = new();
+
+    // Raw EventsFound per source, before the per-crawler city filter — only populated
+    // on the aggregate result returned by CrawlAllSourcesAsync.
+    public Dictionary<string, int> FoundBySource { get; set; } = new();
 }
