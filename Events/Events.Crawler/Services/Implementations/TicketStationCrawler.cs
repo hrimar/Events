@@ -54,7 +54,7 @@ public class TicketStationCrawler : IWebScrapingCrawler
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error crawling TicketStation.bg");
+            _logger.LogError(ex, "[{Source}] Error crawling TicketStation.bg", SourceName);
             result.Success = false;
             result.ErrorMessage = ex.Message;
         }
@@ -110,7 +110,7 @@ public class TicketStationCrawler : IWebScrapingCrawler
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error extracting elements from {Url} with selector {Selector}", url, selector);
+            _logger.LogError(ex, "[{Source}] Error extracting elements from {Url} with selector {Selector}", SourceName, url, selector);
             throw;
         }
     }
@@ -146,7 +146,7 @@ public class TicketStationCrawler : IWebScrapingCrawler
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting page content from {Url}", url);
+            _logger.LogError(ex, "[{Source}] Error getting page content from {Url}", SourceName, url);
             throw;
         }
     }
@@ -166,21 +166,21 @@ public class TicketStationCrawler : IWebScrapingCrawler
 
             try
             {
-                _logger.LogInformation("Checking Playwright browser installation...");
+                _logger.LogInformation("[{Source}] Checking Playwright browser installation...", SourceName);
 
                 var chromiumPath = PlaywrightHelper.GetChromiumExecutablePath();
                 if (string.IsNullOrEmpty(chromiumPath) || !File.Exists(chromiumPath))
                 {
-                    _logger.LogWarning("Playwright browsers not found. Attempting to install...");
+                    _logger.LogWarning("[{Source}] Playwright browsers not found. Attempting to install...", SourceName);
                     InstallPlaywrightBrowsers();
                 }
 
                 _browsersInstalled = true;
-                _logger.LogInformation("Playwright browsers are ready");
+                _logger.LogInformation("[{Source}] Playwright browsers are ready", SourceName);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to ensure Playwright browsers are installed");
+                _logger.LogError(ex, "[{Source}] Failed to ensure Playwright browsers are installed", SourceName);
                 throw new InvalidOperationException("Playwright browsers are not installed. Please run 'npx playwright install chromium' manually.", ex);
             }
         }
@@ -214,7 +214,7 @@ public class TicketStationCrawler : IWebScrapingCrawler
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error installing Playwright browsers");
+            _logger.LogError(ex, "[{Source}] Error installing Playwright browsers", SourceName);
             throw;
         }
     }
@@ -257,8 +257,7 @@ public class TicketStationCrawler : IWebScrapingCrawler
                     catch (TimeoutException)
                     {
                         var htmlSnippet = await page.ContentAsync();
-                        _logger.LogWarning(
-                            "TicketStation Timeout waiting for .item elements. Status={Status}, Url={Url}, HtmlSnippet={Snippet}",
+                        _logger.LogWarning("[{Source}] Timeout waiting for .item elements. Status={Status}, Url={Url}, HtmlSnippet={Snippet}", SourceName,
                             response?.Status, page.Url, htmlSnippet.Length > 1000 ? htmlSnippet[..1000] : htmlSnippet);
                         await Task.Delay(5000);
                     }
@@ -267,7 +266,7 @@ public class TicketStationCrawler : IWebScrapingCrawler
 
                     // Phase 1: Collect cards from all pages (DOM snapshot + tc:gt API)
                     var cardDataList = await CollectAllPagesCardDataAsync(page, url);
-                    _logger.LogInformation("Snapshotted {Count} total card references across all pages", cardDataList.Count);
+                    _logger.LogInformation("[{Source}] Snapshotted {Count} total card references across all pages", SourceName, cardDataList.Count);
 
                     // Wait for any pending fetch/network activity from Phase 1 to settle
                     // before starting GotoAsync calls in Phase 2 — prevents ERR_ABORTED
@@ -281,7 +280,7 @@ public class TicketStationCrawler : IWebScrapingCrawler
                     {
                         if (!IsSofiaCity(cardData.City?.Trim().ToLowerInvariant() ?? ""))
                         {
-                            _logger.LogDebug("Skipping non-Sofia card: {Name} in {City}", cardData.Name, cardData.City);
+                            _logger.LogDebug("[{Source}] Skipping non-Sofia card: {Name} in {City}", SourceName, cardData.Name, cardData.City);
                             continue;
                         }
 
@@ -297,13 +296,13 @@ public class TicketStationCrawler : IWebScrapingCrawler
                                 if (!string.IsNullOrEmpty(eventDto.Name))
                                 {
                                     events.Add(eventDto);
-                                    _logger.LogDebug("Extracted TicketStation event: {Name} on {Date} in {City}", eventDto.Name, eventDto.Date, eventDto.City);
+                                    _logger.LogDebug("[{Source}] Extracted TicketStation event: {Name} on {Date} in {City}", SourceName, eventDto.Name, eventDto.Date, eventDto.City);
                                 }
                             }
                         }
                         catch (Exception ex)
                         {
-                            _logger.LogWarning(ex, "Error extracting details for: {Name}", cardData.Name);
+                            _logger.LogWarning(ex, "[{Source}] Error extracting details for: {Name}", SourceName, cardData.Name);
                         }
                         finally
                         {
@@ -321,7 +320,7 @@ public class TicketStationCrawler : IWebScrapingCrawler
             catch (Exception ex)
             {
                 retryCount++;
-                _logger.LogWarning(ex, "Attempt {Retry} failed for TicketStation crawl", retryCount);
+                _logger.LogWarning(ex, "[{Source}] Attempt {Retry} failed for TicketStation crawl", SourceName, retryCount);
 
                 if (retryCount >= _maxRetries)
                     throw;
@@ -347,10 +346,10 @@ public class TicketStationCrawler : IWebScrapingCrawler
         // Page 1 is already loaded in the browser
         var page1Cards = await SnapshotCardDataAsync(page, baseUrl);
         allCards.AddRange(page1Cards);
-        _logger.LogInformation("Page 1: snapshotted {Count} cards", page1Cards.Count);
+        _logger.LogInformation("[{Source}] Page 1: snapshotted {Count} cards", SourceName, page1Cards.Count);
 
         var pageNumbers = await GetPaginationPageNumbersAsync(page);
-        _logger.LogInformation("Pagination pages found: {Pages}", string.Join(", ", pageNumbers));
+        _logger.LogInformation("[{Source}] Pagination pages found: {Pages}", SourceName, string.Join(", ", pageNumbers));
 
         foreach (var pageNum in pageNumbers)
         {
@@ -378,11 +377,11 @@ public class TicketStationCrawler : IWebScrapingCrawler
                 try
                 {
                     await responseTask;
-                    _logger.LogDebug("tc:gt response received for page {Page}", pageNum);
+                    _logger.LogDebug("[{Source}] tc:gt response received for page {Page}", SourceName, pageNum);
                 }
                 catch (TimeoutException)
                 {
-                    _logger.LogWarning("No tc:gt response detected after clicking page {Page}", pageNum);
+                    _logger.LogWarning("[{Source}] No tc:gt response detected after clicking page {Page}", SourceName, pageNum);
                 }
 
                 // Log active pagination page for diagnostics
@@ -390,18 +389,18 @@ public class TicketStationCrawler : IWebScrapingCrawler
                     const active = document.querySelector('ul.pagination li.page-item.active a.page-link');
                     return active ? active.innerText.trim() : null;
                 }");
-                _logger.LogInformation("Active pagination page after click: {ActivePage} (expected: {Expected})", activePage, pageNum);
+                _logger.LogInformation("[{Source}] Active pagination page after click: {ActivePage} (expected: {Expected})", SourceName, activePage, pageNum);
 
                 // Wait for DOM cards to update
                 await WaitForCardsToRefreshAsync(page, hrefsBefore);
 
                 var pageCards = await SnapshotCardDataAsync(page, baseUrl);
                 allCards.AddRange(pageCards);
-                _logger.LogInformation("Page {PageNum}: snapshotted {Count} cards", pageNum, pageCards.Count);
+                _logger.LogInformation("[{Source}] Page {PageNum}: snapshotted {Count} cards", SourceName, pageNum, pageCards.Count);
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Error collecting cards from pagination page {Page}", pageNum);
+                _logger.LogWarning(ex, "[{Source}] Error collecting cards from pagination page {Page}", SourceName, pageNum);
             }
         }
 
@@ -413,11 +412,11 @@ public class TicketStationCrawler : IWebScrapingCrawler
             if (seen.Add(card.DetailUrl))
                 deduplicated.Add(card);
             else
-                _logger.LogDebug("Duplicate card skipped: {Name} ({Url})", card.Name, card.DetailUrl);
+                _logger.LogDebug("[{Source}] Duplicate card skipped: {Name} ({Url})", SourceName, card.Name, card.DetailUrl);
         }
 
         if (deduplicated.Count < allCards.Count)
-            _logger.LogInformation("Deduplication removed {Count} duplicate cards ({Total} → {Unique})",
+            _logger.LogInformation("[{Source}] Deduplication removed {Count} duplicate cards ({Total} → {Unique})", SourceName,
                 allCards.Count - deduplicated.Count, allCards.Count, deduplicated.Count);
 
         return deduplicated;
@@ -451,12 +450,12 @@ public class TicketStationCrawler : IWebScrapingCrawler
                 {
                     await Task.Delay(2000);
                 }
-                _logger.LogInformation("Cookie consent dismissed");
+                _logger.LogInformation("[{Source}] Cookie consent dismissed", SourceName);
             }
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Could not dismiss cookie consent — will attempt pagination anyway");
+            _logger.LogWarning(ex, "[{Source}] Could not dismiss cookie consent — will attempt pagination anyway", SourceName);
         }
     }
 
@@ -483,7 +482,7 @@ public class TicketStationCrawler : IWebScrapingCrawler
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Error reading pagination links");
+            _logger.LogWarning(ex, "[{Source}] Error reading pagination links", SourceName);
         }
 
         return result;
@@ -533,7 +532,7 @@ public class TicketStationCrawler : IWebScrapingCrawler
         }
 
         // Fallback: pagination may not have changed the visible cards
-        _logger.LogWarning("Card set did not change after pagination click within {Timeout}s — proceeding anyway", timeout.TotalSeconds);
+        _logger.LogWarning("[{Source}] Card set did not change after pagination click within {Timeout}s — proceeding anyway", SourceName, timeout.TotalSeconds);
         await Task.Delay(2000);
     }
 
@@ -552,7 +551,7 @@ public class TicketStationCrawler : IWebScrapingCrawler
         }
         catch (TimeoutException)
         {
-            _logger.LogWarning("No .item.ev-radius.mb-3 elements found on page before snapshot");
+            _logger.LogWarning("[{Source}] No .item.ev-radius.mb-3 elements found on page before snapshot", SourceName);
             return [];
         }
 
@@ -574,7 +573,7 @@ public class TicketStationCrawler : IWebScrapingCrawler
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Card snapshot failed");
+            _logger.LogWarning(ex, "[{Source}] Card snapshot failed", SourceName);
             return [];
         }
 
@@ -639,7 +638,7 @@ public class TicketStationCrawler : IWebScrapingCrawler
         }
         catch (TimeoutException)
         {
-            _logger.LogWarning("No .item.ev-radius.mb-3 appeared on detail page for: {Name}", cardData.Name);
+            _logger.LogWarning("[{Source}] No .item.ev-radius.mb-3 appeared on detail page for: {Name}", SourceName, cardData.Name);
             results.Add(new TicketStationEventDto { Name = cardData.Name, City = cardData.City, ImageUrl = cardData.ImageUrl, Url = "https://ticketstation.bg" });
             return results;
         }
@@ -648,7 +647,7 @@ public class TicketStationCrawler : IWebScrapingCrawler
 
         if (itemElements.Count == 0)
         {
-            _logger.LogWarning("No .item.ev-radius.mb-3 found on detail page for: {Name}", cardData.Name);
+            _logger.LogWarning("[{Source}] No .item.ev-radius.mb-3 found on detail page for: {Name}", SourceName, cardData.Name);
             results.Add(new TicketStationEventDto { Name = cardData.Name, City = cardData.City, ImageUrl = cardData.ImageUrl, Url = "https://ticketstation.bg" });
             return results;
         }
@@ -662,7 +661,7 @@ public class TicketStationCrawler : IWebScrapingCrawler
         if (itemElements.Count > 1)
         {
             // Sub-cards case: multiple date slots
-            _logger.LogInformation("Event '{Name}' has {Count} date sub-cards — processing each", cardData.Name, itemElements.Count);
+            _logger.LogInformation("[{Source}] Event '{Name}' has {Count} date sub-cards — processing each", SourceName, cardData.Name, itemElements.Count);
 
             var subCardJson = await page.EvaluateAsync<string>(@"() =>
                 JSON.stringify(Array.from(document.querySelectorAll('.item.ev-radius.mb-3')).map(card => ({
@@ -698,7 +697,7 @@ public class TicketStationCrawler : IWebScrapingCrawler
             // Single date — navigate to the booking page
             if (string.IsNullOrEmpty(firstHref))
             {
-                _logger.LogWarning("No href in .item.ev-radius.mb-3 on detail page for: {Name}", cardData.Name);
+                _logger.LogWarning("[{Source}] No href in .item.ev-radius.mb-3 on detail page for: {Name}", SourceName, cardData.Name);
                 results.Add(new TicketStationEventDto { Name = cardData.Name, City = cardData.City, ImageUrl = cardData.ImageUrl, Url = "https://ticketstation.bg" });
                 return results;
             }
@@ -760,11 +759,11 @@ public class TicketStationCrawler : IWebScrapingCrawler
             if (extractedDate.HasValue)
             {
                 eventDto.Date = extractedDate.Value.ToString("yyyy-MM-dd");
-                _logger.LogDebug("Parsed date {Date} for: {Name}", eventDto.Date, eventDto.Name);
+                _logger.LogDebug("[{Source}] Parsed date {Date} for: {Name}", SourceName, eventDto.Date, eventDto.Name);
             }
             else
             {
-                _logger.LogWarning("Could not extract date for: {Name}", eventDto.Name);
+                _logger.LogWarning("[{Source}] Could not extract date for: {Name}", SourceName, eventDto.Name);
             }
         }
 
@@ -777,7 +776,7 @@ public class TicketStationCrawler : IWebScrapingCrawler
         var city = ticketStationEvent.City?.Trim().ToLowerInvariant();
         if (string.IsNullOrEmpty(city) || !IsSofiaCity(city))
         {
-            _logger.LogDebug("Filtering out non-Sofia event: {EventName} in {City}", ticketStationEvent.Name, ticketStationEvent.City);
+            _logger.LogDebug("[{Source}] Filtering out non-Sofia event: {EventName} in {City}", SourceName, ticketStationEvent.Name, ticketStationEvent.City);
             return null; // Skip non-Sofia events
         }
 
@@ -846,7 +845,7 @@ public class TicketStationCrawler : IWebScrapingCrawler
             return parsedDate;
         }
 
-        _logger.LogDebug("Could not parse date: {DateText}", dateText);
+        _logger.LogDebug("[{Source}] Could not parse date: {DateText}", SourceName, dateText);
         return null;
     }
 
@@ -871,7 +870,7 @@ public class TicketStationCrawler : IWebScrapingCrawler
 
             if (matches.Count == 0)
             {
-                _logger.LogDebug("No EUR prices found in text: {Text}", text);
+                _logger.LogDebug("[{Source}] No EUR prices found in text: {Text}", SourceName, text);
                 return null;
             }
 
@@ -892,19 +891,19 @@ public class TicketStationCrawler : IWebScrapingCrawler
 
             if (prices.Count == 0)
             {
-                _logger.LogDebug("No valid EUR prices could be parsed from text");
+                _logger.LogDebug("[{Source}] No valid EUR prices could be parsed from text", SourceName);
                 return null;
             }
 
             // Return the lowest price
             var lowestPrice = prices.Min();
-            _logger.LogDebug("Extracted lowest price: {LowestPrice} EUR from {TotalPrices} prices found", lowestPrice, prices.Count);
+            _logger.LogDebug("[{Source}] Extracted lowest price: {LowestPrice} EUR from {TotalPrices} prices found", SourceName, lowestPrice, prices.Count);
 
             return lowestPrice;
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Error extracting EUR price from text: {Text}", text);
+            _logger.LogWarning(ex, "[{Source}] Error extracting EUR price from text: {Text}", SourceName, text);
             return null;
         }
     }
@@ -1108,7 +1107,7 @@ public class TicketStationCrawler : IWebScrapingCrawler
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Error extracting date from description: {Description}", description?.Substring(0, Math.Min(50, description?.Length ?? 0)));
+            _logger.LogWarning(ex, "[{Source}] Error extracting date from description: {Description}", SourceName, description?.Substring(0, Math.Min(50, description?.Length ?? 0)));
             return null;
         }
     }
@@ -1131,7 +1130,7 @@ public class TicketStationCrawler : IWebScrapingCrawler
                 // Ignore dates more than 3 years in the past (likely historical references)
                 if (parsedDate < currentDate.AddYears(-3))
                 {
-                    _logger.LogDebug("Ignoring historical date (older than 3 years): {Date}", parsedDate.ToString("yyyy-MM-dd"));
+                    _logger.LogDebug("[{Source}] Ignoring historical date (older than 3 years): {Date}", SourceName, parsedDate.ToString("yyyy-MM-dd"));
                     return false;
                 }
 

@@ -98,11 +98,11 @@ public class EpaygoCrawler : IWebScrapingCrawler
             result.EventsProcessed = sofiaEvents.Count;
             result.Success = true;
 
-            _logger.LogInformation("Crawled {TotalEvents} events from Epaygo, {SofiaEvents} in Sofia", epaygoEvents.Count, sofiaEvents.Count);
+            _logger.LogInformation("[{Source}] Crawled {TotalEvents} events from Epaygo, {SofiaEvents} in Sofia", SourceName, epaygoEvents.Count, sofiaEvents.Count);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error crawling Epaygo.bg");
+            _logger.LogError(ex, "[{Source}] Error crawling Epaygo.bg", SourceName);
             result.Success = false;
             result.ErrorMessage = ex.Message;
         }
@@ -158,7 +158,7 @@ public class EpaygoCrawler : IWebScrapingCrawler
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error extracting elements from {Url} with selector {Selector}", url, selector);
+            _logger.LogError(ex, "[{Source}] Error extracting elements from {Url} with selector {Selector}", SourceName, url, selector);
             throw;
         }
     }
@@ -194,7 +194,7 @@ public class EpaygoCrawler : IWebScrapingCrawler
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting page content from {Url}", url);
+            _logger.LogError(ex, "[{Source}] Error getting page content from {Url}", SourceName, url);
             throw;
         }
     }
@@ -233,7 +233,7 @@ public class EpaygoCrawler : IWebScrapingCrawler
             }
             catch (TimeoutException)
             {
-                _logger.LogWarning("Timeout waiting for .event_content_box elements");
+                _logger.LogWarning("[{Source}] Timeout waiting for .event_content_box elements", SourceName);
                 await Task.Delay(3000); // Reduced from 5000
             }
 
@@ -241,7 +241,7 @@ public class EpaygoCrawler : IWebScrapingCrawler
 
             // Process elements in smaller batch size
             var totalElements = await page.EvaluateAsync<int>("document.querySelectorAll('.event_content_box').length");
-            _logger.LogInformation("Found {EventCount} event content boxes", totalElements);
+            _logger.LogInformation("[{Source}] Found {EventCount} event content boxes", SourceName, totalElements);
 
             var events = new List<EpaygoEventDto>();
             const int batchSize = 30; // Increased from 20 for better balance
@@ -249,7 +249,7 @@ public class EpaygoCrawler : IWebScrapingCrawler
             for (int batchStart = 0; batchStart < totalElements; batchStart += batchSize)
             {
                 var batchEnd = Math.Min(batchStart + batchSize, totalElements);
-                _logger.LogDebug("Processing batch {Start}-{End} of {Total}", batchStart + 1, batchEnd, totalElements);
+                _logger.LogDebug("[{Source}] Processing batch {Start}-{End} of {Total}", SourceName, batchStart + 1, batchEnd, totalElements);
 
                 // Get fresh elements for each batch
                 var batchElements = await page.QuerySelectorAllAsync($".event_content_box:nth-child(n+{batchStart + 1}):nth-child(-n+{batchEnd})");
@@ -298,7 +298,7 @@ public class EpaygoCrawler : IWebScrapingCrawler
                             }
                             catch (Exception ex)
                             {
-                                _logger.LogDebug("Error extracting image/ticket URL: {Error}", ex.Message);
+                                _logger.LogDebug("[{Source}] Error extracting image/ticket URL: {Error}", SourceName, ex.Message);
                             }
                         }
 
@@ -337,7 +337,7 @@ public class EpaygoCrawler : IWebScrapingCrawler
                         }
                         catch (Exception ex)
                         {
-                            _logger.LogDebug("Error extracting dates: {Error}", ex.Message);
+                            _logger.LogDebug("[{Source}] Error extracting dates: {Error}", SourceName, ex.Message);
                         }
 
                         // Extract name from .headline_text_t_all element
@@ -351,7 +351,7 @@ public class EpaygoCrawler : IWebScrapingCrawler
                         }
                         catch (Exception ex)
                         {
-                            _logger.LogDebug("Error extracting name: {Error}", ex.Message);
+                            _logger.LogDebug("[{Source}] Error extracting name: {Error}", SourceName, ex.Message);
                         }
 
                         // Fallback URL extraction if not found in order button
@@ -379,7 +379,7 @@ public class EpaygoCrawler : IWebScrapingCrawler
                             }
                             catch (Exception ex)
                             {
-                                _logger.LogDebug("Error extracting fallback URL: {Error}", ex.Message);
+                                _logger.LogDebug("[{Source}] Error extracting fallback URL: {Error}", SourceName, ex.Message);
                             }
                         }
 
@@ -391,7 +391,7 @@ public class EpaygoCrawler : IWebScrapingCrawler
                         }
                         catch (Exception ex)
                         {
-                            _logger.LogDebug("Error extracting description: {Error}", ex.Message);
+                            _logger.LogDebug("[{Source}] Error extracting description: {Error}", SourceName, ex.Message);
                             eventDto.Description = eventDto.Name; // Fallback
                         }
 
@@ -413,12 +413,12 @@ public class EpaygoCrawler : IWebScrapingCrawler
                         if (!string.IsNullOrEmpty(eventDto.Name))
                         {
                             events.Add(eventDto);
-                            _logger.LogDebug("Extracted event: {EventName} on {EventDate}", eventDto.Name, eventDto.Date);
+                            _logger.LogDebug("[{Source}] Extracted event: {EventName} on {EventDate}", SourceName, eventDto.Name, eventDto.Date);
                         }
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogDebug(ex, "Error extracting event data from element");
+                        _logger.LogDebug(ex, "[{Source}] Error extracting event data from element", SourceName);
                     }
                 }
 
@@ -434,15 +434,15 @@ public class EpaygoCrawler : IWebScrapingCrawler
                     GC.Collect();
                     GC.WaitForPendingFinalizers();
                     await Task.Delay(200); // Brief pause
-                    _logger.LogDebug("Memory cleanup after processing {ProcessedCount} elements", batchStart);
+                    _logger.LogDebug("[{Source}] Memory cleanup after processing {ProcessedCount} elements", SourceName, batchStart);
                 }
             }
 
-            _logger.LogInformation("Epaygo Phase 1 complete: Found {EventCount} events with basic data", events.Count);
+            _logger.LogInformation("[{Source}] Epaygo Phase 1 complete: Found {EventCount} events with basic data", SourceName, events.Count);
 
             // Phase 2: Extract city and location info - with name-based pre-filtering
             var eventsNeedingDetails = events.Where(e => !string.IsNullOrEmpty(e.TicketUrl)).ToList();
-            _logger.LogInformation("Epaygo Phase 2: Pre-filtering {EventCount} events before city/location extraction", eventsNeedingDetails.Count);
+            _logger.LogInformation("[{Source}] Epaygo Phase 2: Pre-filtering {EventCount} events before city/location extraction", SourceName, eventsNeedingDetails.Count);
 
             // Smart name-based pre-filtering: Skip events with other city names in the title
             var likelySofiaEvents = eventsNeedingDetails.Where(e => !IsObviouslyNonSofiaEvent(e)).ToList();
@@ -450,10 +450,10 @@ public class EpaygoCrawler : IWebScrapingCrawler
 
             if (skippedNonSofiaCount > 0)
             {
-                _logger.LogInformation("Emaoygo Pre-filtered out {SkippedCount} events based on city names in titles", skippedNonSofiaCount);
+                _logger.LogInformation("[{Source}] Emaoygo Pre-filtered out {SkippedCount} events based on city names in titles", SourceName, skippedNonSofiaCount);
             }
 
-            _logger.LogInformation("Epaygo Phase 2: Processing {EventCount} events for city/location data", likelySofiaEvents.Count);
+            _logger.LogInformation("[{Source}] Epaygo Phase 2: Processing {EventCount} events for city/location data", SourceName, likelySofiaEvents.Count);
 
             const int detailBatchSize = 20; // Increased batch size for efficiency
             var processedDetailCount = 0;
@@ -461,7 +461,7 @@ public class EpaygoCrawler : IWebScrapingCrawler
             for (int batchStart = 0; batchStart < likelySofiaEvents.Count; batchStart += detailBatchSize)
             {
                 var batchEnd = Math.Min(batchStart + detailBatchSize, likelySofiaEvents.Count);
-                _logger.LogDebug("Processing detail batch {Start}-{End} of {Total}", batchStart + 1, batchEnd, likelySofiaEvents.Count);
+                _logger.LogDebug("[{Source}] Processing detail batch {Start}-{End} of {Total}", SourceName, batchStart + 1, batchEnd, likelySofiaEvents.Count);
 
                 for (int i = batchStart; i < batchEnd; i++)
                 {
@@ -470,7 +470,7 @@ public class EpaygoCrawler : IWebScrapingCrawler
                     // Fix null reference warning
                     if (string.IsNullOrEmpty(eventDto.TicketUrl))
                     {
-                        _logger.LogWarning("Event {EventName} has null/empty TicketUrl, skipping detail extraction", eventDto.Name);
+                        _logger.LogWarning("[{Source}] Event {EventName} has null/empty TicketUrl, skipping detail extraction", SourceName, eventDto.Name);
                         continue;
                     }
 
@@ -516,25 +516,25 @@ public class EpaygoCrawler : IWebScrapingCrawler
                                 {
                                     // Address does not mention Sofia, but the location is a well-known Sofia venue
                                     eventDto.City = "София";
-                                    _logger.LogDebug("City resolved to Sofia via known location: {Location} for event: {EventName}",
+                                    _logger.LogDebug("[{Source}] City resolved to Sofia via known location: {Location} for event: {EventName}", SourceName,
                                         eventDto.Location, eventDto.Name);
                                 }
                                 else
                                 {
                                     eventDto.City = null;
-                                    _logger.LogDebug("Non-Sofia event: {EventName} at {Address}, location: {Location}",
+                                    _logger.LogDebug("[{Source}] Non-Sofia event: {EventName} at {Address}, location: {Location}", SourceName,
                                         eventDto.Name, addressText, eventDto.Location ?? "unknown");
                                 }
                             }
                         }
 
                         processedDetailCount++;
-                        _logger.LogDebug("Processed event {Count}/{Total}: {EventName} in {City}",
+                        _logger.LogDebug("[{Source}] Processed event {Count}/{Total}: {EventName} in {City}", SourceName,
                             processedDetailCount, likelySofiaEvents.Count, eventDto.Name, eventDto.City ?? "Unknown");
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogWarning(ex, "Error extracting details for event: {EventName} at {TicketUrl}", eventDto.Name, eventDto.TicketUrl);
+                        _logger.LogWarning(ex, "[{Source}] Error extracting details for event: {EventName} at {TicketUrl}", SourceName, eventDto.Name, eventDto.TicketUrl);
                         // Still keep the event - will be filtered later if needed
                         processedDetailCount++;
                     }
@@ -555,7 +555,7 @@ public class EpaygoCrawler : IWebScrapingCrawler
                 {
                     GC.Collect();
                     GC.WaitForPendingFinalizers();
-                    _logger.LogDebug("Memory cleanup after processing {ProcessedCount} detail events", processedDetailCount);
+                    _logger.LogDebug("[{Source}] Memory cleanup after processing {ProcessedCount} detail events", SourceName, processedDetailCount);
                 }
             }
 
@@ -566,7 +566,7 @@ public class EpaygoCrawler : IWebScrapingCrawler
                 eventDto.City = null; // Will be filtered out in MapEpaygoToStandardDto
             }
 
-            _logger.LogInformation("Successfully processed {EventCount} events from Epaygo ({ProcessedDetails} with full details, {PreFiltered} pre-filtered)",
+            _logger.LogInformation("[{Source}] Successfully processed {EventCount} events from Epaygo ({ProcessedDetails} with full details, {PreFiltered} pre-filtered)", SourceName,
                 events.Count, processedDetailCount, nonProcessedEvents.Count);
             return events;
         }
@@ -583,7 +583,7 @@ public class EpaygoCrawler : IWebScrapingCrawler
             (!epaygoEvent.City.ToLowerInvariant().Contains("софия") &&
              !epaygoEvent.City.ToLowerInvariant().Contains("sofia")))
         {
-            _logger.LogDebug("Filtering out non-Sofia event: {EventName} in {City}", epaygoEvent.Name, epaygoEvent.City ?? "Unknown");
+            _logger.LogDebug("[{Source}] Filtering out non-Sofia event: {EventName} in {City}", SourceName, epaygoEvent.Name, epaygoEvent.City ?? "Unknown");
             return null; // Skip non-Sofia events
         }
 
@@ -667,7 +667,7 @@ public class EpaygoCrawler : IWebScrapingCrawler
             return parsedDate;
         }
 
-        _logger.LogDebug("Could not parse date: {DateText}", dateText);
+        _logger.LogDebug("[{Source}] Could not parse date: {DateText}", SourceName, dateText);
         return DateTime.MinValue; // 0001-01-01 for invalid date
     }
 
@@ -726,7 +726,7 @@ public class EpaygoCrawler : IWebScrapingCrawler
         }
         catch (Exception ex)
         {
-            _logger.LogDebug(ex, "Error parsing Bulgarian date: {DateText}", dateText);
+            _logger.LogDebug(ex, "[{Source}] Error parsing Bulgarian date: {DateText}", SourceName, dateText);
             return null;
         }
     }
@@ -756,14 +756,14 @@ public class EpaygoCrawler : IWebScrapingCrawler
             // Parse day
             if (!int.TryParse(dayStr, out int day) || day < 1 || day > 31)
             {
-                _logger.LogDebug("Invalid day: {Day}", dayStr);
+                _logger.LogDebug("[{Source}] Invalid day: {Day}", SourceName, dayStr);
                 return null;
             }
 
             // Find month using static dictionary
             if (!BulgarianMonths.TryGetValue(monthStr, out int month))
             {
-                _logger.LogDebug("Unknown Bulgarian month: {Month}", monthStr);
+                _logger.LogDebug("[{Source}] Unknown Bulgarian month: {Month}", SourceName, monthStr);
                 return null;
             }
 
@@ -789,19 +789,19 @@ public class EpaygoCrawler : IWebScrapingCrawler
             // Check for validity of the date
             if (!IsValidDate(year, month, day))
             {
-                _logger.LogDebug("Invalid date: {Year}-{Month:D2}-{Day:D2}", year, month, day);
+                _logger.LogDebug("[{Source}] Invalid date: {Year}-{Month:D2}-{Day:D2}", SourceName, year, month, day);
                 return null;
             }
 
             var parsedDate = new DateTime(year, month, day);
 
-            _logger.LogDebug("Parsed Bulgarian date '{DateText}' as {ParsedDate}", dateText, parsedDate.ToString("yyyy-MM-dd"));
+            _logger.LogDebug("[{Source}] Parsed Bulgarian date '{DateText}' as {ParsedDate}", SourceName, dateText, parsedDate.ToString("yyyy-MM-dd"));
 
             return parsedDate;
         }
         catch (Exception ex)
         {
-            _logger.LogDebug(ex, "Error parsing single Bulgarian date: {DateText}", dateText);
+            _logger.LogDebug(ex, "[{Source}] Error parsing single Bulgarian date: {DateText}", SourceName, dateText);
             return null;
         }
     }
@@ -829,21 +829,21 @@ public class EpaygoCrawler : IWebScrapingCrawler
 
             try
             {
-                _logger.LogInformation("Checking Playwright browser installation...");
+                _logger.LogInformation("[{Source}] Checking Playwright browser installation...", SourceName);
 
                 var chromiumPath = GetChromiumPath();
                 if (string.IsNullOrEmpty(chromiumPath) || !File.Exists(chromiumPath))
                 {
-                    _logger.LogWarning("Playwright browsers not found. Attempting to install...");
+                    _logger.LogWarning("[{Source}] Playwright browsers not found. Attempting to install...", SourceName);
                     InstallPlaywrightBrowsers();
                 }
 
                 _browsersInstalled = true;
-                _logger.LogInformation("Playwright browsers are ready");
+                _logger.LogInformation("[{Source}] Playwright browsers are ready", SourceName);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to ensure Playwright browsers are installed");
+                _logger.LogError(ex, "[{Source}] Failed to ensure Playwright browsers are installed", SourceName);
                 throw new InvalidOperationException("Playwright browsers are not installed. Please run 'npx playwright install chromium' manually.", ex);
             }
         }
@@ -877,7 +877,7 @@ public class EpaygoCrawler : IWebScrapingCrawler
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error installing Playwright browsers");
+            _logger.LogError(ex, "[{Source}] Error installing Playwright browsers", SourceName);
             throw;
         }
     }
@@ -919,7 +919,7 @@ public class EpaygoCrawler : IWebScrapingCrawler
         {
             if (name.Contains(city))
             {
-                _logger.LogDebug("Pre-filtered out non-Sofia event based on city in name: {EventName}", eventDto.Name);
+                _logger.LogDebug("[{Source}] Pre-filtered out non-Sofia event based on city in name: {EventName}", SourceName, eventDto.Name);
                 return true; // This is obviously a non-Sofia event
             }
         }

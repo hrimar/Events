@@ -54,11 +54,11 @@ public class BiletBgApiCrawler : IHttpApiCrawler
             result.EventsProcessed = sofiaEvents.Count;
             result.Success = true;
 
-            _logger.LogInformation("Crawled {TotalEvents} events from Bilet.bg, {SofiaEvents} in Sofia", events.Count, sofiaEvents.Count);
+            _logger.LogInformation("[{Source}] Crawled {TotalEvents} events from Bilet.bg, {SofiaEvents} in Sofia", SourceName, events.Count, sofiaEvents.Count);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error crawling Bilet.bg");
+            _logger.LogError(ex, "[{Source}] Error crawling Bilet.bg", SourceName);
             result.Success = false;
             result.ErrorMessage = ex.Message;
         }
@@ -150,7 +150,7 @@ public class BiletBgApiCrawler : IHttpApiCrawler
         {
             if (IsSlugForNonSofiaCity(biletEvent.Slug))
             {
-                _logger.LogDebug("Filtering out event {EventName} ({EventId}) due to slug hinting a non-Sofia city: {Slug}",
+                _logger.LogDebug("[{Source}] Filtering out event {EventName} ({EventId}) due to slug hinting a non-Sofia city: {Slug}", SourceName,
                     biletEvent.Name,
                     biletEvent.Id,
                     biletEvent.Slug);
@@ -162,7 +162,7 @@ public class BiletBgApiCrawler : IHttpApiCrawler
 
         if (!IsSofiaCity(city))
         {
-            _logger.LogDebug("Filtering out non-Sofia event: {EventName} in {City}", biletEvent.Name, biletEvent.Place?.City);
+            _logger.LogDebug("[{Source}] Filtering out non-Sofia event: {EventName} in {City}", SourceName, biletEvent.Name, biletEvent.Place?.City);
             return null; // Skip non-Sofia events
         }
 

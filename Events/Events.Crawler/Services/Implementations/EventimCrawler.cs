@@ -55,11 +55,11 @@ public class EventimCrawler : IWebScrapingCrawler
             result.EventsProcessed = sofiaEvents.Count;
             result.Success = true;
 
-            _logger.LogInformation("Crawled {TotalEvents} events from Eventim, {SofiaEvents} in Sofia", eventimEvents.Count, sofiaEvents.Count);
+            _logger.LogInformation("[{Source}] Crawled {TotalEvents} events from Eventim, {SofiaEvents} in Sofia", SourceName, eventimEvents.Count, sofiaEvents.Count);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error crawling Eventim.bg");
+            _logger.LogError(ex, "[{Source}] Error crawling Eventim.bg", SourceName);
             result.Success = false;
             result.ErrorMessage = ex.Message;
         }
@@ -115,7 +115,7 @@ public class EventimCrawler : IWebScrapingCrawler
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error extracting elements from {Url} with selector {Selector}", url, selector);
+            _logger.LogError(ex, "[{Source}] Error extracting elements from {Url} with selector {Selector}", SourceName, url, selector);
             throw;
         }
     }
@@ -151,7 +151,7 @@ public class EventimCrawler : IWebScrapingCrawler
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting page content from {Url}", url);
+            _logger.LogError(ex, "[{Source}] Error getting page content from {Url}", SourceName, url);
             throw;
         }
     }
@@ -216,7 +216,7 @@ public class EventimCrawler : IWebScrapingCrawler
                         });
                     ");
 
-                    _logger.LogInformation("Loading Eventim main page...");
+                    _logger.LogInformation("[{Source}] Loading Eventim main page...", SourceName);
 
                     await page.GotoAsync("https://www.eventim.bg/bg/tursi/?lang=bg", new PageGotoOptions
                     {
@@ -224,7 +224,7 @@ public class EventimCrawler : IWebScrapingCrawler
                         Timeout = 60000
                     });
 
-                    _logger.LogDebug("Page loaded successfully");
+                    _logger.LogDebug("[{Source}] Page loaded successfully", SourceName);
                     await Task.Delay(3000);
 
                     // Simulate human behavior
@@ -249,7 +249,7 @@ public class EventimCrawler : IWebScrapingCrawler
             catch (Exception ex)
             {
                 retryCount++;
-                _logger.LogWarning(ex, "Attempt {Retry} failed for Eventim crawl", retryCount);
+                _logger.LogWarning(ex, "[{Source}] Attempt {Retry} failed for Eventim crawl", SourceName, retryCount);
 
                 if (retryCount >= _maxRetries)
                     throw;
@@ -265,7 +265,7 @@ public class EventimCrawler : IWebScrapingCrawler
     {
         var allEvents = new List<EventimEventInstanceDto>();
 
-        _logger.LogInformation("Starting to crawl all Eventim events...");
+        _logger.LogInformation("[{Source}] Starting to crawl all Eventim events...", SourceName);
 
         const string baseApiUrl =
             "https://public-api.eventim.com/websearch/search/api/exploration/v2/" +
@@ -280,7 +280,7 @@ public class EventimCrawler : IWebScrapingCrawler
             {
                 var currentUrl = pageNumber == 1 ? baseApiUrl : $"{baseApiUrl}&page={pageNumber}";
 
-                _logger.LogDebug("API call to page {PageNumber}", pageNumber);
+                _logger.LogDebug("[{Source}] API call to page {PageNumber}", SourceName, pageNumber);
 
                 var apiResponse = await page.EvaluateAsync<string>($@"
                     async () => {{
@@ -307,7 +307,7 @@ public class EventimCrawler : IWebScrapingCrawler
 
                 if (string.IsNullOrEmpty(apiResponse) || apiResponse.StartsWith("Error") || apiResponse.StartsWith("Fetch error"))
                 {
-                    _logger.LogWarning("API call error: {Error}", apiResponse);
+                    _logger.LogWarning("[{Source}] API call error: {Error}", SourceName, apiResponse);
                     break;
                 }
 
@@ -321,28 +321,28 @@ public class EventimCrawler : IWebScrapingCrawler
 
                 if (parsed?.ProductGroups == null || parsed.ProductGroups.Count == 0)
                 {
-                    _logger.LogInformation("No more product groups available on page {PageNumber}", pageNumber);
+                    _logger.LogInformation("[{Source}] No more product groups available on page {PageNumber}", SourceName, pageNumber);
                     break;
                 }
 
-                _logger.LogDebug("Received {ProductGroupCount} product groups from page {PageNumber}", parsed.ProductGroups.Count, pageNumber);
+                _logger.LogDebug("[{Source}] Received {ProductGroupCount} product groups from page {PageNumber}", SourceName, parsed.ProductGroups.Count, pageNumber);
 
                 var eventInstances = ConvertProductGroupsToEventInstances(parsed.ProductGroups);
                 allEvents.AddRange(eventInstances);
 
-                _logger.LogDebug("Events from this page: {EventCount}, Total: {TotalEvents}", eventInstances.Count, allEvents.Count);
+                _logger.LogDebug("[{Source}] Events from this page: {EventCount}, Total: {TotalEvents}", SourceName, eventInstances.Count, allEvents.Count);
 
                 await Task.Delay(_delayBetweenRequests);
                 pageNumber++;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error processing page {PageNumber}", pageNumber);
+                _logger.LogError(ex, "[{Source}] Error processing page {PageNumber}", SourceName, pageNumber);
                 break;
             }
         }
 
-        _logger.LogInformation("Total collected events: {TotalEvents} (from {TotalPages} pages)", allEvents.Count, pageNumber - 1);
+        _logger.LogInformation("[{Source}] Total collected events: {TotalEvents} (from {TotalPages} pages)", SourceName, allEvents.Count, pageNumber - 1);
         return allEvents;
     }
 
@@ -465,7 +465,7 @@ public class EventimCrawler : IWebScrapingCrawler
             return parsedDate;
         }
 
-        _logger.LogDebug("Could not parse date: {DateText}", dateText);
+        _logger.LogDebug("[{Source}] Could not parse date: {DateText}", SourceName, dateText);
         return null;
     }
 
@@ -479,21 +479,21 @@ public class EventimCrawler : IWebScrapingCrawler
 
             try
             {
-                _logger.LogInformation("Checking Playwright browser installation...");
+                _logger.LogInformation("[{Source}] Checking Playwright browser installation...", SourceName);
 
                 var chromiumPath = PlaywrightHelper.GetChromiumExecutablePath();
                 if (string.IsNullOrEmpty(chromiumPath) || !File.Exists(chromiumPath))
                 {
-                    _logger.LogWarning("Playwright browsers not found. Attempting to install...");
+                    _logger.LogWarning("[{Source}] Playwright browsers not found. Attempting to install...", SourceName);
                     InstallPlaywrightBrowsers();
                 }
 
                 _browsersInstalled = true;
-                _logger.LogInformation("Playwright browsers are ready");
+                _logger.LogInformation("[{Source}] Playwright browsers are ready", SourceName);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to ensure Playwright browsers are installed");
+                _logger.LogError(ex, "[{Source}] Failed to ensure Playwright browsers are installed", SourceName);
                 throw new InvalidOperationException("Playwright browsers are not installed. Please run 'npx playwright install chromium' manually.", ex);
             }
         }
@@ -527,7 +527,7 @@ public class EventimCrawler : IWebScrapingCrawler
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error installing Playwright browsers");
+            _logger.LogError(ex, "[{Source}] Error installing Playwright browsers", SourceName);
             throw;
         }
     }

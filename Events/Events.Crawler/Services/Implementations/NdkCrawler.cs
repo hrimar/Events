@@ -78,11 +78,11 @@ public class NdkCrawler : IWebScrapingCrawler
             result.EventsProcessed = sofiaEvents.Count;
             result.Success = true;
 
-            _logger.LogInformation("Crawled {TotalEvents} events from NDK, {SofiaEvents} in Sofia", ndkEvents.Count, sofiaEvents.Count);
+            _logger.LogInformation("[{Source}] Crawled {TotalEvents} events from NDK, {SofiaEvents} in Sofia", SourceName, ndkEvents.Count, sofiaEvents.Count);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error crawling NDK.bg");
+            _logger.LogError(ex, "[{Source}] Error crawling NDK.bg", SourceName);
             result.Success = false;
             result.ErrorMessage = ex.Message;
         }
@@ -144,7 +144,7 @@ public class NdkCrawler : IWebScrapingCrawler
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error extracting elements from {Url} with selector {Selector}", url, selector);
+            _logger.LogError(ex, "[{Source}] Error extracting elements from {Url} with selector {Selector}", SourceName, url, selector);
             throw;
         }
     }
@@ -186,7 +186,7 @@ public class NdkCrawler : IWebScrapingCrawler
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting page content from {Url}", url);
+            _logger.LogError(ex, "[{Source}] Error getting page content from {Url}", SourceName, url);
             throw;
         }
     }
@@ -216,14 +216,14 @@ public class NdkCrawler : IWebScrapingCrawler
             }
             catch (TimeoutException)
             {
-                _logger.LogWarning("Timeout waiting for {Selector} element", EventsContainerSelector);
+                _logger.LogWarning("[{Source}] Timeout waiting for {Selector} element", SourceName, EventsContainerSelector);
                 await Task.Delay(3000);
             }
 
             await Task.Delay(2000);
 
             var totalElements = await page.EvaluateAsync<int>($"document.querySelectorAll('{EventsContainerSelector} {EventBoxSelector}').length");
-            _logger.LogInformation("Found {EventCount} event boxes in NDK", totalElements);
+            _logger.LogInformation("[{Source}] Found {EventCount} event boxes in NDK", SourceName, totalElements);
 
             var events = new List<NdkEventDto>();
             const int batchSize = 25;
@@ -231,7 +231,7 @@ public class NdkCrawler : IWebScrapingCrawler
             for (int batchStart = 0; batchStart < totalElements; batchStart += batchSize)
             {
                 var batchEnd = Math.Min(batchStart + batchSize, totalElements);
-                _logger.LogDebug("Processing batch {Start}-{End} of {Total}", batchStart + 1, batchEnd, totalElements);
+                _logger.LogDebug("[{Source}] Processing batch {Start}-{End} of {Total}", SourceName, batchStart + 1, batchEnd, totalElements);
 
                 var batchElements = await page.QuerySelectorAllAsync($"{EventsContainerSelector} {EventBoxSelector}");
                 var elementsToProcess = batchElements.Skip(batchStart).Take(batchEnd - batchStart);
@@ -251,11 +251,11 @@ public class NdkCrawler : IWebScrapingCrawler
                     GC.Collect();
                     GC.WaitForPendingFinalizers();
                     await Task.Delay(200);
-                    _logger.LogDebug("Memory cleanup after processing {ProcessedCount} elements", batchStart);
+                    _logger.LogDebug("[{Source}] Memory cleanup after processing {ProcessedCount} elements", SourceName, batchStart);
                 }
             }
 
-            _logger.LogInformation("Successfully extracted {EventCount} events from NDK", events.Count);
+            _logger.LogInformation("[{Source}] Successfully extracted {EventCount} events from NDK", SourceName, events.Count);
             return events;
         }
         finally
@@ -285,7 +285,7 @@ public class NdkCrawler : IWebScrapingCrawler
 
         if (!string.IsNullOrEmpty(eventDto.Name))
         {
-            _logger.LogDebug("Extracted event: {EventName} on {EventDate} at {EventTime}", eventDto.Name, eventDto.Date, eventDto.Time);
+            _logger.LogDebug("[{Source}] Extracted event: {EventName} on {EventDate} at {EventTime}", SourceName, eventDto.Name, eventDto.Date, eventDto.Time);
         }
 
         return eventDto;
@@ -304,7 +304,7 @@ public class NdkCrawler : IWebScrapingCrawler
         }
         catch (Exception ex)
         {
-            _logger.LogDebug("Error extracting date: {Error}", ex.Message);
+            _logger.LogDebug("[{Source}] Error extracting date: {Error}", SourceName, ex.Message);
             return null;
         }
     }
@@ -321,7 +321,7 @@ public class NdkCrawler : IWebScrapingCrawler
         }
         catch (Exception ex)
         {
-            _logger.LogDebug("Error extracting name: {Error}", ex.Message);
+            _logger.LogDebug("[{Source}] Error extracting name: {Error}", SourceName, ex.Message);
             return null;
         }
     }
@@ -347,7 +347,7 @@ public class NdkCrawler : IWebScrapingCrawler
         }
         catch (Exception ex)
         {
-            _logger.LogDebug("Error extracting image URL: {Error}", ex.Message);
+            _logger.LogDebug("[{Source}] Error extracting image URL: {Error}", SourceName, ex.Message);
             return null;
         }
     }
@@ -370,7 +370,7 @@ public class NdkCrawler : IWebScrapingCrawler
         }
         catch (Exception ex)
         {
-            _logger.LogDebug("Error extracting time and location: {Error}", ex.Message);
+            _logger.LogDebug("[{Source}] Error extracting time and location: {Error}", SourceName, ex.Message);
             return (null, null);
         }
     }
@@ -395,7 +395,7 @@ public class NdkCrawler : IWebScrapingCrawler
         }
         catch (Exception ex)
         {
-            _logger.LogDebug("Error extracting ticket URL: {Error}", ex.Message);
+            _logger.LogDebug("[{Source}] Error extracting ticket URL: {Error}", SourceName, ex.Message);
             return null;
         }
     }
@@ -451,7 +451,7 @@ public class NdkCrawler : IWebScrapingCrawler
         }
         catch (Exception ex)
         {
-            _logger.LogDebug("Error parsing time {TimeText}: {Error}", timeText, ex.Message);
+            _logger.LogDebug("[{Source}] Error parsing time {TimeText}: {Error}", SourceName, timeText, ex.Message);
         }
 
         return date.Value;
@@ -491,13 +491,13 @@ public class NdkCrawler : IWebScrapingCrawler
                 return null;
 
             var parsedDate = new DateTime(year, month, day);
-            _logger.LogDebug("Parsed NDK date '{DateText}' as {ParsedDate}", dateText, parsedDate.ToString("yyyy-MM-dd"));
+            _logger.LogDebug("[{Source}] Parsed NDK date '{DateText}' as {ParsedDate}", SourceName, dateText, parsedDate.ToString("yyyy-MM-dd"));
 
             return parsedDate;
         }
         catch (Exception ex)
         {
-            _logger.LogDebug(ex, "Error parsing NDK date: {DateText}", dateText);
+            _logger.LogDebug(ex, "[{Source}] Error parsing NDK date: {DateText}", SourceName, dateText);
             return null;
         }
     }
@@ -538,21 +538,21 @@ public class NdkCrawler : IWebScrapingCrawler
 
             try
             {
-                _logger.LogInformation("Checking Playwright browser installation...");
+                _logger.LogInformation("[{Source}] Checking Playwright browser installation...", SourceName);
 
                 var chromiumPath = GetChromiumPath();
                 if (string.IsNullOrEmpty(chromiumPath) || !File.Exists(chromiumPath))
                 {
-                    _logger.LogWarning("Playwright browsers not found. Attempting to install...");
+                    _logger.LogWarning("[{Source}] Playwright browsers not found. Attempting to install...", SourceName);
                     InstallPlaywrightBrowsers();
                 }
 
                 _browsersInstalled = true;
-                _logger.LogInformation("Playwright browsers are ready");
+                _logger.LogInformation("[{Source}] Playwright browsers are ready", SourceName);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to ensure Playwright browsers are installed");
+                _logger.LogError(ex, "[{Source}] Failed to ensure Playwright browsers are installed", SourceName);
                 throw new InvalidOperationException("Playwright browsers are not installed. " + "Please run 'npx playwright install chromium' manually.", ex);
             }
         }
@@ -586,7 +586,7 @@ public class NdkCrawler : IWebScrapingCrawler
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error installing Playwright browsers");
+            _logger.LogError(ex, "[{Source}] Error installing Playwright browsers", SourceName);
             throw;
         }
     }

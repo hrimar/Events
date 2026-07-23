@@ -66,11 +66,11 @@ public class EntaseCrawler : IWebScrapingCrawler
             result.EventsProcessed = sofiaEvents.Count;
             result.Success = true;
 
-            _logger.LogInformation("Crawled {TotalEvents} spectacles from Entase ({EventCount} events with spectacles)", sofiaEvents.Count, entaseEvents.Count);
+            _logger.LogInformation("[{Source}] Crawled {TotalEvents} spectacles from Entase ({EventCount} events with spectacles)", SourceName, sofiaEvents.Count, entaseEvents.Count);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error crawling Entase.com");
+            _logger.LogError(ex, "[{Source}] Error crawling Entase.com", SourceName);
             result.Success = false;
             result.ErrorMessage = ex.Message;
         }
@@ -121,7 +121,7 @@ public class EntaseCrawler : IWebScrapingCrawler
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error extracting elements from {Url} with selector {Selector}", url, selector);
+            _logger.LogError(ex, "[{Source}] Error extracting elements from {Url} with selector {Selector}", SourceName, url, selector);
             throw;
         }
     }
@@ -153,7 +153,7 @@ public class EntaseCrawler : IWebScrapingCrawler
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting page content from {Url}", url);
+            _logger.LogError(ex, "[{Source}] Error getting page content from {Url}", SourceName, url);
             throw;
         }
     }
@@ -186,7 +186,7 @@ public class EntaseCrawler : IWebScrapingCrawler
 
             // Extract card data (name, image, link) from list page first
             var cardDataList = await ExtractCardDataAsync(page);
-            _logger.LogInformation("Found {EventCount} event cards on Entase", cardDataList.Count);
+            _logger.LogInformation("[{Source}] Found {EventCount} event cards on Entase", SourceName, cardDataList.Count);
 
             var events = new List<EntaseEventDto>();
 
@@ -206,7 +206,7 @@ public class EntaseCrawler : IWebScrapingCrawler
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogDebug(ex, "Error extracting event details for {EventName}", cardData.Name);
+                    _logger.LogDebug(ex, "[{Source}] Error extracting event details for {EventName}", SourceName, cardData.Name);
                 }
                 finally
                 {
@@ -214,7 +214,7 @@ public class EntaseCrawler : IWebScrapingCrawler
                 }
             }
 
-            _logger.LogInformation("Successfully extracted {EventCount} events with spectacles from Entase", events.Count);
+            _logger.LogInformation("[{Source}] Successfully extracted {EventCount} events with spectacles from Entase", SourceName, events.Count);
             return events;
         }
         finally
@@ -252,13 +252,13 @@ public class EntaseCrawler : IWebScrapingCrawler
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogDebug(ex, "Error extracting card data");
+                    _logger.LogDebug(ex, "[{Source}] Error extracting card data", SourceName);
                 }
             }
         }
         catch (Exception ex)
         {
-            _logger.LogDebug(ex, "Error in ExtractCardDataAsync");
+            _logger.LogDebug(ex, "[{Source}] Error in ExtractCardDataAsync", SourceName);
         }
 
         return cardDataList;
@@ -276,7 +276,7 @@ public class EntaseCrawler : IWebScrapingCrawler
 
             if (currentHeight == previousHeight)
             {
-                _logger.LogDebug("Reached end of page after {Attempts} scroll attempts", scrollAttempts);
+                _logger.LogDebug("[{Source}] Reached end of page after {Attempts} scroll attempts", SourceName, scrollAttempts);
                 break;
             }
 
@@ -310,11 +310,11 @@ public class EntaseCrawler : IWebScrapingCrawler
             var spectacles = await ExtractSpectaclesAsync(page);
             eventDto.Spectacles = spectacles;
 
-            _logger.LogDebug("Extracted event '{EventName}' with {SpectacleCount} spectacles", eventDto.Name, spectacles.Count);
+            _logger.LogDebug("[{Source}] Extracted event '{EventName}' with {SpectacleCount} spectacles", SourceName, eventDto.Name, spectacles.Count);
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Error extracting details for event '{EventName}'", eventDto.Name);
+            _logger.LogWarning(ex, "[{Source}] Error extracting details for event '{EventName}'", SourceName, eventDto.Name);
             return null;
         }
 
@@ -334,7 +334,7 @@ public class EntaseCrawler : IWebScrapingCrawler
         }
         catch (Exception ex)
         {
-            _logger.LogDebug(ex, "Error extracting event name");
+            _logger.LogDebug(ex, "[{Source}] Error extracting event name", SourceName);
             return null;
         }
     }
@@ -359,7 +359,7 @@ public class EntaseCrawler : IWebScrapingCrawler
         }
         catch (Exception ex)
         {
-            _logger.LogDebug(ex, "Error extracting image URL");
+            _logger.LogDebug(ex, "[{Source}] Error extracting image URL", SourceName);
             return null;
         }
     }
@@ -383,7 +383,7 @@ public class EntaseCrawler : IWebScrapingCrawler
         }
         catch (Exception ex)
         {
-            _logger.LogDebug(ex, "Error extracting description");
+            _logger.LogDebug(ex, "[{Source}] Error extracting description", SourceName);
             return null;
         }
     }
@@ -418,7 +418,7 @@ public class EntaseCrawler : IWebScrapingCrawler
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogDebug(ex, "Error extracting spectacle details");
+                    _logger.LogDebug(ex, "[{Source}] Error extracting spectacle details", SourceName);
                 }
             }
 
@@ -426,7 +426,7 @@ public class EntaseCrawler : IWebScrapingCrawler
         }
         catch (Exception ex)
         {
-            _logger.LogDebug(ex, "Error extracting spectacles");
+            _logger.LogDebug(ex, "[{Source}] Error extracting spectacles", SourceName);
             return spectacles;
         }
     }
@@ -444,7 +444,7 @@ public class EntaseCrawler : IWebScrapingCrawler
         }
         catch (Exception ex)
         {
-            _logger.LogDebug(ex, "Error extracting spectacle date");
+            _logger.LogDebug(ex, "[{Source}] Error extracting spectacle date", SourceName);
             return null;
         }
     }
@@ -462,7 +462,7 @@ public class EntaseCrawler : IWebScrapingCrawler
         }
         catch (Exception ex)
         {
-            _logger.LogDebug(ex, "Error extracting spectacle location");
+            _logger.LogDebug(ex, "[{Source}] Error extracting spectacle location", SourceName);
             return null;
         }
     }
@@ -483,7 +483,7 @@ public class EntaseCrawler : IWebScrapingCrawler
         }
         catch (Exception ex)
         {
-            _logger.LogDebug(ex, "Error extracting ticket URL");
+            _logger.LogDebug(ex, "[{Source}] Error extracting ticket URL", SourceName);
             return null;
         }
     }
@@ -512,21 +512,21 @@ public class EntaseCrawler : IWebScrapingCrawler
 
             try
             {
-                _logger.LogInformation("Checking Playwright browser installation...");
+                _logger.LogInformation("[{Source}] Checking Playwright browser installation...", SourceName);
 
                 var chromiumPath = GetChromiumPath();
                 if (string.IsNullOrEmpty(chromiumPath) || !File.Exists(chromiumPath))
                 {
-                    _logger.LogWarning("Playwright browsers not found. Attempting to install...");
+                    _logger.LogWarning("[{Source}] Playwright browsers not found. Attempting to install...", SourceName);
                     InstallPlaywrightBrowsers();
                 }
 
                 _browsersInstalled = true;
-                _logger.LogInformation("Playwright browsers are ready");
+                _logger.LogInformation("[{Source}] Playwright browsers are ready", SourceName);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to ensure Playwright browsers are installed");
+                _logger.LogError(ex, "[{Source}] Failed to ensure Playwright browsers are installed", SourceName);
                 throw new InvalidOperationException("Playwright browsers are not installed. Please run 'npx playwright install chromium' manually.", ex);
             }
         }
@@ -560,7 +560,7 @@ public class EntaseCrawler : IWebScrapingCrawler
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error installing Playwright browsers");
+            _logger.LogError(ex, "[{Source}] Error installing Playwright browsers", SourceName);
             throw;
         }
     }
@@ -578,7 +578,7 @@ public class EntaseCrawler : IWebScrapingCrawler
 
         if (!isSofia)
         {
-            _logger.LogInformation("Skipping non-Sofia spectacle for '{EventName}': Location='{Location}'", entaseEvent.Name, spectacle.Location);
+            _logger.LogInformation("[{Source}] Skipping non-Sofia spectacle for '{EventName}': Location='{Location}'", SourceName, entaseEvent.Name, spectacle.Location);
             return null;
         }
 
@@ -661,7 +661,7 @@ public class EntaseCrawler : IWebScrapingCrawler
         }
         catch (Exception ex)
         {
-            _logger.LogDebug(ex, "Error parsing Entase date: {DateText}", dateText);
+            _logger.LogDebug(ex, "[{Source}] Error parsing Entase date: {DateText}", SourceName, dateText);
             return null;
         }
     }

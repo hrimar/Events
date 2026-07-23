@@ -80,12 +80,14 @@ public class CrawlerService : ICrawlerService
 
             try
             {
-                _logger.LogInformation("Starting parallel crawl for source: {Source}", crawler.SourceName);
-                return await crawler.CrawlAsync(targetDate);
+                _logger.LogInformation("[{Source}] Starting parallel crawl", crawler.SourceName);
+                var crawlResult = await crawler.CrawlAsync(targetDate);
+                _logger.LogInformation("[{Source}] Crawl finished: Found={Found}", crawler.SourceName, crawlResult.EventsFound);
+                return crawlResult;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error crawling source: {Source}", crawler.SourceName);
+                _logger.LogError(ex, "[{Source}] Error crawling", crawler.SourceName);
                 return new CrawlResult
                 {
                     Source = crawler.SourceName,

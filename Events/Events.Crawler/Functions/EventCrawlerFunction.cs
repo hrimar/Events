@@ -50,6 +50,8 @@ public class EventCrawlerFunction
 
                 _logger.LogInformation("Starting processing of {EventCount} events in batches of {BatchSize}", events.Count, batchSize);
 
+                var allOutcomes = new List<EventOutcome>();
+
                 for (int i = 0; i < events.Count; i += batchSize)
                 {
                     cts.Token.ThrowIfCancellationRequested();
@@ -59,6 +61,24 @@ public class EventCrawlerFunction
 
                     _logger.LogInformation("Batch {BatchNumber}: Created {Created}, Updated {Updated}, Skipped {Skipped}",
                         (i / batchSize) + 1, processingResult.EventsCreated, processingResult.EventsUpdated, processingResult.EventsSkipped);
+
+                    allOutcomes.AddRange(processingResult.Outcomes);
+                }
+
+                // Aggregate by source after the fact, so the mixed/flat batching above stays
+                // unchanged (same order, same batch boundaries as before per-source reporting existed).
+                var foundBySource = events.GroupBy(e => e.Source).ToDictionary(g => g.Key, g => g.Count());
+
+                foreach (var sourceGroup in allOutcomes.GroupBy(o => o.Source))
+                {
+                    var created = sourceGroup.Count(o => o.Type == EventOutcomeType.Created);
+                    var updated = sourceGroup.Count(o => o.Type == EventOutcomeType.Updated);
+                    var skipped = sourceGroup.Count(o => o.Type == EventOutcomeType.Skipped);
+                    var found = foundBySource.GetValueOrDefault(sourceGroup.Key);
+
+                    _logger.LogInformation(
+                        "[{Source}] Completed: Found={Found}, Processed={Processed}, Created={Created}, Updated={Updated}, Skipped={Skipped}",
+                        sourceGroup.Key, found, created + updated + skipped, created, updated, skipped);
                 }
             }
         }
@@ -75,9 +95,16 @@ public class EventCrawlerFunction
         finally
         {
             _logger.LogInformation("Event crawler function completed at: {Time}", DateTime.UtcNow);
-            // Allow logs to flush before stopping the host
-            await Task.Delay(TimeSpan.FromSeconds(5));
-            _lifetime.StopApplication();
+
+            // StopApplication is required for Container Apps Job — the container must exit after the job finishes.
+            // Skip it in local development to avoid killing the VS host before the function result is acknowledged.
+            var isContainerJob = string.Equals(Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"), "Production", StringComparison.OrdinalIgnoreCase);
+
+            if (isContainerJob)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(5)); // Allow logs to flush
+                _lifetime.StopApplication();
+            }
         }
     }
 

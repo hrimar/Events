@@ -50,6 +50,7 @@ public class EventProcessingService : IEventProcessingService
                 {
                     // TODO: Do not update existing events or update only existing events not older than today by Date or other!!!
                     result.EventsSkipped++;
+                    result.Outcomes.Add(new EventOutcome(crawledEvent.Source, EventOutcomeType.Skipped));
                     //var updatedEvent = await UpdateEventFromCrawledDataAsync(existingEvent, crawledEvent, eventService);
                     //if (updatedEvent != null)
                     //{
@@ -80,6 +81,7 @@ public class EventProcessingService : IEventProcessingService
 
                     result.EventsCreated++;
                     result.ProcessedEventIds.Add(createdEvent.Id);
+                    result.Outcomes.Add(new EventOutcome(crawledEvent.Source, EventOutcomeType.Created));
                 }
 
                 result.EventsProcessed++;
