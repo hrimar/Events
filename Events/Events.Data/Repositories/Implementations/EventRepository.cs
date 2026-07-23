@@ -258,6 +258,11 @@ public class EventRepository : IEventRepository
         return await _context.Events.Where(e => e.Name.ToLower() == name.ToLower()).FirstOrDefaultAsync();
     }
 
+    public async Task<IEnumerable<Event>> FindAllByNameAsync(string name)
+    {
+        return await _context.Events.Where(e => e.Name.ToLower() == name.ToLower()).ToListAsync();
+    }
+
     public async Task<IEnumerable<Event>> GetByDateRangeAsync(DateTime startDate, DateTime endDate)
     {
         return await _context.Events

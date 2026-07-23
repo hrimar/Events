@@ -70,6 +70,19 @@ public class EventService : IEventService
         }
     }
 
+    public async Task<IEnumerable<Event>> FindEventsByNameAsync(string name)
+    {
+        try
+        {
+            return await _eventRepository.FindAllByNameAsync(name);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error finding events by name: {Name}", name);
+            return [];
+        }
+    }
+
     public async Task<(IEnumerable<Event> Events, int TotalCount)> GetPagedEventsAsync(
         int page,
         int pageSize,

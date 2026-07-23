@@ -117,11 +117,24 @@ public class EventProcessingService : IEventProcessingService
     {
         try
         {
+            // TicketUrl uniquely identifies a specific showing when the crawler provides one, so
+            // check it first — before the date-based fast path. Matching by date alone truncates
+            // to day-level (.Date), so same-day-different-time showings of the same production
+            // (e.g. matinee + evening) would otherwise collide on the first same-day match and
+            // never reach a proper disambiguation check.
+            if (!string.IsNullOrEmpty(crawledEvent.TicketUrl))
+            {
+                var candidatesByName = await eventService.FindEventsByNameAsync(crawledEvent.Name);
+                // No match among same-named events means this is a different showing/date
+                // instance of the same production, not a duplicate — let it be created.
+                return candidatesByName.FirstOrDefault(e => e.TicketUrl == crawledEvent.TicketUrl);
+            }
+
             var hasValidDate = crawledEvent.StartDate.HasValue && crawledEvent.StartDate.Value != DateTime.MinValue;
 
             if (hasValidDate)
             {
-                // Fast path: search by date + name
+                // Fast path: search by date + name (only reached when there's no TicketUrl to disambiguate with)
                 var eventDate = crawledEvent.StartDate!.Value.Date;
                 var byDate = await eventService.GetEventsByDateRangeAsync(eventDate, eventDate.AddDays(1));
                 var match = byDate.FirstOrDefault(e => e.Name.Equals(crawledEvent.Name, StringComparison.OrdinalIgnoreCase));

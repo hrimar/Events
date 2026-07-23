@@ -19,6 +19,7 @@ public interface IEventRepository
     Task DeleteAsync(int id);
     Task<bool> ExistsAsync(int id);
     Task<Event?> FindByNameAsync(string name);
+    Task<IEnumerable<Event>> FindAllByNameAsync(string name);
 
     // pagination and filtering
     Task<(IEnumerable<Event> Events, int TotalCount)> GetPagedEventsAsync(
