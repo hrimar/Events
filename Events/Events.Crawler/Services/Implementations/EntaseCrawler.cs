@@ -173,7 +173,17 @@ public class EntaseCrawler : IWebScrapingCrawler
         });
         // A single shared context keeps cookies/cache/connections warm across all pages,
         // while each page is still closed after use to bound its renderer memory lifetime.
-        await using var context = await browser.NewContextAsync();
+        // Entase serves localized content based on the request's Accept-Language/geo-IP —
+        // from Azure's (non-Bulgarian) datacenter IP it returns English names/dates instead
+        // of Bulgarian, which broke Cyrillic-only date parsing. Force bg-BG explicitly.
+        await using var context = await browser.NewContextAsync(new BrowserNewContextOptions
+        {
+            Locale = "bg-BG",
+            ExtraHTTPHeaders = new Dictionary<string, string>
+            {
+                ["Accept-Language"] = "bg-BG,bg;q=0.9,en;q=0.1"
+            }
+        });
         var page = await context.NewPageAsync();
 
         try
@@ -612,9 +622,9 @@ public class EntaseCrawler : IWebScrapingCrawler
 
         try
         {
-            // Format: "08 февруари неделя, 11:00 ч."
+            // Format: "08 февруари неделя, 11:00 ч." (or English if the site served that locale: "08 February Sunday, 11:00")
             // Extract date and time components
-            var dateMatch = Regex.Match(dateText, @"(\d{1,2})\s+([а-яА-Я]+).*?(\d{1,2}):(\d{2})");
+            var dateMatch = Regex.Match(dateText, @"(\d{1,2})\s+([а-яА-Яa-zA-Z]+).*?(\d{1,2}):(\d{2})");
             if (!dateMatch.Success)
                 return null;
 
@@ -646,7 +656,31 @@ public class EntaseCrawler : IWebScrapingCrawler
                 ["ноември"] = 11,
                 ["ное"] = 11,
                 ["декември"] = 12,
-                ["дек"] = 12
+                ["дек"] = 12,
+                // English fallback, in case the site ever serves an English-localized page
+                ["january"] = 1,
+                ["jan"] = 1,
+                ["february"] = 2,
+                ["feb"] = 2,
+                ["march"] = 3,
+                ["mar"] = 3,
+                ["april"] = 4,
+                ["apr"] = 4,
+                ["may"] = 5,
+                ["june"] = 6,
+                ["jun"] = 6,
+                ["july"] = 7,
+                ["jul"] = 7,
+                ["august"] = 8,
+                ["aug"] = 8,
+                ["september"] = 9,
+                ["sep"] = 9,
+                ["october"] = 10,
+                ["oct"] = 10,
+                ["november"] = 11,
+                ["nov"] = 11,
+                ["december"] = 12,
+                ["dec"] = 12
             };
 
             if (!months.TryGetValue(monthText, out int month))
