@@ -171,7 +171,10 @@ public class EntaseCrawler : IWebScrapingCrawler
             Headless = true,
             Args = new[] { "--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage" }
         });
-        var page = await browser.NewPageAsync();
+        // A single shared context keeps cookies/cache/connections warm across all pages,
+        // while each page is still closed after use to bound its renderer memory lifetime.
+        await using var context = await browser.NewContextAsync();
+        var page = await context.NewPageAsync();
 
         try
         {
@@ -192,7 +195,7 @@ public class EntaseCrawler : IWebScrapingCrawler
                 // Use a fresh page per detail navigation instead of reusing the list page.
                 // Reusing one page across dozens of navigations was accumulating renderer
                 // memory and crashing the Chromium process in memory-constrained containers.
-                var detailPage = await browser.NewPageAsync();
+                var detailPage = await context.NewPageAsync();
                 try
                 {
                     var eventDto = await ExtractEventDetailsAsync(detailPage, cardData);

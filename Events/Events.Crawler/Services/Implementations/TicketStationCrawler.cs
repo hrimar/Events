@@ -229,7 +229,10 @@ public class TicketStationCrawler : IWebScrapingCrawler
             {
                 using var playwright = await Playwright.CreateAsync();
                 var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = true });
-                var page = await browser.NewPageAsync();
+                // A single shared context keeps cookies/cache/connections warm across all pages,
+                // while each page is still closed after use to bound its renderer memory lifetime.
+                var context = await browser.NewContextAsync();
+                var page = await context.NewPageAsync();
 
                 try
                 {
@@ -276,7 +279,7 @@ public class TicketStationCrawler : IWebScrapingCrawler
                         // Use a fresh page per detail/booking navigation instead of reusing the
                         // list page. Reusing one page across many navigations was accumulating
                         // renderer memory and crashing the Chromium process in containers.
-                        var detailPage = await browser.NewPageAsync();
+                        var detailPage = await context.NewPageAsync();
                         try
                         {
                             var extracted = await ExtractEventDetailsAsync(detailPage, cardData);
