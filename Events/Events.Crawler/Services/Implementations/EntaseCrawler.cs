@@ -173,12 +173,14 @@ public class EntaseCrawler : IWebScrapingCrawler
         });
         // A single shared context keeps cookies/cache/connections warm across all pages,
         // while each page is still closed after use to bound its renderer memory lifetime.
-        // Entase serves localized content based on the request's Accept-Language/geo-IP —
-        // from Azure's (non-Bulgarian) datacenter IP it returns English names/dates instead
-        // of Bulgarian, which broke Cyrillic-only date parsing. Force bg-BG explicitly.
+        // NOTE: Entase still serves English content from Azure's datacenter IP even with an
+        // explicit Accept-Language header set (production evidence: even browsers sending "en"
+        // first as their preferred language still get Bulgarian content locally) — the site's
+        // locale selection is most likely IP-geolocation based, not header based, so this has
+        // no confirmed effect. Left in as a harmless, low-cost attempt; ParseEntaseDate below is
+        // the real fix since it must handle whatever language Entase actually serves.
         await using var context = await browser.NewContextAsync(new BrowserNewContextOptions
         {
-            Locale = "bg-BG",
             ExtraHTTPHeaders = new Dictionary<string, string>
             {
                 ["Accept-Language"] = "bg-BG,bg;q=0.9,en;q=0.1"
@@ -622,16 +624,26 @@ public class EntaseCrawler : IWebScrapingCrawler
 
         try
         {
-            // Format: "08 февруари неделя, 11:00 ч." (or English if the site served that locale: "08 February Sunday, 11:00")
-            // Extract date and time components
-            var dateMatch = Regex.Match(dateText, @"(\d{1,2})\s+([а-яА-Яa-zA-Z]+).*?(\d{1,2}):(\d{2})");
+            // Format: "08 февруари неделя, 11:00 ч." or English "08 February Sunday, 11:00 am/pm"
+            // Extract date and time components, plus an optional trailing am/pm marker
+            var dateMatch = Regex.Match(dateText, @"(\d{1,2})\s+([а-яА-Яa-zA-Z]+).*?(\d{1,2}):(\d{2})\s*(am|pm)?", RegexOptions.IgnoreCase);
             if (!dateMatch.Success)
+            {
+                _logger.LogInformation("[{Source}] Could not match date pattern in: '{DateText}'", SourceName, dateText);
                 return null;
+            }
 
             var day = int.Parse(dateMatch.Groups[1].Value);
             var monthText = dateMatch.Groups[2].Value.ToLowerInvariant();
             var hour = int.Parse(dateMatch.Groups[3].Value);
             var minute = int.Parse(dateMatch.Groups[4].Value);
+            var meridiem = dateMatch.Groups[5].Success ? dateMatch.Groups[5].Value.ToLowerInvariant() : null;
+
+            // Convert 12-hour English am/pm format to 24-hour; Bulgarian "ч." format has no am/pm group.
+            if (meridiem == "pm" && hour < 12)
+                hour += 12;
+            else if (meridiem == "am" && hour == 12)
+                hour = 0;
 
             var months = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
             {
@@ -684,7 +696,10 @@ public class EntaseCrawler : IWebScrapingCrawler
             };
 
             if (!months.TryGetValue(monthText, out int month))
+            {
+                _logger.LogInformation("[{Source}] Unrecognized month name '{MonthText}' in date: '{DateText}'", SourceName, monthText, dateText);
                 return null;
+            }
 
             var year = DateTime.Now.Year;
             if (month < DateTime.Now.Month)
