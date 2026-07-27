@@ -465,6 +465,57 @@
   <data name="AboutUs_AdvertiseText" xml:space="preserve">
     <value>Ако сте организатор и искате да включите свое събитие в платформата или да го популяризирате пред по-широка аудитория, можете да се свържете с нас за възможностите за реклама и представяне на адрес:</value>
   </data>
+  <data name="Contact_Title" xml:space="preserve">
+    <value>Контакти</value>
+  </data>
+  <data name="Contact_Heading" xml:space="preserve">
+    <value>Свържете се с нас</value>
+  </data>
+  <data name="Contact_Subtitle" xml:space="preserve">
+    <value>Имате въпрос, идея или предложение? Пишете ни и ще се свържем с вас възможно най-скоро.</value>
+  </data>
+  <data name="Contact_NameLabel" xml:space="preserve">
+    <value>Име</value>
+  </data>
+  <data name="Contact_EmailLabel" xml:space="preserve">
+    <value>Имейл</value>
+  </data>
+  <data name="Contact_TopicLabel" xml:space="preserve">
+    <value>Тема</value>
+  </data>
+  <data name="Contact_TopicPlaceholder" xml:space="preserve">
+    <value>Изберете тема</value>
+  </data>
+  <data name="Contact_MessageLabel" xml:space="preserve">
+    <value>Съобщение</value>
+  </data>
+  <data name="Contact_SubmitButton" xml:space="preserve">
+    <value>Изпрати</value>
+  </data>
+  <data name="Contact_SuccessMessage" xml:space="preserve">
+    <value>Съобщението е изпратено успешно! Ще се свържем с вас скоро.</value>
+  </data>
+  <data name="Contact_ErrorMessage" xml:space="preserve">
+    <value>Възникна грешка при изпращането на съобщението. Моля, опитайте отново по-късно.</value>
+  </data>
+  <data name="Contact_ConfirmationSubject" xml:space="preserve">
+    <value>Получихме вашето съобщение</value>
+  </data>
+  <data name="Contact_ConfirmationBody" xml:space="preserve">
+    <value>Благодарим ви, че се свързахте с Go Sofia! Получихме вашето съобщение и ще ви отговорим възможно най-скоро.</value>
+  </data>
+  <data name="ContactTopic_AddEvent" xml:space="preserve">
+    <value>Добавяне на събитие</value>
+  </data>
+  <data name="ContactTopic_AddVenue" xml:space="preserve">
+    <value>Добавяне на локация</value>
+  </data>
+  <data name="ContactTopic_Advertising" xml:space="preserve">
+    <value>Реклама</value>
+  </data>
+  <data name="ContactTopic_Other" xml:space="preserve">
+    <value>Друго</value>
+  </data>
   <data name="Privacy_Title" xml:space="preserve">
     <value>Политика за поверителност</value>
   </data>

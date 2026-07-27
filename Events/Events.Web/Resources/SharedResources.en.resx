@@ -165,6 +165,25 @@
   <data name="AboutUs_AdvertiseHeading" xml:space="preserve"><value>Advertise with Us</value></data>
   <data name="AboutUs_AdvertiseText" xml:space="preserve"><value>If you are an event organizer and would like to feature your event on the platform or promote it to a wider audience, feel free to contact us about advertising and promotion opportunities at</value></data>
 
+  <!-- Contact Page -->
+  <data name="Contact_Title" xml:space="preserve"><value>Contact</value></data>
+  <data name="Contact_Heading" xml:space="preserve"><value>Get in Touch</value></data>
+  <data name="Contact_Subtitle" xml:space="preserve"><value>Have a question, idea, or suggestion? Send us a message and we'll get back to you as soon as possible.</value></data>
+  <data name="Contact_NameLabel" xml:space="preserve"><value>Name</value></data>
+  <data name="Contact_EmailLabel" xml:space="preserve"><value>Email</value></data>
+  <data name="Contact_TopicLabel" xml:space="preserve"><value>Topic</value></data>
+  <data name="Contact_TopicPlaceholder" xml:space="preserve"><value>Choose a topic</value></data>
+  <data name="Contact_MessageLabel" xml:space="preserve"><value>Message</value></data>
+  <data name="Contact_SubmitButton" xml:space="preserve"><value>Send</value></data>
+  <data name="Contact_SuccessMessage" xml:space="preserve"><value>Your message was sent successfully! We'll get back to you soon.</value></data>
+  <data name="Contact_ErrorMessage" xml:space="preserve"><value>Something went wrong while sending your message. Please try again later.</value></data>
+  <data name="Contact_ConfirmationSubject" xml:space="preserve"><value>We received your message</value></data>
+  <data name="Contact_ConfirmationBody" xml:space="preserve"><value>Thank you for contacting Go Sofia! We received your message and will get back to you as soon as possible.</value></data>
+  <data name="ContactTopic_AddEvent" xml:space="preserve"><value>Add an event</value></data>
+  <data name="ContactTopic_AddVenue" xml:space="preserve"><value>Add a venue</value></data>
+  <data name="ContactTopic_Advertising" xml:space="preserve"><value>Advertising</value></data>
+  <data name="ContactTopic_Other" xml:space="preserve"><value>Other</value></data>
+
   <!-- Privacy Policy Page -->
   <data name="Privacy_Title" xml:space="preserve"><value>Privacy Policy</value></data>
   <data name="Privacy_Subtitle" xml:space="preserve"><value>of go-sofia.com</value></data>
