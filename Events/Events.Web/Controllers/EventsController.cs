@@ -118,21 +118,41 @@ public class EventsController : Controller
             var popularTags = await GetPopularTagsAsync();
 
             var pageTitle = BuildPageTitle(category, free, search);
-            string? pageMetaDescription = null;
 
-            if (!string.IsNullOrWhiteSpace(category) && Enum.TryParse<EventCategory>(category, ignoreCase: true, out var seoCategory))
+            // Default description until an admin configures PageSeoMeta for this page -
+            // set before the lookup (not clobbered after), mirroring the Home page fix.
+            var pageMetaDescription = _localizer["PageMetaDescription_AllEvents"].Value;
+
+            EventCategory parsedCategory = default;
+            var hasValidCategory = !string.IsNullOrWhiteSpace(category)
+                && Enum.TryParse(category, ignoreCase: true, out parsedCategory);
+
+            // "All events" (no category) has its own PageSeoMeta key (SeoPageKeys.AllEvents),
+            // separate from the per-category keys, so an admin can configure both independently.
+            var seoKey = hasValidCategory ? SeoPageKeys.ForCategory(parsedCategory) : SeoPageKeys.AllEvents;
+            var seo = await _seoMetaService.GetByKeyAsync(seoKey);
+            if (seo != null)
             {
-                var seo = await _seoMetaService.GetByKeyAsync(SeoPageKeys.ForCategory(seoCategory));
-                if (seo != null)
-                {
-                    var isEnglish = CultureHelper.IsEnglish();
-                    var seoTitle = seo.LocalizedTitle(isEnglish);
-                    if (!string.IsNullOrWhiteSpace(seoTitle))
-                        pageTitle = seoTitle;
+                var isEnglish = CultureHelper.IsEnglish();
+                var seoTitle = seo.LocalizedTitle(isEnglish);
+                if (!string.IsNullOrWhiteSpace(seoTitle))
+                    pageTitle = seoTitle;
 
-                    pageMetaDescription = seo.LocalizedDescription(isEnglish);
-                }
+                var seoDescription = seo.LocalizedDescription(isEnglish);
+                if (!string.IsNullOrWhiteSpace(seoDescription))
+                    pageMetaDescription = seoDescription;
             }
+
+            // Category listing pages are individually listed in sitemap.xml (see SeoController),
+            // so they must self-canonicalize to their own "?category=" URL, not the bare /Events -
+            // otherwise Google is told two contradictory things about the same page.
+            var canonicalUrl = hasValidCategory
+                ? _siteUrlProvider.BuildAbsoluteUrl($"/Events?category={parsedCategory}")
+                : _siteUrlProvider.BuildAbsoluteUrl("/Events");
+
+            ViewData["CanonicalUrl"] = canonicalUrl;
+            ViewData["OgUrl"] = canonicalUrl;
+            ViewData["OgImageUrl"] = _siteUrlProvider.BuildAbsoluteUrl("/images/logo.jpeg");
 
             var viewModel = new EventsPageViewModel
             {

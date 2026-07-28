@@ -87,6 +87,7 @@
 
   <!-- Events Index Page - Filters -->
   <data name="PageTitle_AllEvents" xml:space="preserve"><value>All Events</value></data>
+  <data name="PageMetaDescription_AllEvents" xml:space="preserve"><value>Discover upcoming events in Sofia - concerts, exhibitions, festivals, theatre and more, updated daily.</value></data>
   <data name="PageTitle_FreeEvents" xml:space="preserve"><value>Free Events</value></data>
   <data name="PageTitle_SearchResults" xml:space="preserve"><value>Search Results</value></data>
   <data name="PageTitle_Events" xml:space="preserve"><value>Events</value></data>

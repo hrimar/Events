@@ -246,6 +246,9 @@
   <data name="PageTitle_AllEvents" xml:space="preserve">
     <value>Всички събития</value>
   </data>
+  <data name="PageMetaDescription_AllEvents" xml:space="preserve">
+    <value>Открийте предстоящи събития в София - концерти, изложби, фестивали, театър и още, обновявано ежедневно.</value>
+  </data>
   <data name="PageTitle_FreeEvents" xml:space="preserve">
     <value>Безплатни събития</value>
   </data>
