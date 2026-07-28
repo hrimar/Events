@@ -1,3 +1,4 @@
+using Events.Models;
 using Events.Models.Entities;
 using Events.Services.Interfaces;
 using Events.Web.Infrastructure;
@@ -15,17 +16,20 @@ public class VenuesController : Controller
     private readonly IVenueService _venueService;
     private readonly ILogger<VenuesController> _logger;
     private readonly ISiteUrlProvider _siteUrlProvider;
+    private readonly ISeoMetaService _seoMetaService;
     private readonly IStringLocalizer<SharedResources> _localizer;
 
     public VenuesController(
         IVenueService venueService,
         ILogger<VenuesController> logger,
         ISiteUrlProvider siteUrlProvider,
+        ISeoMetaService seoMetaService,
         IStringLocalizer<SharedResources> localizer)
     {
         _venueService = venueService;
         _logger = logger;
         _siteUrlProvider = siteUrlProvider;
+        _seoMetaService = seoMetaService;
         _localizer = localizer;
     }
 
@@ -60,6 +64,28 @@ public class VenuesController : Controller
 
             ViewBag.Search = search;
             ViewData["Title"] = _localizer["Venue_IndexTitle"].Value;
+
+            // Default description until an admin configures PageSeoMeta for this page -
+            // set before the lookup (not clobbered after), mirroring the Home page fix.
+            var pageMetaDescription = _localizer["Venue_IndexSubtitle"].Value;
+
+            var seo = await _seoMetaService.GetByKeyAsync(SeoPageKeys.VenuesIndex);
+            if (seo != null)
+            {
+                var isEnglish = CultureHelper.IsEnglish();
+                var seoTitle = seo.LocalizedTitle(isEnglish);
+                if (!string.IsNullOrWhiteSpace(seoTitle))
+                    ViewData["Title"] = seoTitle;
+
+                var seoDescription = seo.LocalizedDescription(isEnglish);
+                if (!string.IsNullOrWhiteSpace(seoDescription))
+                    pageMetaDescription = seoDescription;
+            }
+
+            ViewData["MetaDescription"] = pageMetaDescription;
+            ViewData["OgImageUrl"] = _siteUrlProvider.BuildAbsoluteUrl("/images/logo.jpeg");
+            ViewData["OgUrl"] = _siteUrlProvider.BuildAbsoluteUrl("/Venues");
+
             return View(viewModels);
         }
         catch (Exception ex)
