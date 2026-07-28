@@ -182,6 +182,12 @@ public class SiteContentController : Controller
         if (pageKey == Events.Models.SeoPageKeys.AboutUs)
             return "About Us";
 
+        if (pageKey == Events.Models.SeoPageKeys.AllEvents)
+            return "All Events (listing)";
+
+        if (pageKey == Events.Models.SeoPageKeys.VenuesIndex)
+            return "Venues (listing)";
+
         const string categoryPrefix = "category-";
         if (pageKey.StartsWith(categoryPrefix, StringComparison.OrdinalIgnoreCase))
         {

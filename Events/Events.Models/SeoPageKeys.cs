@@ -7,6 +7,8 @@ public static class SeoPageKeys
 {
     public const string Home = "home";
     public const string AboutUs = "about-us";
+    public const string AllEvents = "events-all";
+    public const string VenuesIndex = "venues-index";
 
     public static string ForCategory(EventCategory category) => $"category-{category.ToString().ToLowerInvariant()}";
 }

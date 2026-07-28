@@ -700,6 +700,9 @@ public class EventsDbContext : IdentityDbContext<User>
             rows.Add(new PageSeoMeta { Id = id++, PageKey = SeoPageKeys.ForCategory(category), UpdatedAt = SeedDate });
         }
 
+        rows.Add(new PageSeoMeta { Id = id++, PageKey = SeoPageKeys.AllEvents, UpdatedAt = SeedDate });
+        rows.Add(new PageSeoMeta { Id = id++, PageKey = SeoPageKeys.VenuesIndex, UpdatedAt = SeedDate });
+
         modelBuilder.Entity<PageSeoMeta>().HasData(rows);
     }
 
