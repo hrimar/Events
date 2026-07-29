@@ -67,6 +67,24 @@ public class SeoController : Controller
             "Disallow: /Admin/\n" +   // admin area - no SEO value, has its own auth anyway
             "Disallow: /Identity/\n" + // login/register/manage account pages
             "Disallow: /api/\n" +     // JSON endpoints, not crawlable pages
+
+            // The Events listing's sort/pagination links propagate every active filter into
+            // the query string (see Events/Index.cshtml), so combined with category/tags/date
+            // range/search they form a huge combinatorial space of near-duplicate URLs, all of
+            // which already canonicalize to a clean "/Events" or "/Events?category=X" (see
+            // EventsController.Index). Blocking crawl of these "noise" parameters directly stops
+            // Google from wasting crawl budget discovering/re-evaluating them as duplicates,
+            // rather than relying solely on the canonical tag to consolidate them after the fact.
+            "Disallow: /Events?*sortBy=\n" +
+            "Disallow: /Events?*sortOrder=\n" +
+            "Disallow: /Events?*fromDate=\n" +
+            "Disallow: /Events?*toDate=\n" +
+            "Disallow: /Events?*tags=\n" +
+            "Disallow: /Events?*search=\n" +
+            "Disallow: /Events?*subCategory=\n" +
+            "Disallow: /Events?*free=\n" +
+            "Disallow: /Events?*page=\n" +
+
             $"\nSitemap: {baseUrl}/sitemap.xml\n";
 
         return Content(content, "text/plain", Encoding.UTF8);
