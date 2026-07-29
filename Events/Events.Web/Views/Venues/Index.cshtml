@@ -3,7 +3,8 @@
 @using Microsoft.Extensions.Localization
 @inject IStringLocalizer<SharedResources> Localizer
 @{
-    ViewData["Title"] = Localizer["Venue_IndexTitle"];
+    // Title/MetaDescription are set in VenuesController.Index (default + admin PageSeoMeta
+    // override) - not clobbered here.
     var search = ViewBag.Search as string;
 }
 

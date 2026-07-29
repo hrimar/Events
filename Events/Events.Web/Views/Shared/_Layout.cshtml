@@ -34,7 +34,7 @@
             document.documentElement.setAttribute('data-theme', t);
         })();
     </script>
-    <title>@(ViewData["PageTitle"] ?? ViewData["Title"] + " — Sofia Events")</title>
+    <title>@(ViewData["PageTitle"] ?? ViewData["Title"])</title>
     <link rel="canonical" href="@(ViewData["CanonicalUrl"] ?? SiteUrlProvider.BuildAbsoluteUrl(Context.Request.Path))" />
     <link rel="icon" type="image/png" href="~/images/favicon.png" asp-append-version="true" />
 

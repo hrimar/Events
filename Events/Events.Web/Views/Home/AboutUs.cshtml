@@ -3,9 +3,8 @@
 @using Microsoft.Extensions.Localization
 @inject IStringLocalizer<SharedResources> Localizer
 
-@{
-    ViewData["Title"] = Localizer["AboutUs_Title"];
-}
+@* Title/MetaDescription are set in HomeController.AboutUs (default + admin PageSeoMeta
+   override) - not here, so this view doesn't clobber the admin-configured value. *@
 
 <div class="container py-5">
     <div class="row justify-content-center">
