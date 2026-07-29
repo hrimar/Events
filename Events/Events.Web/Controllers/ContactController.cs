@@ -1,4 +1,7 @@
 using System.Text.Encodings.Web;
+using Events.Models;
+using Events.Services.Interfaces;
+using Events.Web.Infrastructure;
 using Events.Web.Localization;
 using Events.Web.Models;
 using Events.Web.Options;
@@ -15,23 +18,31 @@ public class ContactController : Controller
     private readonly IEmailSender _emailSender;
     private readonly IStringLocalizer<SharedResources> _localizer;
     private readonly ILogger<ContactController> _logger;
+    private readonly ISeoMetaService _seoMetaService;
     private readonly SmtpOptions _smtpOptions;
 
     public ContactController(
         IEmailSender emailSender,
         IStringLocalizer<SharedResources> localizer,
         ILogger<ContactController> logger,
+        ISeoMetaService seoMetaService,
         IOptions<SmtpOptions> smtpOptions)
     {
         _emailSender = emailSender;
         _localizer = localizer;
         _logger = logger;
+        _seoMetaService = seoMetaService;
         _smtpOptions = smtpOptions.Value;
     }
 
-    public IActionResult Index()
+    public async Task<IActionResult> Index()
     {
+        // Default title (mirrors HomeController.AboutUs) - set before the PageSeoMeta
+        // override, not clobbered after, so the page never has empty title/description.
         ViewData["Title"] = _localizer["Contact_Title"];
+
+        var seo = await _seoMetaService.GetByKeyAsync(SeoPageKeys.Contact);
+        ViewData.ApplySeoMeta(seo);
 
         var model = new ContactViewModel
         {

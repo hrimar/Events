@@ -43,15 +43,17 @@ public class SiteContentController : Controller
                     AboutUsContentBg = siteContent.AboutUsContentBg,
                     AboutUsContentEn = siteContent.AboutUsContentEn
                 },
-                SeoItems = seoPages.Select(p => new PageSeoMetaFormItem
-                {
-                    PageKey = p.PageKey,
-                    DisplayName = GetDisplayName(p.PageKey),
-                    TitleBg = p.TitleBg,
-                    TitleEn = p.TitleEn,
-                    DescriptionBg = p.DescriptionBg,
-                    DescriptionEn = p.DescriptionEn
-                }).ToList()
+                SeoItems = seoPages
+                    .OrderBy(p => GetDisplayOrder(p.PageKey))
+                    .Select(p => new PageSeoMetaFormItem
+                    {
+                        PageKey = p.PageKey,
+                        DisplayName = GetDisplayName(p.PageKey),
+                        TitleBg = p.TitleBg,
+                        TitleEn = p.TitleEn,
+                        DescriptionBg = p.DescriptionBg,
+                        DescriptionEn = p.DescriptionEn
+                    }).ToList()
             };
 
             return View(viewModel);
@@ -160,15 +162,17 @@ public class SiteContentController : Controller
                 AboutUsContentBg = siteContent.AboutUsContentBg,
                 AboutUsContentEn = siteContent.AboutUsContentEn
             },
-            SeoItems = seoPages.Select(p => new PageSeoMetaFormItem
-            {
-                PageKey = p.PageKey,
-                DisplayName = GetDisplayName(p.PageKey),
-                TitleBg = p.TitleBg,
-                TitleEn = p.TitleEn,
-                DescriptionBg = p.DescriptionBg,
-                DescriptionEn = p.DescriptionEn
-            }).ToList()
+            SeoItems = seoPages
+                .OrderBy(p => GetDisplayOrder(p.PageKey))
+                .Select(p => new PageSeoMetaFormItem
+                {
+                    PageKey = p.PageKey,
+                    DisplayName = GetDisplayName(p.PageKey),
+                    TitleBg = p.TitleBg,
+                    TitleEn = p.TitleEn,
+                    DescriptionBg = p.DescriptionBg,
+                    DescriptionEn = p.DescriptionEn
+                }).ToList()
         };
 
         return View(nameof(Index), viewModel);
@@ -181,6 +185,9 @@ public class SiteContentController : Controller
 
         if (pageKey == Events.Models.SeoPageKeys.AboutUs)
             return "About Us";
+
+        if (pageKey == Events.Models.SeoPageKeys.Contact)
+            return "Contact";
 
         if (pageKey == Events.Models.SeoPageKeys.AllEvents)
             return "All Events (listing)";
@@ -197,5 +204,23 @@ public class SiteContentController : Controller
         }
 
         return pageKey;
+    }
+
+    // Display order in the admin SEO table, independent of the underlying PageSeoMeta.Id
+    // (which stays append-only/immutable to avoid renumbering already-seeded rows in a
+    // live database). Home/AboutUs/Contact are pinned first, in that exact order; every
+    // other key keeps its existing relative (Id-ascending) order via a stable sort.
+    private static int GetDisplayOrder(string pageKey)
+    {
+        if (pageKey == Events.Models.SeoPageKeys.Home)
+            return 0;
+
+        if (pageKey == Events.Models.SeoPageKeys.AboutUs)
+            return 1;
+
+        if (pageKey == Events.Models.SeoPageKeys.Contact)
+            return 2;
+
+        return int.MaxValue;
     }
 }
