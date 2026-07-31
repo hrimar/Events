@@ -2,6 +2,15 @@
 
 @{
     ViewData["Title"] = "Admin Dashboard";
+
+    string createdAtDrillDownUrl(DateTime from, DateTime? to = null) => Url.Action("Index", "Events", new
+    {
+        area = "Admin",
+        createdAtFrom = from.ToString("yyyy-MM-dd"),
+        createdAtTo = to?.ToString("yyyy-MM-dd"),
+        sortBy = "createdat",
+        sortOrder = "desc"
+    })!;
 }
 
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -81,30 +90,36 @@
 <!-- Activity Stats -->
 <div class="row mb-4">
     <div class="col-6 col-md-4 mb-3">
-        <div class="card">
-            <div class="card-body">
-                <h6 class="card-title text-muted">Events Added Today</h6>
-                <h3 class="mb-0">@Model.EventsAddedToday</h3>
+        <a href="@createdAtDrillDownUrl(Model.TodayDate, Model.TodayDate)" class="text-decoration-none text-reset">
+            <div class="card stat-card-link">
+                <div class="card-body">
+                    <h6 class="card-title text-muted">Events Added Today</h6>
+                    <h3 class="mb-0">@Model.EventsAddedToday</h3>
+                </div>
             </div>
-        </div>
+        </a>
     </div>
-    
+
     <div class="col-6 col-md-4 mb-3">
-        <div class="card">
-            <div class="card-body">
-                <h6 class="card-title text-muted">Events This Week</h6>
-                <h3 class="mb-0">@Model.EventsAddedThisWeek</h3>
+        <a href="@createdAtDrillDownUrl(Model.WeekStartDate)" class="text-decoration-none text-reset">
+            <div class="card stat-card-link">
+                <div class="card-body">
+                    <h6 class="card-title text-muted">Events This Week</h6>
+                    <h3 class="mb-0">@Model.EventsAddedThisWeek</h3>
+                </div>
             </div>
-        </div>
+        </a>
     </div>
-    
+
     <div class="col-6 col-md-4 mb-3">
-        <div class="card">
-            <div class="card-body">
-                <h6 class="card-title text-muted">Events This Month</h6>
-                <h3 class="mb-0">@Model.EventsAddedThisMonth</h3>
+        <a href="@createdAtDrillDownUrl(Model.MonthStartDate)" class="text-decoration-none text-reset">
+            <div class="card stat-card-link">
+                <div class="card-body">
+                    <h6 class="card-title text-muted">Events This Month</h6>
+                    <h3 class="mb-0">@Model.EventsAddedThisMonth</h3>
+                </div>
             </div>
-        </div>
+        </a>
     </div>
 </div>
 
@@ -271,3 +286,11 @@
         </div>
     </div>
 </div>
+
+<style>
+    .stat-card-link:hover {
+        box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.1);
+        cursor: pointer;
+        transition: box-shadow 0.15s ease-in-out;
+    }
+</style>

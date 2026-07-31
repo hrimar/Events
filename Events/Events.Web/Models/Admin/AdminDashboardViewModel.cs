@@ -10,6 +10,9 @@ public class AdminDashboardViewModel
     public int EventsAddedToday { get; set; }
     public int EventsAddedThisWeek { get; set; }
     public int EventsAddedThisMonth { get; set; }
+    public DateTime TodayDate { get; set; }
+    public DateTime WeekStartDate { get; set; }
+    public DateTime MonthStartDate { get; set; }
 
     public List<CategoryStatistic> CategoryStatistics { get; set; } = new();
     public List<AdminEventViewModel> RecentEvents { get; set; } = new();

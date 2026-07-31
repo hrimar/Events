@@ -85,6 +85,14 @@
                 <label for="toDate" class="form-label">To</label>
                 <input type="date" class="form-control" id="toDate" name="toDate" value="@filters.ToDate?.ToString("yyyy-MM-dd")">
             </div>
+            <div class="col-md-1">
+                <label for="createdAtFrom" class="form-label">Added from</label>
+                <input type="date" class="form-control" id="createdAtFrom" name="createdAtFrom" value="@filters.CreatedAtFrom?.ToString("yyyy-MM-dd")">
+            </div>
+            <div class="col-md-1">
+                <label for="createdAtTo" class="form-label">Added to</label>
+                <input type="date" class="form-control" id="createdAtTo" name="createdAtTo" value="@filters.CreatedAtTo?.ToString("yyyy-MM-dd")">
+            </div>
             <div class="col-md-1 d-flex align-items-end">
                 <button type="submit" class="btn btn-primary w-100" title="Apply filters">
                     <i class="fas fa-search"></i>
@@ -119,6 +127,14 @@
                     @if (filters.ToDate.HasValue)
                     {
                         <span class="badge bg-light text-dark border ms-2">To: @filters.ToDate.Value.ToString("yyyy-MM-dd")</span>
+                    }
+                    @if (filters.CreatedAtFrom.HasValue)
+                    {
+                        <span class="badge bg-light text-dark border ms-2">Added from: @filters.CreatedAtFrom.Value.ToString("yyyy-MM-dd")</span>
+                    }
+                    @if (filters.CreatedAtTo.HasValue)
+                    {
+                        <span class="badge bg-light text-dark border ms-2">Added to: @filters.CreatedAtTo.Value.ToString("yyyy-MM-dd")</span>
                     }
                 </div>
             }
@@ -255,6 +271,15 @@
                                 }
                             </a>
                         </th>
+                        <th style="width: 130px;">
+                            <a href="@buildSortUrl("createdat")" class="text-decoration-none text-dark d-flex align-items-center gap-1">
+                                Added
+                                @if(isCurrentSort("createdat"))
+                                {
+                                    <i class="fas fa-chevron-@(filters.SortOrder == "asc" ? "up" : "down") ms-1"></i>
+                                }
+                            </a>
+                        </th>
                         <th style="width: 150px;">Actions</th>
                     </tr>
                 </thead>
@@ -339,6 +364,9 @@
                                 {
                                     <i class="far fa-star text-muted"></i>
                                 }
+                            </td>
+                            <td>
+                                <small>@evt.FormattedCreatedAt</small>
                             </td>
                             <td>
                                 <div class="btn-group btn-group-sm">

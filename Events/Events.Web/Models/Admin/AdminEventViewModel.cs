@@ -29,6 +29,7 @@ public class AdminEventViewModel
     public List<string> Tags { get; set; } = new();
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+    public string FormattedCreatedAt => CreatedAt.ToString("dd.MM.yyyy HH:mm");
     public string? SourceUrl { get; set; }
 
     public string ShortDescription => Description?.Length > 100 

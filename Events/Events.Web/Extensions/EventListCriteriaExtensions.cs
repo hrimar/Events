@@ -36,6 +36,12 @@ public static class EventListCriteriaExtensions
         if (criteria.ToDate.HasValue)
             route["toDate"] = criteria.ToDate.Value.ToString("yyyy-MM-dd");
 
+        if (criteria.CreatedAtFrom.HasValue)
+            route["createdAtFrom"] = criteria.CreatedAtFrom.Value.ToString("yyyy-MM-dd");
+
+        if (criteria.CreatedAtTo.HasValue)
+            route["createdAtTo"] = criteria.CreatedAtTo.Value.ToString("yyyy-MM-dd");
+
         return route;
     }
 }

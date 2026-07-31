@@ -157,6 +157,19 @@ public class EventRepository : IEventRepository
             query = query.Where(e => e.Date < exclusiveEnd);
         }
 
+        if (criteria.CreatedAtFrom.HasValue)
+        {
+            query = query.Where(e => e.CreatedAt >= criteria.CreatedAtFrom.Value);
+        }
+
+        if (criteria.CreatedAtTo.HasValue)
+        {
+            var exclusiveEnd = criteria.CreatedAtTo.Value.Date == DateTime.MaxValue.Date
+                ? DateTime.MaxValue
+                : criteria.CreatedAtTo.Value.AddDays(1);
+            query = query.Where(e => e.CreatedAt < exclusiveEnd);
+        }
+
         if (!string.IsNullOrWhiteSpace(criteria.Search))
         {
             var searchTerm = criteria.Search;
@@ -208,6 +221,9 @@ public class EventRepository : IEventRepository
             "featured" => isDescending
                 ? query.OrderByDescending(e => e.IsFeatured)
                 : query.OrderBy(e => e.IsFeatured),
+            "createdat" => isDescending
+                ? query.OrderByDescending(e => e.CreatedAt)
+                : query.OrderBy(e => e.CreatedAt),
             _ => isDescending
                 ? query.OrderByDescending(e => e.Date).ThenByDescending(e => e.StartTime.HasValue ? e.StartTime.Value : TimeSpan.Zero)
                 : query.OrderBy(e => e.Date).ThenBy(e => e.StartTime.HasValue ? e.StartTime.Value : TimeSpan.Zero)

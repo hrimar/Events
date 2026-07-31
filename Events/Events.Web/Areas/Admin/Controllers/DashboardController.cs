@@ -42,16 +42,19 @@ public class DashboardController : Controller
             var today = DateTime.Today;
             var todayEvents = allEvents.Where(e => e.CreatedAt.Date == today).Count();
             viewModel.EventsAddedToday = todayEvents;
+            viewModel.TodayDate = today;
 
             // Events added this week
             var weekStart = today.AddDays(-(int)today.DayOfWeek);
             var weekEvents = allEvents.Where(e => e.CreatedAt >= weekStart).Count();
             viewModel.EventsAddedThisWeek = weekEvents;
+            viewModel.WeekStartDate = weekStart;
 
             // Events added this month
             var monthStart = new DateTime(today.Year, today.Month, 1);
             var monthEvents = allEvents.Where(e => e.CreatedAt >= monthStart).Count();
             viewModel.EventsAddedThisMonth = monthEvents;
+            viewModel.MonthStartDate = monthStart;
 
             // Get category statistics
             viewModel.CategoryStatistics = allEvents

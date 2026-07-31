@@ -13,6 +13,8 @@ public sealed class EventListCriteria
     public bool? IsFree { get; init; }
     public DateTime? FromDate { get; init; }
     public DateTime? ToDate { get; init; }
+    public DateTime? CreatedAtFrom { get; init; }
+    public DateTime? CreatedAtTo { get; init; }
     public string SortBy { get; init; } = "date";
     public string SortOrder { get; init; } = "asc";
 
@@ -37,6 +39,8 @@ public sealed class EventListCriteria
             IsFree = IsFree,
             FromDate = FromDate?.Date,
             ToDate = ToDate?.Date,
+            CreatedAtFrom = CreatedAtFrom?.Date,
+            CreatedAtTo = CreatedAtTo?.Date,
             SortBy = sortBy,
             SortOrder = sortOrder
         };
@@ -49,5 +53,7 @@ public sealed class EventListCriteria
         SubCategoryId.HasValue ||
         IsFree.HasValue ||
         FromDate.HasValue ||
-        ToDate.HasValue;
+        ToDate.HasValue ||
+        CreatedAtFrom.HasValue ||
+        CreatedAtTo.HasValue;
 }
