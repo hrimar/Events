@@ -73,11 +73,7 @@ public class TicketStationCrawler : IWebScrapingCrawler
             EnsureBrowsersInstalled();
 
             using var playwright = await Playwright.CreateAsync();
-            var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
-            {
-                Headless = true,
-                Args = new[] { "--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage" }
-            });
+            var browser = await playwright.Chromium.LaunchAsync(BuildLaunchOptions());
 
             var page = await browser.NewPageAsync();
 
@@ -122,11 +118,7 @@ public class TicketStationCrawler : IWebScrapingCrawler
             EnsureBrowsersInstalled();
 
             using var playwright = await Playwright.CreateAsync();
-            var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
-            {
-                Headless = true,
-                Args = new[] { "--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage" }
-            });
+            var browser = await playwright.Chromium.LaunchAsync(BuildLaunchOptions());
 
             var page = await browser.NewPageAsync();
 
@@ -154,6 +146,40 @@ public class TicketStationCrawler : IWebScrapingCrawler
     public bool IsHealthy()
     {
         return PlaywrightHelper.IsChromiumAvailable();
+    }
+
+    // ticketstation.bg's WAF blocks cloud/datacenter IP ranges outright (confirmed 403 from
+    // both Azure and an unrelated Azure Cloud Shell test), while ordinary ISP connections pass
+    // through fine. Route through a residential/mobile proxy when one is configured via
+    // environment variables, so this crawler's requests don't get rejected before they even
+    // reach the site. Falls back to a direct (unproxied) connection when unset (e.g. local dev).
+    private BrowserTypeLaunchOptions BuildLaunchOptions()
+    {
+        var options = new BrowserTypeLaunchOptions
+        {
+            Headless = true,
+            Args = new[] { "--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage" }
+        };
+
+        var proxyServer = Environment.GetEnvironmentVariable("TICKETSTATION_PROXY_SERVER");
+        if (!string.IsNullOrEmpty(proxyServer))
+        {
+            options.Proxy = new Proxy
+            {
+                Server = proxyServer,
+                Username = Environment.GetEnvironmentVariable("TICKETSTATION_PROXY_USERNAME"),
+                Password = Environment.GetEnvironmentVariable("TICKETSTATION_PROXY_PASSWORD")
+            };
+            _logger.LogInformation("[{Source}] Routing through configured proxy", SourceName);
+        }
+        else
+        {
+            _logger.LogWarning(
+                "[{Source}] No proxy configured (TICKETSTATION_PROXY_SERVER not set) — requests from a cloud-hosted container will likely be blocked (403)",
+                SourceName);
+        }
+
+        return options;
     }
 
     private void EnsureBrowsersInstalled()
@@ -228,7 +254,7 @@ public class TicketStationCrawler : IWebScrapingCrawler
             try
             {
                 using var playwright = await Playwright.CreateAsync();
-                var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = true });
+                var browser = await playwright.Chromium.LaunchAsync(BuildLaunchOptions());
                 // A single shared context keeps cookies/cache/connections warm across all pages,
                 // while each page is still closed after use to bound its renderer memory lifetime.
                 var context = await browser.NewContextAsync();
@@ -620,7 +646,7 @@ public class TicketStationCrawler : IWebScrapingCrawler
     // Navigates to the detail page. If the page contains sub-cards (multiple dates), processes each one.
     // Returns a list: one dto per date slot, or a single dto for single-date events.
     private async Task<List<TicketStationEventDto>> ExtractEventDetailsAsync(IPage page, CardBasicData cardData)
-    {
+     {
         var results = new List<TicketStationEventDto>();
 
         // Step 2: Detail page — wait explicitly for .item.ev-radius.mb-3 to render (JS-driven)
@@ -680,7 +706,7 @@ public class TicketStationCrawler : IWebScrapingCrawler
                 var bookingUrl = sub.Href.StartsWith("/") ? $"https://ticketstation.bg{sub.Href}" : sub.Href;
                 var subName = !string.IsNullOrWhiteSpace(sub.Name) ? sub.Name : cardData.Name;
 
-                var dto = await ExtractBookingPageDetailsAsync(page, bookingUrl, new TicketStationEventDto
+                var dtos = await ExtractBookingPageDetailsAsync(page, bookingUrl, new TicketStationEventDto
                 {
                     Name = subName,
                     City = cardData.City,
@@ -688,8 +714,7 @@ public class TicketStationCrawler : IWebScrapingCrawler
                     Url = "https://ticketstation.bg"
                 });
 
-                if (dto != null)
-                    results.Add(dto);
+                results.AddRange(dtos);
             }
         }
         else
@@ -703,7 +728,7 @@ public class TicketStationCrawler : IWebScrapingCrawler
             }
 
             var locationUrl = firstHref.StartsWith("/") ? $"https://ticketstation.bg{firstHref}" : firstHref;
-            var dto = await ExtractBookingPageDetailsAsync(page, locationUrl, new TicketStationEventDto
+            var dtos = await ExtractBookingPageDetailsAsync(page, locationUrl, new TicketStationEventDto
             {
                 Name = cardData.Name,
                 City = cardData.City,
@@ -711,8 +736,7 @@ public class TicketStationCrawler : IWebScrapingCrawler
                 Url = "https://ticketstation.bg"
             });
 
-            if (dto != null)
-                results.Add(dto);
+            results.AddRange(dtos);
         }
 
         return results;
@@ -725,7 +749,9 @@ public class TicketStationCrawler : IWebScrapingCrawler
     }
 
     // Navigates to the booking/location page and extracts description, date, venue.
-    private async Task<TicketStationEventDto?> ExtractBookingPageDetailsAsync(IPage page, string bookingUrl, TicketStationEventDto eventDto)
+    // Normally returns a single-item list; returns one item per date when the description
+    // lists multiple dates for the same card (e.g. a recurring event with one shared booking page).
+    private async Task<List<TicketStationEventDto>> ExtractBookingPageDetailsAsync(IPage page, string bookingUrl, TicketStationEventDto eventDto)
     {
         await page.GotoAsync(bookingUrl, new PageGotoOptions
         {
@@ -755,6 +781,32 @@ public class TicketStationCrawler : IWebScrapingCrawler
 
         if (!string.IsNullOrEmpty(eventDto.Description))
         {
+            // Some events (e.g. a recurring party) list several dates as separate lines in the
+            // description instead of separate date sub-cards. Detect that case first; if fewer
+            // than 2 dates are found this way, fall back to the existing single-date extraction.
+            var multipleDates = ExtractAllDatesFromDescription(eventDto.Description);
+            if (multipleDates.Count > 1)
+            {
+                _logger.LogInformation("[{Source}] Found {Count} dates in description for '{Name}' — creating separate events",
+                    SourceName, multipleDates.Count, eventDto.Name);
+
+                return multipleDates.Select(date => new TicketStationEventDto
+                {
+                    Name = eventDto.Name,
+                    City = eventDto.City,
+                    ImageUrl = eventDto.ImageUrl,
+                    Url = eventDto.Url,
+                    // All dates share one physical booking page, so append a date fragment to keep
+                    // TicketUrl unique per showing — FindExistingEventAsync matches by Name+TicketUrl,
+                    // and an identical TicketUrl across clones would collapse them into "duplicates".
+                    TicketUrl = $"{eventDto.TicketUrl}#{date:yyyy-MM-dd}",
+                    Description = eventDto.Description,
+                    Location = eventDto.Location,
+                    Price = eventDto.Price,
+                    Date = date.ToString("yyyy-MM-dd")
+                }).ToList();
+            }
+
             var extractedDate = ExtractDateFromDescription(eventDto.Description);
             if (extractedDate.HasValue)
             {
@@ -767,7 +819,51 @@ public class TicketStationCrawler : IWebScrapingCrawler
             }
         }
 
-        return eventDto;
+        return [eventDto];
+    }
+
+    // Detects the "DD month, HH:MM - HH:MM – <title>" repeated-line format used by events with
+    // several distinct dates listed in a single description (one shared booking card for all
+    // dates), e.g. "31 юли, 19:00 - 00:00 – DJ PARTY IBIZA COMES TO YOU". Returns all distinct
+    // dates found, sorted; empty/single-element results mean the caller should use the existing
+    // single-date extraction instead.
+    private List<DateTime> ExtractAllDatesFromDescription(string? description)
+    {
+        var dates = new List<DateTime>();
+        if (string.IsNullOrWhiteSpace(description))
+            return dates;
+
+        var bulgarianMonths = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["януари"] = 1, ["ян"] = 1, ["яну"] = 1,
+            ["февруари"] = 2, ["фев"] = 2, ["феб"] = 2,
+            ["март"] = 3, ["мар"] = 3,
+            ["април"] = 4, ["апр"] = 4,
+            ["май"] = 5,
+            ["юни"] = 6, ["юн"] = 6,
+            ["юли"] = 7, ["юл"] = 7,
+            ["август"] = 8, ["авг"] = 8,
+            ["септември"] = 9, ["сеп"] = 9,
+            ["октомври"] = 10, ["окт"] = 10,
+            ["ноември"] = 11, ["ное"] = 11,
+            ["декември"] = 12, ["дек"] = 12
+        };
+
+        var currentDate = DateTime.Today;
+        var pattern = @"(\d{1,2})\s+([а-яА-Я]+)\s*,\s*\d{1,2}:\d{2}\s*-\s*\d{1,2}:\d{2}";
+        var matches = System.Text.RegularExpressions.Regex.Matches(description, pattern, System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+        foreach (System.Text.RegularExpressions.Match match in matches)
+        {
+            if (TryParseBulgarianDateWithoutYear(match.Groups[1].Value, match.Groups[2].Value, bulgarianMonths, currentDate, out var date)
+                && !dates.Contains(date))
+            {
+                dates.Add(date);
+            }
+        }
+
+        dates.Sort();
+        return dates;
     }
 
     private CrawledEventDto? MapTicketStationToStandardDto(TicketStationEventDto ticketStationEvent)
