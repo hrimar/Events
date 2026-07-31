@@ -21,6 +21,19 @@ public interface IImageUploadService
     Task<(string OriginalUrl, string ThumbnailUrl)> UploadEventImageAsync(IFormFile file, string eventIdOrSessionId);
 
     /// <summary>
+    /// Uploads an image file for a venue and returns the original image URL.
+    /// Performs synchronous upload with automatic resizing. No thumbnail is generated,
+    /// since venue pages only display the original photo.
+    /// Supports both numeric venue IDs and GUID session IDs.
+    /// </summary>
+    /// <param name="file">The image file to upload</param>
+    /// <param name="venueIdOrSessionId">Venue ID (int) or session GUID (string)</param>
+    /// <returns>Full URL of the uploaded image</returns>
+    /// <exception cref="ArgumentException">Thrown when file validation fails</exception>
+    /// <exception cref="InvalidOperationException">Thrown when upload fails</exception>
+    Task<string> UploadVenueImageAsync(IFormFile file, string venueIdOrSessionId);
+
+    /// <summary>
     /// Deletes an image from cloud storage.
     /// </summary>
     /// <param name="imageUrl">The full URL or blob name of the image to delete</param>

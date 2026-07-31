@@ -111,37 +111,10 @@ public class AzureBlobImageService : IImageUploadService
             var originalFileName = $"original/{eventIdOrSessionId}_{timestamp}.jpg";
             var thumbnailFileName = $"thumbnails/{eventIdOrSessionId}_{timestamp}.jpg";
 
-            // Save the original image
-            await using (var fileStream = file.OpenReadStream())
-            {
-                using var originalImage = Image.Load(fileStream);
-
-                // Resize the original image if it's larger
-                if (originalImage.Width > OriginalMaxWidth || originalImage.Height > OriginalMaxHeight)
-                {
-                    originalImage.Mutate(x => x.Resize(new ResizeOptions
-                    {
-                        Size = new Size(OriginalMaxWidth, OriginalMaxHeight),
-                        Mode = ResizeMode.Max,
-                        Sampler = KnownResamplers.Lanczos3
-                    }));
-                }
-
-                // Upload the original image
-                await using var originalStream = new MemoryStream();
-                originalImage.SaveAsJpeg(originalStream);
-                originalStream.Position = 0;
-
-                var originalBlobClient = _containerClient.GetBlobClient(originalFileName);
-                await originalBlobClient.UploadAsync(originalStream, overwrite: true);
-
-                _logger.LogInformation("Original image uploaded for event {EventId}: {BlobName}", eventIdOrSessionId, originalFileName);
-            }
+            var originalUrl = await UploadResizedOriginalAsync(file, originalFileName);
 
             // Create and upload thumbnail
             var thumbnailUrl = await CreateAndUploadThumbnailAsync(file, thumbnailFileName, eventIdOrSessionId);
-
-            var originalUrl = _containerClient.Uri.AbsoluteUri.TrimEnd('/') + "/" + originalFileName;
 
             return (originalUrl, thumbnailUrl);
         }
@@ -150,6 +123,58 @@ public class AzureBlobImageService : IImageUploadService
             _logger.LogError(ex, "Error uploading image for event {EventId}", eventIdOrSessionId);
             throw new InvalidOperationException("Failed to upload image to storage", ex);
         }
+    }
+
+    public async Task<string> UploadVenueImageAsync(IFormFile file, string venueIdOrSessionId)
+    {
+        var validation = ValidateImageFile(file);
+        if (!validation.IsValid)
+        {
+            throw new ArgumentException(validation.ErrorMessage);
+        }
+
+        try
+        {
+            var timestamp = DateTime.UtcNow.Ticks;
+            var originalFileName = $"venues/original/{venueIdOrSessionId}_{timestamp}.jpg";
+
+            var originalUrl = await UploadResizedOriginalAsync(file, originalFileName);
+
+            _logger.LogInformation("Original image uploaded for venue {VenueId}: {BlobName}", venueIdOrSessionId, originalFileName);
+
+            return originalUrl;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error uploading image for venue {VenueId}", venueIdOrSessionId);
+            throw new InvalidOperationException("Failed to upload image to storage", ex);
+        }
+    }
+
+    // Resizes (if larger than the max dimensions) and uploads an image as the "original" variant, returning its full URL.
+    private async Task<string> UploadResizedOriginalAsync(IFormFile file, string blobFileName)
+    {
+        await using var fileStream = file.OpenReadStream();
+        using var originalImage = Image.Load(fileStream);
+
+        if (originalImage.Width > OriginalMaxWidth || originalImage.Height > OriginalMaxHeight)
+        {
+            originalImage.Mutate(x => x.Resize(new ResizeOptions
+            {
+                Size = new Size(OriginalMaxWidth, OriginalMaxHeight),
+                Mode = ResizeMode.Max,
+                Sampler = KnownResamplers.Lanczos3
+            }));
+        }
+
+        await using var originalStream = new MemoryStream();
+        originalImage.SaveAsJpeg(originalStream);
+        originalStream.Position = 0;
+
+        var originalBlobClient = _containerClient.GetBlobClient(blobFileName);
+        await originalBlobClient.UploadAsync(originalStream, overwrite: true);
+
+        return _containerClient.Uri.AbsoluteUri.TrimEnd('/') + "/" + blobFileName;
     }
 
     public async Task<bool> DeleteImageAsync(string imageUrl)

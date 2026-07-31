@@ -14,12 +14,18 @@ public class VenuesController : Controller
 {
     private readonly IVenueService _venueService;
     private readonly IEventRepository _eventRepository;
+    private readonly IImageUploadService _imageUploadService;
     private readonly ILogger<VenuesController> _logger;
 
-    public VenuesController(IVenueService venueService, IEventRepository eventRepository, ILogger<VenuesController> logger)
+    public VenuesController(
+        IVenueService venueService,
+        IEventRepository eventRepository,
+        IImageUploadService imageUploadService,
+        ILogger<VenuesController> logger)
     {
         _venueService = venueService;
         _eventRepository = eventRepository;
+        _imageUploadService = imageUploadService;
         _logger = logger;
     }
 
@@ -198,7 +204,24 @@ public class VenuesController : Controller
     {
         try
         {
+            var venue = await _venueService.GetByIdAsync(id);
+
             await _venueService.DeleteAsync(id);
+
+            // Delete associated photo from Azure Blob Storage after the venue is deleted
+            if (venue != null && !string.IsNullOrEmpty(venue.PhotoUrl))
+            {
+                var deleted = await _imageUploadService.DeleteImageAsync(venue.PhotoUrl);
+                if (deleted)
+                {
+                    _logger.LogInformation("Deleted photo for venue {VenueId}: {PhotoUrl}", id, venue.PhotoUrl);
+                }
+                else
+                {
+                    _logger.LogWarning("Failed to delete photo for venue {VenueId}: {PhotoUrl}", id, venue.PhotoUrl);
+                }
+            }
+
             TempData["SuccessMessage"] = "Venue deleted successfully.";
         }
         catch (KeyNotFoundException ex)

@@ -6,6 +6,8 @@ class AdminImageUploader {
         this.dropZoneId = options.dropZoneId || 'dropZone';
         this.progressBarId = options.progressBarId || 'uploadProgress';
         this.eventIdInputId = options.eventIdInputId || 'eventId';
+        this.uploadEndpoint = options.uploadEndpoint || '/api/eventimages/upload';
+        this.idFieldName = options.idFieldName || 'eventId';
 
         this.init();
     }
@@ -114,12 +116,12 @@ class AdminImageUploader {
 
         const formData = new FormData();
         formData.append('file', file);
-        formData.append('eventId', eventId);
+        formData.append(this.idFieldName, eventId);
 
         this.showProgress(true);
 
         try {
-            const response = await fetch('/api/eventimages/upload', {
+            const response = await fetch(this.uploadEndpoint, {
                 method: 'POST',
                 body: formData
             });
@@ -205,14 +207,17 @@ class AdminImageUploader {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    if (document.getElementById('imageFile')) {
+    const fileInput = document.getElementById('imageFile');
+    if (fileInput) {
         new AdminImageUploader({
             fileInputId: 'imageFile',
             previewContainerId: 'imagePreview',
-            imageUrlInputId: 'ImageUrl',
+            imageUrlInputId: fileInput.dataset.imageUrlInputId || 'ImageUrl',
             dropZoneId: 'dropZone',
             progressBarId: 'uploadProgress',
-            eventIdInputId: 'Id'
+            eventIdInputId: 'Id',
+            uploadEndpoint: fileInput.dataset.uploadEndpoint || '/api/eventimages/upload',
+            idFieldName: fileInput.dataset.idFieldName || 'eventId'
         });
     }
 });
