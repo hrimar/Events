@@ -72,8 +72,14 @@ var host = new HostBuilder()
             client.Timeout = TimeSpan.FromSeconds(30);
         });
 
+        services.AddHttpClient<PayseraApiCrawler>(client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(30);
+        });
+
         // Crawler strategies
         services.AddScoped<IEventCrawlerStrategy, BiletBgApiCrawler>();    // via HttpClient. Paginated JSON requests to API ~ 7 min for the first invocation locally
+        services.AddScoped<IEventCrawlerStrategy, PayseraApiCrawler>();    // via HttpClient. Offset-paginated JSON requests to API
         //services.AddScoped<IEventCrawlerStrategy, TicketStationCrawler>(); // via Playwright. 3 levels of deep click. Optimized ~ 7 min for the first invocation. Wworks only locally now!
         services.AddScoped<IEventCrawlerStrategy, EventimCrawler>();       // via Playwright & AJAX. No clicks ~ 7 min for the first invocation
         services.AddScoped<IEventCrawlerStrategy, EpaygoCrawler>();        // via Playwright. Two Phases ~ 10 min for the first invocation
