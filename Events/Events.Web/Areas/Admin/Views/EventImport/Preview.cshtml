@@ -1,0 +1,78 @@
+@using Events.Services.Import.Models
+@model EventImportBatch
+
+@{
+    ViewData["Title"] = "Import Preview";
+    var okCount = Model.Rows.Count(r => r.Severity == ImportRowSeverity.Ok && !r.Excluded);
+    var warningCount = Model.Rows.Count(r => r.Severity == ImportRowSeverity.Warning && !r.Excluded);
+    var errorCount = Model.Rows.Count(r => r.Severity == ImportRowSeverity.Error && !r.Excluded);
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-list-check me-2"></i>Import Preview</h1>
+    <a asp-action="Upload" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-2"></i>Upload a Different File
+    </a>
+</div>
+
+<div class="mb-3">
+    <span class="badge bg-success me-2">OK: @okCount</span>
+    <span class="badge bg-warning text-dark me-2">Warning: @warningCount</span>
+    <span class="badge bg-danger me-2">Error: @errorCount</span>
+    <span class="text-muted">File: @Model.OriginalFileName</span>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-sm table-bordered align-middle">
+        <thead>
+            <tr>
+                <th>Row</th>
+                <th>Status</th>
+                <th>Name</th>
+                <th>Date</th>
+                <th>Category</th>
+                <th>Subcategory</th>
+                <th>Tags</th>
+                <th>Messages</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var row in Model.Rows)
+            {
+                var rowClass = row.Severity switch
+                {
+                    ImportRowSeverity.Error => "table-danger",
+                    ImportRowSeverity.Warning => "table-warning",
+                    _ => ""
+                };
+
+                <tr class="@rowClass">
+                    <td>@row.RowNumber</td>
+                    <td>@row.Severity</td>
+                    <td>@row.Name</td>
+                    <td>@(row.Date?.ToString("yyyy-MM-dd"))</td>
+                    <td>@(row.CategoryId?.ToString() ?? row.RawCategoryText)</td>
+                    <td>@(row.SubCategoryId?.ToString() ?? row.RawSubCategoryText)</td>
+                    <td>
+                        @row.MatchedTagIds.Count matched
+                        @if (row.UnmatchedTagNames.Count > 0)
+                        {
+                            <text>, unmatched: @string.Join(", ", row.UnmatchedTagNames)</text>
+                        }
+                    </td>
+                    <td>
+                        @if (row.Messages.Count > 0)
+                        {
+                            <ul class="mb-0 ps-3 small">
+                                @foreach (var message in row.Messages)
+                                {
+                                    <li>@message</li>
+                                }
+                            </ul>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

@@ -210,6 +210,7 @@ static void RegisterServices(WebApplicationBuilder builder)
     builder.Services.AddScoped<IEventImportRowMapper, EventImportRowMapper>();
     builder.Services.AddScoped<IEventImportDuplicateDetector, EventImportDuplicateDetector>();
     builder.Services.AddScoped<IEventImportService, EventImportService>();
+    builder.Services.AddSingleton<Events.Web.Areas.Admin.Services.EventImportBatchCache>();
 }
 
 static async Task InitializeDatabaseAsync(WebApplication app)

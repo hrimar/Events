@@ -1,0 +1,62 @@
+@model EventImportUploadViewModel
+
+@{
+    ViewData["Title"] = "Import Events";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-file-import me-2"></i>Import Events</h1>
+    <a asp-area="Admin" asp-controller="Events" asp-action="Index" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-2"></i>Back to Events
+    </a>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+{
+    <div class="alert alert-danger">@Model.ErrorMessage</div>
+}
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-upload me-2"></i>Upload File</h5>
+            </div>
+            <div class="card-body">
+                <form asp-action="Upload" method="post" enctype="multipart/form-data">
+                    @Html.AntiForgeryToken()
+
+                    <div class="mb-3">
+                        <label for="file" class="form-label">Select an .xlsx or .csv file</label>
+                        <input type="file" class="form-control" id="file" name="file" accept=".xlsx,.csv" required />
+                        <div class="form-text">Maximum file size: 10 MB.</div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-upload me-2"></i>Upload &amp; Preview
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-file-download me-2"></i>Column Template</h5>
+            </div>
+            <div class="card-body">
+                <p>
+                    Use the following columns (in this order): <strong>Event Name, Date, Start Time, City,
+                    Venue/Location, Description, Category, Subcategory, Tags (up to 3), Image URL, Ticket URL,
+                    This is a free event, Event Status, Featured Event (Display on homepage)</strong>.
+                </p>
+                <p class="text-muted mb-0">
+                    After upload you'll get a preview screen where any row with an unrecognized Category,
+                    Subcategory, Tag or Status can be corrected manually before the events are saved.
+                </p>
+                <a href="~/templates/event-import-template.xlsx" class="btn btn-outline-secondary mt-2" download>
+                    <i class="fas fa-download me-2"></i>Download .xlsx template
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
