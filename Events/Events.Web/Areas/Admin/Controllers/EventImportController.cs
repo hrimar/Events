@@ -121,6 +121,38 @@ public class EventImportController : Controller
         return View(await BuildPreviewViewModelAsync(batch));
     }
 
+    // POST: Admin/EventImport/Confirm — applies any last-second corrections from the Preview form,
+    // then commits the accepted rows to the database.
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Confirm(EventImportPreviewEditViewModel model)
+    {
+        var batch = _batchCache.Get(GetUserKey(), model.BatchId);
+        if (batch == null)
+        {
+            TempData["ErrorMessage"] = "This import session has expired. Please upload the file again.";
+            return RedirectToAction(nameof(Upload));
+        }
+
+        ApplyEdits(batch, model);
+
+        if (batch.Rows.Any(r => !r.Excluded && r.Severity == ImportRowSeverity.Error))
+        {
+            _batchCache.Store(GetUserKey(), batch);
+            TempData["ErrorMessage"] = "Some rows still have unresolved errors. Exclude them or fix the source file before confirming.";
+            return RedirectToAction(nameof(Preview), new { batchId = batch.BatchId });
+        }
+
+        var result = await _eventImportService.CommitAsync(batch);
+        _batchCache.Remove(GetUserKey(), batch.BatchId);
+
+        _logger.LogInformation(
+            "Event import batch {BatchId} committed: {Created} created, {Skipped} skipped, {Failed} failed",
+            batch.BatchId, result.CreatedCount, result.SkippedExcludedCount, result.FailedCount);
+
+        return View("Result", result);
+    }
+
     private static void ApplyEdits(EventImportBatch batch, EventImportPreviewEditViewModel model)
     {
         var editsByRow = model.Rows.ToDictionary(r => r.RowNumber);

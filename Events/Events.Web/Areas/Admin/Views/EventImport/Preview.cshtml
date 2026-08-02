@@ -147,6 +147,13 @@
     <button type="submit" class="btn btn-outline-primary">
         <i class="fas fa-rotate me-2"></i>Save Corrections &amp; Re-validate
     </button>
+    <button type="submit" formaction="@Url.Action("Confirm")" class="btn btn-success" id="confirmButton" disabled="@hasBlockingRows">
+        <i class="fas fa-check me-2"></i>Confirm Import
+    </button>
+    @if (hasBlockingRows)
+    {
+        <span class="text-danger ms-2 small">Resolve or exclude all Error rows to enable Confirm.</span>
+    }
 </form>
 
 @section Scripts {
