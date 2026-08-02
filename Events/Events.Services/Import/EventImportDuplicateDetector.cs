@@ -33,15 +33,19 @@ public class EventImportDuplicateDetector : IEventImportDuplicateDetector
 
         if (row.Date.HasValue)
         {
+            // A row with a known date is only a duplicate if an existing event shares both Name
+            // and Date. Falling back to a name-only match here would misflag every later
+            // occurrence of a recurring event (e.g. a monthly club night) as a duplicate of the
+            // first one, since a same-named event on a different date is a legitimate distinct
+            // occurrence, not a re-import of the same row.
             var eventDate = row.Date.Value.Date;
             var byDate = await _eventService.GetEventsByDateRangeAsync(eventDate, eventDate.AddDays(1));
             var match = byDate.FirstOrDefault(e => e.Name.Equals(row.Name, StringComparison.OrdinalIgnoreCase));
-            if (match != null)
-            {
-                return (true, match.Id);
-            }
+            return match != null ? (true, match.Id) : (false, null);
         }
 
+        // No date at all — fall back to a name-only match (mirrors the crawler's behavior for
+        // genuinely dateless rows, where Name is the only signal available).
         var byName = await _eventService.FindEventByNameAsync(row.Name);
         return byName != null ? (true, byName.Id) : (false, null);
     }

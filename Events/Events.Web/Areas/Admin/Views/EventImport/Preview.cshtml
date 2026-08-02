@@ -24,6 +24,18 @@
     <span class="text-muted">File: @Model.OriginalFileName</span>
 </div>
 
+<div class="alert alert-info">
+    Not all <strong>Warning</strong> rows behave the same way on Confirm:
+    <ul class="mb-0">
+        <li>Rows still missing a <strong>Category</strong> or <strong>Event Status</strong> pick will
+            <strong>not</strong> be saved — even if you leave the Exclude checkbox unticked — until you
+            choose a value for them here. Unresolved ones show up as failures on the result screen.</li>
+        <li>Other warnings (possible duplicate, an unmatched tag, a malformed URL, a free-event note to
+            double-check) are informational only — those rows <strong>will</strong> be saved as-is unless
+            you tick Exclude.</li>
+    </ul>
+</div>
+
 @if (hasBlockingRows)
 {
     <div class="alert alert-danger">

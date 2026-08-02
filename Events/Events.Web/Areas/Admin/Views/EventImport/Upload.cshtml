@@ -16,6 +16,13 @@
     <div class="alert alert-danger">@Model.ErrorMessage</div>
 }
 
+<div class="alert alert-warning">
+    <strong>Uploading a large list in several smaller files?</strong> Confirm each file's import before
+    uploading the next one. Duplicate detection only checks already-saved events in the database — two
+    files that are both still sitting unconfirmed at the same time won't be checked against each other,
+    so overlapping rows between them could both get created.
+</div>
+
 <div class="row">
     <div class="col-lg-8">
         <div class="card mb-4">
