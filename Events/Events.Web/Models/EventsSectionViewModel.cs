@@ -57,7 +57,7 @@ public class EventsSectionViewModel
         {
             Title = title,
             Events = events,
-            MaxItems = 18,
+            MaxItems = 6,
             ViewAllUrl = null, // No dedicated favorites page yet
             LocalizedCategories = categories
         };

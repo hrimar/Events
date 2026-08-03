@@ -62,7 +62,7 @@ namespace Events.Web.Controllers
                 {
                     var favorites = await _favoriteEventService.GetUserFavoritesAsync(userId);
                     savedEvents = favorites
-                        .Where(f => f.Event != null)
+                        .Where(f => f.Event != null && f.Event.Date >= today)
                         .Select(f => EventViewModel.FromEntity(f.Event!))
                         .OrderByDescending(e => e.Date)
                         .ToList();
