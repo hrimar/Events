@@ -78,14 +78,14 @@ var host = new HostBuilder()
         });
 
         // Crawler strategies
-        services.AddScoped<IEventCrawlerStrategy, BiletBgApiCrawler>();    // via HttpClient. Paginated JSON requests to API ~ 7 min for the first invocation locally
-        services.AddScoped<IEventCrawlerStrategy, PayseraApiCrawler>();    // via HttpClient. Offset-paginated JSON requests to API
-        //services.AddScoped<IEventCrawlerStrategy, TicketStationCrawler>(); // via Playwright. 3 levels of deep click. Optimized ~ 7 min for the first invocation. Wworks only locally now!
-        services.AddScoped<IEventCrawlerStrategy, EventimCrawler>();       // via Playwright & AJAX. No clicks ~ 7 min for the first invocation
-        services.AddScoped<IEventCrawlerStrategy, EpaygoCrawler>();        // via Playwright. Two Phases ~ 10 min for the first invocation
-        services.AddScoped<IEventCrawlerStrategy, NdkCrawler>();           // via Playwright. No clicks  ~ 0.5 min for the first invocation
-        services.AddScoped<IEventCrawlerStrategy, EntaseCrawler>();        // via Playwright. 2 levels of deep click. ~ 1.8 min for the first invocation
-        //services.AddScoped<IEventCrawlerStrategy, KupibiletiCrawler>();  // via Playwright & FlareSolverr Docker dependency. 3 levels of deep click ~ 17 min. Wworks only locally!
+        services.AddScoped<IEventCrawlerStrategy, BiletBgApiCrawler>();    // via HttpClient. Paginated JSON requests to API ~7 min for the first invocation locally
+        services.AddScoped<IEventCrawlerStrategy, PayseraApiCrawler>();    // via HttpClient. Offset-paginated JSON requests to API ~0.5 min for the first invocation in production
+        //services.AddScoped<IEventCrawlerStrategy, TicketStationCrawler>(); // via Playwright. 3 levels of deep click. Optimized ~7 min for the first invocation. Wworks only locally now!
+        services.AddScoped<IEventCrawlerStrategy, EventimCrawler>();       // via Playwright & AJAX. No clicks ~7 min for the first invocation
+        services.AddScoped<IEventCrawlerStrategy, EpaygoCrawler>();        // via Playwright. Two Phases ~10 min for the first invocation
+        services.AddScoped<IEventCrawlerStrategy, NdkCrawler>();           // via Playwright. No clicks  ~0.5 min for the first invocation
+        services.AddScoped<IEventCrawlerStrategy, EntaseCrawler>();        // via Playwright. 2 levels of deep click. ~1.8 min for the first invocation
+        //services.AddScoped<IEventCrawlerStrategy, KupibiletiCrawler>();  // via Playwright & FlareSolverr Docker dependency. 3 levels of deep click ~14-17 min. Wworks only locally!
 
         System.Diagnostics.Trace.WriteLine("Services configured successfully");
     })
