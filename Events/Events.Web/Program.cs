@@ -8,6 +8,8 @@ using Events.Data.Repositories.Interfaces;
 using Events.Data.Services;
 using Events.Models.Entities;
 using Events.Services.Implementations;
+using Events.Services.Import;
+using Events.Services.Import.Parsers;
 using Events.Services.Interfaces;
 using Events.Web.Options;
 using Events.Web.Services.Email;
@@ -192,12 +194,23 @@ static void RegisterServices(WebApplicationBuilder builder)
     // Services
     builder.Services.AddScoped<IEventService, EventService>();
     builder.Services.AddScoped<ITagService, TagService>();
+    builder.Services.AddScoped<ISubCategoryService, SubCategoryService>();
     builder.Services.AddScoped<IUserFavoriteEventService, UserFavoriteEventService>();
     builder.Services.AddScoped<IAdminUserService, AdminUserService>();
     builder.Services.AddScoped<IEventFilterOptionsBuilder, EventFilterOptionsBuilder>();
     builder.Services.AddScoped<IVenueService, VenueService>();
     builder.Services.AddScoped<ISiteContentService, SiteContentService>();
     builder.Services.AddScoped<ISeoMetaService, SeoMetaService>();
+
+    // Event import (bulk create from .xlsx/.csv)
+    builder.Services.AddMemoryCache();
+    builder.Services.AddScoped<IEventImportFileParser, XlsxEventImportParser>();
+    builder.Services.AddScoped<IEventImportFileParser, CsvEventImportParser>();
+    builder.Services.AddScoped<IEventImportFileParserFactory, EventImportFileParserFactory>();
+    builder.Services.AddScoped<IEventImportRowMapper, EventImportRowMapper>();
+    builder.Services.AddScoped<IEventImportDuplicateDetector, EventImportDuplicateDetector>();
+    builder.Services.AddScoped<IEventImportService, EventImportService>();
+    builder.Services.AddSingleton<Events.Web.Areas.Admin.Services.EventImportBatchCache>();
 }
 
 static async Task InitializeDatabaseAsync(WebApplication app)

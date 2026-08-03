@@ -1,0 +1,234 @@
+@using Events.Models.Enums
+@using Events.Services.Import.Models
+@model EventImportPreviewViewModel
+
+@{
+    ViewData["Title"] = "Import Preview";
+    var okCount = Model.Rows.Count(r => r.Severity == ImportRowSeverity.Ok && !r.Excluded);
+    var warningCount = Model.Rows.Count(r => r.Severity == ImportRowSeverity.Warning && !r.Excluded);
+    var errorCount = Model.Rows.Count(r => r.Severity == ImportRowSeverity.Error && !r.Excluded);
+    var hasBlockingRows = Model.Rows.Any(r => r.Severity == ImportRowSeverity.Error && !r.Excluded);
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-list-check me-2"></i>Import Preview</h1>
+    <a asp-action="Upload" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-2"></i>Upload a Different File
+    </a>
+</div>
+
+<div class="mb-3">
+    <span class="badge bg-success me-2">OK: @okCount</span>
+    <span class="badge bg-warning text-dark me-2">Warning: @warningCount</span>
+    <span class="badge bg-danger me-2">Error: @errorCount</span>
+    <span class="text-muted">File: @Model.OriginalFileName</span>
+</div>
+
+<div class="alert alert-info">
+    Not all <strong>Warning</strong> rows behave the same way on Confirm:
+    <ul class="mb-0">
+        <li>Rows still missing a <strong>Category</strong> or <strong>Event Status</strong> pick will
+            <strong>not</strong> be saved — even if you leave the Exclude checkbox unticked — until you
+            choose a value for them here. Unresolved ones show up as failures on the result screen.</li>
+        <li>Other warnings (possible duplicate, an unmatched tag, a malformed URL, a free-event note to
+            double-check) are informational only — those rows <strong>will</strong> be saved as-is unless
+            you tick Exclude.</li>
+    </ul>
+</div>
+
+@if (hasBlockingRows)
+{
+    <div class="alert alert-danger">
+        Rows marked <strong>Error</strong> are missing a required field (Event Name, Date, City or Venue/Location)
+        that can't be fixed from this screen. Exclude them, or fix the source file and upload again.
+    </div>
+}
+
+<form asp-action="Preview" method="post" id="previewForm">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="BatchId" value="@Model.BatchId" />
+
+    <div class="table-responsive">
+        <table class="table table-sm table-bordered align-middle">
+            <thead>
+                <tr class="table-light small text-uppercase">
+                    <th colspan="3" class="text-center">Import Controls</th>
+                    <th colspan="9" class="text-center">From File</th>
+                    <th colspan="1" class="text-center">Diagnostics</th>
+                </tr>
+                <tr>
+                    <th>Row</th>
+                    <th>Exclude</th>
+                    <th>Status</th>
+                    <th>Name / Date</th>
+                    <th>Location</th>
+                    <th>Description</th>
+                    <th>Category</th>
+                    <th>Subcategory</th>
+                    <th>Tags</th>
+                    <th>Free / Price</th>
+                    <th>Event Status</th>
+                    <th>Featured</th>
+                    <th>Messages</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (var i = 0; i < Model.Rows.Count; i++)
+                {
+                    var row = Model.Rows[i];
+                    var rowClass = row.Severity switch
+                    {
+                        ImportRowSeverity.Error => "table-danger",
+                        ImportRowSeverity.Warning => "table-warning",
+                        _ => ""
+                    };
+
+                    <tr class="@rowClass">
+                        <td>
+                            @row.RowNumber
+                            <input type="hidden" name="Rows[@i].RowNumber" value="@row.RowNumber" />
+                        </td>
+                        <td class="text-center">
+                            <input type="checkbox" name="Rows[@i].Excluded" value="true" class="form-check-input"
+                                   checked="@row.Excluded" />
+                        </td>
+                        <td><span class="badge bg-secondary">@row.Severity</span></td>
+                        <td>
+                            @row.Name<br />
+                            <span class="text-muted small">@(row.Date?.ToString("yyyy-MM-dd"))</span>
+                        </td>
+                        <td class="text-muted small">@row.Location</td>
+                        <td class="text-muted small" title="@row.Description">
+                            @(row.Description?.Length > 60 ? row.Description[..60] + "…" : row.Description)
+                        </td>
+                        <td>
+                            <select name="Rows[@i].CategoryId" class="form-select form-select-sm row-category-select" data-row="@i">
+                                <option value="">-- select --</option>
+                                @foreach (var category in Model.AvailableCategories)
+                                {
+                                    <option value="@category.Id" selected="@(row.CategoryId == category.Id)">@category.Name</option>
+                                }
+                            </select>
+                            @if (row.CategoryId == null && !string.IsNullOrEmpty(row.RawCategoryText))
+                            {
+                                <div class="text-muted small">file: "@row.RawCategoryText"</div>
+                            }
+                        </td>
+                        <td>
+                            <select name="Rows[@i].SubCategoryId" class="form-select form-select-sm row-subcategory-select" data-row="@i">
+                                <option value="">-- none --</option>
+                                @foreach (var subCategory in Model.AvailableSubCategories)
+                                {
+                                    <option value="@subCategory.Id" data-category-id="@subCategory.CategoryId" selected="@(row.SubCategoryId == subCategory.Id)">@subCategory.Name</option>
+                                }
+                            </select>
+                            @if (row.SubCategoryId == null && !string.IsNullOrEmpty(row.RawSubCategoryText))
+                            {
+                                <div class="text-muted small">file: "@row.RawSubCategoryText"</div>
+                            }
+                        </td>
+                        <td>
+                            <select name="Rows[@i].TagIds" class="form-select form-select-sm" multiple size="3">
+                                @foreach (var tag in Model.AvailableTags)
+                                {
+                                    <option value="@tag.Id" selected="@(row.MatchedTagIds.Contains(tag.Id))">@tag.Name</option>
+                                }
+                            </select>
+                            @if (row.UnmatchedTagNames.Count > 0)
+                            {
+                                <div class="text-muted small">unmatched: @string.Join(", ", row.UnmatchedTagNames)</div>
+                            }
+                        </td>
+                        <td class="text-muted small">
+                            @(row.IsFree ? "Free" : row.Price.HasValue ? row.Price.Value.ToString("0.##") + " лв" : "-")
+                        </td>
+                        <td>
+                            <select name="Rows[@i].Status" class="form-select form-select-sm">
+                                <option value="">-- select --</option>
+                                @foreach (var status in Enum.GetValues<EventStatus>())
+                                {
+                                    <option value="@status" selected="@(row.Status == status)">@status</option>
+                                }
+                            </select>
+                            @if (row.Status == null && !string.IsNullOrEmpty(row.RawStatusText))
+                            {
+                                <div class="text-muted small">file: "@row.RawStatusText"</div>
+                            }
+                        </td>
+                        <td class="text-center">
+                            @if (row.IsFeatured)
+                            {
+                                <span class="badge bg-info text-dark">Yes</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted small">No</span>
+                            }
+                        </td>
+                        <td>
+                            @if (row.Messages.Count > 0)
+                            {
+                                <ul class="mb-0 ps-3 small">
+                                    @foreach (var message in row.Messages)
+                                    {
+                                        <li>@message</li>
+                                    }
+                                </ul>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <button type="submit" class="btn btn-outline-primary">
+        <i class="fas fa-rotate me-2"></i>Save Corrections &amp; Re-validate
+    </button>
+    <button type="submit" formaction="@Url.Action("Confirm")" class="btn btn-success" id="confirmButton" disabled="@hasBlockingRows">
+        <i class="fas fa-check me-2"></i>Confirm Import
+    </button>
+    @if (hasBlockingRows)
+    {
+        <span class="text-danger ms-2 small">Resolve or exclude all Error rows to enable Confirm.</span>
+    }
+</form>
+
+@section Scripts {
+    <script>
+        // Filters each row's Subcategory dropdown to only the options matching its currently
+        // selected Category, mirroring the single-row pattern used on the Create Event page.
+        function filterSubCategoryOptions(rowIndex) {
+            var categorySelect = document.querySelector('.row-category-select[data-row="' + rowIndex + '"]');
+            var subCategorySelect = document.querySelector('.row-subcategory-select[data-row="' + rowIndex + '"]');
+            if (!categorySelect || !subCategorySelect) return;
+
+            var selectedCategoryId = categorySelect.value;
+            var options = subCategorySelect.querySelectorAll('option[data-category-id]');
+            options.forEach(function (option) {
+                var matches = !selectedCategoryId || option.getAttribute('data-category-id') === selectedCategoryId;
+                option.hidden = !matches;
+                if (!matches && option.selected) {
+                    option.selected = false;
+                }
+            });
+        }
+
+        document.querySelectorAll('.row-category-select').forEach(function (select) {
+            filterSubCategoryOptions(select.dataset.row);
+            select.addEventListener('change', function () {
+                filterSubCategoryOptions(select.dataset.row);
+            });
+        });
+
+        // Caps tag multi-selects at 3 selections, matching the "Tags (up to 3)" import column.
+        document.querySelectorAll('select[multiple]').forEach(function (select) {
+            select.addEventListener('change', function () {
+                var selected = Array.from(select.selectedOptions);
+                if (selected.length > 3) {
+                    selected[selected.length - 1].selected = false;
+                }
+            });
+        });
+    </script>
+}

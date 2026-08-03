@@ -1,6 +1,5 @@
 ﻿using Events.Crawler.DTOs.Common;
 using Events.Crawler.Models;
-using Events.Crawler.Services;
 using Events.Crawler.Services.Interfaces;
 using Events.Models.Entities;
 using Events.Models.Enums;

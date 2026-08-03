@@ -1,0 +1,52 @@
+@using Events.Services.Import.Models
+@model EventImportCommitResult
+
+@{
+    ViewData["Title"] = "Import Result";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-circle-check me-2"></i>Import Result</h1>
+    <div>
+        <a asp-action="Upload" class="btn btn-outline-secondary me-2">
+            <i class="fas fa-file-import me-2"></i>Import Another File
+        </a>
+        <a asp-area="Admin" asp-controller="Events" asp-action="Index" class="btn btn-primary">
+            <i class="fas fa-list me-2"></i>Go to Events
+        </a>
+    </div>
+</div>
+
+<div class="alert @(Model.FailedCount > 0 ? "alert-warning" : "alert-success")">
+    <strong>@Model.CreatedCount</strong> event(s) created,
+    <strong>@Model.SkippedExcludedCount</strong> skipped (excluded),
+    <strong>@Model.FailedCount</strong> failed.
+</div>
+
+@if (Model.Failures.Count > 0)
+{
+    <div class="card">
+        <div class="card-header bg-danger text-white">
+            <h5 class="mb-0">Rows That Failed to Import</h5>
+        </div>
+        <div class="card-body">
+            <table class="table table-sm mb-0">
+                <thead>
+                    <tr>
+                        <th>Row</th>
+                        <th>Error</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var failure in Model.Failures)
+                    {
+                        <tr>
+                            <td>@failure.RowNumber</td>
+                            <td>@failure.Error</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
