@@ -176,9 +176,8 @@
                     }
                     @if(!string.IsNullOrEmpty(Model.SelectedSubCategory))
                     {
-                        var activeSubCatDisplay = Model.AvailableSubCategories.FirstOrDefault(s => s.Value == Model.SelectedSubCategory);
                         <span class="badge bg-primary">
-                            <i class="fas fa-layer-group me-1"></i>@Localizer["Events_FilterSubCategory"] @(activeSubCatDisplay?.Text ?? Model.SelectedSubCategory)
+                            <i class="fas fa-layer-group me-1"></i>@Localizer["Events_FilterSubCategory"] @CategoryLocalizationExtensions.LocalizeSubCategoryName(Model.SelectedSubCategory, Localizer)
                         </span>
                     }
                     @if(Model.IsFreeFilter == true)
@@ -284,8 +283,7 @@
                         }
                         @if(!string.IsNullOrEmpty(Model.SelectedSubCategory))
                         {
-                            var resultSubCatDisplay = Model.AvailableSubCategories.FirstOrDefault(s => s.Value == Model.SelectedSubCategory);
-                            <span class="badge bg-primary">@(resultSubCatDisplay?.Text ?? Model.SelectedSubCategory)</span>
+                            <span class="badge bg-primary">@CategoryLocalizationExtensions.LocalizeSubCategoryName(Model.SelectedSubCategory, Localizer)</span>
                         }
                         @if(Model.IsFreeFilter == true)
                         {
@@ -364,10 +362,9 @@
                                         </a>
                                         @if(!string.IsNullOrEmpty(eventItem.SubCategoryName))
                                         {
-                                            var subCatDisplay = Model.AvailableSubCategories.FirstOrDefault(s => s.Value == eventItem.SubCategoryName);
-                                            <a href="@Url.Action("Index", "Events", new { subCategory = eventItem.SubCategoryName })" 
+                                            <a href="@Url.Action("Index", "Events", new { category = eventItem.CategoryName, subCategory = eventItem.SubCategoryName })"
                                                class="badge bg-dark text-decoration-none ms-1">
-                                                @(subCatDisplay?.Text ?? eventItem.SubCategoryName)
+                                                @CategoryLocalizationExtensions.LocalizeSubCategoryName(eventItem.SubCategoryName, Localizer)
                                             </a>
                                         }
                                     </div>
