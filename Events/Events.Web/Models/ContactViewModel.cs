@@ -20,9 +20,12 @@ public class ContactViewModel
     [StringLength(3000, MinimumLength = 10)]
     public string Message { get; set; } = string.Empty;
 
-    // Honeypot field: legitimate visitors never fill it in, since it's hidden from sighted users
-    // via CSS rather than display:none/type=hidden, which bots tend to skip.
-    public string? Website { get; set; }
+    // Honeypot: hidden from sighted users via CSS rather than display:none/type=hidden.
+    // Real visitors leave it empty. Avoid classic names like "Website" that sophisticated bots know to skip.
+    public string? FaxNumber { get; set; }
+
+    // Protected "form issued at" token used for minimum-fill-time checks.
+    public string? FormIssuedAt { get; set; }
 
     public List<SelectListItem> TopicOptions { get; set; } = new();
 }

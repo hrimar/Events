@@ -15,7 +15,9 @@ using Events.Web.Options;
 using Events.Web.Services.Email;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,6 +29,7 @@ ConfigureEmail(builder);
 RegisterServices(builder);
 
 ConfigureLocalization(builder);
+ConfigureRateLimiting(builder);
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddRazorPages()
     .AddViewLocalization()
@@ -174,11 +177,29 @@ static void ConfigureLocalization(WebApplicationBuilder builder)
     });
 }
 
+static void ConfigureRateLimiting(WebApplicationBuilder builder)
+{
+    builder.Services.AddRateLimiter(options =>
+    {
+        options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+        options.AddPolicy("contact", httpContext =>
+            RateLimitPartition.GetFixedWindowLimiter(
+                partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                factory: _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = 5,
+                    Window = TimeSpan.FromMinutes(1),
+                    QueueLimit = 0
+                }));
+    });
+}
+
 static void RegisterServices(WebApplicationBuilder builder)
 {
     // Infrastructure
     builder.Services.AddHttpContextAccessor();
     builder.Services.AddScoped<ISiteUrlProvider, SiteUrlProvider>();
+    builder.Services.AddSingleton<ContactFormTimingProtector>();
 
     // Repositories
     builder.Services.AddScoped<IEventRepository, EventRepository>();
@@ -280,6 +301,7 @@ static void ConfigureHttpPipeline(WebApplication app)
     app.UseStaticFiles();
     app.UseRequestLocalization();
     app.UseRouting();
+    app.UseRateLimiter();
     app.UseAuthentication();
     app.UseAuthorization();
 

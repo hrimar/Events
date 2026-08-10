@@ -37,10 +37,12 @@
                     <form asp-controller="Contact" asp-action="Index" method="post">
                         <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
 
+                        <input type="hidden" asp-for="FormIssuedAt" />
+
                         <!-- Honeypot: hidden from sighted users, left empty by real visitors -->
                         <div class="visually-hidden" aria-hidden="true">
-                            <label asp-for="Website">Website</label>
-                            <input asp-for="Website" tabindex="-1" autocomplete="off" />
+                            <label asp-for="FaxNumber">Fax</label>
+                            <input asp-for="FaxNumber" tabindex="-1" autocomplete="off" />
                         </div>
 
                         <div class="mb-3">
