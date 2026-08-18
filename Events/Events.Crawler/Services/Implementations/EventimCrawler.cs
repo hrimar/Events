@@ -6,6 +6,7 @@ using Events.Crawler.Services.Interfaces;
 using Microsoft.Extensions.Logging;
 using Microsoft.Playwright;
 using System.Diagnostics;
+using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
@@ -432,37 +433,11 @@ public class EventimCrawler : IWebScrapingCrawler
     {
         if (string.IsNullOrWhiteSpace(dateText)) return null;
 
-        var formats = new[]
+        // DateTimeOffset keeps the source wall-clock time (19:00+03:00 -> 19:00).
+        // DateTime.Parse would convert to the host timezone (UTC on Azure -> 16:00).
+        if (DateTimeOffset.TryParse(dateText.Trim(), CultureInfo.InvariantCulture, DateTimeStyles.None, out var dateTimeOffset))
         {
-            // ISO 8601 formats (from new API)
-            "yyyy-MM-ddTHH:mm:sszzz",
-            "yyyy-MM-ddTHH:mm:ss.fffzzz",
-            "yyyy-MM-ddTHH:mm:ssZ",
-            "yyyy-MM-ddTHH:mm:ss.fffZ",
-            "yyyy-MM-ddTHH:mm:ss",
-            // Other formats
-            "yyyy-MM-dd HH:mm:ss",
-            "dd.MM.yyyy",
-            "dd/MM/yyyy",
-            "yyyy-MM-dd",
-            "dd MMMM yyyy",
-            "dd MMM yyyy",
-            "dd.MM.yyyy HH:mm",
-            "dd/MM/yyyy HH:mm"
-        };
-
-        foreach (var format in formats)
-        {
-            if (DateTime.TryParseExact(dateText.Trim(), format, null, System.Globalization.DateTimeStyles.RoundtripKind, out var date))
-            {
-                return date;
-            }
-        }
-
-        // Fallback to automatic parsing
-        if (DateTime.TryParse(dateText, out var parsedDate))
-        {
-            return parsedDate;
+            return DateTime.SpecifyKind(dateTimeOffset.DateTime, DateTimeKind.Unspecified);
         }
 
         _logger.LogDebug("[{Source}] Could not parse date: {DateText}", SourceName, dateText);
