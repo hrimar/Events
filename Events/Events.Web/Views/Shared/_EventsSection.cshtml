@@ -7,9 +7,9 @@
 @if(Model.Events.Any())
 {
     <section class="py-3 bg-surface theme-section border-top">
-        <div class="container">
+        <div class="container-grid">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2>@Model.Title</h2>
+                <h2 class="home-section-title">@Model.Title</h2>
                 @if(!string.IsNullOrEmpty(Model.ViewAllUrl))
                 {
                     <a href="@Model.ViewAllUrl" class="btn btn-outline-primary">
@@ -31,26 +31,26 @@
                                          onerror="this.src='/images/default_event_image.jpeg'">
                                     @if(eventItem.IsFree)
                                     {
-                                        <div class="event-price event-free">@Localizer["Home_Free"]</div>
+                                        <div class="event-price event-free home-event-badge">@Localizer["Home_Free"]</div>
                                     }
                                     @if(eventItem.IsPastEvent)
                                     {
-                                        <div class="event-badge-past">@Localizer["Home_PastEvent"]</div>
+                                        <div class="event-badge-past home-event-badge">@Localizer["Home_PastEvent"]</div>
                                     }
                                 </div>
                             </a>
 
                             <div class="card-body d-flex flex-column">
-                                <h5 class="event-title">
+                                <div class="home-event-title text-clamp-2 mb-2">
                                     <a href="/Events/Details/@eventItem.Id" class="text-decoration-none text-body">
                                         @eventItem.Name
                                     </a>
-                                </h5>
-                                <div class="event-date mb-2">
+                                </div>
+                                <div class="home-event-meta mb-2">
                                     <i class="fas fa-calendar me-1"></i>
                                     @eventItem.FormattedDate@(eventItem.HasKnownTime ? " " + eventItem.FormattedTime : "")
                                 </div>
-                                <div class="event-venue mb-2">
+                                <div class="home-event-meta mb-2">
                                     <i class="fas fa-map-marker-alt me-1"></i>
                                     @if (!string.IsNullOrEmpty(eventItem.VenueSlug))
                                     {
@@ -68,13 +68,13 @@
                                 {
                                     var catDisplay = Model.LocalizedCategories.FirstOrDefault(c => c.Value == eventItem.CategoryName);
                                     <div class="mb-2">
-                                        <a href="/Events?category=@eventItem.CategoryName" class="badge bg-secondary text-decoration-none">
+                                        <a href="/Events?category=@eventItem.CategoryName" class="badge bg-secondary text-decoration-none home-event-badge">
                                             @(catDisplay?.DisplayName ?? eventItem.CategoryName)
                                         </a>
                                         @if(!string.IsNullOrEmpty(eventItem.SubCategoryName))
                                         {
                                             <a href="/Events?subCategory=@eventItem.SubCategoryName"
-                                               class="badge bg-dark text-decoration-none ms-1">
+                                               class="badge bg-dark text-decoration-none ms-1 home-event-badge">
                                                 @CategoryLocalizationExtensions.LocalizeSubCategoryName(eventItem.SubCategoryName, Localizer)
                                             </a>
                                         }
@@ -87,13 +87,13 @@
                                         @foreach(var tag in eventItem.Tags.Take(2))
                                         {
                                             <a href="/Events/Tag/@Uri.EscapeDataString(tag)"
-                                               class="badge bg-info text-white text-decoration-none me-1 mb-1">
+                                               class="badge bg-info text-white text-decoration-none me-1 mb-1 home-event-badge">
                                                 <i class="fas fa-tag me-1"></i>@CategoryLocalizationExtensions.LocalizeTagName(tag, Localizer)
                                             </a>
                                         }
                                         @if(eventItem.Tags.Count > 2)
                                         {
-                                            <span class="badge bg-light text-dark">+@(eventItem.Tags.Count - 2)</span>
+                                            <span class="badge bg-light text-dark home-event-badge">+@(eventItem.Tags.Count - 2)</span>
                                         }
                                     </div>
                                 }

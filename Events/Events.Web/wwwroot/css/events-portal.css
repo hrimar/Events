@@ -840,3 +840,200 @@ footer {
 [data-theme="dark"] footer .footer-social-link:hover {
     color: var(--text-primary) !important;
 }
+
+/* ------------------------------------------------------------------
+   Homepage desktop layout — typography scale, grid container, weekly
+   ------------------------------------------------------------------ */
+
+.container-grid {
+    width: min(1560px, calc(100% - 3rem));
+    margin-inline: auto;
+    padding-inline: 1.5rem;
+}
+
+.text-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    word-break: break-word;
+}
+
+.home-section-title {
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1.25;
+    margin-bottom: 0;
+}
+
+.home-column-header {
+    font-size: 17px;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.home-event-title {
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.35;
+    color: var(--text-primary, #333);
+}
+
+.home-event-title.text-clamp-2 {
+    display: -webkit-box;
+}
+
+.home-event-meta {
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.35;
+    color: var(--text-secondary, #666);
+}
+
+.home-event-badge {
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.home-hero-title {
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 0.5rem;
+}
+
+.home-hero-subtitle {
+    font-size: 16px;
+    line-height: 1.4;
+    margin-bottom: 0.75rem;
+    opacity: 0.9;
+}
+
+.home-hero-icon {
+    font-size: 3rem;
+    opacity: 0.3;
+}
+
+.home-category-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 0.5rem;
+}
+
+.home-category-tile {
+    padding: 0.5rem 0.35rem;
+    min-height: 72px;
+    font-size: 13px;
+    line-height: 1.2;
+}
+
+.home-category-tile i {
+    font-size: 1.25rem;
+    margin-bottom: 0.25rem;
+}
+
+.home-weekly-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.home-weekly-header-left {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem 1rem;
+    min-width: 0;
+}
+
+.home-period-nav {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.home-period-label {
+    font-size: 15px;
+    font-weight: 600;
+    min-width: 180px;
+    text-align: center;
+}
+
+.weekly-day-columns {
+    display: flex;
+    gap: 0.75rem;
+    align-items: start;
+}
+
+.weekly-day-column {
+    flex: 1 1 0;
+    min-width: 0;
+}
+
+.weekly-day-card-body {
+    padding: 0.5rem;
+}
+
+.weekly-day-thumb {
+    width: 48px;
+    height: 48px;
+    object-fit: cover;
+    border-radius: 4px;
+    flex-shrink: 0;
+}
+
+.home-cat-scroll {
+    display: flex;
+    gap: 0.75rem;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+}
+
+.home-cat-card {
+    min-width: 175px;
+    max-width: 175px;
+    flex-shrink: 0;
+}
+
+.home-cat-card-img {
+    height: 100px;
+    object-fit: cover;
+    border-radius: 4px 4px 0 0;
+}
+
+.home-cat-compact-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.home-cat-compact-block {
+    border: 1px solid var(--border-color, #dee2e6);
+    border-radius: 8px;
+    padding: 0.75rem;
+    background: var(--card-bg, #fff);
+}
+
+.home-cat-compact-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.home-more-link {
+    font-size: 13px;
+}
+
+@media (max-width: 767.98px) {
+    .container-grid {
+        width: 100%;
+        padding-inline: 0.75rem;
+    }
+}
