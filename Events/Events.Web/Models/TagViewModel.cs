@@ -38,6 +38,9 @@ public class TagViewModel
         EventCategory.Exhibitions => "fas fa-images",
         EventCategory.Conferences => "fas fa-users",
         EventCategory.Workshops => "fas fa-tools",
+        EventCategory.Entertainment => "fas fa-cocktail",
+        EventCategory.FoodDrink => "fas fa-utensils",
+        EventCategory.Markets => "fas fa-store",
         _ => "fas fa-tag"
     };
 }

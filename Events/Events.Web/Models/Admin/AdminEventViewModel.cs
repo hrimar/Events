@@ -38,7 +38,10 @@ public class AdminEventViewModel
 
     public string DefaultImage => ImageUrl ?? "/images/default_event_image.jpeg";
     public bool HasTicketUrl => !string.IsNullOrEmpty(TicketUrl);
-    public bool IsUncategorized => CategoryId == 11; // Undefined category
+    // 11 is Category.Id (DB primary key) of the seeded "Undefined" category row — NOT the
+    // EventCategory.Undefined enum value (14). Category.Id was kept stable at 11 when Entertainment/
+    // FoodDrink/Markets were added, so existing Event.CategoryId foreign keys wouldn't break.
+    public bool IsUncategorized => CategoryId == 11;
 
     public static AdminEventViewModel FromEntity(Event eventEntity)
     {

@@ -31,6 +31,9 @@ public static class CategoryLocalizationExtensions
         EventCategory.Exhibitions => "fas fa-images",
         EventCategory.Conferences => "fas fa-users",
         EventCategory.Workshops   => "fas fa-tools",
+        EventCategory.Entertainment => "fas fa-cocktail",
+        EventCategory.FoodDrink   => "fas fa-utensils",
+        EventCategory.Markets     => "fas fa-store",
         _                         => "fas fa-calendar"
     };
 
@@ -107,6 +110,15 @@ public static class CategoryLocalizationExtensions
         => localizer[$"SubCategory_{sub}"];
 
     public static string Localize(this WorkshopsSubCategory sub, IStringLocalizer<SharedResources> localizer)
+        => localizer[$"SubCategory_{sub}"];
+
+    public static string Localize(this EntertainmentSubCategory sub, IStringLocalizer<SharedResources> localizer)
+        => localizer[$"SubCategory_{sub}"];
+
+    public static string Localize(this FoodDrinkSubCategory sub, IStringLocalizer<SharedResources> localizer)
+        => localizer[$"SubCategory_{sub}"];
+
+    public static string Localize(this MarketsSubCategory sub, IStringLocalizer<SharedResources> localizer)
         => localizer[$"SubCategory_{sub}"];
 }
 
