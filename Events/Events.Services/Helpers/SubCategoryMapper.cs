@@ -32,6 +32,9 @@ public static class SubCategoryMapper
             EventCategory.Exhibitions => MapExhibitionsSubCategory(normalized),
             EventCategory.Conferences => MapConferencesSubCategory(normalized),
             EventCategory.Workshops => MapWorkshopsSubCategory(normalized),
+            EventCategory.Entertainment => MapEntertainmentSubCategory(normalized),
+            EventCategory.FoodDrink => MapFoodDrinkSubCategory(normalized),
+            EventCategory.Markets => MapMarketsSubCategory(normalized),
             _ => null
         };
 
@@ -78,6 +81,9 @@ public static class SubCategoryMapper
             EventCategory.Exhibitions => Enum.IsDefined(typeof(ExhibitionsSubCategory), enumValue),
             EventCategory.Conferences => Enum.IsDefined(typeof(ConferencesSubCategory), enumValue),
             EventCategory.Workshops => Enum.IsDefined(typeof(WorkshopsSubCategory), enumValue),
+            EventCategory.Entertainment => Enum.IsDefined(typeof(EntertainmentSubCategory), enumValue),
+            EventCategory.FoodDrink => Enum.IsDefined(typeof(FoodDrinkSubCategory), enumValue),
+            EventCategory.Markets => Enum.IsDefined(typeof(MarketsSubCategory), enumValue),
             _ => false
         };
     }
@@ -324,6 +330,54 @@ public static class SubCategoryMapper
             "yogaandwellnessworkshops" or "йога" or "уелнес" => (int)WorkshopsSubCategory.YogaAndWellnessWorkshops,
             "marketingworkshops" or "маркетинговиработилници" => (int)WorkshopsSubCategory.MarketingWorkshops,
             "other" or "друго" => (int)WorkshopsSubCategory.Other,
+            _ => null
+        };
+    }
+
+    private static int? MapEntertainmentSubCategory(string normalized)
+    {
+        return normalized switch
+        {
+            "party" or "парти" => (int)EntertainmentSubCategory.Party,
+            "themedparty" or "тематичнопарти" => (int)EntertainmentSubCategory.ThemedParty,
+            "clubnight" or "клубнавечер" => (int)EntertainmentSubCategory.ClubNight,
+            "quiz" or "куизитривия" => (int)EntertainmentSubCategory.Quiz,
+            "karaoke" or "караоке" => (int)EntertainmentSubCategory.Karaoke,
+            "boardgames" or "настолниигри" => (int)EntertainmentSubCategory.BoardGames,
+            "escaperoom" or "ескейпрум" => (int)EntertainmentSubCategory.EscapeRoom,
+            "socialdance" or "социалнитанци" => (int)EntertainmentSubCategory.SocialDance,
+            "other" or "друго" => (int)EntertainmentSubCategory.Other,
+            _ => null
+        };
+    }
+
+    private static int? MapFoodDrinkSubCategory(string normalized)
+    {
+        return normalized switch
+        {
+            "winetasting" or "дегустациянавино" => (int)FoodDrinkSubCategory.WineTasting,
+            "beertasting" or "дегустациянабира" => (int)FoodDrinkSubCategory.BeerTasting,
+            "spiritstasting" or "дегустациянаспиртнинапитки" => (int)FoodDrinkSubCategory.SpiritsTasting,
+            "culinarydinner" or "кулинарнавечеря" => (int)FoodDrinkSubCategory.CulinaryDinner,
+            "brunch" or "бранч" => (int)FoodDrinkSubCategory.Brunch,
+            "streetfood" or "стрийтфууд" => (int)FoodDrinkSubCategory.StreetFood,
+            "coffeetea" or "кафеичай" => (int)FoodDrinkSubCategory.CoffeeTea,
+            "other" or "друго" => (int)FoodDrinkSubCategory.Other,
+            _ => null
+        };
+    }
+
+    private static int? MapMarketsSubCategory(string normalized)
+    {
+        return normalized switch
+        {
+            "craftmarket" or "хендмейдбазар" => (int)MarketsSubCategory.CraftMarket,
+            "farmersmarket" or "фермерскипазар" => (int)MarketsSubCategory.FarmersMarket,
+            "fleamarket" or "битакивинтидж" => (int)MarketsSubCategory.FleaMarket,
+            "christmasmarket" or "коледенбазар" => (int)MarketsSubCategory.ChristmasMarket,
+            "designmarket" or "дизайнмаркет" => (int)MarketsSubCategory.DesignMarket,
+            "bookmarket" or "книженбазар" => (int)MarketsSubCategory.BookMarket,
+            "other" or "друго" => (int)MarketsSubCategory.Other,
             _ => null
         };
     }

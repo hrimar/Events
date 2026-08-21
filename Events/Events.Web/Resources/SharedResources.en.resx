@@ -255,6 +255,9 @@
   <data name="Category_Exhibitions" xml:space="preserve"><value>Exhibitions</value></data>
   <data name="Category_Conferences" xml:space="preserve"><value>Conferences</value></data>
   <data name="Category_Workshops" xml:space="preserve"><value>Workshops</value></data>
+  <data name="Category_Entertainment" xml:space="preserve"><value>Entertainment</value></data>
+  <data name="Category_FoodDrink" xml:space="preserve"><value>Food &amp; Drink</value></data>
+  <data name="Category_Markets" xml:space="preserve"><value>Markets</value></data>
 
   <!-- Music SubCategories -->
   <data name="SubCategory_Pop" xml:space="preserve"><value>Pop</value></data>
@@ -424,6 +427,33 @@
 
   <!-- Shared Other -->
   <data name="SubCategory_Other" xml:space="preserve"><value>Other</value></data>
+
+  <!-- Entertainment SubCategories -->
+  <data name="SubCategory_Party" xml:space="preserve"><value>Party</value></data>
+  <data name="SubCategory_ThemedParty" xml:space="preserve"><value>Themed Party</value></data>
+  <data name="SubCategory_ClubNight" xml:space="preserve"><value>Club Night</value></data>
+  <data name="SubCategory_Quiz" xml:space="preserve"><value>Quiz &amp; Trivia</value></data>
+  <data name="SubCategory_Karaoke" xml:space="preserve"><value>Karaoke</value></data>
+  <data name="SubCategory_BoardGames" xml:space="preserve"><value>Board Games</value></data>
+  <data name="SubCategory_EscapeRoom" xml:space="preserve"><value>Escape Room</value></data>
+  <data name="SubCategory_SocialDance" xml:space="preserve"><value>Social Dance</value></data>
+
+  <!-- FoodDrink SubCategories -->
+  <data name="SubCategory_WineTasting" xml:space="preserve"><value>Wine Tasting</value></data>
+  <data name="SubCategory_BeerTasting" xml:space="preserve"><value>Beer Tasting</value></data>
+  <data name="SubCategory_SpiritsTasting" xml:space="preserve"><value>Spirits Tasting</value></data>
+  <data name="SubCategory_CulinaryDinner" xml:space="preserve"><value>Culinary Dinner</value></data>
+  <data name="SubCategory_Brunch" xml:space="preserve"><value>Brunch</value></data>
+  <data name="SubCategory_StreetFood" xml:space="preserve"><value>Street Food</value></data>
+  <data name="SubCategory_CoffeeTea" xml:space="preserve"><value>Coffee &amp; Tea</value></data>
+
+  <!-- Markets SubCategories -->
+  <data name="SubCategory_CraftMarket" xml:space="preserve"><value>Craft Market</value></data>
+  <data name="SubCategory_FarmersMarket" xml:space="preserve"><value>Farmers Market</value></data>
+  <data name="SubCategory_FleaMarket" xml:space="preserve"><value>Flea Market</value></data>
+  <data name="SubCategory_ChristmasMarket" xml:space="preserve"><value>Christmas Market</value></data>
+  <data name="SubCategory_DesignMarket" xml:space="preserve"><value>Design Market</value></data>
+  <data name="SubCategory_BookMarket" xml:space="preserve"><value>Book Market</value></data>
 
   <!-- Event Status -->
   <data name="EventStatus_Draft" xml:space="preserve"><value>Draft</value></data>

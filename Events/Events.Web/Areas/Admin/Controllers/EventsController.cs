@@ -166,7 +166,8 @@ public class EventsController : Controller
         {
             var allEvents = await _eventService.GetAllEventsAsync();
 
-            // Filter uncategorized events (CategoryId = 11 is Undefined)
+            // CategoryId 11 is the Category.Id (DB PK) of the seeded "Undefined" row — kept stable
+            // when Entertainment/FoodDrink/Markets were added, so it does not equal (int)EventCategory.Undefined.
             var uncategorizedEvents = allEvents.Where(e => e.CategoryId == 11);
 
             if (!string.IsNullOrWhiteSpace(search))
@@ -186,7 +187,7 @@ public class EventsController : Controller
             // Load available categories
             var categories = await _categoryRepository.GetAllAsync();
             var availableCategories = categories
-                .Where(c => c.Id != 11) // Exclude Undefined category
+                .Where(c => c.Id != 11) // Exclude Undefined category (Category.Id, not (int)EventCategory.Undefined)
                 .Select(c => new CategoryOption
                 {
                     Id = c.Id,
@@ -250,8 +251,8 @@ public class EventsController : Controller
             eventEntity.CategoryId = categoryId;
             eventEntity.SubCategoryId = subCategoryId;
 
-            // Automatically set status to Published when categorizing from Undefined
-            // CategoryId = 11 is Undefined
+            // Automatically set status to Published when categorizing from Undefined.
+            // CategoryId 11 is the Category.Id (DB PK) of the "Undefined" row, not (int)EventCategory.Undefined.
             if (oldCategoryId == 11 && categoryId != 11)
             {
                 eventEntity.Status = EventStatus.Published;
@@ -547,7 +548,7 @@ public class EventsController : Controller
             // Load available categories (exclude Undefined - CategoryId = 11)
             var categories = await _categoryRepository.GetAllAsync();
             viewModel.AvailableCategories = categories
-                .Where(c => c.Id != 11) // Exclude Undefined category
+                .Where(c => c.Id != 11) // Exclude Undefined category (Category.Id, not (int)EventCategory.Undefined)
                 .Select(c => new CategoryOption
                 {
                     Id = c.Id,
@@ -598,7 +599,7 @@ public class EventsController : Controller
                 // Repopulate available categories and subcategories (exclude Undefined)
                 var categories = await _categoryRepository.GetAllAsync();
                 model.AvailableCategories = categories
-                    .Where(c => c.Id != 11) // Exclude Undefined category
+                    .Where(c => c.Id != 11) // Exclude Undefined category (Category.Id, not (int)EventCategory.Undefined)
                     .Select(c => new CategoryOption { Id = c.Id, Name = c.Name })
                     .OrderBy(c => c.Name)
                     .ToList();
@@ -667,7 +668,7 @@ public class EventsController : Controller
             // Repopulate dropdowns on error (exclude Undefined)
             var categories = await _categoryRepository.GetAllAsync();
             model.AvailableCategories = categories
-                .Where(c => c.Id != 11) // Exclude Undefined category
+                .Where(c => c.Id != 11) // Exclude Undefined category (Category.Id, not (int)EventCategory.Undefined)
                 .Select(c => new CategoryOption { Id = c.Id, Name = c.Name })
                 .OrderBy(c => c.Name)
                 .ToList();

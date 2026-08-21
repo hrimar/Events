@@ -9,6 +9,7 @@ namespace Events.Data.Context;
 public class EventsDbContext : IdentityDbContext<User>
 {
     private static readonly DateTime SeedDate = new DateTime(2026, 1, 23, 0, 0, 0, DateTimeKind.Utc);
+    private static readonly DateTime NewCategorySeedDate = new DateTime(2026, 8, 21, 0, 0, 0, DateTimeKind.Utc);
 
     public EventsDbContext(DbContextOptions<EventsDbContext> options)
         : base(options)
@@ -341,6 +342,51 @@ public class EventsDbContext : IdentityDbContext<User>
             });
         }
 
+        // Entertainment subcategories (CategoryId = 12)
+        foreach (EntertainmentSubCategory entertainmentSub in Enum.GetValues<EntertainmentSubCategory>())
+        {
+            subCategories.Add(new SubCategory
+            {
+                Id = id++,
+                Name = entertainmentSub.ToString(),
+                Description = GetEntertainmentSubCategoryDescription(entertainmentSub),
+                ParentCategory = EventCategory.Entertainment,
+                CategoryId = 12,
+                EnumValue = (int)entertainmentSub,
+                CreatedAt = NewCategorySeedDate
+            });
+        }
+
+        // FoodDrink subcategories (CategoryId = 13)
+        foreach (FoodDrinkSubCategory foodDrinkSub in Enum.GetValues<FoodDrinkSubCategory>())
+        {
+            subCategories.Add(new SubCategory
+            {
+                Id = id++,
+                Name = foodDrinkSub.ToString(),
+                Description = GetFoodDrinkSubCategoryDescription(foodDrinkSub),
+                ParentCategory = EventCategory.FoodDrink,
+                CategoryId = 13,
+                EnumValue = (int)foodDrinkSub,
+                CreatedAt = NewCategorySeedDate
+            });
+        }
+
+        // Markets subcategories (CategoryId = 14)
+        foreach (MarketsSubCategory marketsSub in Enum.GetValues<MarketsSubCategory>())
+        {
+            subCategories.Add(new SubCategory
+            {
+                Id = id++,
+                Name = marketsSub.ToString(),
+                Description = GetMarketsSubCategoryDescription(marketsSub),
+                ParentCategory = EventCategory.Markets,
+                CategoryId = 14,
+                EnumValue = (int)marketsSub,
+                CreatedAt = NewCategorySeedDate
+            });
+        }
+
         modelBuilder.Entity<SubCategory>().HasData(subCategories);
     }
 
@@ -581,6 +627,54 @@ public class EventsDbContext : IdentityDbContext<User>
         };
     }
 
+    private static string GetEntertainmentSubCategoryDescription(EntertainmentSubCategory category)
+    {
+        return category switch
+        {
+            EntertainmentSubCategory.Party => "General parties with no announced artist",
+            EntertainmentSubCategory.ThemedParty => "Themed parties (e.g. Gatsby Night, Retro Party)",
+            EntertainmentSubCategory.ClubNight => "Club nights and DJ sets with no headline artist",
+            EntertainmentSubCategory.Quiz => "Pub quiz and trivia nights",
+            EntertainmentSubCategory.Karaoke => "Karaoke nights",
+            EntertainmentSubCategory.BoardGames => "Board game nights",
+            EntertainmentSubCategory.EscapeRoom => "Escape rooms and quests",
+            EntertainmentSubCategory.SocialDance => "Social dance parties (salsa, bachata, swing)",
+            EntertainmentSubCategory.Other => "Other entertainment events",
+            _ => $"{category} entertainment events"
+        };
+    }
+
+    private static string GetFoodDrinkSubCategoryDescription(FoodDrinkSubCategory category)
+    {
+        return category switch
+        {
+            FoodDrinkSubCategory.WineTasting => "Wine tasting events",
+            FoodDrinkSubCategory.BeerTasting => "Craft beer tasting events",
+            FoodDrinkSubCategory.SpiritsTasting => "Spirits tasting events",
+            FoodDrinkSubCategory.CulinaryDinner => "Chef dinners and special menus",
+            FoodDrinkSubCategory.Brunch => "Brunch events",
+            FoodDrinkSubCategory.StreetFood => "Street food events",
+            FoodDrinkSubCategory.CoffeeTea => "Coffee and tea events",
+            FoodDrinkSubCategory.Other => "Other food and drink events",
+            _ => $"{category} food and drink events"
+        };
+    }
+
+    private static string GetMarketsSubCategoryDescription(MarketsSubCategory category)
+    {
+        return category switch
+        {
+            MarketsSubCategory.CraftMarket => "Handmade craft markets",
+            MarketsSubCategory.FarmersMarket => "Farmers markets",
+            MarketsSubCategory.FleaMarket => "Flea and vintage markets",
+            MarketsSubCategory.ChristmasMarket => "Christmas markets",
+            MarketsSubCategory.DesignMarket => "Design markets",
+            MarketsSubCategory.BookMarket => "Book fairs and markets",
+            MarketsSubCategory.Other => "Other markets",
+            _ => $"{category} markets"
+        };
+    }
+
     private static void ConfigureTagEntity(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Tag>(entity =>
@@ -691,10 +785,13 @@ public class EventsDbContext : IdentityDbContext<User>
             new PageSeoMeta { Id = 2, PageKey = SeoPageKeys.AboutUs, UpdatedAt = SeedDate }
         };
 
+        // Ids 3-12 (original categories) and 13-15 (AllEvents/VenuesIndex/Contact) are already
+        // deployed; keep them stable so admin-edited SEO content (Site Content screen) never gets
+        // reassigned to a different page. New categories are appended afterwards with fresh ids.
         var id = 3;
         foreach (EventCategory category in Enum.GetValues<EventCategory>())
         {
-            if (category == EventCategory.Undefined)
+            if (category == EventCategory.Undefined || IsNewCategory(category))
                 continue;
 
             rows.Add(new PageSeoMeta { Id = id++, PageKey = SeoPageKeys.ForCategory(category), UpdatedAt = SeedDate });
@@ -704,8 +801,19 @@ public class EventsDbContext : IdentityDbContext<User>
         rows.Add(new PageSeoMeta { Id = id++, PageKey = SeoPageKeys.VenuesIndex, UpdatedAt = SeedDate });
         rows.Add(new PageSeoMeta { Id = id++, PageKey = SeoPageKeys.Contact, UpdatedAt = SeedDate });
 
+        foreach (EventCategory category in Enum.GetValues<EventCategory>())
+        {
+            if (IsNewCategory(category))
+                rows.Add(new PageSeoMeta { Id = id++, PageKey = SeoPageKeys.ForCategory(category), UpdatedAt = NewCategorySeedDate });
+        }
+
         modelBuilder.Entity<PageSeoMeta>().HasData(rows);
     }
+
+    // Categories added after the initial 10 + AllEvents/VenuesIndex/Contact PageSeoMeta rows were
+    // already deployed; kept separate so their SEO rows are always appended, never interleaved.
+    private static bool IsNewCategory(EventCategory category)
+        => category is EventCategory.Entertainment or EventCategory.FoodDrink or EventCategory.Markets;
 
     private static void SeedCategories(ModelBuilder modelBuilder)
     {
@@ -720,7 +828,10 @@ public class EventsDbContext : IdentityDbContext<User>
             new Category { Id = 8, Name = "Exhibitions", CategoryType = EventCategory.Exhibitions, CreatedAt = SeedDate, Description = "Exhibitions and displays" },
             new Category { Id = 9, Name = "Conferences", CategoryType = EventCategory.Conferences, CreatedAt = SeedDate, Description = "Professional conferences and seminars" },
             new Category { Id = 10, Name = "Workshops", CategoryType = EventCategory.Workshops, CreatedAt = SeedDate, Description = "Educational workshops and training" },
-            new Category { Id = 11, Name = "Undefined", CategoryType = EventCategory.Undefined, CreatedAt = SeedDate, Description = "Events pending categorization" }
+            new Category { Id = 11, Name = "Undefined", CategoryType = EventCategory.Undefined, CreatedAt = SeedDate, Description = "Events pending categorization" },
+            new Category { Id = 12, Name = "Entertainment", CategoryType = EventCategory.Entertainment, CreatedAt = NewCategorySeedDate, Description = "Parties, quizzes, games and social entertainment" },
+            new Category { Id = 13, Name = "FoodDrink", CategoryType = EventCategory.FoodDrink, CreatedAt = NewCategorySeedDate, Description = "Tastings, culinary dinners and food events" },
+            new Category { Id = 14, Name = "Markets", CategoryType = EventCategory.Markets, CreatedAt = NewCategorySeedDate, Description = "Craft, farmers and flea markets" }
         );
     }
 }

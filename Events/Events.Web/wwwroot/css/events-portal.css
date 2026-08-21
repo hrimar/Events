@@ -917,21 +917,23 @@ footer {
 }
 
 .home-category-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-    gap: 0.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.4rem;
 }
 
 .home-category-tile {
-    padding: 0.5rem 0.35rem;
-    min-height: 72px;
-    font-size: 13px;
-    line-height: 1.2;
+    flex: 0 1 90px;
+    padding: 0.4rem 0.3rem;
+    min-height: 64px;
+    font-size: 12px;
+    line-height: 1.15;
 }
 
 .home-category-tile i {
-    font-size: 1.25rem;
-    margin-bottom: 0.25rem;
+    font-size: 1.1rem;
+    margin-bottom: 0.2rem;
 }
 
 .home-weekly-header {

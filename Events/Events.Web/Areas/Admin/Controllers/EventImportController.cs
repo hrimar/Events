@@ -211,7 +211,7 @@ public class EventImportController : Controller
             OriginalFileName = batch.OriginalFileName,
             Rows = batch.Rows,
             AvailableCategories = categories
-                .Where(c => c.Id != 11) // Exclude Undefined category
+                .Where(c => c.Id != 11) // Exclude Undefined category (Category.Id, not (int)EventCategory.Undefined)
                 .Select(c => new CategoryOption { Id = c.Id, Name = c.Name })
                 .OrderBy(c => c.Name)
                 .ToList(),

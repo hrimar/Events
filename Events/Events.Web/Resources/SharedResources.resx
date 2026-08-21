@@ -720,6 +720,15 @@
   <data name="Category_Workshops" xml:space="preserve">
     <value>Уъркшопи</value>
   </data>
+  <data name="Category_Entertainment" xml:space="preserve">
+    <value>Забавления</value>
+  </data>
+  <data name="Category_FoodDrink" xml:space="preserve">
+    <value>Храна и напитки</value>
+  </data>
+  <data name="Category_Markets" xml:space="preserve">
+    <value>Пазари</value>
+  </data>
   <data name="SubCategory_Pop" xml:space="preserve">
     <value>Поп</value>
   </data>
@@ -1160,6 +1169,69 @@
   </data>
   <data name="SubCategory_Other" xml:space="preserve">
     <value>Друго</value>
+  </data>
+  <data name="SubCategory_Party" xml:space="preserve">
+    <value>Парти</value>
+  </data>
+  <data name="SubCategory_ThemedParty" xml:space="preserve">
+    <value>Тематично парти</value>
+  </data>
+  <data name="SubCategory_ClubNight" xml:space="preserve">
+    <value>Клубна вечер</value>
+  </data>
+  <data name="SubCategory_Quiz" xml:space="preserve">
+    <value>Куиз и тривия</value>
+  </data>
+  <data name="SubCategory_Karaoke" xml:space="preserve">
+    <value>Караоке</value>
+  </data>
+  <data name="SubCategory_BoardGames" xml:space="preserve">
+    <value>Настолни игри</value>
+  </data>
+  <data name="SubCategory_EscapeRoom" xml:space="preserve">
+    <value>Escape room</value>
+  </data>
+  <data name="SubCategory_SocialDance" xml:space="preserve">
+    <value>Социални танци</value>
+  </data>
+  <data name="SubCategory_WineTasting" xml:space="preserve">
+    <value>Дегустация на вино</value>
+  </data>
+  <data name="SubCategory_BeerTasting" xml:space="preserve">
+    <value>Дегустация на бира</value>
+  </data>
+  <data name="SubCategory_SpiritsTasting" xml:space="preserve">
+    <value>Дегустация на спиртни напитки</value>
+  </data>
+  <data name="SubCategory_CulinaryDinner" xml:space="preserve">
+    <value>Кулинарна вечеря</value>
+  </data>
+  <data name="SubCategory_Brunch" xml:space="preserve">
+    <value>Бранч</value>
+  </data>
+  <data name="SubCategory_StreetFood" xml:space="preserve">
+    <value>Стрийт фууд</value>
+  </data>
+  <data name="SubCategory_CoffeeTea" xml:space="preserve">
+    <value>Кафе и чай</value>
+  </data>
+  <data name="SubCategory_CraftMarket" xml:space="preserve">
+    <value>Хендмейд базар</value>
+  </data>
+  <data name="SubCategory_FarmersMarket" xml:space="preserve">
+    <value>Фермерски пазар</value>
+  </data>
+  <data name="SubCategory_FleaMarket" xml:space="preserve">
+    <value>Битак и винтидж</value>
+  </data>
+  <data name="SubCategory_ChristmasMarket" xml:space="preserve">
+    <value>Коледен базар</value>
+  </data>
+  <data name="SubCategory_DesignMarket" xml:space="preserve">
+    <value>Дизайн маркет</value>
+  </data>
+  <data name="SubCategory_BookMarket" xml:space="preserve">
+    <value>Книжен базар</value>
   </data>
   <data name="EventStatus_Draft" xml:space="preserve">
     <value>Чернова</value>

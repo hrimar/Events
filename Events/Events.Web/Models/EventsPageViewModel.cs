@@ -147,6 +147,9 @@ public class EventsPageViewModel
         EventCategory.Exhibitions => "Изложби",
         EventCategory.Conferences => "Конференции",
         EventCategory.Workshops   => "Уъркшопи",
+        EventCategory.Entertainment => "Забавления",
+        EventCategory.FoodDrink   => "Храна и напитки",
+        EventCategory.Markets     => "Пазари",
         _                         => category.ToString()
     };
 }

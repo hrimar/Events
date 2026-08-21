@@ -1,6 +1,7 @@
 ﻿using Events.Crawler.DTOs.Common;
 using Events.Crawler.Models;
 using Events.Crawler.Services.Interfaces;
+using Events.Data.Repositories.Interfaces;
 using Events.Models.Entities;
 using Events.Models.Enums;
 using Events.Services.Helpers;
@@ -15,6 +16,7 @@ public class EventProcessingService : IEventProcessingService
     private readonly IServiceProvider _serviceProvider;
     private readonly IAiTaggingService _aiTaggingService;
     private readonly ISubCategoryService _subCategoryService;
+    private readonly ICategoryRepository _categoryRepository;
     private readonly IVenueService _venueService;
     private readonly ILogger<EventProcessingService> _logger;
 
@@ -22,12 +24,14 @@ public class EventProcessingService : IEventProcessingService
         IServiceProvider serviceProvider,
         IAiTaggingService aiTaggingService,
         ISubCategoryService subCategoryService,
+        ICategoryRepository categoryRepository,
         IVenueService venueService,
         ILogger<EventProcessingService> logger)
     {
         _serviceProvider = serviceProvider;
         _aiTaggingService = aiTaggingService;
         _subCategoryService = subCategoryService;
+        _categoryRepository = categoryRepository;
         _venueService = venueService;
         _logger = logger;
     }
@@ -73,8 +77,13 @@ public class EventProcessingService : IEventProcessingService
                         using var tagScope = _serviceProvider.CreateScope();
                         var tagService = tagScope.ServiceProvider.GetRequiredService<ITagService>();
                         
-                        // Pass event category to properly set tag categories
-                        var eventCategory = newEvent.Event.CategoryId != 11 ? (EventCategory)newEvent.Event.CategoryId : (EventCategory?)null;
+                        // Pass event category to properly set tag categories; resolved via the
+                        // database (not cast from CategoryId) since Category.Id and (int)EventCategory
+                        // are not guaranteed to match for every category.
+                        var categoryEntity = await _categoryRepository.GetByIdAsync(newEvent.Event.CategoryId);
+                        var eventCategory = categoryEntity != null && categoryEntity.CategoryType != EventCategory.Undefined
+                            ? categoryEntity.CategoryType
+                            : (EventCategory?)null;
                         await BulkAssignTagsToEventAsync(createdEvent.Id, newEvent.Tags, tagService, eventCategory);
                     }
 
@@ -182,7 +191,7 @@ public class EventProcessingService : IEventProcessingService
     {
         if (string.IsNullOrEmpty(crawledEvent.Name))
         {
-            var fallbackEvent = MapToEntity(crawledEvent, null, null, null);
+            var fallbackEvent = await MapToEntity(crawledEvent, null, null, null);
             return (fallbackEvent, new List<string>());
         }
 
@@ -211,7 +220,7 @@ public class EventProcessingService : IEventProcessingService
                 .FindCanonicalVenueIdAsync(crawledEvent.Location)
                 .WaitAsync(cts.Token);
 
-            var eventEntity = MapToEntity(crawledEvent, category, subCategoryId, canonicalVenueId);
+            var eventEntity = await MapToEntity(crawledEvent, category, subCategoryId, canonicalVenueId);
 
             _logger.LogInformation(
                 "Comprehensively processed '{EventName}': Category={Category}, SubCategory={SubCategory}, Tags=[{Tags}], VenueId={VenueId}",
@@ -223,20 +232,39 @@ public class EventProcessingService : IEventProcessingService
         catch (OperationCanceledException)
         {
             _logger.LogWarning("AI comprehensive processing timeout for event {EventName}, using fallback", crawledEvent.Name);
-            var fallbackEvent = MapToEntity(crawledEvent, null, null, null);
+            var fallbackEvent = await MapToEntity(crawledEvent, null, null, null);
             return (fallbackEvent, new List<string>());
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "AI comprehensive processing failed for event {EventName}, using fallback", crawledEvent.Name);
-            var fallbackEvent = MapToEntity(crawledEvent, null, null, null);
+            var fallbackEvent = await MapToEntity(crawledEvent, null, null, null);
             return (fallbackEvent, new List<string>());
         }
     }
 
-    private Event MapToEntity(CrawledEventDto crawledEvent, EventCategory? category, int? subCategoryId, int? canonicalVenueId)
+    // Resolves the actual Category.Id from the database instead of casting the EventCategory enum
+    // value directly, since Category.Id (primary key) and (int)EventCategory are not guaranteed to
+    // match for every category.
+    private async Task<int> ResolveCategoryIdAsync(EventCategory? category)
     {
-        var categoryId = category.HasValue ? (int)category.Value : 11; // Default to Undefined
+        var categoryType = category ?? EventCategory.Undefined;
+        var categoryEntity = await _categoryRepository.GetByTypeAsync(categoryType);
+
+        if (categoryEntity != null)
+        {
+            return categoryEntity.Id;
+        }
+
+        _logger.LogWarning("Category {CategoryType} not found in database, falling back to Undefined", categoryType);
+        var undefinedCategory = await _categoryRepository.GetByTypeAsync(EventCategory.Undefined);
+        return undefinedCategory?.Id
+            ?? throw new InvalidOperationException("Undefined category is missing from the database seed data.");
+    }
+
+    private async Task<Event> MapToEntity(CrawledEventDto crawledEvent, EventCategory? category, int? subCategoryId, int? canonicalVenueId)
+    {
+        var categoryId = await ResolveCategoryIdAsync(category);
 
         return new Event
         {

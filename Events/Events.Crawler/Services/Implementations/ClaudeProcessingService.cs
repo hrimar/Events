@@ -57,74 +57,169 @@ public class ClaudeProcessingService : IAiTaggingService
         {
             await EnsureRateLimit();
 
-            var prompt = $@"You are an expert in cultural life in Sofia, Bulgaria. Your task is to categorize events based on your knowledge of the local cultural scene.
+            var prompt = $@"You are an expert in the cultural and social life of Sofia, Bulgaria. Your task is to categorize events based on your knowledge of the local scene.
 
-Below is the list of available categories and subcategories. Each subcategory includes example events in parentheses to help you choose the most appropriate one:
+Below is the list of available categories and subcategories. Each subcategory includes example events in parentheses to help you choose the most appropriate one.
 
-1=Music → Pop(Concerts of DARA, Mihaela Marinova), Rock(Midalidare Rock, B.T.R. concerts), Hip-Hop / Rap(100 Kila, Krisko, Fyre shows), Jazz(A to Jazz Festival, Plovdiv Jazz Fest), Blues(Sofia Blues Meeting), Classical(Sofia Philharmonic, Opera Open Plovdiv), Folk(Pirin Folk, traditional folklore events), Traditional Bulgarian(National Folklore Festivals), EDM(YALTA Club, Solar Events), Techno(Metropolis Events), House(EXE Club House Nights), Drum & Bass(HMSU events), Trance(Solar Trance Nights), Reggae(One Love Tour), R&B(Soul Sundays at Studio 5), Metal(Hills of Rock, Varna Mega Rock), Indie(Sofia Indie Nights), Acoustic(Acoustic Sessions Sofia), Alternative(Alarma Punk Jazz), Punk(Punk gigs at Mixtape 5), Soul(Smaller club concerts), Chillout(—), Experimental(—), Choir(Sofia Boys Choir), World Music(Ethno Jazz Fest), Other
-2=Art → Painting(National Art Gallery exhibitions), Sculpture(—), Photography(PhotoSynthesis exhibitions), Digital Art(DA Fest), Street Art(Urban Creatures), Graffiti(Sofia Graffiti Tour), Illustration(—), Performance Art(Water Tower Art Fest), Installation Art(Contemporary gallery installations), Contemporary Art(Structura Gallery), Visual Arts(Sofia Art Week), Mixed Media(—), Conceptual Art(—), Other
-3=Business → Networking Events(Founders Live), Startups(Startup Conference Bulgaria), Entrepreneurship(CEO Angels Club), Marketing(Digital4Sofia), Sales(—), Leadership(Leadership Talks), Finance(Investor Finance Forum), Real Estate(Expo Real Bulgaria), Investment(Money Motion), E-commerce(eCommerce Academy), Innovation(Innovation Explorer), Technology(Webit), HR & Management(HR Industry Expo), Business Strategy(—), Product Development(—), Other
-4=Sports → Football(CSKA–Levski Derby), Basketball(NBL Games), Volleyball(National League), Tennis(Sofia Open), Athletics(—), Swimming(—), Running(Sofia Marathon), Cycling(Tour of Bulgaria), Boxing(MaxFight), MMA(Bulgarian Fighting Championship), Wrestling(—), Weightlifting(—), CrossFit(CrossFit Bulgarian Throwdowns), Yoga(Yoga in the Park), Fitness(FitFest), Hiking(Vitosha hikes), Climbing(Climb.bg events), Skiing(Bansko Ski Cup), Snowboarding(Pamporovo Freestyle), Motocross(Bulgarian Motocross Championship), eSports(A1 Gaming League), Table Tennis(—), Badminton(—), Golf(Pirin Golf Tournaments), Dance Sport(Dance Sport Championships), Other
-5=Theatre → Drama(National Theatre performances), Comedy(Theatre Sofia), Musical Theatre(Musical productions at Opera Houses), Tragedy(—), Experimental Theatre(ACT Festival), Puppet Theatre(Puppet Theatre Sofia), Improvisation(HaHaHa Impro Theatre), Street Theatre(Street performances during festivals), Monodrama(One-man shows), Children's Theatre(Theatre Pan), Stand-up Comedy(Comedy Club Sofia, Inside Joke), Other
-6=Cinema → Feature Films(SIFF), Short Films(In The Palace Film Fest), Documentaries(Master of Art Festival), Animation(Golden Kuker Sofia), Independent Cinema(Screenings at Dom na Kinoto), Bulgarian Cinema(Premiers at Odeon, Lumière Lidl), International Cinema(—), Film Premieres(Weekly premieres in cinemas), Student Films(NATFIZ screenings), Film Festivals(SIFF), Other
-7=Festivals → Music Festivals(Hills of Rock, A to Jazz), Film Festivals(SIFF), Art Festivals(KvARTal Festival), Food & Wine Festivals(DiVino Taste), Cultural Festivals(Gabrovo Carnival), Folklore Festivals(Koprivshtitsa Fest), Street Festivals(Kapana Fest), Summer Festivals(Various coastal festivals), Light Festivals(LUNAR), Craft Beer Festivals(Sofia Brew Fest), Eco Festivals(Uzana Polyana Fest), Dance Festivals(Salsa Fest Bulgaria), Tech Festivals(Webit Expo), Other
-8=Exhibitions → Art Exhibitions(National Gallery), Photography Exhibitions(PhotoSynthesis), Historical Exhibitions(National Museum), Science Exhibitions(Inter Expo Center), Technology Exhibitions(Tech Expo Sofia), Automotive Exhibitions(Sofia Motor Show), Design Exhibitions(Design Week), Cultural Heritage Exhibitions(Regional museum exhibitions), Educational Exhibitions(Book Fair Sofia), Craft Exhibitions(Handmade Fest), Other
-9=Conferences → Tech Conferences(DEV.BG All In One, HackConf), Business Conferences(Webit), Startup Conferences(StartUP Conference), Academic Conferences(Sofia Science Festival), Marketing Conferences(DigitalK), Science Conferences(—), Health & Medicine Conferences(Medical Expo), AI & Innovation Conferences(AI Bulgaria Summit), IT Security Conferences(CyberSec Conferences), Environmental Conferences(Green Week), Other
-10=Workshops → Art Workshops(Paint & Wine), Music Workshops(DJ Academy), Dance Workshops(Salsa workshops), Photography Workshops(PhotoSynthesis trainings), Cooking Workshops(Culinary Workshop Bulgaria), Craft Workshops(Handmade Workshops), Startup Workshops(Lean Startup Workshops), Personal Development Workshops(Public Speaking Bootcamps), Coding Workshops(CodeWeek), Language Workshops(English Bootcamps), Theatre Workshops(Acting masterclasses), Yoga Workshops(Yoga Retreats), Wellness Workshops(Breathwork sessions), Marketing Workshops(Social Media Workshops), Other
-11=Undefined
+Output the subcategory **key exactly as written before the parenthesis** (e.g. `ThemedParty`, `WineTasting`, `HipHop`) — do not translate it and do not add spaces.
 
-Approved master tag list:
-Family-friendly, For kids, Beginners, Professionals, Students, Adults only, Live, Outdoor, Indoor, Networking, Hands-on, Interactive, Bulgarian culture, Local artists, International guests, Traditional, Contemporary, English-friendly, Seasonal, Holiday special
+---
+
+## CATEGORIES
+
+**1 = Music** → Pop(DARA, Mihaela Marinova), Rock(Midalidare Rock, B.T.R.), HipHop(100 Kila, Krisko), Rap(Fyre shows), Jazz(A to Jazz Festival), Blues(Sofia Blues Meeting), Classical(Sofia Philharmonic), Folk(Pirin Folk), TraditionalBulgarian(National Folklore Festivals), EDM(YALTA Club, Solar Events), Techno(Metropolis Events), House(EXE Club House Nights), DrumBass(HMSU events), Trance(Solar Trance Nights), Reggae(One Love Tour), RB(Soul Sundays at Studio 5), Metal(Hills of Rock), Indie(Sofia Indie Nights), Acoustic(Acoustic Sessions Sofia), Alternative(Alarma Punk Jazz), Punk(Punk gigs at Mixtape 5), Soul(smaller club concerts), Chillout(—), Experimental(—), Choir(Sofia Boys Choir), WorldMusic(Ethno Jazz Fest), Other
+
+**2 = Art** → Painting(National Art Gallery), Sculpture(—), Photography(PhotoSynthesis), DigitalArt(DA Fest), StreetArt(Urban Creatures), Graffiti(Sofia Graffiti Tour), Illustration(—), PerformanceArt(Water Tower Art Fest), InstallationArt(gallery installations), ContemporaryArt(Structura Gallery), VisualArts(Sofia Art Week), MixedMedia(—), ConceptualArt(—), Other
+
+**3 = Business** → NetworkingEvents(Founders Live), Startups(Startup Conference Bulgaria), Entrepreneurship(CEO Angels Club), Marketing(Digital4Sofia), Sales(—), Leadership(Leadership Talks), Finance(Investor Finance Forum), RealEstate(Expo Real Bulgaria), Investment(Money Motion), ECommerce(eCommerce Academy), Innovation(Innovation Explorer), Technology(Webit), HRManagement(HR Industry Expo), BusinessStrategy(—), ProductDevelopment(—), Other
+
+**4 = Sports** → Football(CSKA–Levski), Basketball(NBL Games), Volleyball(National League), Tennis(Sofia Open), Athletics(—), Swimming(—), Running(Sofia Marathon), Cycling(Tour of Bulgaria), Boxing(MaxFight), MMA(Bulgarian Fighting Championship), Wrestling(—), Weightlifting(—), CrossFit(Bulgarian Throwdowns), Yoga(Yoga in the Park), Fitness(FitFest), Hiking(Vitosha hikes), Climbing(Climb.bg), Skiing(Bansko Ski Cup), Snowboarding(Pamporovo Freestyle), Motocross(Bulgarian Championship), ESports(A1 Gaming League), TableTennis(—), Badminton(—), Golf(Pirin Golf), DanceSport(Dance Sport Championships), Other
+
+**5 = Theatre** → Drama(National Theatre), Comedy(Theatre Sofia), MusicalTheatre(Opera House musicals), Tragedy(—), ExperimentalTheatre(ACT Festival), PuppetTheatre(Puppet Theatre Sofia), Improvisation(HaHaHa Impro), StreetTheatre(street performances), Monodrama(one-man shows), ChildrensTheatre(Theatre Pan), StandUpComedy(Comedy Club Sofia, Inside Joke), Other
+
+**6 = Cinema** → FeatureFilms(SIFF), ShortFilms(In The Palace), Documentaries(Master of Art), Animation(Golden Kuker), IndependentCinema(Dom na Kinoto), BulgarianCinema(Odeon premieres), InternationalCinema(—), FilmPremieres(weekly premieres), StudentFilms(NATFIZ), FilmFestivals(SIFF), Other
+
+**7 = Festivals** → MusicFestivals(Hills of Rock), FilmFestivals(SIFF), ArtFestivals(KvARTal), FoodWineFestivals(DiVino Taste), CulturalFestivals(Gabrovo Carnival), FolkloreFestivals(Koprivshtitsa), StreetFestivals(Kapana Fest), SummerFestivals(coastal festivals), LightFestivals(LUNAR), CraftBeerFestivals(Sofia Brew Fest), EcoFestivals(Uzana Polyana), DanceFestivals(Salsa Fest), TechFestivals(Webit Expo), Other
+
+**8 = Exhibitions** → ArtExhibitions(National Gallery), PhotographyExhibitions(PhotoSynthesis), HistoricalExhibitions(National Museum), ScienceExhibitions(Inter Expo Center), TechnologyExhibitions(Tech Expo), AutomotiveExhibitions(Sofia Motor Show), DesignExhibitions(Design Week), CulturalHeritageExhibitions(regional museums), EducationalExhibitions(Book Fair), CraftExhibitions(Handmade Fest), Other
+
+**9 = Conferences** → TechConferences(DEV.BG, HackConf), BusinessConferences(Webit), StartupConferences(StartUP Conference), AcademicConferences(Sofia Science Festival), MarketingConferences(DigitalK), ScienceConferences(—), HealthMedicineConferences(Medical Expo), AIInnovationConferences(AI Bulgaria Summit), ITSecurityConferences(CyberSec), EnvironmentalConferences(Green Week), Other
+
+**10 = Workshops** → ArtWorkshops(Paint & Wine), MusicWorkshops(DJ Academy), DanceWorkshops(salsa lessons), PhotographyWorkshops(PhotoSynthesis trainings), CookingWorkshops(Culinary Workshop Bulgaria), CraftWorkshops(Handmade Workshops), StartupWorkshops(Lean Startup), PersonalDevelopmentWorkshops(Public Speaking Bootcamps), CodingWorkshops(CodeWeek), LanguageWorkshops(English Bootcamps), TheatreWorkshops(acting masterclasses), YogaWorkshops(Yoga Retreats), WellnessWorkshops(breathwork sessions), MarketingWorkshops(Social Media Workshops), Other
+
+**11 = Entertainment** → Party(club parties with no announced artist), ThemedParty(Gatsby Night, Watermelon Party, Retro Party, 90s Night), ClubNight(club nights / DJ sets with no headline artist), Quiz(pub quiz, trivia night), Karaoke(karaoke nights), BoardGames(board game nights, D&D), EscapeRoom(escape rooms, quests), SocialDance(salsa/bachata/swing party where people dance), Other
+
+**12 = FoodDrink** → WineTasting(wine tastings), BeerTasting(craft beer evenings), SpiritsTasting(Sofia Finest White Spirits, whisky evenings), CulinaryDinner(chef dinners, special menus), Brunch(brunch events), StreetFood(street food events), CoffeeTea(coffee cuppings, tea ceremonies), Other
+
+**13 = Markets** → CraftMarket(handmade markets), FarmersMarket(farmers markets), FleaMarket(flea and vintage markets), ChristmasMarket(Christmas markets), DesignMarket(design markets), BookMarket(book fairs, Aleya na knigata), Other
+
+**14 = Undefined** (use only when nothing above fits)
+
+---
+
+## HOW TO CHOOSE THE CATEGORY
+
+Ask yourself: **why would someone attend this event?**
+
+| Reason to attend | Category |
+|---|---|
+| To watch or listen to a performance | Music, Theatre, Cinema |
+| To look at works or objects on display | Exhibitions, Art |
+| To learn or to do something hands-on | Workshops, Conferences, Business |
+| To compete, train or move | Sports |
+| To eat, drink or taste | FoodDrink |
+| To browse and buy goods from vendors | Markets |
+| To socialize and be entertained | Entertainment |
+| A multi-day or multi-act programme | Festivals |
+
+---
+
+## DISAMBIGUATION RULES
+
+These cases are frequently misclassified. Follow them strictly.
+
+1. **Parties.** If the title or description names a performing artist or DJ → **Music** + the matching genre subcategory. If the draw is a theme or format rather than a named artist (Gatsby Night, Watermelon Party, Retro Party, 90s Night) → **Entertainment / ThemedParty**.
+
+2. **Quiz and trivia** → **Entertainment / Quiz**. Never Workshops.
+
+3. **Dance events** — three different cases:
+   - People come to dance socially (salsa, bachata, swing party) → **Entertainment / SocialDance**
+   - People are being taught → **Workshops / DanceWorkshops**
+   - A competition is being judged → **Sports / DanceSport**
+
+4. **Food events** — two cases:
+   - Participants cook → **Workshops / CookingWorkshops**
+   - Participants eat, drink or taste → **FoodDrink**
+
+5. **Stand-up comedy** → **Theatre / StandUpComedy**, not Entertainment.
+
+6. **Children's events.** Choose the category by the art form or activity, then add the tag `For kids`. A puppet show is **Theatre / PuppetTheatre** + `For kids`. A children's art workshop is **Workshops / ArtWorkshops** + `For kids`. There is no separate children's category.
+
+7. **Walking and hiking.** A mountain or nature hike → **Sports / Hiking**. A guided sightseeing walk around the city has no dedicated category yet — use the closest fitting category, or Undefined.
+
+8. **Multi-day festivals** → **Festivals**, even when the content is music or film.
+
+9. **Markets vs Exhibitions.** If vendors are selling goods → **Markets**. If works are displayed to be viewed → **Exhibitions**.
+
+---
+
+## INPUT
 
 Here is the event you need to categorize:
 Event: {eventName}
 Desc: {description}
 Location: {location}
 
-Use the event name, description, AND location (venues like Театър Сфумато, Кино Влайкова often signal the correct category) to determine the best category, subcategory, and tags.
+The location (venue) is a strong signal (Театър Сфумато → Theatre; Кино Влайкова → Cinema; Bar Singles / клуб → Music or Entertainment; Зала България → Music/Classical).
 
-Your task is to:
-1. Select ONE category and ONE subcategory from the provided list that best fits this event
-2. Add between 0 and 3 tags from the approved master tag list only
+---
 
-Important rules for TAGS:
-- Tags MUST be in English only
-- Tags MUST be selected ONLY from the approved master tag list
-- Tags must add useful secondary information beyond what the category and subcategory already convey
-- Do NOT repeat, restate, or closely match the event name, venue name, category, or subcategory
-- Do NOT output city names or venue names (e.g. Sofia, Teatar Sfumato, Kino Vlaikova, NDK, club names); the system handles venue information separately and all events are already in Sofia
-- Do NOT invent new tags
-- If no approved tags clearly apply, leave the tag section empty
-- Maximum 3 tags
-- Only output tags that are clearly supported by the event information
+## YOUR TASK
 
-Tag selection algorithm:
-1. First determine the best category and subcategory
-2. Then check whether any tag would add real value beyond the chosen category/subcategory
-3. Prefer tags that describe one of these dimensions:
-   - audience (e.g. Family-friendly, For kids, Beginners, Professionals, Students, Adults only)
-   - experience / format (e.g. Live, Outdoor, Indoor, Networking, Hands-on, Interactive)
-   - cultural / visitor relevance (e.g. Bulgarian culture, Local artists, International guests, Traditional, Contemporary, English-friendly)
-   - seasonal / special context (e.g. Seasonal, Holiday special)
-4. Prefer diversity: if selecting multiple tags, choose tags that describe different aspects of the event rather than overlapping ideas
-5. Do NOT use a tag if it is already obvious from the category, subcategory, or event title
-6. It is better to return 0, 1, or 2 tags than to add weak or redundant tags
+1. Select **ONE category** and **ONE subcategory** from the list above.
+2. Add **between 0 and 3 tags** from the approved master tag list only.
 
-Before providing your answer, use the scratchpad to think through:
-- What type of event this is based on the name, description, and location
-- Which category and subcategory best fit
-- Whether any approved tags add useful value beyond the category/subcategory
-- Whether the chosen tags are clearly supported and non-redundant
-Do NOT write or output the scratchpad — keep it internal. Then output ONLY the final answer.
+### Approved master tag list
 
-CRITICAL: Return your answer ONLY in the format CATEGORY|SUBCATEGORY|tag1,tag2,tag3
-If no suitable tags apply, keep the tag section empty like this:
+`Adults only`, `Beginners`, `Bulgarian culture`, `Contemporary`, `English-friendly`, `Family-friendly`, `For kids`, `Hands-on`, `Holiday special`, `Indoor`, `Interactive`, `International guests`, `Live`, `Local artists`, `Networking`, `Outdoor`, `Professionals`, `Seasonal`, `Students`, `Team-building`, `Traditional`
+
+### Rules for tags
+
+- Tags MUST be in English and MUST come from the approved list only. Never invent new tags.
+- **`Live` means a live human performance only** — a band, orchestra, actors, stand-up comedian, live singer. Do **NOT** use `Live` for DJ sets, club nights, film screenings, quizzes, markets, tastings or exhibitions.
+- Tags must add information **beyond** what the category and subcategory already say.
+- Do NOT repeat or paraphrase the event name, location (venue) name, category or subcategory.
+- Do NOT output city or location (venue) names (Sofia, NDK, club names) — the system handles location (venue) data separately and all events are in Sofia.
+- Maximum 3 tags. Returning 0, 1 or 2 tags is better than adding weak or redundant ones.
+
+### Tag selection algorithm
+
+1. Determine the category and subcategory first.
+2. Then check whether a tag adds real value beyond that choice.
+3. Prefer tags across different dimensions:
+   - audience — `Family-friendly`, `For kids`, `Beginners`, `Professionals`, `Students`, `Adults only`
+   - format — `Live`, `Outdoor`, `Indoor`, `Networking`, `Hands-on`, `Interactive`, `Team-building`
+   - cultural relevance — `Bulgarian culture`, `Local artists`, `International guests`, `Traditional`, `Contemporary`, `English-friendly`
+   - timing — `Seasonal`, `Holiday special`
+4. If two tags express the same idea, keep only one.
+5. Skip any tag that is already obvious from the category, subcategory or title.
+
+---
+
+## OUTPUT
+
+Think through the classification internally. Do **not** write out your reasoning.
+
+Return your answer ONLY in this format:
+
+```
+CATEGORY|SUBCATEGORY|tag1,tag2,tag3
+```
+
+If no suitable tags apply, leave the tag section empty:
+
+```
 CATEGORY|SUBCATEGORY|
+```
 
-NO scratchpad
-NO explanations
-NO descriptions
-ONLY the format";
+NO scratchpad. NO explanations. NO descriptions. ONLY the format.
+
+---
+
+## WORKED EXAMPLES
+
+| Event | Correct output |
+|---|---|
+| QUIZ ВЕЧЕР в Бар ""Тънка Червена Линия"" | `Entertainment\|Quiz\|Interactive,Team-building` |
+| Нощта на Гетсби @ Малката Текила | `Entertainment\|ThemedParty\|Adults only` |
+| Swinging Summer Vol.2 \| Swing Dance Party | `Entertainment\|SocialDance\|Beginners` |
+| ATB - SPICE Music Festival Pre-party | `Music\|Trance\|International guests` |
+| FRIDAY AFTERNOON PARTY WITH MITKO PAVLOV | `Music\|House\|Local artists` |
+| Sofia Finest White Spirits | `FoodDrink\|SpiritsTasting\|Adults only` |
+| SCORPIONS @ Арена 8888 | `Music\|Rock\|Live,International guests` |
+| Кино под звездите: България Amore Mio | `Cinema\|BulgarianCinema\|Outdoor,Bulgarian culture` |
+| Дядовата ръкавичка (куклен спектакъл) | `Theatre\|PuppetTheatre\|For kids` |
+| Аз рисувам като Пийт Мондриан — ателие за деца | `Workshops\|ArtWorkshops\|For kids,Hands-on` |";
 
             var requestBody = new ClaudeRequest
             {
@@ -146,6 +241,9 @@ ONLY the format";
 
                 if (!string.IsNullOrEmpty(responseText))
                 {
+                    // Claude sometimes wraps its answer in a markdown code fence despite the
+                    // "NO scratchpad. NO explanations." instruction — strip it defensively.
+                    responseText = StripMarkdownCodeFence(responseText);
                     _logger.LogInformation("Claude AI response for '{EventName}': {Response}", eventName, responseText);
 
                     // Strict validation: Check if response follows format
@@ -157,40 +255,49 @@ ONLY the format";
                     }
 
                     var parts = responseText.Split('|');
-                    // Claude sometimes echoes the category name: "1=Music" — strip the name part
+                    // Claude sometimes echoes the category as "1=Music" — strip the name part.
+                    // The prompt's own worked examples show the category by name (e.g. "Music"), not by
+                    // number, so accept both: try the numeric id first, then fall back to the enum name.
                     var categoryPart = parts[0].Split('=')[0].Trim();
-                    if (parts.Length >= 2 && int.TryParse(categoryPart, out var categoryId))
+                    EventCategory? category = null;
+
+                    if (int.TryParse(categoryPart, out var categoryId) && Enum.IsDefined(typeof(EventCategory), categoryId))
                     {
-                        if (categoryId == 11)
+                        category = (EventCategory)categoryId;
+                    }
+                    else if (Enum.TryParse<EventCategory>(categoryPart, ignoreCase: true, out var parsedCategory))
+                    {
+                        category = parsedCategory;
+                    }
+
+                    if (parts.Length >= 2 && category.HasValue)
+                    {
+                        if (category.Value == EventCategory.Undefined)
                         {
                             _logger.LogWarning("Claude classified '{EventName}' as Undefined", eventName);
                             _consecutiveFailures = Math.Max(0, _consecutiveFailures - 1); // Partial success
                             return FallbackClassification(eventName, description, location);
                         }
 
-                        if (Enum.IsDefined(typeof(EventCategory), categoryId))
+                        var subcategory = parts.Length > 1 && !string.IsNullOrWhiteSpace(parts[1]) ? parts[1].Trim() : "Other";
+
+                        var aiTags = parts.Length > 2 && !string.IsNullOrWhiteSpace(parts[2])
+                            ? parts[2].Split(',').Select(t => t.Trim()).Where(t => !string.IsNullOrWhiteSpace(t)).ToList()
+                            : new List<string>();
+
+                        _logger.LogInformation("Claude classified '{EventName}' as {Category}|{SubCategory} with tags: {Tags}",
+                            eventName, category.Value, subcategory, string.Join(", ", aiTags));
+
+                        // Reset failure counter
+                        _consecutiveFailures = 0;
+
+                        return new TaggingResult
                         {
-                            var category = (EventCategory)categoryId;
-                            var subcategory = parts.Length > 1 && !string.IsNullOrWhiteSpace(parts[1]) ? parts[1].Trim() : "Other";
-
-                            var aiTags = parts.Length > 2 && !string.IsNullOrWhiteSpace(parts[2])
-                                ? parts[2].Split(',').Select(t => t.Trim()).Where(t => !string.IsNullOrWhiteSpace(t)).ToList()
-                                : new List<string>();
-
-                            _logger.LogInformation("Claude classified '{EventName}' as {Category}|{SubCategory} with tags: {Tags}",
-                                eventName, category, subcategory, string.Join(", ", aiTags));
-
-                            // Reset failure counter
-                            _consecutiveFailures = 0;
-
-                            return new TaggingResult
-                            {
-                                SuggestedCategory = category,
-                                SuggestedSubCategory = subcategory,
-                                SuggestedTags = aiTags,
-                                Confidence = aiTags.ToDictionary(tag => tag, _ => 0.85)
-                            };
-                        }
+                            SuggestedCategory = category.Value,
+                            SuggestedSubCategory = subcategory,
+                            SuggestedTags = aiTags,
+                            Confidence = aiTags.ToDictionary(tag => tag, _ => 0.85)
+                        };
                     }
                 }
 
@@ -227,10 +334,26 @@ ONLY the format";
     // Strict format validation
     private static bool IsValidResponseFormat(string response)
     {
-        // Must match: NUMBER|SUBCATEGORY|tags
-        // Allow apostrophes (Children's), ampersands (R&B), = (when Claude echoes category name)
-        var pattern = @"^\d+[^|]*\|[^|]*\|[a-zA-Z\s,\-'&]*$";
+        // Must match: CATEGORY|SUBCATEGORY|tags — CATEGORY may be a number ("1") or the enum
+        // name ("Music"), since the prompt's own worked examples use the name, not the number.
+        // Allow apostrophes (Children's), ampersands (R&B), = (when Claude echoes "1=Music").
+        var pattern = @"^[a-zA-Z0-9][^|]*\|[^|]*\|[a-zA-Z\s,\-'&]*$";
         return Regex.IsMatch(response, pattern);
+    }
+
+    // Claude sometimes wraps its answer in a markdown code fence (``` ... ```), with or without
+    // a language tag/newlines, despite the prompt explicitly forbidding it. Strip defensively.
+    private static string StripMarkdownCodeFence(string text)
+    {
+        var trimmed = text.Trim().Trim('`').Trim();
+
+        var firstNewline = trimmed.IndexOf('\n');
+        if (firstNewline >= 0 && !trimmed[..firstNewline].Contains('|'))
+        {
+            trimmed = trimmed[(firstNewline + 1)..].Trim();
+        }
+
+        return trimmed;
     }
 
     private EventCategory? TryClassifyWithKeywords(string eventName, string description)
@@ -286,6 +409,24 @@ ONLY the format";
             return EventCategory.Workshops;
         }
 
+        if (new[] { "куиз", "quiz", "тривия", "trivia", "парти", "party", "караоке", "karaoke", "настолни игри", "board game", "ескейп рум", "escape room" }.Any(keyword => text.Contains(keyword)))
+        {
+            _logger.LogInformation("Keyword classified '{EventName}' as Entertainment", eventName);
+            return EventCategory.Entertainment;
+        }
+
+        if (new[] { "дегустация", "tasting", "бранч", "brunch", "стрийт фууд", "street food", "кулинарна вечеря" }.Any(keyword => text.Contains(keyword)))
+        {
+            _logger.LogInformation("Keyword classified '{EventName}' as FoodDrink", eventName);
+            return EventCategory.FoodDrink;
+        }
+
+        if (new[] { "пазар", "базар", "market" }.Any(keyword => text.Contains(keyword)))
+        {
+            _logger.LogInformation("Keyword classified '{EventName}' as Markets", eventName);
+            return EventCategory.Markets;
+        }
+
         _logger.LogWarning("Could not classify '{EventName}' - needs manual categorization", eventName);
         return null;
     }
@@ -320,6 +461,9 @@ ONLY the format";
             EventCategory.Cinema => ExtractCinemaSubCategory(text),
             EventCategory.Festivals => ExtractFestivalsSubCategory(text),
             EventCategory.Exhibitions => ExtractExhibitionsSubCategory(text),
+            EventCategory.Entertainment => ExtractEntertainmentSubCategory(text),
+            EventCategory.FoodDrink => ExtractFoodDrinkSubCategory(text),
+            EventCategory.Markets => ExtractMarketsSubCategory(text),
             _ => "Other"
         };
     }
@@ -409,6 +553,81 @@ ONLY the format";
 
         if (new[] { "история", "исторически", "historical" }.Any(keyword => text.Contains(keyword)))
             return "HistoricalExhibitions";
+
+        return "Other";
+    }
+
+    private string? ExtractEntertainmentSubCategory(string text)
+    {
+        if (new[] { "куиз", "quiz", "тривия", "trivia" }.Any(keyword => text.Contains(keyword)))
+            return "Quiz";
+
+        if (new[] { "караоке", "karaoke" }.Any(keyword => text.Contains(keyword)))
+            return "Karaoke";
+
+        if (new[] { "настолни игри", "board game" }.Any(keyword => text.Contains(keyword)))
+            return "BoardGames";
+
+        if (new[] { "ескейп рум", "escape room" }.Any(keyword => text.Contains(keyword)))
+            return "EscapeRoom";
+
+        if (new[] { "танци", "salsa", "bachata", "swing" }.Any(keyword => text.Contains(keyword)))
+            return "SocialDance";
+
+        if (new[] { "тематично парти", "themed party" }.Any(keyword => text.Contains(keyword)))
+            return "ThemedParty";
+
+        if (new[] { "парти", "party" }.Any(keyword => text.Contains(keyword)))
+            return "Party";
+
+        return "Other";
+    }
+
+    private string? ExtractFoodDrinkSubCategory(string text)
+    {
+        if (new[] { "вино", "wine" }.Any(keyword => text.Contains(keyword)))
+            return "WineTasting";
+
+        if (new[] { "бира", "beer" }.Any(keyword => text.Contains(keyword)))
+            return "BeerTasting";
+
+        if (new[] { "спиртни напитки", "spirits", "уиски", "whisky" }.Any(keyword => text.Contains(keyword)))
+            return "SpiritsTasting";
+
+        if (new[] { "бранч", "brunch" }.Any(keyword => text.Contains(keyword)))
+            return "Brunch";
+
+        if (new[] { "стрийт фууд", "street food" }.Any(keyword => text.Contains(keyword)))
+            return "StreetFood";
+
+        if (new[] { "кафе", "coffee", "чай", "tea" }.Any(keyword => text.Contains(keyword)))
+            return "CoffeeTea";
+
+        if (new[] { "кулинарна вечеря", "culinary dinner" }.Any(keyword => text.Contains(keyword)))
+            return "CulinaryDinner";
+
+        return "Other";
+    }
+
+    private string? ExtractMarketsSubCategory(string text)
+    {
+        if (new[] { "фермерски пазар", "farmers market" }.Any(keyword => text.Contains(keyword)))
+            return "FarmersMarket";
+
+        if (new[] { "битпазар", "flea market" }.Any(keyword => text.Contains(keyword)))
+            return "FleaMarket";
+
+        if (new[] { "коледен пазар", "christmas market" }.Any(keyword => text.Contains(keyword)))
+            return "ChristmasMarket";
+
+        if (new[] { "дизайн пазар", "design market" }.Any(keyword => text.Contains(keyword)))
+            return "DesignMarket";
+
+        if (new[] { "книжен пазар", "book market", "book fair" }.Any(keyword => text.Contains(keyword)))
+            return "BookMarket";
+
+        if (new[] { "хендмейд", "craft market", "занаяти" }.Any(keyword => text.Contains(keyword)))
+            return "CraftMarket";
 
         return "Other";
     }

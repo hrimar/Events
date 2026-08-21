@@ -34,7 +34,8 @@ public class DashboardController : Controller
             var featuredEvents = await _eventService.GetFeaturedEventsAsync(100);
             viewModel.FeaturedEvents = featuredEvents.Count();
 
-            // Get uncategorized events count (CategoryId = 11 is Undefined)
+            // CategoryId 11 is the Category.Id (DB PK) of the seeded "Undefined" row — kept stable
+            // when Entertainment/FoodDrink/Markets were added, so it does not equal (int)EventCategory.Undefined.
             var allEvents = await _eventService.GetAllEventsAsync();
             viewModel.UncategorizedEvents = allEvents.Count(e => e.CategoryId == 11);
 
@@ -75,7 +76,7 @@ public class DashboardController : Controller
                 .ToList();
             viewModel.RecentEvents = AdminEventViewModel.FromEntities(recentEvents);
 
-            // Get pending categorization
+            // Get pending categorization (CategoryId 11 = Category.Id of the "Undefined" row)
             var pendingCategorization = allEvents
                 .Where(e => e.CategoryId == 11)
                 .OrderBy(e => e.CreatedAt)
