@@ -241,6 +241,9 @@ NO scratchpad. NO explanations. NO descriptions. ONLY the format.
 
                 if (!string.IsNullOrEmpty(responseText))
                 {
+                    // Claude sometimes wraps its answer in a markdown code fence despite the
+                    // "NO scratchpad. NO explanations." instruction — strip it defensively.
+                    responseText = StripMarkdownCodeFence(responseText);
                     _logger.LogInformation("Claude AI response for '{EventName}': {Response}", eventName, responseText);
 
                     // Strict validation: Check if response follows format
@@ -252,40 +255,49 @@ NO scratchpad. NO explanations. NO descriptions. ONLY the format.
                     }
 
                     var parts = responseText.Split('|');
-                    // Claude sometimes echoes the category name: "1=Music" — strip the name part
+                    // Claude sometimes echoes the category as "1=Music" — strip the name part.
+                    // The prompt's own worked examples show the category by name (e.g. "Music"), not by
+                    // number, so accept both: try the numeric id first, then fall back to the enum name.
                     var categoryPart = parts[0].Split('=')[0].Trim();
-                    if (parts.Length >= 2 && int.TryParse(categoryPart, out var categoryId))
+                    EventCategory? category = null;
+
+                    if (int.TryParse(categoryPart, out var categoryId) && Enum.IsDefined(typeof(EventCategory), categoryId))
                     {
-                        if (categoryId == (int)EventCategory.Undefined)
+                        category = (EventCategory)categoryId;
+                    }
+                    else if (Enum.TryParse<EventCategory>(categoryPart, ignoreCase: true, out var parsedCategory))
+                    {
+                        category = parsedCategory;
+                    }
+
+                    if (parts.Length >= 2 && category.HasValue)
+                    {
+                        if (category.Value == EventCategory.Undefined)
                         {
                             _logger.LogWarning("Claude classified '{EventName}' as Undefined", eventName);
                             _consecutiveFailures = Math.Max(0, _consecutiveFailures - 1); // Partial success
                             return FallbackClassification(eventName, description, location);
                         }
 
-                        if (Enum.IsDefined(typeof(EventCategory), categoryId))
+                        var subcategory = parts.Length > 1 && !string.IsNullOrWhiteSpace(parts[1]) ? parts[1].Trim() : "Other";
+
+                        var aiTags = parts.Length > 2 && !string.IsNullOrWhiteSpace(parts[2])
+                            ? parts[2].Split(',').Select(t => t.Trim()).Where(t => !string.IsNullOrWhiteSpace(t)).ToList()
+                            : new List<string>();
+
+                        _logger.LogInformation("Claude classified '{EventName}' as {Category}|{SubCategory} with tags: {Tags}",
+                            eventName, category.Value, subcategory, string.Join(", ", aiTags));
+
+                        // Reset failure counter
+                        _consecutiveFailures = 0;
+
+                        return new TaggingResult
                         {
-                            var category = (EventCategory)categoryId;
-                            var subcategory = parts.Length > 1 && !string.IsNullOrWhiteSpace(parts[1]) ? parts[1].Trim() : "Other";
-
-                            var aiTags = parts.Length > 2 && !string.IsNullOrWhiteSpace(parts[2])
-                                ? parts[2].Split(',').Select(t => t.Trim()).Where(t => !string.IsNullOrWhiteSpace(t)).ToList()
-                                : new List<string>();
-
-                            _logger.LogInformation("Claude classified '{EventName}' as {Category}|{SubCategory} with tags: {Tags}",
-                                eventName, category, subcategory, string.Join(", ", aiTags));
-
-                            // Reset failure counter
-                            _consecutiveFailures = 0;
-
-                            return new TaggingResult
-                            {
-                                SuggestedCategory = category,
-                                SuggestedSubCategory = subcategory,
-                                SuggestedTags = aiTags,
-                                Confidence = aiTags.ToDictionary(tag => tag, _ => 0.85)
-                            };
-                        }
+                            SuggestedCategory = category.Value,
+                            SuggestedSubCategory = subcategory,
+                            SuggestedTags = aiTags,
+                            Confidence = aiTags.ToDictionary(tag => tag, _ => 0.85)
+                        };
                     }
                 }
 
@@ -322,10 +334,26 @@ NO scratchpad. NO explanations. NO descriptions. ONLY the format.
     // Strict format validation
     private static bool IsValidResponseFormat(string response)
     {
-        // Must match: NUMBER|SUBCATEGORY|tags
-        // Allow apostrophes (Children's), ampersands (R&B), = (when Claude echoes category name)
-        var pattern = @"^\d+[^|]*\|[^|]*\|[a-zA-Z\s,\-'&]*$";
+        // Must match: CATEGORY|SUBCATEGORY|tags — CATEGORY may be a number ("1") or the enum
+        // name ("Music"), since the prompt's own worked examples use the name, not the number.
+        // Allow apostrophes (Children's), ampersands (R&B), = (when Claude echoes "1=Music").
+        var pattern = @"^[a-zA-Z0-9][^|]*\|[^|]*\|[a-zA-Z\s,\-'&]*$";
         return Regex.IsMatch(response, pattern);
+    }
+
+    // Claude sometimes wraps its answer in a markdown code fence (``` ... ```), with or without
+    // a language tag/newlines, despite the prompt explicitly forbidding it. Strip defensively.
+    private static string StripMarkdownCodeFence(string text)
+    {
+        var trimmed = text.Trim().Trim('`').Trim();
+
+        var firstNewline = trimmed.IndexOf('\n');
+        if (firstNewline >= 0 && !trimmed[..firstNewline].Contains('|'))
+        {
+            trimmed = trimmed[(firstNewline + 1)..].Trim();
+        }
+
+        return trimmed;
     }
 
     private EventCategory? TryClassifyWithKeywords(string eventName, string description)

@@ -143,7 +143,9 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach(var stat in Model.CategoryStatistics.Take(10))
+                                @* Category count is bounded (currently 14 max), so show all — a Take() cap here
+                                   previously hid low-volume categories (e.g. freshly added ones) below the fold. *@
+                                @foreach(var stat in Model.CategoryStatistics)
                                 {
                                     <tr>
                                         <td>
