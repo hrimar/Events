@@ -174,7 +174,8 @@ public class AzureBlobImageService : IImageUploadService
         var originalBlobClient = _containerClient.GetBlobClient(blobFileName);
         await originalBlobClient.UploadAsync(originalStream, overwrite: true);
 
-        return _containerClient.Uri.AbsoluteUri.TrimEnd('/') + "/" + blobFileName;
+        // Relative URL, served through MediaController so the public address stays under our own domain.
+        return "/media/" + blobFileName;
     }
 
     public async Task<bool> DeleteImageAsync(string imageUrl)
@@ -230,11 +231,20 @@ public class AzureBlobImageService : IImageUploadService
 
         _logger.LogInformation("Thumbnail created for event {EventId}: {BlobName}", eventIdOrSessionId, thumbnailFileName);
 
-        return _containerClient.Uri.AbsoluteUri.TrimEnd('/') + "/" + thumbnailFileName;
+        // Relative URL, served through MediaController so the public address stays under our own domain.
+        return "/media/" + thumbnailFileName;
     }
 
     private static string? ExtractBlobNameFromUrl(string imageUrl)
     {
+        // Current format: relative URL served through MediaController, e.g. "/media/original/xxx.jpg".
+        const string mediaPrefix = "/media/";
+        if (imageUrl.StartsWith(mediaPrefix, StringComparison.OrdinalIgnoreCase))
+        {
+            return imageUrl[mediaPrefix.Length..];
+        }
+
+        // Legacy format: absolute blob storage URL, e.g. "https://...blob.core.windows.net/event-images/original/xxx.jpg".
         try
         {
             var uri = new Uri(imageUrl);
