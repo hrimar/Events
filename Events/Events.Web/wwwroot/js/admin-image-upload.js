@@ -4,6 +4,7 @@ class AdminImageUploader {
         this.previewContainerId = options.previewContainerId || 'imagePreview';
         this.imageUrlInputId = options.imageUrlInputId || 'imageUrl';
         this.dropZoneId = options.dropZoneId || 'dropZone';
+        this.selectButtonId = options.selectButtonId || 'selectImageBtn';
         this.progressBarId = options.progressBarId || 'uploadProgress';
         this.eventIdInputId = options.eventIdInputId || 'eventId';
         this.uploadEndpoint = options.uploadEndpoint || '/api/eventimages/upload';
@@ -18,6 +19,7 @@ class AdminImageUploader {
         this.previewContainer = document.getElementById(this.previewContainerId);
         this.dropZone = document.getElementById(this.dropZoneId);
         this.progressBar = document.getElementById(this.progressBarId);
+        this.selectButton = document.getElementById(this.selectButtonId);
 
         if (this.fileInput) {
             this.fileInput.addEventListener('change', (e) =>
@@ -26,7 +28,28 @@ class AdminImageUploader {
 
         if (this.dropZone) {
             this.setupDragAndDrop();
+            this.setupClickToSelect();
         }
+
+        if (this.selectButton) {
+            // Own listener so the button works even without a dropZone.
+            this.selectButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.fileInput.click();
+            });
+        }
+    }
+
+    setupClickToSelect() {
+        // Clicking anywhere in the drop zone opens the native file dialog,
+        // except when the click originated from the select button itself
+        // (that has its own listener and would otherwise open it twice).
+        this.dropZone.addEventListener('click', (e) => {
+            if (this.selectButton && this.selectButton.contains(e.target)) {
+                return;
+            }
+            this.fileInput.click();
+        });
     }
 
     setupDragAndDrop() {
