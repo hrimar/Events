@@ -208,6 +208,43 @@ public class TagRepository : ITagRepository
             .ToListAsync();
     }
 
+    public async Task<List<TagPopularityProjection>> GetPopularTagsAsync(
+        DateTime fromDate,
+        string? nameFilter = null,
+        EventCategory? category = null,
+        int? maxCount = null,
+        CancellationToken cancellationToken = default)
+    {
+        var query = _context.Tags.AsNoTracking();
+
+        if (!string.IsNullOrWhiteSpace(nameFilter))
+        {
+            var pattern = $"%{nameFilter.Trim()}%";
+            query = query.Where(t => EF.Functions.Like(t.Name, pattern));
+        }
+
+        if (category.HasValue)
+        {
+            query = query.Where(t => t.Category == category.Value);
+        }
+
+        var projected = query
+            .Select(t => new TagPopularityProjection
+            {
+                Name = t.Name,
+                Category = t.Category,
+                EventCount = t.EventTags.Count(et =>
+                    et.Event.Status == EventStatus.Published && et.Event.Date >= fromDate)
+            })
+            .Where(t => t.EventCount > 0)
+            .OrderByDescending(t => t.EventCount)
+            .ThenBy(t => t.Name);
+
+        return maxCount.HasValue
+            ? await projected.Take(maxCount.Value).ToListAsync(cancellationToken)
+            : await projected.ToListAsync(cancellationToken);
+    }
+
     private static IQueryable<Tag> ApplySorting(IQueryable<Tag> query, string sortBy, string sortOrder)
     {
         var normalizedSort = string.IsNullOrWhiteSpace(sortBy) ? "name" : sortBy.ToLowerInvariant();

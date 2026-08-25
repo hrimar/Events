@@ -1,5 +1,6 @@
 ﻿using Events.Data.Repositories.Interfaces;
 using Events.Models.Entities;
+using Events.Models.Enums;
 using Events.Services.Helpers;
 using Events.Services.Interfaces;
 using Events.Services.Models.Admin;
@@ -205,6 +206,24 @@ public class TagService : ITagService
         {
             _logger.LogError(ex, "Error removing tag {TagId} from event {EventId}", tagId, eventId);
             throw;
+        }
+    }
+
+    public async Task<List<TagPopularityProjection>> GetPopularTagsAsync(
+        DateTime fromDate,
+        string? nameFilter = null,
+        EventCategory? category = null,
+        int? maxCount = null,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return await _tagRepository.GetPopularTagsAsync(fromDate, nameFilter, category, maxCount, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting popular tags");
+            throw new ApplicationException("Failed to retrieve popular tags", ex);
         }
     }
 

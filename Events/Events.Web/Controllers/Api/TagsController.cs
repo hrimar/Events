@@ -10,13 +10,11 @@ namespace Events.Web.Controllers.Api;
 public class TagsController : ControllerBase
 {
     private readonly ITagService _tagService;
-    private readonly IEventService _eventService;
     private readonly ILogger<TagsController> _logger;
 
-    public TagsController(ITagService tagService, IEventService eventService, ILogger<TagsController> logger)
+    public TagsController(ITagService tagService, ILogger<TagsController> logger)
     {
         _tagService = tagService;
-        _eventService = eventService;
         _logger = logger;
     }
 
@@ -25,26 +23,11 @@ public class TagsController : ControllerBase
     {
         try
         {
-            var futureEvents = await _eventService.GetPagedEventsAsync(
-                1, int.MaxValue, EventStatus.Published, null, null, null, DateTime.Today);
-            
-            var futureEventIds = futureEvents.Events.Select(e => e.Id).ToList();
-            var allTags = await _tagService.GetAllTagsAsync();
-            
-            var popularTags = allTags
-                .Where(t => t.EventTags?.Any(et => futureEventIds.Contains(et.EventId)) == true)
-                .Select(t => new TagViewModel
-                {
-                    Name = t.Name,
-                    EventCount = t.EventTags?.Count(et => futureEventIds.Contains(et.EventId)) ?? 0,
-                    Category = t.Category
-                })
-                .Where(t => t.EventCount > 0)
-                .OrderByDescending(t => t.EventCount)
-                .Take(count)
-                .ToList();
+            var popularTags = await _tagService.GetPopularTagsAsync(DateTime.Today, maxCount: count);
 
-            return Ok(popularTags);
+            return Ok(popularTags
+                .Select(t => new TagViewModel { Name = t.Name, EventCount = t.EventCount, Category = t.Category })
+                .ToList());
         }
         catch (Exception ex)
         {
@@ -63,27 +46,11 @@ public class TagsController : ControllerBase
                 return Ok(new List<TagViewModel>());
             }
 
-            var futureEvents = await _eventService.GetPagedEventsAsync(
-                1, int.MaxValue, EventStatus.Published, null, null, null, DateTime.Today);
-            
-            var futureEventIds = futureEvents.Events.Select(e => e.Id).ToList();
-            var allTags = await _tagService.GetAllTagsAsync();
-            
-            var matchingTags = allTags
-                .Where(t => t.Name.Contains(query, StringComparison.OrdinalIgnoreCase))
-                .Where(t => t.EventTags?.Any(et => futureEventIds.Contains(et.EventId)) == true)
-                .Select(t => new TagViewModel
-                {
-                    Name = t.Name,
-                    EventCount = t.EventTags?.Count(et => futureEventIds.Contains(et.EventId)) ?? 0,
-                    Category = t.Category
-                })
-                .Where(t => t.EventCount > 0)
-                .OrderByDescending(t => t.EventCount)
-                .Take(count)
-                .ToList();
+            var matchingTags = await _tagService.GetPopularTagsAsync(DateTime.Today, nameFilter: query, maxCount: count);
 
-            return Ok(matchingTags);
+            return Ok(matchingTags
+                .Select(t => new TagViewModel { Name = t.Name, EventCount = t.EventCount, Category = t.Category })
+                .ToList());
         }
         catch (Exception ex)
         {
@@ -97,32 +64,16 @@ public class TagsController : ControllerBase
     {
         try
         {
-            if (!Enum.TryParse<Events.Models.Enums.EventCategory>(category, true, out var categoryEnum))
+            if (!Enum.TryParse<EventCategory>(category, true, out var categoryEnum))
             {
                 return BadRequest("Invalid category");
             }
 
-            var futureEvents = await _eventService.GetPagedEventsAsync(
-                1, int.MaxValue, EventStatus.Published, null, null, null, DateTime.Today);
-            
-            var futureEventIds = futureEvents.Events.Select(e => e.Id).ToList();
-            var allTags = await _tagService.GetAllTagsAsync();
-            
-            var categoryTags = allTags
-                .Where(t => t.Category == categoryEnum)
-                .Where(t => t.EventTags?.Any(et => futureEventIds.Contains(et.EventId)) == true)
-                .Select(t => new TagViewModel
-                {
-                    Name = t.Name,
-                    EventCount = t.EventTags?.Count(et => futureEventIds.Contains(et.EventId)) ?? 0,
-                    Category = t.Category
-                })
-                .Where(t => t.EventCount > 0)
-                .OrderByDescending(t => t.EventCount)
-                .Take(count)
-                .ToList();
+            var categoryTags = await _tagService.GetPopularTagsAsync(DateTime.Today, category: categoryEnum, maxCount: count);
 
-            return Ok(categoryTags);
+            return Ok(categoryTags
+                .Select(t => new TagViewModel { Name = t.Name, EventCount = t.EventCount, Category = t.Category })
+                .ToList());
         }
         catch (Exception ex)
         {

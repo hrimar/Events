@@ -1,4 +1,6 @@
-﻿using Events.Models.Entities;
+﻿using Events.Data.Repositories.Interfaces;
+using Events.Models.Entities;
+using Events.Models.Enums;
 using Events.Services.Models.Admin;
 using Events.Services.Models.Admin.DTOs;
 
@@ -16,6 +18,17 @@ public interface ITagService
     Task RemoveTagFromEventAsync(int eventId, int tagId);
 
     Task<AdminTagListResult> GetAdminTagsAsync(AdminTagQuery query, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Returns tags with their usage count among published, upcoming events, computed via
+    /// a single SQL aggregate query (see ITagRepository.GetPopularTagsAsync).
+    /// </summary>
+    Task<List<TagPopularityProjection>> GetPopularTagsAsync(
+        DateTime fromDate,
+        string? nameFilter = null,
+        EventCategory? category = null,
+        int? maxCount = null,
+        CancellationToken cancellationToken = default);
 
     Task DeleteTagsAsync(IEnumerable<int> tagIds);
     Task<int> DeleteOrphanTagsAsync();

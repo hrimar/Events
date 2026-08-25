@@ -32,6 +32,18 @@ public interface ITagRepository
     Task<TagStatisticsResult> GetStatisticsAsync(CancellationToken cancellationToken);
 
     Task<List<int>> GetOrphanTagIdsAsync();
+
+    /// <summary>
+    /// Returns tags with their usage count computed via a single aggregate SQL query
+    /// (COUNT per tag, filtered to published events on/after fromDate), instead of
+    /// loading the full Events/Tags graphs into memory to count matches in code.
+    /// </summary>
+    Task<List<TagPopularityProjection>> GetPopularTagsAsync(
+        DateTime fromDate,
+        string? nameFilter = null,
+        EventCategory? category = null,
+        int? maxCount = null,
+        CancellationToken cancellationToken = default);
 }
 
 public class TagAdminProjection
@@ -71,4 +83,11 @@ public class TagStatisticsResult
     public int OrphanTags { get; set; }
     public string? MostUsedTagName { get; set; }
     public int MostUsedTagCount { get; set; }
+}
+
+public class TagPopularityProjection
+{
+    public string Name { get; set; } = string.Empty;
+    public EventCategory? Category { get; set; }
+    public int EventCount { get; set; }
 }

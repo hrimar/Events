@@ -135,8 +135,7 @@ public class EventsController : Controller
             var pageMetaDescription = _localizer["PageMetaDescription_AllEvents"].Value;
 
             EventCategory parsedCategory = default;
-            var hasValidCategory = !string.IsNullOrWhiteSpace(category)
-                && Enum.TryParse(category, ignoreCase: true, out parsedCategory);
+            var hasValidCategory = !string.IsNullOrWhiteSpace(category) && Enum.TryParse(category, ignoreCase: true, out parsedCategory);
 
             // "All events" (no category) has its own PageSeoMeta key (SeoPageKeys.AllEvents),
             // separate from the per-category keys, so an admin can configure both independently.
@@ -268,23 +267,10 @@ public class EventsController : Controller
     {
         try
         {
-            var futureEvents = await _eventService.GetPagedEventsAsync(
-                1, int.MaxValue, EventStatus.Published, null, null, null, DateTime.Today);
+            var popularTags = await _tagService.GetPopularTagsAsync(DateTime.Today, maxCount: MaxPopularTagsCount);
 
-            var futureEventIds = futureEvents.Events.Select(e => e.Id).ToList();
-            var allTags = await _tagService.GetAllTagsAsync();
-
-            return allTags
-                .Where(t => t.EventTags?.Any(et => futureEventIds.Contains(et.EventId)) == true)
-                .Select(t => new TagViewModel
-                {
-                    Name = t.Name,
-                    EventCount = t.EventTags?.Count(et => futureEventIds.Contains(et.EventId)) ?? 0,
-                    Category = t.Category
-                })
-                .Where(t => t.EventCount > 0)
-                .OrderByDescending(t => t.EventCount)
-                .Take(MaxPopularTagsCount)
+            return popularTags
+                .Select(t => new TagViewModel { Name = t.Name, EventCount = t.EventCount, Category = t.Category })
                 .ToList();
         }
         catch (Exception ex)
@@ -298,26 +284,11 @@ public class EventsController : Controller
     {
         try
         {
-            var futureEvents = await _eventService.GetPagedEventsAsync(
-                1, int.MaxValue, EventStatus.Published, null, null, null, DateTime.Today);
+            var matchingTags = await _tagService.GetPopularTagsAsync(DateTime.Today, nameFilter: query.Trim());
 
-            var futureEventIds = futureEvents.Events.Select(e => e.Id).ToList();
-            var allTags = await _tagService.GetAllTagsAsync();
-
-            var matchingTags = allTags
-                .Where(t => t.Name.Contains(query.Trim(), StringComparison.OrdinalIgnoreCase))
-                .Where(t => t.EventTags?.Any(et => futureEventIds.Contains(et.EventId)) == true)
-                .Select(t => new TagViewModel
-                {
-                    Name = t.Name,
-                    EventCount = t.EventTags?.Count(et => futureEventIds.Contains(et.EventId)) ?? 0,
-                    Category = t.Category
-                })
-                .Where(t => t.EventCount > 0)
-                .OrderByDescending(t => t.EventCount)
+            return matchingTags
+                .Select(t => new TagViewModel { Name = t.Name, EventCount = t.EventCount, Category = t.Category })
                 .ToList();
-
-            return matchingTags;
         }
         catch (Exception ex)
         {
@@ -351,7 +322,7 @@ public class EventsController : Controller
             if (!isOtherSubCategory)
             {
                 // SubCategory is specific - suggest 4 events from the same SubCategory
-                var result = await _eventService.GetPagedEventsAsync(1, int.MaxValue, EventStatus.Published,
+                var result = await _eventService.GetPagedEventsAsync(1, RelatedEventsCount + 1, EventStatus.Published,
                     eventEntity.Category?.Name, eventEntity.SubCategory!.Name, null, DateTime.Today);
 
                 relatedEvents = EventViewModel.FromEntities(result.Events.Where(e => e.Id != id).Take(RelatedEventsCount)).ToList();
