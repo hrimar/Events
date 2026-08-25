@@ -71,47 +71,58 @@ public class EventsController : Controller
             // Default to showing only future events unless explicitly specified
             fromDate ??= DateTime.Today;
 
-            IEnumerable<Events.Models.Entities.Event> allEvents;
+            // Bound caller-supplied paging to sane values - a public, unauthenticated endpoint
+            // must not be able to force an oversized fetch via the pageSize query parameter.
+            if (page < 1) page = 1;
+            if (pageSize < 1 || pageSize > 100) pageSize = DefaultPageSize;
+
+            var tagList = tags?.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                .Select(t => t.Trim())
+                .Where(t => !string.IsNullOrEmpty(t))
+                .ToList() ?? new List<string>();
+
+            List<Events.Models.Entities.Event> pagedEvents;
+            int totalCount;
 
             if (!string.IsNullOrWhiteSpace(search))
             {
-                var searchResults = await _eventService.SearchEventsAsync(search);
-                allEvents = searchResults;
+                // Search results come from a separate lookup and are filtered/sorted/paged in memory
+                // (pre-existing behavior, unchanged here).
+                IEnumerable<Events.Models.Entities.Event> allEvents = await _eventService.SearchEventsAsync(search);
+
+                if (tagList.Count > 0)
+                {
+                    allEvents = allEvents.Where(e =>
+                        e.EventTags != null && e.EventTags.Any(et =>
+                            et.Tag != null && tagList.Any(searchTag =>
+                                string.Equals(et.Tag.Name.Trim(), searchTag.Trim(), StringComparison.OrdinalIgnoreCase))));
+                }
+
+                // Use exclusive upper bound (< next day) so events at any time during toDate are included.
+                if (toDate.HasValue)
+                {
+                    var exclusiveEnd = toDate.Value.Date.AddDays(1);
+                    allEvents = allEvents.Where(e => e.Date < exclusiveEnd);
+                }
+
+                allEvents = ApplySorting(allEvents, sortBy, sortOrder);
+
+                totalCount = allEvents.Count();
+                pagedEvents = allEvents
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToList();
             }
             else
             {
-                var (events, count) = await _eventService.GetPagedEventsAsync(1, int.MaxValue, EventStatus.Published, category, subCategory, free, fromDate);
-                allEvents = events;
+                // Filtering, sorting and pagination all happen in SQL via a single query -
+                // this used to fetch the entire matching dataset (pageSize = int.MaxValue) and
+                // paginate in memory, which was the root cause of the 2026-08-25 SQL worker-limit incident.
+                var (events, count) = await _eventService.GetPagedEventsAsync(
+                    page, pageSize, EventStatus.Published, category, subCategory, free, fromDate, sortBy, sortOrder ?? "asc", toDate, tagList);
+                pagedEvents = events.ToList();
+                totalCount = count;
             }
-
-            // Apply tag filtering if specified
-            if (!string.IsNullOrWhiteSpace(tags))
-            {
-                var tagList = tags.Split(',', StringSplitOptions.RemoveEmptyEntries)
-                    .Select(t => t.Trim())
-                    .Where(t => !string.IsNullOrEmpty(t))
-                    .ToList();
-
-                allEvents = allEvents.Where(e =>
-                    e.EventTags != null && e.EventTags.Any(et =>
-                        et.Tag != null && tagList.Any(searchTag =>
-                            string.Equals(et.Tag.Name.Trim(), searchTag.Trim(), StringComparison.OrdinalIgnoreCase))));
-            }
-
-            // Use exclusive upper bound (< next day) so events at any time during toDate are included.
-            if (toDate.HasValue)
-            {
-                var exclusiveEnd = toDate.Value.Date.AddDays(1);
-                allEvents = allEvents.Where(e => e.Date < exclusiveEnd);
-            }
-
-            allEvents = ApplySorting(allEvents, sortBy, sortOrder);
-
-            var totalCount = allEvents.Count();
-            var pagedEvents = allEvents
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToList();
 
             var eventViewModels = EventViewModel.FromEntities(pagedEvents);
             var paginatedEvents = new PaginatedList<EventViewModel>(eventViewModels, totalCount, page, pageSize);
@@ -163,10 +174,7 @@ public class EventsController : Controller
                 FromDate = fromDate,
                 ToDate = toDate,
                 SearchTerm = search,
-                SelectedTags = tags?.Split(',', StringSplitOptions.RemoveEmptyEntries)
-                    .Select(t => t.Trim())
-                    .Where(t => !string.IsNullOrEmpty(t))
-                    .ToList() ?? new List<string>(),
+                SelectedTags = tagList,
                 PopularTags = popularTags,
                 SortBy = sortBy,
                 SortOrder = sortOrder,

@@ -63,7 +63,9 @@ public class EventRepository : IEventRepository
         bool? isFree = null,
         DateTime? fromDate = null,
         string? sortBy = null,
-        string sortOrder = "asc")
+        string sortOrder = "asc",
+        DateTime? toDate = null,
+        IEnumerable<string>? tagNames = null)
     {
         var query = _context.Events
             .Include(e => e.Category)
@@ -101,6 +103,21 @@ public class EventRepository : IEventRepository
         if (fromDate.HasValue)
         {
             query = query.Where(e => e.Date >= fromDate.Value);
+        }
+
+        // Use exclusive upper bound (< next day) so events at any time during toDate are included.
+        if (toDate.HasValue)
+        {
+            var exclusiveEnd = toDate.Value.Date == DateTime.MaxValue.Date
+                ? DateTime.MaxValue
+                : toDate.Value.Date.AddDays(1);
+            query = query.Where(e => e.Date < exclusiveEnd);
+        }
+
+        var tagList = tagNames?.Where(t => !string.IsNullOrWhiteSpace(t)).ToList();
+        if (tagList is { Count: > 0 })
+        {
+            query = query.Where(e => e.EventTags.Any(et => et.Tag != null && tagList.Contains(et.Tag.Name)));
         }
 
         var totalCount = await query.CountAsync();

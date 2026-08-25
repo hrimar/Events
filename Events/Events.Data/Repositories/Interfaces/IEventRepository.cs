@@ -31,7 +31,9 @@ public interface IEventRepository
         bool? isFree = null,
         DateTime? fromDate = null,
         string? sortBy = null,
-        string sortOrder = "asc");
+        string sortOrder = "asc",
+        DateTime? toDate = null,
+        IEnumerable<string>? tagNames = null);
 
     Task<(IEnumerable<Event> Events, int TotalCount)> GetFilteredEventsAsync(EventListCriteria criteria);
 

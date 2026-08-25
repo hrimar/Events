@@ -92,12 +92,14 @@ public class EventService : IEventService
         bool? isFree = null,
         DateTime? fromDate = null,
         string? sortBy = null,
-        string sortOrder = "asc")
+        string sortOrder = "asc",
+        DateTime? toDate = null,
+        IEnumerable<string>? tagNames = null)
     {
         try
         {
             if (page < 1) page = 1;
-            
+
             // Allow large pageSize for "get all" scenarios (Controller uses int.MaxValue)
             if (pageSize < 1) pageSize = 12;
             if (pageSize > 50000) pageSize = 50000; // Safety limit to prevent memory issues
@@ -109,7 +111,7 @@ public class EventService : IEventService
                 page, pageSize, status, categoryName, subCategoryName, fromDate, sortBy, sortOrder);
 
             return await _eventRepository.GetPagedEventsAsync(
-                page, pageSize, status, categoryName, subCategoryName, isFree, fromDate, sortBy, sortOrder);
+                page, pageSize, status, categoryName, subCategoryName, isFree, fromDate, sortBy, sortOrder, toDate, tagNames);
         }
         catch (Exception ex)
         {
