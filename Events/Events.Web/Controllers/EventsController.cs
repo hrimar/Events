@@ -318,6 +318,8 @@ public class EventsController : Controller
 
             // EnumValue == OtherSubCategoryEnumValue represents "Other" across all subcategory enums
             var isOtherSubCategory = eventEntity.SubCategory == null || eventEntity.SubCategory.EnumValue == OtherSubCategoryEnumValue;
+            // Fetch RelatedEventsCount + 1 (not int.MaxValue) so filtering can happen in SQL - the
+            // +1 buffer covers the case where the current event itself is among the top matches.
             List<EventViewModel> relatedEvents;
             if (!isOtherSubCategory)
             {
@@ -333,15 +335,20 @@ public class EventsController : Controller
                 var eventTagNames = eventEntity.EventTags
                     .Select(et => et.Tag?.Name)
                     .Where(name => name != null)
-                    .ToHashSet(StringComparer.OrdinalIgnoreCase)!;
-
-                var result = await _eventService.GetPagedEventsAsync(1, int.MaxValue, EventStatus.Published, eventEntity.Category?.Name,
-                    null, null, DateTime.Today);
-
-                relatedEvents = EventViewModel.FromEntities(result.Events
-                        .Where(e => e.Id != id && e.EventTags?.Any(et => et.Tag != null && eventTagNames.Contains(et.Tag.Name)) == true)
-                        .Take(RelatedEventsCount))
+                    .Select(name => name!)
                     .ToList();
+
+                if (eventTagNames.Count == 0)
+                {
+                    relatedEvents = new List<EventViewModel>();
+                }
+                else
+                {
+                    var result = await _eventService.GetPagedEventsAsync(1, RelatedEventsCount + 1, EventStatus.Published,
+                        eventEntity.Category?.Name, null, null, DateTime.Today, tagNames: eventTagNames);
+
+                    relatedEvents = EventViewModel.FromEntities(result.Events.Where(e => e.Id != id).Take(RelatedEventsCount)).ToList();
+                }
             }
 
             ViewBag.RelatedEvents = relatedEvents;
