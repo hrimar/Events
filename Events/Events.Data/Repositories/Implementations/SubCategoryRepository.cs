@@ -44,11 +44,11 @@ public class SubCategoryRepository : ISubCategoryRepository
             .FirstOrDefaultAsync(sc => sc.ParentCategory == category && sc.EnumValue == enumValue);
     }
 
+    // Without .ToLower() as the DB collation (SQL_Latin1_General_CP1_CI_AS) is already case-insensitive.
     public async Task<SubCategory?> GetByNameAsync(EventCategory category, string name)
     {
         return await _context.SubCategories
-            .FirstOrDefaultAsync(sc => sc.ParentCategory == category &&
-                                      sc.Name.ToLower() == name.ToLower());
+            .FirstOrDefaultAsync(sc => sc.ParentCategory == category && sc.Name == name);
     }
 
     public async Task<SubCategory> AddAsync(SubCategory subCategory)
@@ -85,8 +85,7 @@ public class SubCategoryRepository : ISubCategoryRepository
     public async Task<bool> ExistsByNameAsync(EventCategory category, string name)
     {
         return await _context.SubCategories
-            .AnyAsync(sc => sc.ParentCategory == category &&
-                           sc.Name.ToLower() == name.ToLower());
+            .AnyAsync(sc => sc.ParentCategory == category && sc.Name == name);
     }
 
     public async Task<int> GetCountByCategoryAsync(EventCategory category)

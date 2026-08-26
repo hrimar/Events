@@ -295,14 +295,16 @@ public class EventRepository : IEventRepository
         return await query.CountAsync();
     }
 
+    // Without .ToLower() as the DB collation (SQL_Latin1_General_CP1_CI_AS) is already case-insensitive.
+    // .ToLower() wrapped the column, so no index on Name could be used.
     public async Task<Event?> FindByNameAsync(string name)
     {
-        return await _context.Events.AsNoTracking().Where(e => e.Name.ToLower() == name.ToLower()).FirstOrDefaultAsync();
+        return await _context.Events.AsNoTracking().Where(e => e.Name == name).FirstOrDefaultAsync();
     }
 
     public async Task<IEnumerable<Event>> FindAllByNameAsync(string name)
     {
-        return await _context.Events.AsNoTracking().Where(e => e.Name.ToLower() == name.ToLower()).ToListAsync();
+        return await _context.Events.AsNoTracking().Where(e => e.Name == name).ToListAsync();
     }
 
     public async Task<IEnumerable<Event>> GetByDateRangeAsync(DateTime startDate, DateTime endDate)

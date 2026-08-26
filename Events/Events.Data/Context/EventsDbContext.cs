@@ -61,6 +61,7 @@ public class EventsDbContext : IdentityDbContext<User>
             entity.HasIndex(e => e.CategoryId);
             entity.HasIndex(e => e.SubCategoryId);
             entity.HasIndex(e => e.Status);
+            entity.HasIndex(e => e.Name); // Supports FindByNameAsync/FindAllByNameAsync (crawler duplicate detection)
 
             // Covers the public events listing query (WHERE Status = ... AND Date >= ...,
             // ORDER BY Date), avoiding a scan across the separate single-column Status/Date

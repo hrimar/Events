@@ -32,10 +32,12 @@ public class TagRepository : ITagRepository
             return null;
         }
 
-        var normalized = name.Trim().ToLower();
+        // Without .ToLower() as the DB collation (SQL_Latin1_General_CP1_CI_AS) is already case-insensitive.
+        // Plain equality can use the unique index on Name.
+        var normalized = name.Trim();
         return await _context.Tags
             .AsNoTracking() // Important to avoid tracking issues on updates after that
-            .FirstOrDefaultAsync(t => t.Name.ToLower() == normalized);
+            .FirstOrDefaultAsync(t => t.Name == normalized);
     }
 
     public async Task<IEnumerable<Tag>> GetByCategoryAsync(EventCategory? category)
