@@ -61,6 +61,13 @@ public class EventsDbContext : IdentityDbContext<User>
             entity.HasIndex(e => e.CategoryId);
             entity.HasIndex(e => e.SubCategoryId);
             entity.HasIndex(e => e.Status);
+
+            // Covers the public events listing query (WHERE Status = ... AND Date >= ...,
+            // ORDER BY Date), avoiding a scan across the separate single-column Status/Date
+            // indexes. Recommended by Azure SQL after the 2026-08-25 incident.
+            entity.HasIndex(e => new { e.Status, e.Date })
+                .IncludeProperties(e => new { e.CanonicalVenueId, e.CategoryId })
+                .HasDatabaseName("IX_Events_Status_Date");
         });
 
         // Configure SubCategory entity
