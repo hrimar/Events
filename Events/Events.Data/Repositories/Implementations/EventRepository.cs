@@ -17,6 +17,10 @@ public class EventRepository : IEventRepository
         _context = context;
     }
 
+    // Intentionally NOT AsNoTracking(): TagService.RemoveTagFromEventAsync loads an Event via this
+    // method, removes an item from its EventTags collection, then calls UpdateAsync - it relies on
+    // EF change tracking to detect the collection removal and delete the EventTag row. AsNoTracking()
+    // here would silently stop tag removal from working (no error, the tag just stays associated).
     public async Task<Event?> GetByIdAsync(int id)
     {
         return await _context.Events
@@ -31,6 +35,7 @@ public class EventRepository : IEventRepository
     public async Task<IEnumerable<Event>> GetAllAsync()
     {
         return await _context.Events
+            .AsNoTracking()
             .Include(e => e.Category)
             .Include(e => e.SubCategory)
             .Include(e => e.EventTags)
@@ -68,6 +73,7 @@ public class EventRepository : IEventRepository
         IEnumerable<string>? tagNames = null)
     {
         var query = _context.Events
+            .AsNoTracking()
             .Include(e => e.Category)
             .Include(e => e.SubCategory)
             .Include(e => e.CanonicalVenue)
@@ -135,6 +141,7 @@ public class EventRepository : IEventRepository
     public async Task<(IEnumerable<Event> Events, int TotalCount)> GetFilteredEventsAsync(EventListCriteria criteria)
     {
         var query = _context.Events
+            .AsNoTracking()
             .Include(e => e.Category)
             .Include(e => e.SubCategory)
             .Include(e => e.CanonicalVenue)
@@ -250,6 +257,7 @@ public class EventRepository : IEventRepository
     public async Task<IEnumerable<Event>> GetFeaturedEventsAsync(int count = 10)
     {
         return await _context.Events
+            .AsNoTracking()
             .Include(e => e.Category)
             .Include(e => e.SubCategory)
             .Include(e => e.CanonicalVenue)
@@ -264,6 +272,7 @@ public class EventRepository : IEventRepository
     public async Task<IEnumerable<Event>> GetUpcomingEventsAsync(int count = 10)
     {
         return await _context.Events
+            .AsNoTracking()
             .Include(e => e.Category)
             .Include(e => e.CanonicalVenue)
             .Include(e => e.EventTags)
@@ -288,17 +297,18 @@ public class EventRepository : IEventRepository
 
     public async Task<Event?> FindByNameAsync(string name)
     {
-        return await _context.Events.Where(e => e.Name.ToLower() == name.ToLower()).FirstOrDefaultAsync();
+        return await _context.Events.AsNoTracking().Where(e => e.Name.ToLower() == name.ToLower()).FirstOrDefaultAsync();
     }
 
     public async Task<IEnumerable<Event>> FindAllByNameAsync(string name)
     {
-        return await _context.Events.Where(e => e.Name.ToLower() == name.ToLower()).ToListAsync();
+        return await _context.Events.AsNoTracking().Where(e => e.Name.ToLower() == name.ToLower()).ToListAsync();
     }
 
     public async Task<IEnumerable<Event>> GetByDateRangeAsync(DateTime startDate, DateTime endDate)
     {
         return await _context.Events
+            .AsNoTracking()
             .Include(e => e.Category)
             .Include(e => e.SubCategory)
             .Include(e => e.EventTags)
@@ -313,6 +323,7 @@ public class EventRepository : IEventRepository
         var categoryId = (int)category;
 
         return await _context.Events
+            .AsNoTracking()
             .Include(e => e.Category)
             .Include(e => e.SubCategory)
             .Include(e => e.EventTags)
@@ -325,6 +336,7 @@ public class EventRepository : IEventRepository
     public async Task<IEnumerable<Event>> GetByLocationAsync(string location)
     {
         return await _context.Events
+            .AsNoTracking()
             .Include(e => e.Category)
             .Include(e => e.SubCategory)
             .Include(e => e.EventTags)
@@ -337,6 +349,7 @@ public class EventRepository : IEventRepository
     public async Task<IEnumerable<Event>> SearchAsync(string searchTerm)
     {
         return await _context.Events
+            .AsNoTracking()
             .Include(e => e.Category)
             .Include(e => e.SubCategory)
             .Include(e => e.EventTags)
@@ -375,6 +388,7 @@ public class EventRepository : IEventRepository
     public async Task<IEnumerable<Event>> GetByCategoryIdAsync(int categoryId)
     {
         return await _context.Events
+            .AsNoTracking()
             .Include(e => e.Category)
             .Include(e => e.SubCategory)
             .Include(e => e.EventTags)
