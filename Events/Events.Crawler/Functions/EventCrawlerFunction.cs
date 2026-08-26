@@ -30,9 +30,13 @@ public class EventCrawlerFunction
     }
 
     [Function("CrawlEventsFunction")]
-    // Runs daily at 04:00 UTC. RunOnStartup=true is required for Container Apps Job — the container starts at 04:00
-    // and must execute immediately. After completion the host is stopped so the container exits cleanly and the Job reports Succeeded.
-    public async Task CrawlEventsTimerFunction([TimerTrigger("0 0 4 * * *", RunOnStartup = true)] TimerInfo myTimer)
+    // The actual schedule is controlled by the Container Apps Job's schedule_trigger_config in
+    // Terraform (cron_expression, UTC only), not by this attribute - RunOnStartup=true makes the
+    // function fire immediately whenever the Job's own cron starts the container, regardless of
+    // what's configured here. Kept in sync with Terraform purely for documentation accuracy.
+    // Terraform cron_expression "0 1 * * *" = 01:00 UTC = 04:00 Bulgaria summer time (EEST, UTC+3);
+    // drifts to 03:00 Bulgaria time in winter (EET, UTC+2) - single fixed-offset cron, no DST switch.
+    public async Task CrawlEventsTimerFunction([TimerTrigger("0 0 1 * * *", RunOnStartup = true)] TimerInfo myTimer)
     {
         using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(28));
 
@@ -104,6 +108,15 @@ public class EventCrawlerFunction
             {
                 await Task.Delay(TimeSpan.FromSeconds(5)); // Allow logs to flush
                 _lifetime.StopApplication();
+
+                // StopApplication() alone only stops our isolated-worker host, not the outer
+                // Functions Host process (the container's PID 1), which otherwise stays alive
+                // waiting for further triggers until the Container Apps Job's replica_timeout_in_seconds
+                // kills it and reports the execution as Failed - even though the crawl itself
+                // already completed successfully. Exiting our process directly makes the Functions
+                // Host detect the dead worker channel and terminate too, so the container exits
+                // with code 0 right away.
+                Environment.Exit(0);
             }
         }
     }
