@@ -6,7 +6,7 @@ namespace Events.Services.Interfaces;
 
 public interface IEventService
 {
-    Task<Event?> GetEventByIdAsync(int id);
+    Task<Event?> GetEventByIdAsync(int id, CancellationToken cancellationToken = default);
     Task<IEnumerable<Event>> GetAllEventsAsync();
     Task<int> GetEventsCountInRangeAsync(DateTime fromDate, DateTime toDate, EventStatus? status = null);
     Task<Event> CreateEventAsync(Event eventEntity);
@@ -24,13 +24,14 @@ public interface IEventService
         string? sortBy = null,
         string sortOrder = "asc",
         DateTime? toDate = null,
-        IEnumerable<string>? tagNames = null);
+        IEnumerable<string>? tagNames = null,
+        CancellationToken cancellationToken = default);
 
     Task<(IEnumerable<Event> Events, int TotalCount)> GetFilteredEventsAsync(EventListCriteria criteria);
 
     Task<IEnumerable<Event>> GetFeaturedEventsAsync(int count = 10);
     Task<IEnumerable<Event>> GetUpcomingEventsAsync(int count = 10);
-    Task<IEnumerable<Event>> SearchEventsAsync(string searchTerm);
+    Task<IEnumerable<Event>> SearchEventsAsync(string searchTerm, CancellationToken cancellationToken = default);
     Task<IEnumerable<Event>> GetEventsByCategoryAsync(EventCategory category);
     Task<IEnumerable<Event>> GetEventsByDateRangeAsync(DateTime startDate, DateTime endDate);
 

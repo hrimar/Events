@@ -6,14 +6,14 @@ namespace Events.Data.Repositories.Interfaces;
 
 public interface IEventRepository
 {
-    Task<Event?> GetByIdAsync(int id);
+    Task<Event?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
     Task<IEnumerable<Event>> GetAllAsync();
     Task<int> GetEventsCountInRangeAsync(DateTime fromDate, DateTime toDate, EventStatus? status = null);
     Task<IEnumerable<Event>> GetByDateRangeAsync(DateTime startDate, DateTime endDate);
     Task<IEnumerable<Event>> GetByCategoryAsync(EventCategory category);
     Task<IEnumerable<Event>> GetByCategoryIdAsync(int categoryId);
     Task<IEnumerable<Event>> GetByLocationAsync(string location);
-    Task<IEnumerable<Event>> SearchAsync(string searchTerm);
+    Task<IEnumerable<Event>> SearchAsync(string searchTerm, CancellationToken cancellationToken = default);
     Task<Event> AddAsync(Event eventEntity);
     Task<Event> UpdateAsync(Event eventEntity);
     Task DeleteAsync(int id);
@@ -33,7 +33,8 @@ public interface IEventRepository
         string? sortBy = null,
         string sortOrder = "asc",
         DateTime? toDate = null,
-        IEnumerable<string>? tagNames = null);
+        IEnumerable<string>? tagNames = null,
+        CancellationToken cancellationToken = default);
 
     Task<(IEnumerable<Event> Events, int TotalCount)> GetFilteredEventsAsync(EventListCriteria criteria);
 

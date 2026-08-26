@@ -21,7 +21,7 @@ public class EventRepository : IEventRepository
     // method, removes an item from its EventTags collection, then calls UpdateAsync - it relies on
     // EF change tracking to detect the collection removal and delete the EventTag row. AsNoTracking()
     // here would silently stop tag removal from working (no error, the tag just stays associated).
-    public async Task<Event?> GetByIdAsync(int id)
+    public async Task<Event?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         return await _context.Events
             .Include(e => e.Category)
@@ -29,7 +29,7 @@ public class EventRepository : IEventRepository
             .Include(e => e.CanonicalVenue)
             .Include(e => e.EventTags)
             .ThenInclude(et => et.Tag)
-            .FirstOrDefaultAsync(e => e.Id == id);
+            .FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
     }
 
     public async Task<IEnumerable<Event>> GetAllAsync()
@@ -70,7 +70,8 @@ public class EventRepository : IEventRepository
         string? sortBy = null,
         string sortOrder = "asc",
         DateTime? toDate = null,
-        IEnumerable<string>? tagNames = null)
+        IEnumerable<string>? tagNames = null,
+        CancellationToken cancellationToken = default)
     {
         var query = _context.Events
             .AsNoTracking()
@@ -126,14 +127,14 @@ public class EventRepository : IEventRepository
             query = query.Where(e => e.EventTags.Any(et => et.Tag != null && tagList.Contains(et.Tag.Name)));
         }
 
-        var totalCount = await query.CountAsync();
+        var totalCount = await query.CountAsync(cancellationToken);
 
         var orderedQuery = ApplySorting(query, sortBy, sortOrder);
 
         var events = await orderedQuery
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
         return (events, totalCount);
     }
@@ -348,7 +349,7 @@ public class EventRepository : IEventRepository
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<Event>> SearchAsync(string searchTerm)
+    public async Task<IEnumerable<Event>> SearchAsync(string searchTerm, CancellationToken cancellationToken = default)
     {
         return await _context.Events
             .AsNoTracking()
@@ -360,7 +361,7 @@ public class EventRepository : IEventRepository
                        e.Description!.Contains(searchTerm) ||
                        e.Location.Contains(searchTerm))
             .OrderBy(e => e.Date)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
     }
 
     public async Task<Event> AddAsync(Event eventEntity)

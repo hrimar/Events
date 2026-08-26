@@ -64,7 +64,8 @@ public class EventsController : Controller
         DateTime? fromDate = null,
         DateTime? toDate = null,
         string? sortBy = null,
-        string? sortOrder = "asc")
+        string? sortOrder = "asc",
+        CancellationToken cancellationToken = default)
     {
         try
         {
@@ -88,7 +89,7 @@ public class EventsController : Controller
             {
                 // Search results come from a separate lookup and are filtered/sorted/paged in memory
                 // (pre-existing behavior, unchanged here).
-                IEnumerable<Events.Models.Entities.Event> allEvents = await _eventService.SearchEventsAsync(search);
+                IEnumerable<Events.Models.Entities.Event> allEvents = await _eventService.SearchEventsAsync(search, cancellationToken);
 
                 if (tagList.Count > 0)
                 {
@@ -119,14 +120,14 @@ public class EventsController : Controller
                 // this used to fetch the entire matching dataset (pageSize = int.MaxValue) and
                 // paginate in memory, which was the root cause of the 2026-08-25 SQL worker-limit incident.
                 var (events, count) = await _eventService.GetPagedEventsAsync(
-                    page, pageSize, EventStatus.Published, category, subCategory, free, fromDate, sortBy, sortOrder ?? "asc", toDate, tagList);
+                    page, pageSize, EventStatus.Published, category, subCategory, free, fromDate, sortBy, sortOrder ?? "asc", toDate, tagList, cancellationToken);
                 pagedEvents = events.ToList();
                 totalCount = count;
             }
 
             var eventViewModels = EventViewModel.FromEntities(pagedEvents);
             var paginatedEvents = new PaginatedList<EventViewModel>(eventViewModels, totalCount, page, pageSize);
-            var popularTags = await GetPopularTagsAsync();
+            var popularTags = await GetPopularTagsAsync(cancellationToken);
 
             var pageTitle = BuildPageTitle(category, free, search);
 
@@ -230,7 +231,7 @@ public class EventsController : Controller
     }
 
     [HttpGet("/Events/Search")]
-    public async Task<IActionResult> Search(string query)
+    public async Task<IActionResult> Search(string query, CancellationToken cancellationToken)
     {
         try
         {
@@ -239,12 +240,12 @@ public class EventsController : Controller
                 return Json(Array.Empty<object>());
             }
 
-            var results = await _eventService.SearchEventsAsync(query);
+            var results = await _eventService.SearchEventsAsync(query, cancellationToken);
             var eventSuggestions = results.Take(MaxEventSuggestions)
                 .Select(e => e.ToSearchSuggestionDto())
                 .ToList();
 
-            var tagResults = await SearchTagsAsync(query);
+            var tagResults = await SearchTagsAsync(query, cancellationToken);
             var tagSuggestions = tagResults.Take(MaxTagSuggestions)
                 .Select(t => t.ToSearchSuggestionDto())
                 .ToList();
@@ -263,11 +264,11 @@ public class EventsController : Controller
         }
     }
 
-    private async Task<List<TagViewModel>> GetPopularTagsAsync()
+    private async Task<List<TagViewModel>> GetPopularTagsAsync(CancellationToken cancellationToken)
     {
         try
         {
-            var popularTags = await _tagService.GetPopularTagsAsync(DateTime.Today, maxCount: MaxPopularTagsCount);
+            var popularTags = await _tagService.GetPopularTagsAsync(DateTime.Today, maxCount: MaxPopularTagsCount, cancellationToken: cancellationToken);
 
             return popularTags
                 .Select(t => new TagViewModel { Name = t.Name, EventCount = t.EventCount, Category = t.Category })
@@ -280,11 +281,11 @@ public class EventsController : Controller
         }
     }
 
-    private async Task<List<TagViewModel>> SearchTagsAsync(string query)
+    private async Task<List<TagViewModel>> SearchTagsAsync(string query, CancellationToken cancellationToken)
     {
         try
         {
-            var matchingTags = await _tagService.GetPopularTagsAsync(DateTime.Today, nameFilter: query.Trim());
+            var matchingTags = await _tagService.GetPopularTagsAsync(DateTime.Today, nameFilter: query.Trim(), cancellationToken: cancellationToken);
 
             return matchingTags
                 .Select(t => new TagViewModel { Name = t.Name, EventCount = t.EventCount, Category = t.Category })
@@ -298,11 +299,11 @@ public class EventsController : Controller
     }
 
     // GET: /Events/Details/5
-    public async Task<IActionResult> Details(int id)
+    public async Task<IActionResult> Details(int id, CancellationToken cancellationToken)
     {
         try
         {
-            var eventEntity = await _eventService.GetEventByIdAsync(id);
+            var eventEntity = await _eventService.GetEventByIdAsync(id, cancellationToken);
 
             if (eventEntity == null)
             {
@@ -325,7 +326,7 @@ public class EventsController : Controller
             {
                 // SubCategory is specific - suggest 4 events from the same SubCategory
                 var result = await _eventService.GetPagedEventsAsync(1, RelatedEventsCount + 1, EventStatus.Published,
-                    eventEntity.Category?.Name, eventEntity.SubCategory!.Name, null, DateTime.Today);
+                    eventEntity.Category?.Name, eventEntity.SubCategory!.Name, null, DateTime.Today, cancellationToken: cancellationToken);
 
                 relatedEvents = EventViewModel.FromEntities(result.Events.Where(e => e.Id != id).Take(RelatedEventsCount)).ToList();
             }
@@ -345,7 +346,7 @@ public class EventsController : Controller
                 else
                 {
                     var result = await _eventService.GetPagedEventsAsync(1, RelatedEventsCount + 1, EventStatus.Published,
-                        eventEntity.Category?.Name, null, null, DateTime.Today, tagNames: eventTagNames);
+                        eventEntity.Category?.Name, null, null, DateTime.Today, tagNames: eventTagNames, cancellationToken: cancellationToken);
 
                     relatedEvents = EventViewModel.FromEntities(result.Events.Where(e => e.Id != id).Take(RelatedEventsCount)).ToList();
                 }

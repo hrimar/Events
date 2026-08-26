@@ -18,11 +18,11 @@ public class EventService : IEventService
         _logger = logger;
     }
 
-    public async Task<Event?> GetEventByIdAsync(int id)
+    public async Task<Event?> GetEventByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         try
         {
-            return await _eventRepository.GetByIdAsync(id);
+            return await _eventRepository.GetByIdAsync(id, cancellationToken);
         }
         catch (Exception ex)
         {
@@ -94,7 +94,8 @@ public class EventService : IEventService
         string? sortBy = null,
         string sortOrder = "asc",
         DateTime? toDate = null,
-        IEnumerable<string>? tagNames = null)
+        IEnumerable<string>? tagNames = null,
+        CancellationToken cancellationToken = default)
     {
         try
         {
@@ -111,7 +112,7 @@ public class EventService : IEventService
                 page, pageSize, status, categoryName, subCategoryName, fromDate, sortBy, sortOrder);
 
             return await _eventRepository.GetPagedEventsAsync(
-                page, pageSize, status, categoryName, subCategoryName, isFree, fromDate, sortBy, sortOrder, toDate, tagNames);
+                page, pageSize, status, categoryName, subCategoryName, isFree, fromDate, sortBy, sortOrder, toDate, tagNames, cancellationToken);
         }
         catch (Exception ex)
         {
@@ -168,7 +169,7 @@ public class EventService : IEventService
         }
     }
 
-    public async Task<IEnumerable<Event>> SearchEventsAsync(string searchTerm)
+    public async Task<IEnumerable<Event>> SearchEventsAsync(string searchTerm, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -179,7 +180,7 @@ public class EventService : IEventService
 
             searchTerm = searchTerm.Trim();
 
-            return await _eventRepository.SearchAsync(searchTerm);
+            return await _eventRepository.SearchAsync(searchTerm, cancellationToken);
         }
         catch (Exception ex)
         {

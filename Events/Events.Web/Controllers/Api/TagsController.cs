@@ -19,11 +19,11 @@ public class TagsController : ControllerBase
     }
 
     [HttpGet("popular")]
-    public async Task<ActionResult<List<TagViewModel>>> GetPopularTags([FromQuery] int count = 20)
+    public async Task<ActionResult<List<TagViewModel>>> GetPopularTags([FromQuery] int count = 20, CancellationToken cancellationToken = default)
     {
         try
         {
-            var popularTags = await _tagService.GetPopularTagsAsync(DateTime.Today, maxCount: count);
+            var popularTags = await _tagService.GetPopularTagsAsync(DateTime.Today, maxCount: count, cancellationToken: cancellationToken);
 
             return Ok(popularTags
                 .Select(t => new TagViewModel { Name = t.Name, EventCount = t.EventCount, Category = t.Category })
@@ -37,7 +37,7 @@ public class TagsController : ControllerBase
     }
 
     [HttpGet("search")]
-    public async Task<ActionResult<List<TagViewModel>>> SearchTags([FromQuery] string query, [FromQuery] int count = 10)
+    public async Task<ActionResult<List<TagViewModel>>> SearchTags([FromQuery] string query, [FromQuery] int count = 10, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -46,7 +46,7 @@ public class TagsController : ControllerBase
                 return Ok(new List<TagViewModel>());
             }
 
-            var matchingTags = await _tagService.GetPopularTagsAsync(DateTime.Today, nameFilter: query, maxCount: count);
+            var matchingTags = await _tagService.GetPopularTagsAsync(DateTime.Today, nameFilter: query, maxCount: count, cancellationToken: cancellationToken);
 
             return Ok(matchingTags
                 .Select(t => new TagViewModel { Name = t.Name, EventCount = t.EventCount, Category = t.Category })
@@ -60,7 +60,7 @@ public class TagsController : ControllerBase
     }
 
     [HttpGet("by-category/{category}")]
-    public async Task<ActionResult<List<TagViewModel>>> GetTagsByCategory(string category, [FromQuery] int count = 20)
+    public async Task<ActionResult<List<TagViewModel>>> GetTagsByCategory(string category, [FromQuery] int count = 20, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -69,7 +69,7 @@ public class TagsController : ControllerBase
                 return BadRequest("Invalid category");
             }
 
-            var categoryTags = await _tagService.GetPopularTagsAsync(DateTime.Today, category: categoryEnum, maxCount: count);
+            var categoryTags = await _tagService.GetPopularTagsAsync(DateTime.Today, category: categoryEnum, maxCount: count, cancellationToken: cancellationToken);
 
             return Ok(categoryTags
                 .Select(t => new TagViewModel { Name = t.Name, EventCount = t.EventCount, Category = t.Category })
