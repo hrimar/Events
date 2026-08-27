@@ -27,7 +27,7 @@ public class CreateEventViewModel
 
     [Required(ErrorMessage = "Image URL is required")]
     [StringLength(500, ErrorMessage = "Image URL cannot exceed 500 characters")]
-    [Url(ErrorMessage = "Please enter a valid image URL")]
+    [RegularExpression(@"^(https?://\S+|/media/\S+)$", ErrorMessage = "Please enter a valid image URL")]
     public string ImageUrl { get; set; } = string.Empty;
 
     [StringLength(500, ErrorMessage = "Thumbnail URL cannot exceed 500 characters")]
