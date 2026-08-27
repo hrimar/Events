@@ -22,6 +22,11 @@ using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// No-op locally/without the connection string (APPLICATIONINSIGHTS_CONNECTION_STRING app setting,
+// set by Terraform) - safe to call unconditionally. Gives request telemetry, exceptions, and
+// SQL dependency tracking (which endpoint/query is slow) without any extra wiring.
+builder.Services.AddApplicationInsightsTelemetry();
+
 ConfigureDatabase(builder);
 ConfigureIdentity(builder);
 ConfigureAuthorization(builder);
@@ -237,6 +242,9 @@ static void RegisterServices(WebApplicationBuilder builder)
     builder.Services.AddHttpContextAccessor();
     builder.Services.AddScoped<ISiteUrlProvider, SiteUrlProvider>();
     builder.Services.AddSingleton<ContactFormTimingProtector>();
+    // /health, checked by the App Service platform (health_check_path in Terraform) and available
+    // for manual/external monitoring - verifies the app can actually reach the database.
+    builder.Services.AddHealthChecks().AddDbContextCheck<EventsDbContext>();
 
     // Repositories
     builder.Services.AddScoped<IEventRepository, EventRepository>();
@@ -343,6 +351,8 @@ static void ConfigureHttpPipeline(WebApplication app)
     app.UseRateLimiter();
     app.UseAuthentication();
     app.UseAuthorization();
+
+    app.MapHealthChecks("/health");
 
     app.MapControllerRoute(
         name: "sitemap",
