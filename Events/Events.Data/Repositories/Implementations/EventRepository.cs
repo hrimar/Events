@@ -264,7 +264,11 @@ public class EventRepository : IEventRepository
             .Include(e => e.CanonicalVenue)
             .Include(e => e.EventTags)
             .ThenInclude(et => et.Tag)
-            .Where(e => e.IsFeatured && e.Status == EventStatus.Published && e.Date >= DateTime.UtcNow)
+            // .Date, not the full UtcNow timestamp: Date only ever stores the calendar day
+            // (time-of-day lives in the separate StartTime column) - comparing it against a
+            // full timestamp would drop today's events as soon as it's past midnight, hours
+            // before their actual start time.
+            .Where(e => e.IsFeatured && e.Status == EventStatus.Published && e.Date >= DateTime.UtcNow.Date)
             .OrderBy(e => e.Date)
             .Take(count)
             .ToListAsync();
@@ -278,7 +282,8 @@ public class EventRepository : IEventRepository
             .Include(e => e.CanonicalVenue)
             .Include(e => e.EventTags)
             .ThenInclude(et => et.Tag)
-            .Where(e => e.Status == EventStatus.Published && e.Date >= DateTime.UtcNow)
+            // .Date, not the full UtcNow timestamp - see GetFeaturedEventsAsync above for why.
+            .Where(e => e.Status == EventStatus.Published && e.Date >= DateTime.UtcNow.Date)
             .OrderBy(e => e.Date)
             .Take(count)
             .ToListAsync();
