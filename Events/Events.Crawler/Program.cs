@@ -5,6 +5,7 @@ using Events.Crawler.Services.Interfaces;
 using Events.Data.Context;
 using Events.Data.Repositories.Implementations;
 using Events.Data.Repositories.Interfaces;
+using Events.Services.Caching;
 using Events.Services.Implementations;
 using Events.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -56,6 +57,12 @@ var host = new HostBuilder()
         services.AddScoped<IVenueRepository, VenueRepository>();
 
         // Core services
+        // EventService/TagService cache Event/Tag query results using these - not that this crawler
+        // process benefits from the caching itself (it mostly writes, doesn't serve listing
+        // requests), but their constructors require these dependencies regardless. Each crawler run
+        // is its own process/DI container, so this cache never persists or interacts with Events.Web's.
+        services.AddMemoryCache();
+        services.AddSingleton<IEventCacheInvalidator, EventCacheInvalidator>();
         services.AddScoped<IEventService, EventService>();
         services.AddScoped<ISubCategoryService, SubCategoryService>();
         services.AddScoped<ITagService, TagService>();
