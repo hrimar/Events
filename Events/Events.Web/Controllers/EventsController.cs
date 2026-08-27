@@ -12,10 +12,12 @@ using Events.Web.Models.DTOs;
 using Events.Web.Resources;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Localization;
 
 namespace Events.Web.Controllers;
 
+[EnableRateLimiting("events")]
 public class EventsController : Controller
 {
     private const int OtherSubCategoryEnumValue = 99;

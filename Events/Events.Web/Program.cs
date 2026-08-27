@@ -183,6 +183,24 @@ static void ConfigureRateLimiting(WebApplicationBuilder builder)
     builder.Services.AddRateLimiter(options =>
     {
         options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+        // Logged + Retry-After header on any rejection, from any policy below - lets us see in logs who's actually
+        // hitting these limits (IP, path), which is also the raw data a future bot/scraping-defense decision
+        // would want before choosing a bigger tool (WAF, bot detection, etc.).
+        // This app-level limiter is one layer, not the final anti-scraping answer - it only caps request frequency per IP,
+        // and doesn't conflict with adding an edge-level defense (e.g. Azure Front Door + WAF)
+        // in front of it later; that would simply filter traffic before it reaches here.
+        options.OnRejected = (context, cancellationToken) =>
+        {
+            context.HttpContext.Response.Headers.RetryAfter = "60";
+
+            var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+            logger.LogWarning("Rate limit exceeded: {Ip} on {Path}",
+                context.HttpContext.Connection.RemoteIpAddress, context.HttpContext.Request.Path);
+
+            return ValueTask.CompletedTask;
+        };
+
         options.AddPolicy("contact", httpContext =>
             RateLimitPartition.GetFixedWindowLimiter(
                 partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
@@ -190,6 +208,24 @@ static void ConfigureRateLimiting(WebApplicationBuilder builder)
                 {
                     PermitLimit = 5,
                     Window = TimeSpan.FromMinutes(1),
+                    QueueLimit = 0
+                }));
+
+        // Token bucket, not fixed window: a fixed window can be gamed for ~2x its nominal rate
+        // by timing requests around the window boundary (e.g. 30 requests at 0:59, another 30 at
+        // 1:01). Token bucket avoids that - the bucket starts full (allows an initial burst), then
+        // refills steadily, so the achievable rate stays close to the intended limit no matter how
+        // requests are timed. Numbers are a starting point (no real traffic baseline yet - see
+        // Phase 2 observability) and should be recalibrated once Application Insights data exists.
+        options.AddPolicy("events", httpContext =>
+            RateLimitPartition.GetTokenBucketLimiter(
+                partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                factory: _ => new TokenBucketRateLimiterOptions
+                {
+                    TokenLimit = 40,
+                    TokensPerPeriod = 30,
+                    ReplenishmentPeriod = TimeSpan.FromMinutes(1),
+                    AutoReplenishment = true,
                     QueueLimit = 0
                 }));
     });

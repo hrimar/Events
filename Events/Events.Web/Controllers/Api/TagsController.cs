@@ -1,12 +1,14 @@
 using Events.Services.Interfaces;
 using Events.Web.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Events.Models.Enums;
 
 namespace Events.Web.Controllers.Api;
 
 [ApiController]
 [Route("api/[controller]")]
+[EnableRateLimiting("events")]
 public class TagsController : ControllerBase
 {
     private readonly ITagService _tagService;
