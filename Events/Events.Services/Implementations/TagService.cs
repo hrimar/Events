@@ -1,31 +1,46 @@
 ﻿using Events.Data.Repositories.Interfaces;
 using Events.Models.Entities;
 using Events.Models.Enums;
+using Events.Services.Caching;
 using Events.Services.Helpers;
 using Events.Services.Interfaces;
 using Events.Services.Models.Admin;
 using Events.Services.Models.Admin.DTOs;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Primitives;
 
 namespace Events.Services.Implementations;
 
 public class TagService : ITagService
 {
+    // Shares IEventCacheInvalidator with EventService: tag popularity counts and cached event
+    // listings (which include each Event's EventTags) both depend on the same underlying data
+    // (Events + EventTags + Tags), so one write path invalidating both together is simpler and
+    // safer than tracking two separate invalidation tokens in sync.
+    private static readonly TimeSpan PopularTagsCacheDuration = TimeSpan.FromMinutes(5);
+
     private readonly ITagRepository _tagRepository;
     private readonly IEventRepository _eventRepository;
     private readonly IEventTagRepository _eventTagRepository;
     private readonly ILogger<TagService> _logger;
+    private readonly IMemoryCache _cache;
+    private readonly IEventCacheInvalidator _cacheInvalidator;
 
     public TagService(
         ITagRepository tagRepository,
         IEventRepository eventRepository,
         IEventTagRepository eventTagRepository,
-        ILogger<TagService> logger)
+        ILogger<TagService> logger,
+        IMemoryCache cache,
+        IEventCacheInvalidator cacheInvalidator)
     {
         _tagRepository = tagRepository;
         _eventRepository = eventRepository;
         _eventTagRepository = eventTagRepository;
         _logger = logger;
+        _cache = cache;
+        _cacheInvalidator = cacheInvalidator;
     }
 
     public async Task<Tag?> GetTagByIdAsync(int id)
@@ -78,7 +93,9 @@ public class TagService : ITagService
         try
         {
             await NormalizeAndValidateTagAsync(tag);
-            return await _tagRepository.AddAsync(tag);
+            var created = await _tagRepository.AddAsync(tag);
+            _cacheInvalidator.Invalidate();
+            return created;
         }
         catch (Exception ex)
         {
@@ -92,7 +109,9 @@ public class TagService : ITagService
         try
         {
             await NormalizeAndValidateTagAsync(tag);
-            return await _tagRepository.UpdateAsync(tag);
+            var updated = await _tagRepository.UpdateAsync(tag);
+            _cacheInvalidator.Invalidate();
+            return updated;
         }
         catch (Exception ex)
         {
@@ -106,6 +125,7 @@ public class TagService : ITagService
         try
         {
             await _tagRepository.DeleteAsync(id);
+            _cacheInvalidator.Invalidate();
         }
         catch (Exception ex)
         {
@@ -126,6 +146,7 @@ public class TagService : ITagService
         {
             await _eventTagRepository.RemoveEventTagsByTagIdsAsync(ids);
             await _tagRepository.DeleteRangeAsync(ids);
+            _cacheInvalidator.Invalidate();
 
             _logger.LogInformation("Deleted {Count} tags", ids.Count);
         }
@@ -148,6 +169,7 @@ public class TagService : ITagService
 
             await _eventTagRepository.RemoveEventTagsByTagIdsAsync(orphanIds);
             await _tagRepository.DeleteRangeAsync(orphanIds);
+            _cacheInvalidator.Invalidate();
 
             _logger.LogInformation("Deleted {Count} orphan tags", orphanIds.Count);
             return orphanIds.Count;
@@ -171,6 +193,7 @@ public class TagService : ITagService
 
             var eventTag = new EventTag { EventId = eventId, TagId = tagId };
             await _eventTagRepository.BulkAddEventTagsAsync(new List<EventTag> { eventTag });
+            _cacheInvalidator.Invalidate();
         }
         catch (Exception ex)
         {
@@ -198,6 +221,7 @@ public class TagService : ITagService
                     {
                         eventEntity.EventTags.Remove(eventTagToRemove);
                         await _eventRepository.UpdateAsync(eventEntity);
+                        _cacheInvalidator.Invalidate();
                     }
                 }
             }
@@ -214,11 +238,24 @@ public class TagService : ITagService
         string? nameFilter = null,
         EventCategory? category = null,
         int? maxCount = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default) // Not passed to the cached fetch below - see
+        // EventService.GetPagedEventsAsync's CancellationToken.None comment for why.
     {
         try
         {
-            return await _tagRepository.GetPopularTagsAsync(fromDate, nameFilter, category, maxCount, cancellationToken);
+            var cacheKey = string.Join("|", "PopularTags",
+                fromDate.ToString("O"), nameFilter?.Trim().ToLowerInvariant(), category, maxCount);
+
+            var lazyResult = _cache.GetOrCreate(cacheKey, entry =>
+            {
+                entry.SetAbsoluteExpiration(PopularTagsCacheDuration);
+                entry.AddExpirationToken(new CancellationChangeToken(_cacheInvalidator.Token));
+
+                return new Lazy<Task<List<TagPopularityProjection>>>(() =>
+                    _tagRepository.GetPopularTagsAsync(fromDate, nameFilter, category, maxCount, CancellationToken.None));
+            });
+
+            return await lazyResult!.Value;
         }
         catch (Exception ex)
         {
@@ -308,6 +345,7 @@ public class TagService : ITagService
             }).ToList();
 
             await _eventTagRepository.BulkAddEventTagsAsync(eventTags);
+            _cacheInvalidator.Invalidate();
 
             _logger.LogInformation("Bulk added {Count} tags to event {EventId}", tagIds.Count, eventId);
         }
@@ -323,6 +361,7 @@ public class TagService : ITagService
         try
         {
             await _eventTagRepository.BulkRemoveEventTagsByEventIdAsync(eventId);
+            _cacheInvalidator.Invalidate();
             _logger.LogInformation("Bulk removed all tags from event {EventId}", eventId);
         }
         catch (Exception ex)
@@ -386,6 +425,7 @@ public class TagService : ITagService
             if (eventTags.Any())
             {
                 await _eventTagRepository.BulkAddEventTagsAsync(eventTags);
+                _cacheInvalidator.Invalidate();
 
                 _logger.LogInformation("Bulk assigned {TagCount} tags to {EventCount} events ({TotalOperations} total operations)",
                     tagIdList.Count,
