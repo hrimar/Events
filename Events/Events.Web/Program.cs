@@ -7,6 +7,7 @@ using Events.Data.Repositories.Implementations;
 using Events.Data.Repositories.Interfaces;
 using Events.Data.Services;
 using Events.Models.Entities;
+using Events.Services.Caching;
 using Events.Services.Implementations;
 using Events.Services.Import;
 using Events.Services.Import.Parsers;
@@ -213,6 +214,9 @@ static void RegisterServices(WebApplicationBuilder builder)
     builder.Services.AddScoped<IPageSeoMetaRepository, PageSeoMetaRepository>();
 
     // Services
+    // This IMemoryCache is shared - also used below by EventImportBatchCache for the bulk create from .xlsx/.csv admin feature.
+    builder.Services.AddMemoryCache();
+    builder.Services.AddSingleton<IEventCacheInvalidator, EventCacheInvalidator>();
     builder.Services.AddScoped<IEventService, EventService>();
     builder.Services.AddScoped<ITagService, TagService>();
     builder.Services.AddScoped<ISubCategoryService, SubCategoryService>();
@@ -224,7 +228,6 @@ static void RegisterServices(WebApplicationBuilder builder)
     builder.Services.AddScoped<ISeoMetaService, SeoMetaService>();
 
     // Event import (bulk create from .xlsx/.csv)
-    builder.Services.AddMemoryCache();
     builder.Services.AddScoped<IEventImportFileParser, XlsxEventImportParser>();
     builder.Services.AddScoped<IEventImportFileParser, CsvEventImportParser>();
     builder.Services.AddScoped<IEventImportFileParserFactory, EventImportFileParserFactory>();

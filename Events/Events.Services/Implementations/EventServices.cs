@@ -1,21 +1,39 @@
+using Events.Services.Caching;
 using Events.Services.Interfaces;
 using Events.Data.Repositories.Interfaces;
 using Events.Models.Entities;
 using Events.Models.Enums;
 using Events.Models.Queries;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Primitives;
 
 namespace Events.Services.Implementations;
 
 public class EventService : IEventService
 {
+    // Long TTL is safe because entries also get invalidated immediately on any write
+    // (see _cacheInvalidator.Invalidate() below) - this is just a safety net, not the
+    // primary freshness mechanism. Events only change via the daily crawler run or
+    // occasional admin edits, so a few minutes of staleness (if invalidation were ever
+    // missed) would be harmless anyway.
+    private static readonly TimeSpan PagedEventsCacheDuration = TimeSpan.FromMinutes(5);
+
     private readonly IEventRepository _eventRepository;
     private readonly ILogger<EventService> _logger;
+    private readonly IMemoryCache _cache;
+    private readonly IEventCacheInvalidator _cacheInvalidator;
 
-    public EventService(IEventRepository eventRepository, ILogger<EventService> logger)
+    public EventService(
+        IEventRepository eventRepository,
+        ILogger<EventService> logger,
+        IMemoryCache cache,
+        IEventCacheInvalidator cacheInvalidator)
     {
         _eventRepository = eventRepository;
         _logger = logger;
+        _cache = cache;
+        _cacheInvalidator = cacheInvalidator;
     }
 
     public async Task<Event?> GetEventByIdAsync(int id, CancellationToken cancellationToken = default)
@@ -95,7 +113,8 @@ public class EventService : IEventService
         string sortOrder = "asc",
         DateTime? toDate = null,
         IEnumerable<string>? tagNames = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default) // Accepted for interface consistency but intentionally not passed
+        // to the DB call below - see the CancellationToken.None comment where the query actually runs.
     {
         try
         {
@@ -106,13 +125,32 @@ public class EventService : IEventService
             if (pageSize > 50000) pageSize = 50000; // Safety limit to prevent memory issues
 
             _logger.LogInformation(
-                "Getting paged events: Page {Page}, PageSize {PageSize}, Status {Status}, " +
-                "Category {Category}, SubCategory {SubCategory}, FromDate {FromDate}, " +
-                "SortBy {SortBy}, SortOrder {SortOrder}",
+                "Getting paged events: Page {Page}, PageSize {PageSize}, Status {Status}, Category {Category}," +
+                "SubCategory {SubCategory}, FromDate {FromDate}, SortBy {SortBy}, SortOrder {SortOrder}",
                 page, pageSize, status, categoryName, subCategoryName, fromDate, sortBy, sortOrder);
 
-            return await _eventRepository.GetPagedEventsAsync(
-                page, pageSize, status, categoryName, subCategoryName, isFree, fromDate, sortBy, sortOrder, toDate, tagNames, cancellationToken);
+            var cacheKey = BuildPagedEventsCacheKey(
+                page, pageSize, status, categoryName, subCategoryName, isFree, fromDate, sortBy, sortOrder, toDate, tagNames);
+
+            // The cached value is a Lazy<Task<...>>, not the result itself: IMemoryCache.GetOrCreate
+            // only guarantees the factory delegate runs once, but concurrent callers could still each
+            // start their own DB call before the first one finishes writing to the cache. Wrapping the
+            // fetch in a Lazy makes concurrent callers for the same key await the SAME in-flight task
+            // instead of each issuing their own query (single-flight / anti "thundering herd").
+            var lazyResult = _cache.GetOrCreate(cacheKey, entry =>
+            {
+                entry.SetAbsoluteExpiration(PagedEventsCacheDuration);
+                entry.AddExpirationToken(new CancellationChangeToken(_cacheInvalidator.Token));
+
+                // CancellationToken.None, not the caller's own token: this fetch is shared across
+                // whichever concurrent requests happen to hit the same cache key. If it used the
+                // first caller's token, that caller disconnecting would cancel the query for every
+                // other caller waiting on the same Lazy<Task<...>> too, even ones still connected.
+                return new Lazy<Task<(IEnumerable<Event> Events, int TotalCount)>>(() => _eventRepository.GetPagedEventsAsync(
+                        page, pageSize, status, categoryName, subCategoryName, isFree, fromDate, sortBy, sortOrder, toDate, tagNames, CancellationToken.None));
+            });
+
+            return await lazyResult!.Value;
         }
         catch (Exception ex)
         {
@@ -229,7 +267,9 @@ public class EventService : IEventService
                 throw new ArgumentException("Event name is required");
             }
 
-            return await _eventRepository.AddAsync(eventEntity);
+            var created = await _eventRepository.AddAsync(eventEntity);
+            _cacheInvalidator.Invalidate();
+            return created;
         }
         catch (Exception ex)
         {
@@ -247,7 +287,9 @@ public class EventService : IEventService
                 throw new InvalidOperationException($"Event with ID {eventEntity.Id} not found");
             }
 
-            return await _eventRepository.UpdateAsync(eventEntity);
+            var updated = await _eventRepository.UpdateAsync(eventEntity);
+            _cacheInvalidator.Invalidate();
+            return updated;
         }
         catch (Exception ex)
         {
@@ -266,6 +308,7 @@ public class EventService : IEventService
             }
 
             await _eventRepository.DeleteAsync(id);
+            _cacheInvalidator.Invalidate();
         }
         catch (Exception ex)
         {
@@ -314,6 +357,8 @@ public class EventService : IEventService
             // This is significantly faster than sequential individual updates.
             int updatedCount = await _eventRepository.BulkUpdateAsync(events);
 
+            _cacheInvalidator.Invalidate();
+
             _logger.LogInformation("Bulk update completed: {UpdatedCount} events updated in single transaction", updatedCount);
 
             return updatedCount;
@@ -323,5 +368,27 @@ public class EventService : IEventService
             _logger.LogError(ex, "Error during bulk update of events");
             throw new ApplicationException("Failed to bulk update events", ex);
         }
+    }
+
+    private static string BuildPagedEventsCacheKey(
+        int page,
+        int pageSize,
+        EventStatus? status,
+        string? categoryName,
+        string? subCategoryName,
+        bool? isFree,
+        DateTime? fromDate,
+        string? sortBy,
+        string sortOrder,
+        DateTime? toDate,
+        IEnumerable<string>? tagNames)
+    {
+        // Sorted so the same set of tags in a different order still hits the same cache entry.
+        var sortedTags = tagNames is null
+            ? string.Empty
+            : string.Join(",", tagNames.OrderBy(t => t, StringComparer.OrdinalIgnoreCase));
+
+        return string.Join("|", "PagedEvents", page, pageSize, status, categoryName, subCategoryName, isFree,
+            fromDate?.ToString("O"), sortBy, sortOrder, toDate?.ToString("O"), sortedTags);
     }
 }
