@@ -100,23 +100,28 @@ public class EventCrawlerFunction
         {
             _logger.LogInformation("Event crawler function completed at: {Time}", DateTime.UtcNow);
 
-            // StopApplication is required for Container Apps Job — the container must exit after the job finishes.
-            // Skip it in local development to avoid killing the VS host before the function result is acknowledged.
+            // The container must exit after the job finishes, or it sits idle until the Container Apps Job's
+            // replica_timeout_in_seconds kills it and reports the execution as Failed - even though the crawl
+            // itself already completed successfully. Skip in local development to avoid killing the VS host.
             var isContainerJob = string.Equals(Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"), "Production", StringComparison.OrdinalIgnoreCase);
 
             if (isContainerJob)
             {
-                await Task.Delay(TimeSpan.FromSeconds(5)); // Allow logs to flush
-                _lifetime.StopApplication();
+                // Fire-and-forget, NOT awaited here: this function must actually return first, so the isolated worker SDK
+                // can report "invocation succeeded" back to the Functions Host over gRPC.
+                // Calling Environment.Exit() synchronously from within this method's own call stack (as a previous version
+                // of this code did) kills the process before that report is ever sent, so the Host sees the worker vanish 
+                // mid-invocation and logs the run as Failed ("Host.Results[0]") despite the crawl having succeeded.
+                _ = Task.Run(async () =>
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(10)); // Let this invocation's result reach the Host first.
+                    _lifetime.StopApplication();
 
-                // StopApplication() alone only stops our isolated-worker host, not the outer
-                // Functions Host process (the container's PID 1), which otherwise stays alive
-                // waiting for further triggers until the Container Apps Job's replica_timeout_in_seconds
-                // kills it and reports the execution as Failed - even though the crawl itself
-                // already completed successfully. Exiting our process directly makes the Functions
-                // Host detect the dead worker channel and terminate too, so the container exits
-                // with code 0 right away.
-                Environment.Exit(0);
+                    // StopApplication() alone only stops our isolated-worker host, not the outer Functions Host process
+                    // (the container's PID 1). Exiting our process directly makes the Functions Host detect
+                    // the dead worker channel and terminate too, so the container exits with code 0.
+                    Environment.Exit(0);
+                });
             }
         }
     }
