@@ -98,58 +98,16 @@ public class EventCrawlerFunction
         }
         finally
         {
-            _logger.LogInformation("Event crawler function completed at: {Time}", DateTime.UtcNow);
+            _logger.LogInformation("Event crawler function completed at UTC: {Time}", DateTime.UtcNow);
 
-            // The container must exit after the job finishes, or it sits idle until the Container Apps Job's
-            // replica_timeout_in_seconds kills it and reports the execution as Failed - even though the crawl
-            // itself already completed successfully. Skip in local development to avoid killing the VS host.
+            // StopApplication is required for Container Apps Job — the container must exit after the job finishes.
+            // Skip it in local development to avoid killing the VS host before the function result is acknowledged.
             var isContainerJob = string.Equals(Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"), "Production", StringComparison.OrdinalIgnoreCase);
-            _logger.LogInformation("isContainerJob={IsContainerJob} (ASPNETCORE_ENVIRONMENT={Env})",
-                isContainerJob, Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"));
 
             if (isContainerJob)
             {
-                // Fire-and-forget, NOT awaited here: this function must actually return first, so the isolated worker SDK
-                // can report "invocation succeeded" back to the Functions Host over gRPC.
-                // Calling Environment.Exit() synchronously from within this method's own call stack (as a previous version
-                // of this code did) kills the process before that report is ever sent, so the Host sees the worker vanish
-                // mid-invocation and logs the run as Failed ("Host.Results[0]") despite the crawl having succeeded.
-                _logger.LogInformation("Scheduling delayed container exit.");
-                _ = Task.Run(async () =>
-                {
-                    await Task.Delay(TimeSpan.FromSeconds(10)); // Let this invocation's result reach the Host first.
-                    _logger.LogInformation("Delay elapsed - calling StopApplication.");
-                    _lifetime.StopApplication();
-
-                    // Killing PID 1 (the Functions Host itself) directly, not just our own isolated-worker
-                    // process: Environment.Exit() alone only kills this worker, and the Host's own
-                    // resiliency logic may just respawn a new worker instead of exiting - which would
-                    // leave the container running until Container Apps Job's replica_timeout_in_seconds
-                    // forcibly kills it and reports Failed, even though the crawl itself succeeded.
-                    // Sending SIGTERM to PID 1 guarantees the whole container stops, regardless of that
-                    // internal restart behavior.
-                    try
-                    {
-                        _logger.LogInformation("Sending SIGTERM to PID 1 to force container exit.");
-                        using var killProcess = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
-                        {
-                            FileName = "/bin/sh",
-                            Arguments = "-c \"kill -TERM 1\"",
-                            UseShellExecute = false,
-                            RedirectStandardOutput = true,
-                            RedirectStandardError = true
-                        });
-                        killProcess?.WaitForExit(5000);
-                        _logger.LogInformation("kill command exited with code {ExitCode}", killProcess?.ExitCode);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "Failed to send SIGTERM to PID 1, falling back to Environment.Exit(0).");
-                    }
-
-                    _logger.LogInformation("Calling Environment.Exit(0).");
-                    Environment.Exit(0);
-                });
+                await Task.Delay(TimeSpan.FromSeconds(5)); // Allow logs to flush
+                _lifetime.StopApplication();
             }
         }
     }
