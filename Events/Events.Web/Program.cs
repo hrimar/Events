@@ -22,10 +22,16 @@ using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// No-op locally/without the connection string (APPLICATIONINSIGHTS_CONNECTION_STRING app setting,
-// set by Terraform) - safe to call unconditionally. Gives request telemetry, exceptions, and
-// SQL dependency tracking (which endpoint/query is slow) without any extra wiring.
-builder.Services.AddApplicationInsightsTelemetry();
+// Guarded, not called unconditionally: AddApplicationInsightsTelemetry() throws at startup
+// ("A connection string was not found") when APPLICATIONINSIGHTS_CONNECTION_STRING is entirely
+// absent from configuration, rather than no-op'ing - so it must only be registered when the
+// value (set by Terraform in production) is actually present. Gives request telemetry,
+// exceptions, and SQL dependency tracking (which endpoint/query is slow) with no other wiring.
+var appInsightsConnectionString = builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"];
+if (!string.IsNullOrWhiteSpace(appInsightsConnectionString))
+{
+    builder.Services.AddApplicationInsightsTelemetry();
+}
 
 ConfigureDatabase(builder);
 ConfigureIdentity(builder);
