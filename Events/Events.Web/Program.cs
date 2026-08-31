@@ -324,6 +324,24 @@ static async Task InitializeDatabaseAsync(WebApplication app)
 
 static void ConfigureHttpPipeline(WebApplication app)
 {
+    // Permanent redirect from the apex domain to www: keeps canonical URLs consistent
+    // (SiteUrlProvider.BaseUrl derives the host from the current request) and collapses what
+    // would otherwise be two redirects (http -> https, then apex -> www) into one. Placed before
+    // UseHttpsRedirection so it also fires for a plain http request to the apex domain.
+    // 308 (permanent, preserveMethod) rather than 301, so a POST (e.g. the contact form) isn't
+    // silently turned into a GET by the redirect.
+    app.Use(async (context, next) =>
+    {
+        if (string.Equals(context.Request.Host.Host, "go-sofia.com", StringComparison.OrdinalIgnoreCase))
+        {
+            var target = $"https://www.go-sofia.com{context.Request.Path}{context.Request.QueryString}";
+            context.Response.Redirect(target, permanent: true, preserveMethod: true);
+            return;
+        }
+
+        await next();
+    });
+
     if (app.Environment.IsDevelopment())
     {
         app.UseMigrationsEndPoint();
