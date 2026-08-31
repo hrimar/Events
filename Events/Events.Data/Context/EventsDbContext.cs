@@ -38,7 +38,7 @@ public class EventsDbContext : IdentityDbContext<User>
             entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
             entity.Property(e => e.City).IsRequired().HasMaxLength(100);
             entity.Property(e => e.Location).IsRequired().HasMaxLength(300);
-            entity.Property(e => e.Description).HasMaxLength(2000);
+            entity.Property(e => e.Description).HasMaxLength(4000);
             entity.Property(e => e.ImageUrl).HasMaxLength(500);
             entity.Property(e => e.TicketUrl).HasMaxLength(500);
             entity.Property(e => e.SourceUrl).HasMaxLength(500);

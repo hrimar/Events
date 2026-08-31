@@ -14,7 +14,7 @@ public class EventImportRowMapper : IEventImportRowMapper
     private const int NameMaxLength = 200;
     private const int CityMaxLength = 100;
     private const int LocationMaxLength = 300;
-    private const int DescriptionMaxLength = 2000;
+    private const int DescriptionMaxLength = 4000;
     private const int UrlMaxLength = 500;
 
     private static readonly string[] TagDelimiters = { "," };

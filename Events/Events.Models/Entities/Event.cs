@@ -24,7 +24,7 @@ public class Event
     [MaxLength(300)]
     public string Location { get; set; } = string.Empty;
 
-    [MaxLength(2000)]
+    [MaxLength(4000)]
     public string? Description { get; set; }
 
     [MaxLength(500)]

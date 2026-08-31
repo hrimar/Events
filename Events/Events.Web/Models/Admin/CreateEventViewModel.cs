@@ -22,7 +22,7 @@ public class CreateEventViewModel
     [StringLength(300, MinimumLength = 3, ErrorMessage = "Location must be between 3 and 300 characters")]
     public string Location { get; set; } = string.Empty;
 
-    [StringLength(2000, ErrorMessage = "Description cannot exceed 2000 characters")]
+    [StringLength(4000, ErrorMessage = "Description cannot exceed 4000 characters")]
     public string? Description { get; set; }
 
     [Required(ErrorMessage = "Image URL is required")]

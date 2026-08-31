@@ -269,7 +269,7 @@ public class EventProcessingService : IEventProcessingService
         return new Event
         {
             Name = TruncateString(crawledEvent.Name, 200),
-            Description = TruncateString(crawledEvent.Description, 2000),
+            Description = TruncateString(crawledEvent.Description, 4000),
             Date = crawledEvent.StartDate ?? DateTime.MinValue, // TODO: Handle missing date better
             StartTime = crawledEvent.StartDate?.TimeOfDay,
             City = TruncateString(crawledEvent.City, 100),
@@ -377,7 +377,7 @@ public class EventProcessingService : IEventProcessingService
         if (!string.IsNullOrEmpty(crawledEvent.Description) &&
             existingEvent.Description != crawledEvent.Description)
         {
-            existingEvent.Description = TruncateString(crawledEvent.Description, 2000);
+            existingEvent.Description = TruncateString(crawledEvent.Description, 4000);
             needsUpdate = true;
         }
 
