@@ -851,6 +851,15 @@ footer {
     padding-inline: 1.5rem;
 }
 
+/* Bootstrap only wires up flex layout for .navbar > .container(-*); since the navbar
+   and footer now use the wider custom .container-grid, restore that same behavior here. */
+.navbar > .container-grid {
+    display: flex;
+    flex-wrap: inherit;
+    align-items: center;
+    justify-content: space-between;
+}
+
 .text-clamp-2 {
     display: -webkit-box;
     -webkit-line-clamp: 2;
