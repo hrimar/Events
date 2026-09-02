@@ -32,7 +32,11 @@ jobs:
       run: dotnet build Events/Events.Web.sln --configuration Release --no-restore
 
     - name: Run tests
-      run: dotnet test Events/Events.Web.sln --no-build --verbosity normal
+      # -m:1 disables parallel MSBuild nodes for this step: with 3+ test projects in the
+      # solution, dotnet test built them across parallel nodes, which hit a known
+      # MSBuild/VSTestTask race condition mixing up each node's .dll argument list
+      # ("The argument ... is invalid") - running the VSTest targets sequentially avoids it.
+      run: dotnet test Events/Events.Web.sln --no-build --verbosity normal -m:1
 
     - name: Publish application
       run: dotnet publish Events/Events.Web/Events.Web.csproj --configuration Release --no-build --output ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
