@@ -32,16 +32,17 @@ jobs:
       run: dotnet build Events/Events.Web.sln --configuration Release --no-restore
 
     - name: Run tests
-      # Running `dotnet test` against the .sln directly is broken once it contains multiple
-      # test projects: MSBuild's VSTestTask malforms the vstest.console argument list per
-      # project ("The argument ... is invalid"), independent of parallel/sequential build
-      # (-m:1 alone did not fix it). Invoking `dotnet test` once per test project avoids the
-      # multi-project VSTestTask path entirely.
+      # --configuration Release is required here: the build step above builds Release, but
+      # `dotnet test` defaults to Debug when no configuration is given. With --no-build (no
+      # rebuild to fall back on), it looked for a bin/Debug/... assembly that was never
+      # produced - VSTestTask reports that as the cryptic "The argument ... is invalid"
+      # instead of a clear "file not found". (Testing per-project via a loop, rather than
+      # against the .sln, is kept anyway - it gives clearer per-project pass/fail output.)
       run: |
         set -e
         for proj in $(find Events/Tests -name '*.Tests.csproj'); do
           echo "::group::dotnet test $proj"
-          dotnet test "$proj" --no-build --verbosity normal
+          dotnet test "$proj" --no-build --configuration Release --verbosity normal
           echo "::endgroup::"
         done
 

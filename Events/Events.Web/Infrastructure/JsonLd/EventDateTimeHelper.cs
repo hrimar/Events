@@ -20,8 +20,7 @@ public static class EventDateTimeHelper
     private static readonly TimeZoneInfo SofiaTimeZone = ResolveSofiaTimeZone();
 
     // schema.org startDate: full ISO 8601 with the Sofia UTC offset when the time is
-    // known, otherwise a date-only value - we never assert a fabricated 00:00:00 start
-    // time to Google.
+    // known, otherwise a date-only value - we never assert a fabricated 00:00:00 start time to Google.
     public static string ToIso8601StartDate(DateTime date, TimeSpan? startTime)
     {
         if (!HasKnownTime(date, startTime))
