@@ -15,7 +15,7 @@ namespace Events.Crawler.Services.Implementations;
 public class EntaseCrawler : IWebScrapingCrawler
 {
     private const string BaseUrl = "https://www.entase.com";
-    private const string EventsListUrl = "https://www.entase.com/?city=София";
+    private const string EventsListUrl = "https://www.entase.com/?city=София&lc=bg";
     private const string EventCardSelector = ".production-card__content"; // old: ".productions_grid_item_content";
     private const string EventNameSelector = ".production-card__title.line-2"; // old: ".productions_grid_item_title.line-2";
     private const string ImageContainerSelector = ".production-card__cover"; // old: ".productions_grid_item_cover";
@@ -173,12 +173,13 @@ public class EntaseCrawler : IWebScrapingCrawler
         });
         // A single shared context keeps cookies/cache/connections warm across all pages,
         // while each page is still closed after use to bound its renderer memory lifetime.
-        // NOTE: Entase still serves English content from Azure's datacenter IP even with an
-        // explicit Accept-Language header set (production evidence: even browsers sending "en"
-        // first as their preferred language still get Bulgarian content locally) — the site's
-        // locale selection is most likely IP-geolocation based, not header based, so this has
-        // no confirmed effect. Left in as a harmless, low-cost attempt; ParseEntaseDate below is
-        // the real fix since it must handle whatever language Entase actually serves.
+        // NOTE: Entase's locale selection ignores the Accept-Language header (production evidence:
+        // even browsers sending "bg" first as their preferred language still got non-Bulgarian
+        // content from Azure's datacenter IP, e.g. Dutch "oktober"/"zaterdag" when the Function
+        // runs out of a Western-Europe datacenter) — it appears to be IP-geolocation based instead.
+        // The header is left in as a harmless, low-cost attempt, but the real fix is the explicit
+        // ?lc=bg query parameter appended to EventsListUrl and to each detail URL below, which
+        // entase.com honors regardless of the caller's IP.
         await using var context = await browser.NewContextAsync(new BrowserNewContextOptions
         {
             ExtraHTTPHeaders = new Dictionary<string, string>
@@ -260,6 +261,9 @@ public class EntaseCrawler : IWebScrapingCrawler
                         continue;
 
                     var detailsUrl = href.StartsWith("http") ? href : $"{BaseUrl}{href}";
+                    // Force Bulgarian locale on detail navigation too, since entase.com's locale
+                    // selection is unreliable across Azure datacenters (see lc=bg on EventsListUrl).
+                    detailsUrl += detailsUrl.Contains('?') ? "&lc=bg" : "?lc=bg";
                     cardDataList.Add((name, imageUrl ?? "", detailsUrl));
                 }
                 catch (Exception ex)
