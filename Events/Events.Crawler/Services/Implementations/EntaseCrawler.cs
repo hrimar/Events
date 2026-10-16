@@ -194,11 +194,21 @@ public class EntaseCrawler : IWebScrapingCrawler
             await page.GotoAsync(EventsListUrl, new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded, Timeout = 60000 });
             await Task.Delay(2000);
 
+            // EventsListUrl redirects to /explore/bg/sofia; warn if the redirect ever stops landing on
+            // the Bulgarian version, since date parsing and Sofia filtering rely on Bulgarian content.
+            if (!page.Url.Contains("/bg/", StringComparison.OrdinalIgnoreCase))
+            {
+                _logger.LogWarning("[{Source}] Events list did not land on the Bulgarian version. Final URL: {FinalUrl}", SourceName, page.Url);
+            }
+
             // Scroll to load all events
             await ScrollToLoadAllEventsAsync(page);
 
             // Extract card data (name, image, link) from list page first
-            var cardDataList = await ExtractCardDataAsync(page);
+            // Infinite scroll can render the same production more than once, so keep one card per detail URL
+            var cardDataList = (await ExtractCardDataAsync(page))
+                .DistinctBy(c => c.DetailUrl, StringComparer.OrdinalIgnoreCase)
+                .ToList();
             _logger.LogInformation("[{Source}] Found {EventCount} event cards on Entase", SourceName, cardDataList.Count);
 
             var events = new List<EntaseEventDto>();
@@ -282,25 +292,50 @@ public class EntaseCrawler : IWebScrapingCrawler
 
     private async Task ScrollToLoadAllEventsAsync(IPage page)
     {
-        var previousHeight = 0;
-        var maxScrollAttempts = 50;
+        // Entase loads further cards via infinite scroll. The loop is driven by the card count instead of
+        // document.body.scrollHeight, which stays unchanged while scrolling through already loaded content
+        // and used to stop the loop before the next batch was ever triggered.
+        const int maxScrollAttempts = 100;
+        const int maxAttemptsWithoutNewCards = 3;
+        const int newCardsTimeoutMs = 10000;
+
+        var cardCount = await page.Locator(EventCardSelector).CountAsync();
+        var attemptsWithoutNewCards = 0;
         var scrollAttempts = 0;
 
-        while (scrollAttempts < maxScrollAttempts)
+        while (scrollAttempts < maxScrollAttempts && attemptsWithoutNewCards < maxAttemptsWithoutNewCards)
         {
-            var currentHeight = await page.EvaluateAsync<int>("document.body.scrollHeight");
+            scrollAttempts++;
 
-            if (currentHeight == previousHeight)
+            // On a retry, move up first so the scroll back down fires a fresh scroll/intersection event
+            if (attemptsWithoutNewCards > 0)
+                await page.EvaluateAsync("window.scrollBy(0, -window.innerHeight)");
+
+            // Jump to the very bottom so the infinite scroll trigger is always reached
+            await page.EvaluateAsync("window.scrollTo(0, document.body.scrollHeight)");
+
+            try
             {
-                _logger.LogDebug("[{Source}] Reached end of page after {Attempts} scroll attempts", SourceName, scrollAttempts);
-                break;
+                await page.WaitForFunctionAsync(
+                    "([selector, previousCount]) => document.querySelectorAll(selector).length > previousCount",
+                    new object[] { EventCardSelector, cardCount },
+                    new PageWaitForFunctionOptions { Timeout = newCardsTimeoutMs });
+            }
+            catch (TimeoutException)
+            {
+                attemptsWithoutNewCards++;
+                _logger.LogDebug("[{Source}] No new event cards after scroll attempt {Attempt} ({Retry}/{MaxRetries})",
+                    SourceName, scrollAttempts, attemptsWithoutNewCards, maxAttemptsWithoutNewCards);
+                continue;
             }
 
-            previousHeight = currentHeight;
-            await page.EvaluateAsync("window.scrollBy(0, window.innerHeight)");
-            await Task.Delay(500);
-            scrollAttempts++;
+            attemptsWithoutNewCards = 0;
+            cardCount = await page.Locator(EventCardSelector).CountAsync();
+            _logger.LogDebug("[{Source}] Loaded {CardCount} event cards after {Attempts} scroll attempts", SourceName, cardCount, scrollAttempts);
         }
+
+        _logger.LogInformation("[{Source}] Infinite scroll finished: {CardCount} event cards after {Attempts} scroll attempts",
+            SourceName, cardCount, scrollAttempts);
     }
 
     private async Task<EntaseEventDto?> ExtractEventDetailsAsync(IPage page, (string Name, string ImageUrl, string DetailUrl) cardData)
@@ -315,7 +350,7 @@ public class EntaseCrawler : IWebScrapingCrawler
         // Navigate to details page to get description and spectacles
         try
         {
-            await page.GotoAsync(cardData.DetailUrl, new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded, Timeout = 3000 });
+            await page.GotoAsync(cardData.DetailUrl, new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded, Timeout = 10000 });
 
             await Task.Delay(1000);
 
