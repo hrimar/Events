@@ -128,10 +128,10 @@ public class EventServiceTests
     {
         var events = new[] { CreateEvent() };
         _eventRepositoryMock
-            .Setup(r => r.GetPagedEventsAsync(1, 12, null, null, null, null, null, null, "asc", null, null, CancellationToken.None))
+            .Setup(r => r.GetPagedEventsAsync(It.Is<PublicEventQuery>(q => q.Page == 1 && q.PageSize == 12), CancellationToken.None))
             .ReturnsAsync((events.AsEnumerable(), 1));
 
-        var (result, totalCount) = await CreateEventService().GetPagedEventsAsync(page: -5, pageSize: 0);
+        var (result, totalCount) = await CreateEventService().GetPagedEventsAsync(new PublicEventQuery { Page = -5, PageSize = 0 });
 
         Assert.Equal(events, result);
         Assert.Equal(1, totalCount);
@@ -141,41 +141,67 @@ public class EventServiceTests
     public async Task GetPagedEventsAsync_PageSizeExceedsLimit_ClampsTo50000()
     {
         _eventRepositoryMock
-            .Setup(r => r.GetPagedEventsAsync(1, 50000, null, null, null, null, null, null, "asc", null, null, CancellationToken.None))
+            .Setup(r => r.GetPagedEventsAsync(It.IsAny<PublicEventQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Enumerable.Empty<Event>(), 0));
 
-        await CreateEventService().GetPagedEventsAsync(page: 1, pageSize: 100_000);
+        await CreateEventService().GetPagedEventsAsync(new PublicEventQuery { PageSize = 100_000 });
 
         _eventRepositoryMock.Verify(r => r.GetPagedEventsAsync(
-            1, 50000, null, null, null, null, null, null, "asc", null, null, CancellationToken.None), Times.Once);
+            It.Is<PublicEventQuery>(q => q.Page == 1 && q.PageSize == 50000), CancellationToken.None), Times.Once);
     }
 
     [Fact]
     public async Task GetPagedEventsAsync_CalledTwiceWithSameArguments_HitsRepositoryOnlyOnce()
     {
         _eventRepositoryMock
-            .Setup(r => r.GetPagedEventsAsync(1, 12, null, null, null, null, null, null, "asc", null, null, CancellationToken.None))
+            .Setup(r => r.GetPagedEventsAsync(It.IsAny<PublicEventQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Enumerable.Empty<Event>(), 0));
         var sut = CreateEventService();
 
-        await sut.GetPagedEventsAsync(page: 1, pageSize: 12);
-        await sut.GetPagedEventsAsync(page: 1, pageSize: 12);
+        await sut.GetPagedEventsAsync(new PublicEventQuery { PageSize = 12, TagNames = ["Jazz", "Live"] });
+        await sut.GetPagedEventsAsync(new PublicEventQuery { PageSize = 12, TagNames = ["Live", "Jazz"] });
+
+        _eventRepositoryMock.Verify(r => r.GetPagedEventsAsync(It.IsAny<PublicEventQuery>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task GetPagedEventsAsync_WithSearch_BypassesCacheAndTrimsTerm()
+    {
+        _eventRepositoryMock
+            .Setup(r => r.GetPagedEventsAsync(It.IsAny<PublicEventQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Enumerable.Empty<Event>(), 0));
+        var sut = CreateEventService();
+
+        await sut.GetPagedEventsAsync(new PublicEventQuery { Search = "  jazz  " });
+        await sut.GetPagedEventsAsync(new PublicEventQuery { Search = "  jazz  " });
 
         _eventRepositoryMock.Verify(r => r.GetPagedEventsAsync(
-            1, 12, null, null, null, null, null, null, "asc", null, null, CancellationToken.None), Times.Once);
+            It.Is<PublicEventQuery>(q => q.Search == "jazz"), It.IsAny<CancellationToken>()), Times.Exactly(2));
+    }
+
+    [Fact]
+    public async Task GetPagedEventsAsync_BlankSearch_TreatedAsNoSearchAndCached()
+    {
+        _eventRepositoryMock
+            .Setup(r => r.GetPagedEventsAsync(It.IsAny<PublicEventQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Enumerable.Empty<Event>(), 0));
+        var sut = CreateEventService();
+
+        await sut.GetPagedEventsAsync(new PublicEventQuery { Search = "   " });
+        await sut.GetPagedEventsAsync(new PublicEventQuery { Search = "   " });
+
+        _eventRepositoryMock.Verify(r => r.GetPagedEventsAsync(
+            It.Is<PublicEventQuery>(q => q.Search == null), CancellationToken.None), Times.Once);
     }
 
     [Fact]
     public async Task GetPagedEventsAsync_RepositoryThrows_WrapsInApplicationException()
     {
         _eventRepositoryMock
-            .Setup(r => r.GetPagedEventsAsync(
-                It.IsAny<int>(), It.IsAny<int>(), It.IsAny<EventStatus?>(), It.IsAny<string?>(), It.IsAny<string?>(),
-                It.IsAny<bool?>(), It.IsAny<DateTime?>(), It.IsAny<string?>(), It.IsAny<string>(), It.IsAny<DateTime?>(),
-                It.IsAny<IEnumerable<string>?>(), It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetPagedEventsAsync(It.IsAny<PublicEventQuery>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("db error"));
 
-        await Assert.ThrowsAsync<ApplicationException>(() => CreateEventService().GetPagedEventsAsync(page: 1, pageSize: 12));
+        await Assert.ThrowsAsync<ApplicationException>(() => CreateEventService().GetPagedEventsAsync(new PublicEventQuery()));
     }
 
     // GetFilteredEventsAsync

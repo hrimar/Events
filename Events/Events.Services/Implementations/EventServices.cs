@@ -105,36 +105,28 @@ public class EventService : IEventService
         }
     }
 
-    public async Task<(IEnumerable<Event> Events, int TotalCount)> GetPagedEventsAsync(
-        int page,
-        int pageSize,
-        EventStatus? status = null,
-        string? categoryName = null,
-        string? subCategoryName = null,
-        bool? isFree = null,
-        DateTime? fromDate = null,
-        string? sortBy = null,
-        string sortOrder = "asc",
-        DateTime? toDate = null,
-        IEnumerable<string>? tagNames = null,
-        CancellationToken cancellationToken = default) // Accepted for interface consistency but intentionally not passed
-        // to the DB call below - see the CancellationToken.None comment where the query actually runs.
+    public async Task<(IEnumerable<Event> Events, int TotalCount)> GetPagedEventsAsync(PublicEventQuery eventQuery,
+        CancellationToken cancellationToken = default) // Not passed to the cached DB call below - see the
+                                                       // CancellationToken.None comment where that query runs. Used only for uncached search queries.
     {
         try
         {
-            if (page < 1) page = 1;
-
-            // Allow large pageSize for "get all" scenarios (Controller uses int.MaxValue)
-            if (pageSize < 1) pageSize = 12;
-            if (pageSize > 50000) pageSize = 50000; // Safety limit to prevent memory issues
+            eventQuery = Normalize(eventQuery);
 
             _logger.LogInformation(
                 "Getting paged events: Page {Page}, PageSize {PageSize}, Status {Status}, Category {Category}," +
-                "SubCategory {SubCategory}, FromDate {FromDate}, SortBy {SortBy}, SortOrder {SortOrder}",
-                page, pageSize, status, categoryName, subCategoryName, fromDate, sortBy, sortOrder);
+                "SubCategory {SubCategory}, FromDate {FromDate}, SortBy {SortBy}, SortOrder {SortOrder}, Search {Search}",
+                eventQuery.Page, eventQuery.PageSize, eventQuery.Status, eventQuery.CategoryName, eventQuery.SubCategoryName,
+                eventQuery.FromDate, eventQuery.SortBy, eventQuery.SortOrder, eventQuery.Search);
 
-            var cacheKey = BuildPagedEventsCacheKey(
-                page, pageSize, status, categoryName, subCategoryName, isFree, fromDate, sortBy, sortOrder, toDate, tagNames);
+            // Search terms are free user input (autocomplete fires on every keystroke) - caching them would
+            // fill the unbounded IMemoryCache with one-off entries, so search queries always go to the database.
+            if (eventQuery.Search != null)
+            {
+                return await _eventRepository.GetPagedEventsAsync(eventQuery, cancellationToken);
+            }
+
+            var cacheKey = BuildPagedEventsCacheKey(eventQuery);
 
             // The cached value is a Lazy<Task<...>>, not the result itself: IMemoryCache.GetOrCreate
             // only guarantees the factory delegate runs once, but concurrent callers could still each
@@ -150,8 +142,8 @@ public class EventService : IEventService
                 // whichever concurrent requests happen to hit the same cache key. If it used the
                 // first caller's token, that caller disconnecting would cancel the query for every
                 // other caller waiting on the same Lazy<Task<...>> too, even ones still connected.
-                return new Lazy<Task<(IEnumerable<Event> Events, int TotalCount)>>(() => _eventRepository.GetPagedEventsAsync(
-                        page, pageSize, status, categoryName, subCategoryName, isFree, fromDate, sortBy, sortOrder, toDate, tagNames, CancellationToken.None));
+                return new Lazy<Task<(IEnumerable<Event> Events, int TotalCount)>>(() =>
+                    _eventRepository.GetPagedEventsAsync(eventQuery, CancellationToken.None));
             });
 
             return await lazyResult!.Value;
@@ -374,25 +366,29 @@ public class EventService : IEventService
         }
     }
 
-    private static string BuildPagedEventsCacheKey(
-        int page,
-        int pageSize,
-        EventStatus? status,
-        string? categoryName,
-        string? subCategoryName,
-        bool? isFree,
-        DateTime? fromDate,
-        string? sortBy,
-        string sortOrder,
-        DateTime? toDate,
-        IEnumerable<string>? tagNames)
+    // Clamps paging and trims the search term (blank search becomes null).
+    private static PublicEventQuery Normalize(PublicEventQuery eventQuery)
+    {
+        var pageSize = eventQuery.PageSize;
+        // Allow large pageSize for "get all" scenarios (sitemap uses int.MaxValue)
+        if (pageSize < 1) pageSize = 12;
+        if (pageSize > 50000) pageSize = 50000; // Safety limit to prevent memory issues
+
+        return eventQuery with
+        {
+            Page = eventQuery.Page < 1 ? 1 : eventQuery.Page,
+            PageSize = pageSize,
+            Search = string.IsNullOrWhiteSpace(eventQuery.Search) ? null : eventQuery.Search.Trim()
+        };
+    }
+
+    private static string BuildPagedEventsCacheKey(PublicEventQuery eventQuery)
     {
         // Sorted so the same set of tags in a different order still hits the same cache entry.
-        var sortedTags = tagNames is null
-            ? string.Empty
-            : string.Join(",", tagNames.OrderBy(t => t, StringComparer.OrdinalIgnoreCase));
+        var sortedTags = string.Join(",", eventQuery.TagNames.OrderBy(t => t, StringComparer.OrdinalIgnoreCase));
 
-        return string.Join("|", "PagedEvents", page, pageSize, status, categoryName, subCategoryName, isFree,
-            fromDate?.ToString("O"), sortBy, sortOrder, toDate?.ToString("O"), sortedTags);
+        return string.Join("|", "PagedEvents", eventQuery.Page, eventQuery.PageSize, eventQuery.Status,
+            eventQuery.CategoryName, eventQuery.SubCategoryName, eventQuery.IsFree, eventQuery.FromDate?.ToString("O"),
+            eventQuery.SortBy, eventQuery.SortOrder, eventQuery.ToDate?.ToString("O"), sortedTags);
     }
 }

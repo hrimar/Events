@@ -11,6 +11,9 @@ public interface IVenueService
     Task<IEnumerable<VenueWithStatsDto>> GetAllWithStatsAsync();
     Task<IEnumerable<UnmappedLocationDto>> GetUnmappedLocationsAsync();
     Task<IEnumerable<Event>> GetUpcomingEventsByVenueAsync(int venueId);
+
+    // Venue suggestions for the header search (autocomplete). Blank term returns nothing.
+    Task<IEnumerable<CanonicalVenue>> SearchByNameAsync(string searchTerm, int maxCount);
     Task<CanonicalVenue> CreateAsync(CanonicalVenue venue);
     Task<CanonicalVenue> UpdateAsync(CanonicalVenue venue);
     Task DeleteAsync(int id);

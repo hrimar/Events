@@ -29,4 +29,8 @@ public interface IVenueRepository
 
     // Returns upcoming published events for a given venue, ordered by date
     Task<IEnumerable<Event>> GetUpcomingEventsByVenueAsync(int venueId, DateTime fromDate);
+
+    // Returns venues whose BG name, EN name or short name contains the search term (case-insensitive),
+    // names starting with the term first.
+    Task<IEnumerable<CanonicalVenue>> SearchByNameAsync(string searchTerm, int maxCount);
 }

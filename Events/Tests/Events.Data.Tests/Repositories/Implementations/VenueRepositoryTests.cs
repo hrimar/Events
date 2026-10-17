@@ -151,6 +151,39 @@ public class VenueRepositoryTests : IDisposable
         Assert.Equal("MatchingUpcoming", Assert.Single(result).Name);
     }
 
+    // SearchByNameAsync
+
+    [Fact]
+    public async Task SearchByNameAsync_MatchesBgEnAndShortName_StartsWithFirst()
+    {
+        _context.CanonicalVenues.AddRange(
+            CreateVenue(1, "Club Jazz Corner", "club-jazz"),
+            CreateVenue(2, "Jazz Bar Sofia", "jazz-bar"),
+            new CanonicalVenue { Id = 3, Name = "Studio 5", NameEn = "Jazz Studio", Slug = "studio-5", City = "Sofia" },
+            new CanonicalVenue { Id = 4, Name = "Национален дворец", NameEn = "National Palace", ShortName = "NDK Jazz", Slug = "ndk", City = "Sofia" },
+            CreateVenue(5, "Arena", "arena"));
+        await _context.SaveChangesAsync();
+
+        var result = (await CreateVenueRepository().SearchByNameAsync("Jazz", 10)).Select(v => v.Slug).ToList();
+
+        Assert.Equal(4, result.Count);
+        Assert.DoesNotContain("arena", result);
+        Assert.Equal(["jazz-bar", "studio-5"], result.Take(2).OrderBy(s => s));
+    }
+
+    [Fact]
+    public async Task SearchByNameAsync_RespectsMaxCount()
+    {
+        _context.CanonicalVenues.AddRange(
+            CreateVenue(1, "Jazz One", "jazz-one"),
+            CreateVenue(2, "Jazz Two", "jazz-two"));
+        await _context.SaveChangesAsync();
+
+        var result = await CreateVenueRepository().SearchByNameAsync("Jazz", 1);
+
+        Assert.Single(result);
+    }
+
     [Fact]
     public async Task GetUpcomingEventsByVenueAsync_EventThatStartedEarlierToday_IsStillIncluded()
     {

@@ -314,7 +314,7 @@ public class EventRepositoryTests : IDisposable
 
         // Act - both categoryName and subCategoryName given; subCategoryName must win
         var (events, totalCount) = await CreateEventRepository().GetPagedEventsAsync(
-            page: 1, pageSize: 10, categoryName: "Music", subCategoryName: "Rock");
+            new PublicEventQuery { PageSize = 10, CategoryName = "Music", SubCategoryName = "Rock" });
 
         // Assert
         Assert.Equal(1, totalCount);
@@ -329,7 +329,7 @@ public class EventRepositoryTests : IDisposable
             .Select(i => CreateEvent(i, $"Event{i}", new DateTime(2026, 6, i), _musicCategory.Id)));
         await _context.SaveChangesAsync();
 
-        var (events, totalCount) = await CreateEventRepository().GetPagedEventsAsync(page: 1, pageSize: 2);
+        var (events, totalCount) = await CreateEventRepository().GetPagedEventsAsync(new PublicEventQuery { PageSize = 2 });
 
         Assert.Equal(2, events.Count());
         Assert.Equal(5, totalCount);
@@ -343,7 +343,7 @@ public class EventRepositoryTests : IDisposable
             .Select(i => CreateEvent(i, $"Event{i}", new DateTime(2026, 6, i), _musicCategory.Id)));
         await _context.SaveChangesAsync();
 
-        var (events, _) = await CreateEventRepository().GetPagedEventsAsync(page: 2, pageSize: 2);
+        var (events, _) = await CreateEventRepository().GetPagedEventsAsync(new PublicEventQuery { Page = 2, PageSize = 2 });
 
         Assert.Equal(["Event3", "Event4"], events.Select(e => e.Name));
     }
@@ -358,7 +358,7 @@ public class EventRepositoryTests : IDisposable
         await _context.SaveChangesAsync();
 
         var (events, _) = await CreateEventRepository().GetPagedEventsAsync(
-            page: 1, pageSize: 10, toDate: new DateTime(2026, 6, 10));
+            new PublicEventQuery { PageSize = 10, ToDate = new DateTime(2026, 6, 10) });
 
         Assert.Equal("OnToDate", Assert.Single(events).Name);
     }
@@ -378,7 +378,7 @@ public class EventRepositoryTests : IDisposable
 
         // Act
         var (events, _) = await CreateEventRepository().GetPagedEventsAsync(
-            page: 1, pageSize: 10, tagNames: ["Live"]);
+            new PublicEventQuery { PageSize = 10, TagNames = ["Live"] });
 
         // Assert
         Assert.Equal("Tagged", Assert.Single(events).Name);
@@ -393,7 +393,7 @@ public class EventRepositoryTests : IDisposable
             CreateEvent(2, "Earlier", new DateTime(2026, 6, 1), _musicCategory.Id));
         await _context.SaveChangesAsync();
 
-        var (events, _) = await CreateEventRepository().GetPagedEventsAsync(page: 1, pageSize: 10);
+        var (events, _) = await CreateEventRepository().GetPagedEventsAsync(new PublicEventQuery { PageSize = 10 });
 
         Assert.Equal(["Earlier", "Later"], events.Select(e => e.Name));
     }
@@ -407,9 +407,94 @@ public class EventRepositoryTests : IDisposable
             CreateEvent(2, "Beta", new DateTime(2026, 6, 2), _musicCategory.Id));
         await _context.SaveChangesAsync();
 
-        var (events, _) = await CreateEventRepository().GetPagedEventsAsync(page: 1, pageSize: 10, sortBy: "name", sortOrder: "desc");
+        var (events, _) = await CreateEventRepository().GetPagedEventsAsync(
+            new PublicEventQuery { PageSize = 10, SortBy = "name", SortOrder = "desc" });
 
         Assert.Equal(["Beta", "Alpha"], events.Select(e => e.Name));
+    }
+
+    // GetPagedEventsAsync with Search (GS-BUG-003)
+
+    [Fact]
+    public async Task GetPagedEventsAsync_Search_MatchesNameDescriptionAndLocation()
+    {
+        _context.Categories.Add(_musicCategory);
+        var byDescription = CreateEvent(2, "Evening", new DateTime(2026, 6, 2), _musicCategory.Id);
+        byDescription.Description = "Live Jazz trio";
+        _context.Events.AddRange(
+            CreateEvent(1, "Jazz Night", new DateTime(2026, 6, 1), _musicCategory.Id),
+            byDescription,
+            new Event { Id = 3, Name = "Show", Date = new DateTime(2026, 6, 3), City = "Sofia", Location = "Jazz Club", CategoryId = _musicCategory.Id },
+            CreateEvent(4, "Rock", new DateTime(2026, 6, 4), _musicCategory.Id));
+        await _context.SaveChangesAsync();
+
+        var (events, totalCount) = await CreateEventRepository().GetPagedEventsAsync(new PublicEventQuery { PageSize = 10, Search = "Jazz" });
+
+        Assert.Equal(3, totalCount);
+        Assert.DoesNotContain(events, e => e.Name == "Rock");
+    }
+
+    [Fact]
+    public async Task GetPagedEventsAsync_SearchWithFromDateAndStatus_ReturnsOnlyUpcomingPublishedByDateAndTime()
+    {
+        _context.Categories.Add(_musicCategory);
+        var today = new DateTime(2026, 9, 25);
+        _context.Events.AddRange(
+            CreateEvent(1, "Jazz Past", today.AddDays(-3), _musicCategory.Id),
+            CreateEvent(2, "Jazz Tomorrow", today.AddDays(1).AddHours(20), _musicCategory.Id),
+            CreateEvent(3, "Jazz Today Morning", today.AddHours(10), _musicCategory.Id),
+            CreateEvent(4, "Jazz Draft", today.AddDays(2), _musicCategory.Id, status: EventStatus.Draft));
+        await _context.SaveChangesAsync();
+
+        var (events, _) = await CreateEventRepository().GetPagedEventsAsync(new PublicEventQuery
+        {
+            PageSize = 10,
+            Status = EventStatus.Published,
+            FromDate = today,
+            Search = "Jazz"
+        });
+
+        // A today event whose start time has passed is still upcoming (GS-BUG-002 rule).
+        Assert.Equal(["Jazz Today Morning", "Jazz Tomorrow"], events.Select(e => e.Name));
+    }
+
+    [Fact]
+    public async Task GetPagedEventsAsync_SearchCombinedWithCategoryFilter_AppliesBoth()
+    {
+        _context.Categories.AddRange(_musicCategory, _sportsCategory);
+        _context.Events.AddRange(
+            CreateEvent(1, "Jazz Concert", new DateTime(2026, 6, 1), _musicCategory.Id),
+            CreateEvent(2, "Jazz Run", new DateTime(2026, 6, 2), _sportsCategory.Id));
+        await _context.SaveChangesAsync();
+
+        var (events, _) = await CreateEventRepository().GetPagedEventsAsync(
+            new PublicEventQuery { PageSize = 10, CategoryName = _musicCategory.Name, Search = "Jazz" });
+
+        Assert.Equal("Jazz Concert", Assert.Single(events).Name);
+    }
+
+    [Fact]
+    public async Task GetPagedEventsAsync_PastSearchQuery_ReturnsPastMatchesNewestFirstWithinLimit()
+    {
+        _context.Categories.Add(_musicCategory);
+        var today = new DateTime(2026, 9, 25);
+        _context.Events.AddRange(
+            CreateEvent(1, "Jazz Old", today.AddDays(-30), _musicCategory.Id),
+            CreateEvent(2, "Jazz Recent", today.AddDays(-2), _musicCategory.Id),
+            CreateEvent(3, "Jazz Yesterday", today.AddDays(-1).AddHours(21), _musicCategory.Id),
+            CreateEvent(4, "Jazz Today", today.AddHours(9), _musicCategory.Id));
+        await _context.SaveChangesAsync();
+
+        var (events, _) = await CreateEventRepository().GetPagedEventsAsync(new PublicEventQuery
+        {
+            PageSize = 2,
+            Status = EventStatus.Published,
+            ToDate = today.AddDays(-1),
+            Search = "Jazz",
+            SortOrder = "desc"
+        });
+
+        Assert.Equal(["Jazz Yesterday", "Jazz Recent"], events.Select(e => e.Name));
     }
 
     // GetFilteredEventsAsync

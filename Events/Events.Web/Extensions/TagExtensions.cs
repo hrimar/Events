@@ -18,19 +18,4 @@ public static class TagExtensions
             TagName = tagViewModel.Name
         };
     }
-
-    public static SearchSuggestionDto ToSearchSuggestionDto(this TagViewModel tagViewModel)
-    {
-        return new SearchSuggestionDto
-        {
-            Id = 0,
-            Name = "#" + tagViewModel.Name,
-            Category = "Tag",
-            Location = $"{tagViewModel.EventCount} events",
-            Date = string.Empty,
-            Tags = Array.Empty<string>(),
-            IsTag = true,
-            TagName = tagViewModel.Name
-        };
-    }
 }

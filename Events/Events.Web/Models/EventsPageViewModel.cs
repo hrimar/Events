@@ -9,6 +9,9 @@ namespace Events.Web.Models;
 public class EventsPageViewModel
 {
     public PaginatedList<EventViewModel> Events { get; set; } = new(new List<EventViewModel>(), 0, 1, 12);
+
+    // Past events matching the search term, newest first - shown below the upcoming results.
+    public List<EventViewModel> PastSearchResults { get; set; } = new();
     public string? CurrentCategory { get; set; }
     public string? SelectedSubCategory { get; set; }
     public bool? IsFreeFilter { get; set; }

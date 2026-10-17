@@ -18,6 +18,30 @@ public class VenueServiceTests
     private static CanonicalVenue CreateVenue(int id = 1, string name = "NDK") =>
         new() { Id = id, Name = name, NameEn = name, Slug = "ndk", City = "Sofia" };
 
+    // SearchByNameAsync
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public async Task SearchByNameAsync_BlankTerm_ReturnsEmptyWithoutCallingRepository(string? searchTerm)
+    {
+        var result = await CreateVenueService().SearchByNameAsync(searchTerm!, 3);
+
+        Assert.Empty(result);
+        _repositoryMock.Verify(r => r.SearchByNameAsync(It.IsAny<string>(), It.IsAny<int>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task SearchByNameAsync_TermWithWhitespace_TrimsBeforeCallingRepository()
+    {
+        _repositoryMock.Setup(r => r.SearchByNameAsync("ndk", 3)).ReturnsAsync(new[] { CreateVenue() });
+
+        var result = await CreateVenueService().SearchByNameAsync("  ndk  ", 3);
+
+        Assert.Single(result);
+    }
+
     // FindCanonicalVenueIdAsync
 
     [Theory]

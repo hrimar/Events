@@ -129,6 +129,10 @@
   <data name="Events_BuyTickets" xml:space="preserve"><value>Buy tickets</value></data>
   <data name="Events_Free" xml:space="preserve"><value>Free</value></data>
   <data name="Events_PastEvent" xml:space="preserve"><value>Past</value></data>
+  <data name="Events_PastEventsHeading" xml:space="preserve"><value>Past events</value></data>
+  <data name="Events_NoUpcomingForSearch" xml:space="preserve"><value>No upcoming events for “{0}”.</value></data>
+  <data name="Search_GroupEvents" xml:space="preserve"><value>Events</value></data>
+  <data name="Search_GroupVenues" xml:space="preserve"><value>Venues</value></data>
 
   <!-- Events Details Page -->
   <data name="Details_Home" xml:space="preserve"><value>Home</value></data>

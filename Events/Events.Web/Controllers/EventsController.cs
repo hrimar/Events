@@ -2,6 +2,7 @@ using Events.Data.Repositories.Interfaces;
 using Events.Models;
 using Events.Models.Entities;
 using Events.Models.Enums;
+using Events.Models.Queries;
 using Events.Services.Interfaces;
 using Events.Services.Time;
 using Events.Web.Extensions;
@@ -26,13 +27,14 @@ public class EventsController : Controller
     private const int RelatedEventsCount = 4;
     private const int MinSearchQueryLength = 2;
     private const int MaxEventSuggestions = 8;
-    private const int MaxTagSuggestions = 5;
-    private const int MaxAutocompleteSuggestions = 10;
+    private const int MaxVenueSuggestions = 3;
+    private const int MaxPastSearchResults = 12;
     private const int MaxPopularTagsCount = 20;
 
     private readonly ILogger<EventsController> _logger;
     private readonly IEventService _eventService;
     private readonly ITagService _tagService;
+    private readonly IVenueService _venueService;
     private readonly ISubCategoryRepository _subCategoryRepository;
     private readonly ISeoMetaService _seoMetaService;
     private readonly ISiteUrlProvider _siteUrlProvider;
@@ -43,6 +45,7 @@ public class EventsController : Controller
         ILogger<EventsController> logger,
         IEventService eventService,
         ITagService tagService,
+        IVenueService venueService,
         ISubCategoryRepository subCategoryRepository,
         ISeoMetaService seoMetaService,
         ISiteUrlProvider siteUrlProvider,
@@ -52,6 +55,7 @@ public class EventsController : Controller
         _logger = logger;
         _eventService = eventService;
         _tagService = tagService;
+        _venueService = venueService;
         _subCategoryRepository = subCategoryRepository;
         _seoMetaService = seoMetaService;
         _siteUrlProvider = siteUrlProvider;
@@ -88,51 +92,34 @@ public class EventsController : Controller
                 .Where(t => !string.IsNullOrEmpty(t))
                 .ToList() ?? new List<string>();
 
-            List<Events.Models.Entities.Event> pagedEvents;
-            int totalCount;
-
-            if (!string.IsNullOrWhiteSpace(search))
+            // Filtering, search, sorting and pagination all happen in SQL via a single query -
+            // fetching the entire matching dataset and paginating in memory was the root cause
+            // of the 2026-08-25 SQL worker-limit incident.
+            var listQuery = new PublicEventQuery
             {
-                // Search results come from a separate lookup and are filtered/sorted/paged in memory
-                // (pre-existing behavior, unchanged here).
-                IEnumerable<Events.Models.Entities.Event> allEvents = await _eventService.SearchEventsAsync(search, cancellationToken);
+                Page = page,
+                PageSize = pageSize,
+                Status = EventStatus.Published,
+                CategoryName = category,
+                SubCategoryName = subCategory,
+                IsFree = free,
+                FromDate = fromDate,
+                ToDate = toDate,
+                TagNames = tagList,
+                Search = search,
+                SortBy = sortBy,
+                SortOrder = sortOrder ?? "asc"
+            };
 
-                if (tagList.Count > 0)
-                {
-                    allEvents = allEvents.Where(e =>
-                        e.EventTags != null && e.EventTags.Any(et =>
-                            et.Tag != null && tagList.Any(searchTag =>
-                                string.Equals(et.Tag.Name.Trim(), searchTag.Trim(), StringComparison.OrdinalIgnoreCase))));
-                }
-
-                // Use exclusive upper bound (< next day) so events at any time during toDate are included.
-                if (toDate.HasValue)
-                {
-                    var exclusiveEnd = toDate.Value.Date.AddDays(1);
-                    allEvents = allEvents.Where(e => e.Date < exclusiveEnd);
-                }
-
-                allEvents = ApplySorting(allEvents, sortBy, sortOrder);
-
-                totalCount = allEvents.Count();
-                pagedEvents = allEvents
-                    .Skip((page - 1) * pageSize)
-                    .Take(pageSize)
-                    .ToList();
-            }
-            else
-            {
-                // Filtering, sorting and pagination all happen in SQL via a single query -
-                // this used to fetch the entire matching dataset (pageSize = int.MaxValue) and
-                // paginate in memory, which was the root cause of the 2026-08-25 SQL worker-limit incident.
-                var (events, count) = await _eventService.GetPagedEventsAsync(
-                    page, pageSize, EventStatus.Published, category, subCategory, free, fromDate, sortBy, sortOrder ?? "asc", toDate, tagList, cancellationToken);
-                pagedEvents = events.ToList();
-                totalCount = count;
-            }
+            var (pagedEvents, totalCount) = await _eventService.GetPagedEventsAsync(listQuery, cancellationToken);
 
             var eventViewModels = EventViewModel.FromEntities(pagedEvents, _clock.Today);
             var paginatedEvents = new PaginatedList<EventViewModel>(eventViewModels, totalCount, page, pageSize);
+
+            // Past matches go below the last page of upcoming results (GS-BUG-003).
+            var pastSearchResults = paginatedEvents.HasNextPage
+                ? new List<EventViewModel>()
+                : await GetPastSearchResultsAsync(listQuery, cancellationToken);
             var popularTags = await GetPopularTagsAsync(cancellationToken);
 
             var pageTitle = BuildPageTitle(category, free, search);
@@ -174,6 +161,7 @@ public class EventsController : Controller
             var viewModel = new EventsPageViewModel
             {
                 Events = paginatedEvents,
+                PastSearchResults = pastSearchResults,
                 CurrentCategory = category,
                 SelectedSubCategory = subCategory,
                 IsFreeFilter = free,
@@ -241,32 +229,38 @@ public class EventsController : Controller
     {
         try
         {
-            if (string.IsNullOrWhiteSpace(query) || query.Length < MinSearchQueryLength)
+            if (string.IsNullOrWhiteSpace(query) || query.Trim().Length < MinSearchQueryLength)
             {
-                return Json(Array.Empty<object>());
+                return Json(new SearchSuggestionsDto());
             }
 
-            var results = await _eventService.SearchEventsAsync(query, cancellationToken);
-            var eventSuggestions = results.Take(MaxEventSuggestions)
-                .Select(e => e.ToSearchSuggestionDto())
-                .ToList();
+            var isEnglish = CultureHelper.IsEnglish();
 
-            var tagResults = await SearchTagsAsync(query, cancellationToken);
-            var tagSuggestions = tagResults.Take(MaxTagSuggestions)
-                .Select(t => t.ToSearchSuggestionDto())
-                .ToList();
+            // Only upcoming published events, nearest date and time first (GS-BUG-003).
+            var upcomingQuery = new PublicEventQuery
+            {
+                PageSize = MaxEventSuggestions,
+                Status = EventStatus.Published,
+                FromDate = _clock.Today,
+                Search = query
+            };
+            var (events, _) = await _eventService.GetPagedEventsAsync(upcomingQuery, cancellationToken);
+            var venues = await _venueService.SearchByNameAsync(query, MaxVenueSuggestions);
 
-            var combinedResults = eventSuggestions.Cast<object>()
-                .Concat(tagSuggestions.Cast<object>())
-                .Take(MaxAutocompleteSuggestions)
-                .ToList();
-
-            return Json(combinedResults);
+            return Json(new SearchSuggestionsDto
+            {
+                Events = events
+                    .Select(e => e.ToSearchSuggestionDto(isEnglish, LocalizeCategoryName(e.Category?.Name)))
+                    .ToList(),
+                Venues = venues
+                    .Select(v => v.ToSearchSuggestionDto(isEnglish))
+                    .ToList()
+            });
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error in autocomplete search for query {Query}", query);
-            return Json(Array.Empty<object>());
+            return Json(new SearchSuggestionsDto());
         }
     }
 
@@ -287,22 +281,32 @@ public class EventsController : Controller
         }
     }
 
-    private async Task<List<TagViewModel>> SearchTagsAsync(string query, CancellationToken cancellationToken)
+    // Past events matching the same search and filters, newest first. Empty when there is no search term.
+    private async Task<List<EventViewModel>> GetPastSearchResultsAsync(PublicEventQuery listQuery, CancellationToken cancellationToken)
     {
-        try
+        if (string.IsNullOrWhiteSpace(listQuery.Search))
         {
-            var matchingTags = await _tagService.GetPopularTagsAsync(_clock.Today, nameFilter: query.Trim(), cancellationToken: cancellationToken);
+            return new List<EventViewModel>();
+        }
 
-            return matchingTags
-                .Select(t => new TagViewModel { Name = t.Name, EventCount = t.EventCount, Category = t.Category })
-                .ToList();
-        }
-        catch (Exception ex)
+        var today = _clock.Today;
+        var lastPastDay = today.AddDays(-1);
+        var pastQuery = listQuery with
         {
-            _logger.LogError(ex, "Error searching tags for query {Query}", query);
-            return new List<TagViewModel>();
-        }
+            Page = 1,
+            PageSize = MaxPastSearchResults,
+            FromDate = null,
+            ToDate = listQuery.ToDate.HasValue && listQuery.ToDate.Value.Date < lastPastDay ? listQuery.ToDate : lastPastDay,
+            SortBy = null,
+            SortOrder = "desc"
+        };
+
+        var (pastEvents, _) = await _eventService.GetPagedEventsAsync(pastQuery, cancellationToken);
+        return EventViewModel.FromEntities(pastEvents, today);
     }
+
+    private string? LocalizeCategoryName(string? categoryName) =>
+        string.IsNullOrEmpty(categoryName) ? null : CategoryLocalizationExtensions.LocalizeCategoryName(categoryName, _localizer);
 
     // GET: /Events/Details/5
     public async Task<IActionResult> Details(int id, CancellationToken cancellationToken)
@@ -331,8 +335,14 @@ public class EventsController : Controller
             if (!isOtherSubCategory)
             {
                 // SubCategory is specific - suggest 4 events from the same SubCategory
-                var result = await _eventService.GetPagedEventsAsync(1, RelatedEventsCount + 1, EventStatus.Published,
-                    eventEntity.Category?.Name, eventEntity.SubCategory!.Name, null, _clock.Today, cancellationToken: cancellationToken);
+                var result = await _eventService.GetPagedEventsAsync(new PublicEventQuery
+                {
+                    PageSize = RelatedEventsCount + 1,
+                    Status = EventStatus.Published,
+                    CategoryName = eventEntity.Category?.Name,
+                    SubCategoryName = eventEntity.SubCategory!.Name,
+                    FromDate = _clock.Today
+                }, cancellationToken);
 
                 relatedEvents = EventViewModel.FromEntities(result.Events.Where(e => e.Id != id).Take(RelatedEventsCount), _clock.Today).ToList();
             }
@@ -351,8 +361,14 @@ public class EventsController : Controller
                 }
                 else
                 {
-                    var result = await _eventService.GetPagedEventsAsync(1, RelatedEventsCount + 1, EventStatus.Published,
-                        eventEntity.Category?.Name, null, null, _clock.Today, tagNames: eventTagNames, cancellationToken: cancellationToken);
+                    var result = await _eventService.GetPagedEventsAsync(new PublicEventQuery
+                    {
+                        PageSize = RelatedEventsCount + 1,
+                        Status = EventStatus.Published,
+                        CategoryName = eventEntity.Category?.Name,
+                        FromDate = _clock.Today,
+                        TagNames = eventTagNames
+                    }, cancellationToken);
 
                     relatedEvents = EventViewModel.FromEntities(result.Events.Where(e => e.Id != id).Take(RelatedEventsCount), _clock.Today).ToList();
                 }
@@ -450,31 +466,5 @@ public class EventsController : Controller
                 Selected = string.Equals(subCategory.Name, selectedSubCategory, StringComparison.OrdinalIgnoreCase)
             })
             .ToList();
-    }
-
-    private static IEnumerable<Events.Models.Entities.Event> ApplySorting(IEnumerable<Events.Models.Entities.Event> events, string? sortBy, string? sortOrder)
-    {
-        var isDescending = sortOrder?.ToLower() == "desc";
-
-        var sortedEvents = sortBy?.ToLower() switch
-        {
-            "name" => isDescending
-                ? events.OrderByDescending(e => e.Name)
-                : events.OrderBy(e => e.Name),
-            "price" => isDescending
-                ? events.OrderByDescending(e => e.IsFree ? 0 : (e.Price ?? decimal.MaxValue))
-                : events.OrderBy(e => e.IsFree ? 0 : (e.Price ?? decimal.MaxValue)),
-            "category" => isDescending
-                ? events.OrderByDescending(e => e.Category?.Name ?? "")
-                : events.OrderBy(e => e.Category?.Name ?? ""),
-            "subcategory" => isDescending
-                ? events.OrderByDescending(e => e.SubCategory?.Name ?? "")
-                : events.OrderBy(e => e.SubCategory?.Name ?? ""),
-            "date" or _ => isDescending
-                ? events.OrderByDescending(e => e.Date)
-                : events.OrderBy(e => e.Date)
-        };
-
-        return sortedEvents;
     }
 }

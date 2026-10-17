@@ -85,11 +85,35 @@ public class EventExtensionsTests
     // ToSearchSuggestionDto
 
     [Fact]
-    public void ToSearchSuggestionDto_SetsIsTagFalseAndTagNameNull()
+    public void ToSearchSuggestionDto_KnownTime_ShowsDateTimeAndLocation()
     {
-        var result = CreateEvent().ToSearchSuggestionDto();
+        var eventEntity = CreateEvent();
+        eventEntity.StartTime = new TimeSpan(19, 30, 0);
 
-        Assert.False(result.IsTag);
-        Assert.Null(result.TagName);
+        var result = eventEntity.ToSearchSuggestionDto(isEnglish: false, localizedCategory: "Музика");
+
+        Assert.Equal("Concert", result.Title);
+        Assert.Equal("/Events/Details/1", result.Url);
+        Assert.Equal("15.06.2026 · 19:30 · NDK", result.Details);
+        Assert.Equal("Музика", result.Category);
+    }
+
+    [Fact]
+    public void ToSearchSuggestionDto_UnknownTime_OmitsMidnight()
+    {
+        var result = CreateEvent().ToSearchSuggestionDto(isEnglish: false, localizedCategory: null);
+
+        Assert.Equal("15.06.2026 · NDK", result.Details);
+    }
+
+    [Fact]
+    public void ToSearchSuggestionDto_EnglishWithCanonicalVenue_UsesEnglishDateFormatAndVenueName()
+    {
+        var eventEntity = CreateEvent();
+        eventEntity.CanonicalVenue = new CanonicalVenue { Name = "НДК", NameEn = "National Palace of Culture", Slug = "ndk" };
+
+        var result = eventEntity.ToSearchSuggestionDto(isEnglish: true, localizedCategory: null);
+
+        Assert.Equal("15/06/2026 · National Palace of Culture", result.Details);
     }
 }

@@ -1,5 +1,6 @@
 using System.Text;
 using Events.Models.Enums;
+using Events.Models.Queries;
 using Events.Services.Interfaces;
 using Events.Services.Time;
 using Events.Web.Infrastructure;
@@ -47,7 +48,12 @@ public class SeoController : Controller
 
         // Only published, not-yet-past events - a stale sitemap entry for a finished
         // event has no SEO value and Google discourages listing past events at all.
-        var (upcomingEvents, _) = await _eventService.GetPagedEventsAsync(1, int.MaxValue, EventStatus.Published, fromDate: _clock.Today);
+        var (upcomingEvents, _) = await _eventService.GetPagedEventsAsync(new PublicEventQuery
+        {
+            PageSize = int.MaxValue,
+            Status = EventStatus.Published,
+            FromDate = _clock.Today
+        });
 
         entries.AddRange(upcomingEvents.Select(e => new SitemapEntry($"{baseUrl}/Events/Details/{e.Id}", e.UpdatedAt)));
 

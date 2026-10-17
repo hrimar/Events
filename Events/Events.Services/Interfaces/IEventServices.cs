@@ -13,24 +13,18 @@ public interface IEventService
     Task<Event> UpdateEventAsync(Event eventEntity);
     Task DeleteEventAsync(int id);
 
+    // Public listings (all events, categories, search, related events, sitemap).
+    // Results are cached for a few minutes, except search queries.
     Task<(IEnumerable<Event> Events, int TotalCount)> GetPagedEventsAsync(
-        int page,
-        int pageSize,
-        EventStatus? status = null,
-        string? categoryName = null,
-        string? subCategoryName = null,
-        bool? isFree = null,
-        DateTime? fromDate = null,
-        string? sortBy = null,
-        string sortOrder = "asc",
-        DateTime? toDate = null,
-        IEnumerable<string>? tagNames = null,
+        PublicEventQuery eventQuery,
         CancellationToken cancellationToken = default);
 
     Task<(IEnumerable<Event> Events, int TotalCount)> GetFilteredEventsAsync(EventListCriteria criteria);
 
     Task<IEnumerable<Event>> GetFeaturedEventsAsync(int count = 10);
     Task<IEnumerable<Event>> GetUpcomingEventsAsync(int count = 10);
+    // Unfiltered search over all events (any status and date) - for the admin panel only.
+    // Public search goes through GetPagedEventsAsync with PublicEventQuery.Search.
     Task<IEnumerable<Event>> SearchEventsAsync(string searchTerm, CancellationToken cancellationToken = default);
     Task<IEnumerable<Event>> GetEventsByCategoryAsync(EventCategory category);
     Task<IEnumerable<Event>> GetEventsByDateRangeAsync(DateTime startDate, DateTime endDate);

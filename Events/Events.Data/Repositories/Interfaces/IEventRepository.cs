@@ -23,17 +23,7 @@ public interface IEventRepository
 
     // pagination and filtering
     Task<(IEnumerable<Event> Events, int TotalCount)> GetPagedEventsAsync(
-        int page,
-        int pageSize,
-        EventStatus? status = null,
-        string? categoryName = null,
-        string? subCategoryName = null,
-        bool? isFree = null,
-        DateTime? fromDate = null,
-        string? sortBy = null,
-        string sortOrder = "asc",
-        DateTime? toDate = null,
-        IEnumerable<string>? tagNames = null,
+        PublicEventQuery eventQuery,
         CancellationToken cancellationToken = default);
 
     Task<(IEnumerable<Event> Events, int TotalCount)> GetFilteredEventsAsync(EventListCriteria criteria);

@@ -59,19 +59,7 @@ public class EventRepository : IEventRepository
         return await query.CountAsync();
     }
 
-    public async Task<(IEnumerable<Event> Events, int TotalCount)> GetPagedEventsAsync(
-        int page,
-        int pageSize,
-        EventStatus? status = null,
-        string? categoryName = null,
-        string? subCategoryName = null,
-        bool? isFree = null,
-        DateTime? fromDate = null,
-        string? sortBy = null,
-        string sortOrder = "asc",
-        DateTime? toDate = null,
-        IEnumerable<string>? tagNames = null,
-        CancellationToken cancellationToken = default)
+    public async Task<(IEnumerable<Event> Events, int TotalCount)> GetPagedEventsAsync(PublicEventQuery eventQuery, CancellationToken cancellationToken = default)
     {
         var query = _context.Events
             .AsNoTracking()
@@ -83,12 +71,15 @@ public class EventRepository : IEventRepository
             .AsQueryable();
         //var queryString = query.ToQueryString(); // TODO: Use this generated SQL and analize it in via MSSMS Actual Execution Plan!!!
 
-        if (status.HasValue)
+        if (eventQuery.Status.HasValue)
         {
-            query = query.Where(e => e.Status == status.Value);
+            var status = eventQuery.Status.Value;
+            query = query.Where(e => e.Status == status);
         }
 
         // Priority: subCategoryName > categoryName
+        var subCategoryName = eventQuery.SubCategoryName;
+        var categoryName = eventQuery.CategoryName;
         if (!string.IsNullOrEmpty(subCategoryName))
         {
             query = query.Where(e =>
@@ -102,38 +93,46 @@ public class EventRepository : IEventRepository
                 e.Category.Name == categoryName);
         }
 
-        if (isFree.HasValue)
+        if (eventQuery.IsFree.HasValue)
         {
-            query = query.Where(e => e.IsFree == isFree.Value);
+            var isFree = eventQuery.IsFree.Value;
+            query = query.Where(e => e.IsFree == isFree);
         }
 
-        if (fromDate.HasValue)
+        if (eventQuery.FromDate.HasValue)
         {
-            query = query.Where(e => e.Date >= fromDate.Value);
+            var fromDate = eventQuery.FromDate.Value;
+            query = query.Where(e => e.Date >= fromDate);
         }
 
         // Use exclusive upper bound (< next day) so events at any time during toDate are included.
-        if (toDate.HasValue)
+        if (eventQuery.ToDate.HasValue)
         {
-            var exclusiveEnd = toDate.Value.Date == DateTime.MaxValue.Date
+            var toDate = eventQuery.ToDate.Value;
+            var exclusiveEnd = toDate.Date == DateTime.MaxValue.Date
                 ? DateTime.MaxValue
-                : toDate.Value.Date.AddDays(1);
+                : toDate.Date.AddDays(1);
             query = query.Where(e => e.Date < exclusiveEnd);
         }
 
-        var tagList = tagNames?.Where(t => !string.IsNullOrWhiteSpace(t)).ToList();
-        if (tagList is { Count: > 0 })
+        var tagList = eventQuery.TagNames.Where(t => !string.IsNullOrWhiteSpace(t)).ToList();
+        if (tagList.Count > 0)
         {
             query = query.Where(e => e.EventTags.Any(et => et.Tag != null && tagList.Contains(et.Tag.Name)));
         }
 
+        if (!string.IsNullOrWhiteSpace(eventQuery.Search))
+        {
+            query = ApplySearch(query, eventQuery.Search);
+        }
+
         var totalCount = await query.CountAsync(cancellationToken);
 
-        var orderedQuery = ApplySorting(query, sortBy, sortOrder);
+        var orderedQuery = ApplySorting(query, eventQuery.SortBy, eventQuery.SortOrder);
 
         var events = await orderedQuery
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
+            .Skip((eventQuery.Page - 1) * eventQuery.PageSize)
+            .Take(eventQuery.PageSize)
             .ToListAsync(cancellationToken);
 
         return (events, totalCount);
@@ -197,11 +196,7 @@ public class EventRepository : IEventRepository
 
         if (!string.IsNullOrWhiteSpace(criteria.Search))
         {
-            var searchTerm = criteria.Search;
-            query = query.Where(e =>
-                e.Name.Contains(searchTerm) ||
-                (e.Description != null && e.Description.Contains(searchTerm)) ||
-                e.Location.Contains(searchTerm));
+            query = ApplySearch(query, criteria.Search);
         }
 
         var totalCount = await query.CountAsync();
@@ -213,6 +208,16 @@ public class EventRepository : IEventRepository
             .ToListAsync();
 
         return (events, totalCount);
+    }
+
+    // Single definition of what "matches the search term" means for every listing.
+    // Case-insensitivity (incl. Cyrillic) comes from the database collation on nvarchar columns.
+    private static IQueryable<Event> ApplySearch(IQueryable<Event> query, string searchTerm)
+    {
+        return query.Where(e =>
+            e.Name.Contains(searchTerm) ||
+            (e.Description != null && e.Description.Contains(searchTerm)) ||
+            e.Location.Contains(searchTerm));
     }
 
     private static IQueryable<Event> ApplySorting(IQueryable<Event> query, string? sortBy, string sortOrder)
@@ -354,15 +359,14 @@ public class EventRepository : IEventRepository
 
     public async Task<IEnumerable<Event>> SearchAsync(string searchTerm, CancellationToken cancellationToken = default)
     {
-        return await _context.Events
+        var query = _context.Events
             .AsNoTracking()
             .Include(e => e.Category)
             .Include(e => e.SubCategory)
             .Include(e => e.EventTags)
-            .ThenInclude(et => et.Tag)
-            .Where(e => e.Name.Contains(searchTerm) ||
-                       e.Description!.Contains(searchTerm) ||
-                       e.Location.Contains(searchTerm))
+            .ThenInclude(et => et.Tag);
+
+        return await ApplySearch(query, searchTerm)
             .OrderBy(e => e.Date)
             .ToListAsync(cancellationToken);
     }

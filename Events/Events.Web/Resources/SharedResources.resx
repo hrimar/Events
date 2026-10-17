@@ -372,6 +372,18 @@
   <data name="Events_PastEvent" xml:space="preserve">
     <value>Приключило</value>
   </data>
+  <data name="Events_PastEventsHeading" xml:space="preserve">
+    <value>Минали събития</value>
+  </data>
+  <data name="Events_NoUpcomingForSearch" xml:space="preserve">
+    <value>Няма предстоящи събития за „{0}“.</value>
+  </data>
+  <data name="Search_GroupEvents" xml:space="preserve">
+    <value>Събития</value>
+  </data>
+  <data name="Search_GroupVenues" xml:space="preserve">
+    <value>Места</value>
+  </data>
   <data name="Details_Home" xml:space="preserve">
     <value>Начало</value>
   </data>

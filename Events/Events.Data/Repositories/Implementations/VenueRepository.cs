@@ -148,4 +148,17 @@ public class VenueRepository : IVenueRepository
             .OrderBy(e => e.Date)
             .ToListAsync();
     }
+
+    public async Task<IEnumerable<CanonicalVenue>> SearchByNameAsync(string searchTerm, int maxCount)
+    {
+        return await _context.CanonicalVenues
+            .AsNoTracking()
+            .Where(v => v.Name.Contains(searchTerm) ||
+                        v.NameEn.Contains(searchTerm) ||
+                        (v.ShortName != null && v.ShortName.Contains(searchTerm)))
+            .OrderByDescending(v => v.Name.StartsWith(searchTerm) || v.NameEn.StartsWith(searchTerm))
+            .ThenBy(v => v.Name)
+            .Take(maxCount)
+            .ToListAsync();
+    }
 }

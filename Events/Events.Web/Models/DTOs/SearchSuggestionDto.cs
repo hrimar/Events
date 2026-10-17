@@ -1,25 +1,21 @@
-using System.ComponentModel.DataAnnotations;
-
 namespace Events.Web.Models.DTOs;
 
-public class SearchSuggestionDto
+// Header search suggestions (autocomplete), grouped as shown in the dropdown.
+public sealed class SearchSuggestionsDto
 {
-    [Required]
-    public int Id { get; set; }
-    
-    [Required]
-    public string Name { get; set; } = string.Empty;
-    
-    public string? Category { get; set; }
-    
-    [Required]
-    public string Location { get; set; } = string.Empty;
-    
-    public string Date { get; set; } = string.Empty;
-    
-    public string[] Tags { get; set; } = Array.Empty<string>();
-    
-    public bool IsTag { get; set; } = false;
-    
-    public string? TagName { get; set; }
+    public IReadOnlyList<SearchSuggestionDto> Events { get; init; } = Array.Empty<SearchSuggestionDto>();
+    public IReadOnlyList<SearchSuggestionDto> Venues { get; init; } = Array.Empty<SearchSuggestionDto>();
+}
+
+// One suggestion row. All texts are already localized and formatted on the server.
+public sealed class SearchSuggestionDto
+{
+    public string Title { get; init; } = string.Empty;
+    public string Url { get; init; } = string.Empty;
+
+    // Secondary line: "date · time · venue" for events, address for venues.
+    public string? Details { get; init; }
+
+    // Localized category name (events only).
+    public string? Category { get; init; }
 }

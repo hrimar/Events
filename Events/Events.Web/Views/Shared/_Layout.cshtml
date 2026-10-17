@@ -155,7 +155,8 @@
                     </button>
                 </form>
                 <!-- Hidden autocomplete container -->
-                <div id="navbar-search-results" class="position-absolute top-100 start-0 w-100 theme-dropdown border rounded-bottom shadow-lg" style="display: none; z-index: 1000; max-height: 300px; overflow-y: auto;"></div>
+                <div id="navbar-search-results" class="position-absolute top-100 start-0 w-100 theme-dropdown border rounded-bottom shadow-lg" style="display: none; z-index: 1000; max-height: 420px; overflow-y: auto;"
+                     data-label-events="@Localizer["Search_GroupEvents"]" data-label-venues="@Localizer["Search_GroupVenues"]"></div>
             </div>
             
             <!-- Theme Switcher -->
@@ -180,7 +181,8 @@
                     <i class="fas fa-search"></i>
                 </button>
             </form>
-            <div id="mobile-navbar-search-results" class="position-absolute w-100 theme-dropdown border rounded shadow-lg mt-1" style="display: none; z-index: 1000; max-height: 300px; overflow-y: auto; margin-left: -12px; margin-right: -12px; max-width: calc(100% + 24px);"></div>
+            <div id="mobile-navbar-search-results" class="position-absolute w-100 theme-dropdown border rounded shadow-lg mt-1" style="display: none; z-index: 1000; max-height: 420px; overflow-y: auto; margin-left: -12px; margin-right: -12px; max-width: calc(100% + 24px);"
+                 data-label-events="@Localizer["Search_GroupEvents"]" data-label-venues="@Localizer["Search_GroupVenues"]"></div>
         </div>
         
     </div>
@@ -263,23 +265,33 @@
 <!-- Enhanced Navigation Search Script -->
 <script>
 $(document).ready(function() {
-    initializeSearch('#navbar-search', '#navbar-search-results', false);
-    initializeSearch('#mobile-navbar-search', '#mobile-navbar-search-results', true);
+    initializeSearch('#navbar-search', '#navbar-search-results');
+    initializeSearch('#mobile-navbar-search', '#mobile-navbar-search-results');
 
     // Focus the mobile search field once it expands after tapping the search icon
     document.getElementById('mobile-search-bar')?.addEventListener('shown.bs.collapse', function () {
         document.getElementById('mobile-navbar-search')?.focus();
     });
 
-    function initializeSearch(searchInputSelector, resultsContainerSelector, isMobile) {
+    // Event and venue names come from external sources - never insert them as raw HTML.
+    function escapeHtml(value) {
+        return String(value ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function initializeSearch(searchInputSelector, resultsContainerSelector) {
         let searchTimeout;
         const searchInput = $(searchInputSelector);
         const resultsContainer = $(resultsContainerSelector);
-        
+
         searchInput.on('input', function() {
             clearTimeout(searchTimeout);
             const query = $(this).val().trim();
-            
+
             if (query.length >= 2) {
                 searchTimeout = setTimeout(() => {
                     performSearch(query);
@@ -288,85 +300,66 @@ $(document).ready(function() {
                 resultsContainer.hide();
             }
         });
-        
+
         // Hide results when clicking outside
         $(document).on('click', function(e) {
-            const isClickInsideSearch = $(e.target).closest(searchInputSelector).length > 0 || 
+            const isClickInsideSearch = $(e.target).closest(searchInputSelector).length > 0 ||
                                        $(e.target).closest(resultsContainerSelector).length > 0;
             if (!isClickInsideSearch) {
                 resultsContainer.hide();
             }
         });
-        
-        // Handle search result clicks
-        $(document).on('click', `.${searchInputSelector.substring(1)}-item`, function(e) {
-            e.preventDefault();
-            const isTag = $(this).data('is-tag');
-            const value = $(this).data('value');
-            
-            if (isTag) {
-                const tagParam = encodeURIComponent(value);
-                const url = `/Events?tags=${tagParam}`;
-                window.location.href = url;
-            } else {
-                const eventId = $(this).data('id');
-                window.location.href = `/Events/Details/${eventId}`;
-            }
-        });
-        
+
         function performSearch(query) {
             $.ajax({
                 url: '/Events/Search',
                 data: { query: query },
                 success: function(data) {
-                    displaySearchResults(data, query);
+                    displaySearchResults(data);
                 },
                 error: function() {
                     resultsContainer.hide();
                 }
             });
         }
-        
-        function displaySearchResults(data, query) {
-            if (!data || data.length === 0) {
+
+        // Group labels are localized on the server (data-label-* attributes on the results container).
+        function renderGroup(label, items, iconClass) {
+            let html = `<div class="mb-1"><small class="text-muted fw-bold">${escapeHtml(label)}</small></div>`;
+            items.forEach(item => {
+                html += `
+                    <a class="navbar-search-item d-block p-2 rounded hover-bg-surface text-decoration-none text-body"
+                       href="${escapeHtml(item.url)}">
+                        <i class="${iconClass} me-2"></i>
+                        <strong>${escapeHtml(item.title)}</strong><br>
+                        <small class="text-muted">${item.category ? escapeHtml(item.category) + ' • ' : ''}${escapeHtml(item.details)}</small>
+                    </a>`;
+            });
+            return html;
+        }
+
+        function displaySearchResults(data) {
+            const events = data?.events ?? [];
+            const venues = data?.venues ?? [];
+
+            if (events.length === 0 && venues.length === 0) {
                 resultsContainer.hide();
                 return;
             }
-            
+
             let html = '<div class="p-2">';
-            
-            const events = data.filter(item => !item.isTag);
-            const tags = data.filter(item => item.isTag);
-            
-            if (tags.length > 0) {
-                html += '<div class="mb-2"><small class="text-muted fw-bold">Tags</small></div>';
-                tags.forEach(item => {
-                    html += `
-                        <div class="navbar-search-item p-2 rounded hover-bg-surface cursor-pointer" 
-                             data-is-tag="true" data-value="${item.tagName}">
-                            <i class="fas fa-tag text-info me-2"></i>
-                            <strong>${item.name}</strong> 
-                            <small class="text-muted">${item.location}</small>
-                        </div>`;
-                });
-            }
-            
+
             if (events.length > 0) {
-                if (tags.length > 0) {
+                html += renderGroup(resultsContainer.data('label-events'), events, 'fas fa-calendar text-primary');
+            }
+
+            if (venues.length > 0) {
+                if (events.length > 0) {
                     html += '<hr class="my-2">';
                 }
-                html += '<div class="mb-2"><small class="text-muted fw-bold">Events</small></div>';
-                events.slice(0, 4).forEach(item => {
-                    html += `
-                        <div class="navbar-search-item p-2 rounded hover-bg-surface cursor-pointer" 
-                             data-is-tag="false" data-id="${item.id}">
-                            <i class="fas fa-calendar text-primary me-2"></i>
-                            <strong>${item.name}</strong><br>
-                            <small class="text-muted">${item.category || ''} ${item.date ? '• ' + item.date : ''}</small>
-                        </div>`;
-                });
+                html += renderGroup(resultsContainer.data('label-venues'), venues, 'fas fa-map-marker-alt text-primary');
             }
-            
+
             html += '</div>';
             resultsContainer.html(html).show();
         }

@@ -36,6 +36,14 @@ public class VenueService : IVenueService
     public async Task<IEnumerable<Event>> GetUpcomingEventsByVenueAsync(int venueId) =>
         await _repository.GetUpcomingEventsByVenueAsync(venueId, _clock.Today);
 
+    public async Task<IEnumerable<CanonicalVenue>> SearchByNameAsync(string searchTerm, int maxCount)
+    {
+        if (string.IsNullOrWhiteSpace(searchTerm) || maxCount < 1)
+            return Enumerable.Empty<CanonicalVenue>();
+
+        return await _repository.SearchByNameAsync(searchTerm.Trim(), maxCount);
+    }
+
     public async Task<CanonicalVenue> CreateAsync(CanonicalVenue venue) => await _repository.AddAsync(venue);
 
     public async Task<CanonicalVenue> UpdateAsync(CanonicalVenue venue) => await _repository.UpdateAsync(venue);
