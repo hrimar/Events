@@ -97,9 +97,9 @@ public class VenueRepository : IVenueRepository
         await _context.SaveChangesAsync();
     }
 
-    public async Task<IEnumerable<VenueWithStatsDto>> GetAllWithStatsAsync()
+    public async Task<IEnumerable<VenueWithStatsDto>> GetAllWithStatsAsync(DateTime fromDate)
     {
-        var now = DateTime.UtcNow;
+        var upcomingFrom = fromDate.Date;
 
         return await _context.CanonicalVenues
             .Select(v => new VenueWithStatsDto
@@ -112,7 +112,7 @@ public class VenueRepository : IVenueRepository
                 Slug = v.Slug,
                 City = v.City,
                 AliasCount = v.Aliases.Count,
-                UpcomingEventsCount = v.Events.Count(e => e.Date >= now && e.Status == EventStatus.Published),
+                UpcomingEventsCount = v.Events.Count(e => e.Date >= upcomingFrom && e.Status == EventStatus.Published),
                 TotalEventsCount = v.Events.Count()
             })
             .OrderBy(v => v.Name)
@@ -133,9 +133,10 @@ public class VenueRepository : IVenueRepository
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<Event>> GetUpcomingEventsByVenueAsync(int venueId)
+    public async Task<IEnumerable<Event>> GetUpcomingEventsByVenueAsync(int venueId, DateTime fromDate)
     {
-        var now = DateTime.UtcNow;
+        // Calendar day, not a full timestamp: today's events stay listed until the day ends.
+        var upcomingFrom = fromDate.Date;
 
         return await _context.Events
             .Include(e => e.Category)
@@ -143,7 +144,7 @@ public class VenueRepository : IVenueRepository
             .Include(e => e.CanonicalVenue)
             .Include(e => e.EventTags)
             .ThenInclude(et => et.Tag)
-            .Where(e => e.CanonicalVenueId == venueId && e.Status == EventStatus.Published && e.Date >= now)
+            .Where(e => e.CanonicalVenueId == venueId && e.Status == EventStatus.Published && e.Date >= upcomingFrom)
             .OrderBy(e => e.Date)
             .ToListAsync();
     }

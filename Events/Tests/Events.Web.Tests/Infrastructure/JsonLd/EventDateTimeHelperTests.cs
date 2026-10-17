@@ -53,18 +53,26 @@ public class EventDateTimeHelperTests
         Assert.Equal("2026-01-15T19:00:00+02:00", result);
     }
 
-    // IsPastEvent - uses dates safely far from "today" so the test stays deterministic
-    // regardless of what day it actually runs on.
+    // IsPastEvent - "today" is passed in, so the tests are deterministic.
+
+    private static readonly DateTime SofiaToday = new(2026, 9, 25);
 
     [Fact]
-    public void IsPastEvent_DateInThePast_ReturnsTrue()
+    public void IsPastEvent_Yesterday_ReturnsTrue()
     {
-        Assert.True(EventDateTimeHelper.IsPastEvent(new DateTime(2020, 1, 1)));
+        Assert.True(EventDateTimeHelper.IsPastEvent(new DateTime(2026, 9, 24, 20, 0, 0), SofiaToday));
     }
 
     [Fact]
-    public void IsPastEvent_DateInTheFuture_ReturnsFalse()
+    public void IsPastEvent_TodayWithStartTimeAlreadyPassed_ReturnsFalse()
     {
-        Assert.False(EventDateTimeHelper.IsPastEvent(new DateTime(2030, 1, 1)));
+        // A show that started at 10:00 stays current through the whole Sofia day.
+        Assert.False(EventDateTimeHelper.IsPastEvent(new DateTime(2026, 9, 25, 10, 0, 0), SofiaToday));
+    }
+
+    [Fact]
+    public void IsPastEvent_Tomorrow_ReturnsFalse()
+    {
+        Assert.False(EventDateTimeHelper.IsPastEvent(new DateTime(2026, 9, 26), SofiaToday));
     }
 }

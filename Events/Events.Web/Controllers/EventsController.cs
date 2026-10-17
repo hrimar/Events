@@ -3,6 +3,7 @@ using Events.Models;
 using Events.Models.Entities;
 using Events.Models.Enums;
 using Events.Services.Interfaces;
+using Events.Services.Time;
 using Events.Web.Extensions;
 using Events.Web.Infrastructure;
 using Events.Web.Infrastructure.JsonLd;
@@ -36,6 +37,7 @@ public class EventsController : Controller
     private readonly ISeoMetaService _seoMetaService;
     private readonly ISiteUrlProvider _siteUrlProvider;
     private readonly IStringLocalizer<SharedResources> _localizer;
+    private readonly ISofiaClock _clock;
 
     public EventsController(
         ILogger<EventsController> logger,
@@ -44,7 +46,8 @@ public class EventsController : Controller
         ISubCategoryRepository subCategoryRepository,
         ISeoMetaService seoMetaService,
         ISiteUrlProvider siteUrlProvider,
-        IStringLocalizer<SharedResources> localizer)
+        IStringLocalizer<SharedResources> localizer,
+        ISofiaClock clock)
     {
         _logger = logger;
         _eventService = eventService;
@@ -53,6 +56,7 @@ public class EventsController : Controller
         _seoMetaService = seoMetaService;
         _siteUrlProvider = siteUrlProvider;
         _localizer = localizer;
+        _clock = clock;
     }
 
     public async Task<IActionResult> Index(
@@ -72,7 +76,7 @@ public class EventsController : Controller
         try
         {
             // Default to showing only future events unless explicitly specified
-            fromDate ??= DateTime.Today;
+            fromDate ??= _clock.Today;
 
             // Bound caller-supplied paging to sane values - a public, unauthenticated endpoint
             // must not be able to force an oversized fetch via the pageSize query parameter.
@@ -127,7 +131,7 @@ public class EventsController : Controller
                 totalCount = count;
             }
 
-            var eventViewModels = EventViewModel.FromEntities(pagedEvents);
+            var eventViewModels = EventViewModel.FromEntities(pagedEvents, _clock.Today);
             var paginatedEvents = new PaginatedList<EventViewModel>(eventViewModels, totalCount, page, pageSize);
             var popularTags = await GetPopularTagsAsync(cancellationToken);
 
@@ -270,7 +274,7 @@ public class EventsController : Controller
     {
         try
         {
-            var popularTags = await _tagService.GetPopularTagsAsync(DateTime.Today, maxCount: MaxPopularTagsCount, cancellationToken: cancellationToken);
+            var popularTags = await _tagService.GetPopularTagsAsync(_clock.Today, maxCount: MaxPopularTagsCount, cancellationToken: cancellationToken);
 
             return popularTags
                 .Select(t => new TagViewModel { Name = t.Name, EventCount = t.EventCount, Category = t.Category })
@@ -287,7 +291,7 @@ public class EventsController : Controller
     {
         try
         {
-            var matchingTags = await _tagService.GetPopularTagsAsync(DateTime.Today, nameFilter: query.Trim(), cancellationToken: cancellationToken);
+            var matchingTags = await _tagService.GetPopularTagsAsync(_clock.Today, nameFilter: query.Trim(), cancellationToken: cancellationToken);
 
             return matchingTags
                 .Select(t => new TagViewModel { Name = t.Name, EventCount = t.EventCount, Category = t.Category })
@@ -317,7 +321,7 @@ public class EventsController : Controller
                 EventJsonLdBuilder.BuildEvent(eventEntity, baseUrl, includeContext: false),
                 BreadcrumbJsonLdBuilder.BuildBreadcrumbList(BuildBreadcrumbItems(eventEntity, baseUrl), includeContext: false)));
 
-            var viewModel = EventDetailsViewModel.FromEntity(eventEntity, jsonLd);
+            var viewModel = EventDetailsViewModel.FromEntity(eventEntity, jsonLd, _clock.Today);
 
             // EnumValue == OtherSubCategoryEnumValue represents "Other" across all subcategory enums
             var isOtherSubCategory = eventEntity.SubCategory == null || eventEntity.SubCategory.EnumValue == OtherSubCategoryEnumValue;
@@ -328,9 +332,9 @@ public class EventsController : Controller
             {
                 // SubCategory is specific - suggest 4 events from the same SubCategory
                 var result = await _eventService.GetPagedEventsAsync(1, RelatedEventsCount + 1, EventStatus.Published,
-                    eventEntity.Category?.Name, eventEntity.SubCategory!.Name, null, DateTime.Today, cancellationToken: cancellationToken);
+                    eventEntity.Category?.Name, eventEntity.SubCategory!.Name, null, _clock.Today, cancellationToken: cancellationToken);
 
-                relatedEvents = EventViewModel.FromEntities(result.Events.Where(e => e.Id != id).Take(RelatedEventsCount)).ToList();
+                relatedEvents = EventViewModel.FromEntities(result.Events.Where(e => e.Id != id).Take(RelatedEventsCount), _clock.Today).ToList();
             }
             else
             {
@@ -348,9 +352,9 @@ public class EventsController : Controller
                 else
                 {
                     var result = await _eventService.GetPagedEventsAsync(1, RelatedEventsCount + 1, EventStatus.Published,
-                        eventEntity.Category?.Name, null, null, DateTime.Today, tagNames: eventTagNames, cancellationToken: cancellationToken);
+                        eventEntity.Category?.Name, null, null, _clock.Today, tagNames: eventTagNames, cancellationToken: cancellationToken);
 
-                    relatedEvents = EventViewModel.FromEntities(result.Events.Where(e => e.Id != id).Take(RelatedEventsCount)).ToList();
+                    relatedEvents = EventViewModel.FromEntities(result.Events.Where(e => e.Id != id).Take(RelatedEventsCount), _clock.Today).ToList();
                 }
             }
 

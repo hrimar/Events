@@ -12,7 +12,7 @@ public class EventViewModel
     public TimeSpan? StartTime { get; set; }
     public string FormattedDate => Date.ToString("dd.MM.yyyy");
     public bool HasKnownTime => EventDateTimeHelper.HasKnownTime(Date, StartTime);
-    public bool IsPastEvent => EventDateTimeHelper.IsPastEvent(Date);
+    public bool IsPastEvent { get; set; }
     public string FormattedTime => StartTime?.ToString(@"hh\:mm") ?? Date.ToString("HH:mm");
     public string City { get; set; } = string.Empty;
     public string Location { get; set; } = string.Empty;
@@ -39,12 +39,14 @@ public class EventViewModel
 
     public bool HasTicketUrl => !string.IsNullOrEmpty(TicketUrl);
 
-    // Factory method for mapping from Entity
-    public static EventViewModel FromEntity(Event eventEntity) => Populate(new EventViewModel(), eventEntity);
+    // Factory method for mapping from Entity.
+    // sofiaToday comes from ISofiaClock.Today and drives the "past event" label.
+    public static EventViewModel FromEntity(Event eventEntity, DateTime sofiaToday) =>
+        Populate(new EventViewModel(), eventEntity, sofiaToday);
 
     // Shared entity-to-view-model mapping, so subclasses (e.g. EventDetailsViewModel)
     // can add their own fields without duplicating this mapping.
-    protected static T Populate<T>(T model, Event eventEntity) where T : EventViewModel
+    protected static T Populate<T>(T model, Event eventEntity, DateTime sofiaToday) where T : EventViewModel
     {
         model.Id = eventEntity.Id;
         model.Name = eventEntity.Name;
@@ -64,12 +66,13 @@ public class EventViewModel
         model.CanonicalVenueId = eventEntity.CanonicalVenueId;
         model.VenueSlug = eventEntity.CanonicalVenue?.Slug;
         model.Tags = eventEntity.EventTags?.Select(et => et.Tag.Name).ToList() ?? new List<string>();
+        model.IsPastEvent = EventDateTimeHelper.IsPastEvent(eventEntity.Date, sofiaToday);
         return model;
     }
 
     // Extension method for bulk mapping
-    public static List<EventViewModel> FromEntities(IEnumerable<Event> events)
+    public static List<EventViewModel> FromEntities(IEnumerable<Event> events, DateTime sofiaToday)
     {
-        return events.Select(FromEntity).ToList();
+        return events.Select(e => FromEntity(e, sofiaToday)).ToList();
     }
 }

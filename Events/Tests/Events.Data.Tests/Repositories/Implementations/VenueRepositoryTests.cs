@@ -104,7 +104,7 @@ public class VenueRepositoryTests : IDisposable
         await _context.SaveChangesAsync();
 
         // Act
-        var result = await CreateVenueRepository().GetAllWithStatsAsync();
+        var result = await CreateVenueRepository().GetAllWithStatsAsync(now.Date);
 
         // Assert
         var stats = Assert.Single(result);
@@ -146,8 +146,25 @@ public class VenueRepositoryTests : IDisposable
             new Event { Id = 3, Name = "OtherVenue", Date = now.AddDays(5), City = "Sofia", Location = "Arena", CategoryId = _musicCategory.Id, CanonicalVenueId = 2, Status = EventStatus.Published });
         await _context.SaveChangesAsync();
 
-        var result = await CreateVenueRepository().GetUpcomingEventsByVenueAsync(1);
+        var result = await CreateVenueRepository().GetUpcomingEventsByVenueAsync(1, now.Date);
 
         Assert.Equal("MatchingUpcoming", Assert.Single(result).Name);
+    }
+
+    [Fact]
+    public async Task GetUpcomingEventsByVenueAsync_EventThatStartedEarlierToday_IsStillIncluded()
+    {
+        // Crawler events store the start time inside Date - a show that started at 10:00
+        // must stay listed for the rest of that day (GS-BUG-002 rule).
+        _context.Categories.Add(_musicCategory);
+        var today = new DateTime(2026, 9, 25);
+        _context.Events.AddRange(
+            new Event { Id = 1, Name = "StartedThisMorning", Date = today.AddHours(10), City = "Sofia", Location = "NDK", CategoryId = _musicCategory.Id, CanonicalVenueId = 1, Status = EventStatus.Published },
+            new Event { Id = 2, Name = "Yesterday", Date = today.AddDays(-1).AddHours(20), City = "Sofia", Location = "NDK", CategoryId = _musicCategory.Id, CanonicalVenueId = 1, Status = EventStatus.Published });
+        await _context.SaveChangesAsync();
+
+        var result = await CreateVenueRepository().GetUpcomingEventsByVenueAsync(1, today);
+
+        Assert.Equal("StartedThisMorning", Assert.Single(result).Name);
     }
 }

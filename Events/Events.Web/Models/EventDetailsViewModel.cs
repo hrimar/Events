@@ -9,9 +9,9 @@ public class EventDetailsViewModel : EventViewModel
 {
     public string JsonLd { get; set; } = string.Empty;
 
-    public static EventDetailsViewModel FromEntity(Event eventEntity, string jsonLd)
+    public static EventDetailsViewModel FromEntity(Event eventEntity, string jsonLd, DateTime sofiaToday)
     {
-        var model = Populate(new EventDetailsViewModel(), eventEntity);
+        var model = Populate(new EventDetailsViewModel(), eventEntity, sofiaToday);
         model.JsonLd = jsonLd;
         return model;
     }

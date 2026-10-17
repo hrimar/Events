@@ -1,4 +1,5 @@
 using Events.Services.Interfaces;
+using Events.Services.Time;
 using Events.Web.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -13,11 +14,13 @@ public class TagsController : ControllerBase
 {
     private readonly ITagService _tagService;
     private readonly ILogger<TagsController> _logger;
+    private readonly ISofiaClock _clock;
 
-    public TagsController(ITagService tagService, ILogger<TagsController> logger)
+    public TagsController(ITagService tagService, ILogger<TagsController> logger, ISofiaClock clock)
     {
         _tagService = tagService;
         _logger = logger;
+        _clock = clock;
     }
 
     [HttpGet("popular")]
@@ -25,7 +28,7 @@ public class TagsController : ControllerBase
     {
         try
         {
-            var popularTags = await _tagService.GetPopularTagsAsync(DateTime.Today, maxCount: count, cancellationToken: cancellationToken);
+            var popularTags = await _tagService.GetPopularTagsAsync(_clock.Today, maxCount: count, cancellationToken: cancellationToken);
 
             return Ok(popularTags
                 .Select(t => new TagViewModel { Name = t.Name, EventCount = t.EventCount, Category = t.Category })
@@ -48,7 +51,7 @@ public class TagsController : ControllerBase
                 return Ok(new List<TagViewModel>());
             }
 
-            var matchingTags = await _tagService.GetPopularTagsAsync(DateTime.Today, nameFilter: query, maxCount: count, cancellationToken: cancellationToken);
+            var matchingTags = await _tagService.GetPopularTagsAsync(_clock.Today, nameFilter: query, maxCount: count, cancellationToken: cancellationToken);
 
             return Ok(matchingTags
                 .Select(t => new TagViewModel { Name = t.Name, EventCount = t.EventCount, Category = t.Category })
@@ -71,7 +74,7 @@ public class TagsController : ControllerBase
                 return BadRequest("Invalid category");
             }
 
-            var categoryTags = await _tagService.GetPopularTagsAsync(DateTime.Today, category: categoryEnum, maxCount: count, cancellationToken: cancellationToken);
+            var categoryTags = await _tagService.GetPopularTagsAsync(_clock.Today, category: categoryEnum, maxCount: count, cancellationToken: cancellationToken);
 
             return Ok(categoryTags
                 .Select(t => new TagViewModel { Name = t.Name, EventCount = t.EventCount, Category = t.Category })

@@ -4,6 +4,7 @@
 @using Microsoft.Extensions.Localization
 @inject IStringLocalizer<SharedResources> Localizer
 @inject ISiteUrlProvider SiteUrlProvider
+@inject Events.Services.Time.ISofiaClock SofiaClock
 @{
     ViewData["PageTitle"] = Model.Name + " | " + Localizer["Venue_SeoTitleSuffix"];
     ViewData["Title"] = Model.Name;
@@ -76,7 +77,7 @@
                 </div>
                 <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
                     <a asp-controller="Events" asp-action="Index"
-                       asp-route-fromDate="@DateTime.Today.ToString("yyyy-MM-dd")"
+                       asp-route-fromDate="@SofiaClock.Today.ToString("yyyy-MM-dd")"
                        class="btn btn-outline-primary">
                         <i class="fas fa-calendar me-1"></i>@Localizer["Venue_AllEvents"]
                     </a>

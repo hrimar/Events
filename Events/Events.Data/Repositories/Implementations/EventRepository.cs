@@ -255,7 +255,7 @@ public class EventRepository : IEventRepository
         };
     }
 
-    public async Task<IEnumerable<Event>> GetFeaturedEventsAsync(int count = 10)
+    public async Task<IEnumerable<Event>> GetFeaturedEventsAsync(DateTime fromDate, int count = 10)
     {
         return await _context.Events
             .AsNoTracking()
@@ -264,17 +264,15 @@ public class EventRepository : IEventRepository
             .Include(e => e.CanonicalVenue)
             .Include(e => e.EventTags)
             .ThenInclude(et => et.Tag)
-            // .Date, not the full UtcNow timestamp: Date only ever stores the calendar day
-            // (time-of-day lives in the separate StartTime column) - comparing it against a
-            // full timestamp would drop today's events as soon as it's past midnight, hours
-            // before their actual start time.
-            .Where(e => e.IsFeatured && e.Status == EventStatus.Published && e.Date >= DateTime.UtcNow.Date)
+            // fromDate is the calendar day (Europe/Sofia "today" from the caller), not a full timestamp:
+            // comparing against "now" would drop today's events hours before their actual start time.
+            .Where(e => e.IsFeatured && e.Status == EventStatus.Published && e.Date >= fromDate.Date)
             .OrderBy(e => e.Date)
             .Take(count)
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<Event>> GetUpcomingEventsAsync(int count = 10)
+    public async Task<IEnumerable<Event>> GetUpcomingEventsAsync(DateTime fromDate, int count = 10)
     {
         return await _context.Events
             .AsNoTracking()
@@ -282,8 +280,8 @@ public class EventRepository : IEventRepository
             .Include(e => e.CanonicalVenue)
             .Include(e => e.EventTags)
             .ThenInclude(et => et.Tag)
-            // .Date, not the full UtcNow timestamp - see GetFeaturedEventsAsync above for why.
-            .Where(e => e.Status == EventStatus.Published && e.Date >= DateTime.UtcNow.Date)
+            // Calendar day, not a full timestamp - see GetFeaturedEventsAsync above for why.
+            .Where(e => e.Status == EventStatus.Published && e.Date >= fromDate.Date)
             .OrderBy(e => e.Date)
             .Take(count)
             .ToListAsync();

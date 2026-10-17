@@ -4,6 +4,7 @@ using Events.Models.Enums;
 using Events.Models.Queries;
 using Events.Services.Caching;
 using Events.Services.Implementations;
+using Events.Services.Time;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -16,14 +17,18 @@ public class EventServiceTests
     private readonly Mock<ILogger<EventService>> _loggerMock = new();
     private readonly Mock<IEventCacheInvalidator> _cacheInvalidatorMock = new();
     private readonly IMemoryCache _cache = new MemoryCache(new MemoryCacheOptions());
+    private readonly Mock<ISofiaClock> _clockMock = new();
+
+    private static readonly DateTime SofiaToday = new(2026, 9, 25);
 
     public EventServiceTests()
     {
         _cacheInvalidatorMock.Setup(c => c.Token).Returns(CancellationToken.None);
+        _clockMock.Setup(c => c.Today).Returns(SofiaToday);
     }
 
     private EventService CreateEventService() =>
-        new(_eventRepositoryMock.Object, _loggerMock.Object, _cache, _cacheInvalidatorMock.Object);
+        new(_eventRepositoryMock.Object, _loggerMock.Object, _cache, _cacheInvalidatorMock.Object, _clockMock.Object);
 
     private static readonly DateTime FixedEventDate = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
@@ -202,11 +207,11 @@ public class EventServiceTests
     [Fact]
     public async Task GetFeaturedEventsAsync_CountExceedsLimit_ClampsTo50()
     {
-        _eventRepositoryMock.Setup(r => r.GetFeaturedEventsAsync(50)).ReturnsAsync(Enumerable.Empty<Event>());
+        _eventRepositoryMock.Setup(r => r.GetFeaturedEventsAsync(SofiaToday, 50)).ReturnsAsync(Enumerable.Empty<Event>());
 
         await CreateEventService().GetFeaturedEventsAsync(count: 100);
 
-        _eventRepositoryMock.Verify(r => r.GetFeaturedEventsAsync(50), Times.Once);
+        _eventRepositoryMock.Verify(r => r.GetFeaturedEventsAsync(SofiaToday, 50), Times.Once);
     }
 
     // GetUpcomingEventsAsync
@@ -214,11 +219,11 @@ public class EventServiceTests
     [Fact]
     public async Task GetUpcomingEventsAsync_CountExceedsLimit_ClampsTo100()
     {
-        _eventRepositoryMock.Setup(r => r.GetUpcomingEventsAsync(100)).ReturnsAsync(Enumerable.Empty<Event>());
+        _eventRepositoryMock.Setup(r => r.GetUpcomingEventsAsync(SofiaToday, 100)).ReturnsAsync(Enumerable.Empty<Event>());
 
         await CreateEventService().GetUpcomingEventsAsync(count: 500);
 
-        _eventRepositoryMock.Verify(r => r.GetUpcomingEventsAsync(100), Times.Once);
+        _eventRepositoryMock.Verify(r => r.GetUpcomingEventsAsync(SofiaToday, 100), Times.Once);
     }
 
     // SearchEventsAsync

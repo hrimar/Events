@@ -1,4 +1,5 @@
 using System.Globalization;
+using Events.Services.Time;
 
 namespace Events.Web.Infrastructure.JsonLd;
 
@@ -17,8 +18,6 @@ public static class EventDateTimeHelper
         return startTime.HasValue ? startTime.Value != TimeSpan.Zero : date.TimeOfDay != TimeSpan.Zero;
     }
 
-    private static readonly TimeZoneInfo SofiaTimeZone = ResolveSofiaTimeZone();
-
     // schema.org startDate: full ISO 8601 with the Sofia UTC offset when the time is
     // known, otherwise a date-only value - we never assert a fabricated 00:00:00 start time to Google.
     public static string ToIso8601StartDate(DateTime date, TimeSpan? startTime)
@@ -27,30 +26,16 @@ public static class EventDateTimeHelper
             return date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 
         var localDateTime = startTime.HasValue ? date.Date + startTime.Value : date;
-        var offset = SofiaTimeZone.GetUtcOffset(localDateTime);
+        var offset = SofiaTimeZone.Instance.GetUtcOffset(localDateTime);
 
         return new DateTimeOffset(localDateTime, offset).ToString("yyyy-MM-ddTHH:mm:sszzz", CultureInfo.InvariantCulture);
     }
 
     // An event is past from 00:00 on the calendar day after Date, in Europe/Sofia.
     // StartTime is ignored: a 19:00 show stays current through that whole Sofia day.
-    public static bool IsPastEvent(DateTime date)
+    // sofiaToday comes from ISofiaClock.Today, so this rule never reads the current time itself.
+    public static bool IsPastEvent(DateTime date, DateTime sofiaToday)
     {
-        var todayInSofia = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, SofiaTimeZone).Date;
-        return date.Date < todayInSofia;
-    }
-
-    private static TimeZoneInfo ResolveSofiaTimeZone()
-    {
-        try
-        {
-            // IANA id - works cross-platform on .NET 8 (Windows, Linux with ICU).
-            return TimeZoneInfo.FindSystemTimeZoneById("Europe/Sofia");
-        }
-        catch (TimeZoneNotFoundException)
-        {
-            // Windows-only fallback id, in case ICU/IANA data isn't available.
-            return TimeZoneInfo.FindSystemTimeZoneById("FLE Standard Time");
-        }
+        return date.Date < sofiaToday.Date;
     }
 }

@@ -38,8 +38,9 @@ public interface IEventRepository
 
     Task<(IEnumerable<Event> Events, int TotalCount)> GetFilteredEventsAsync(EventListCriteria criteria);
 
-    Task<IEnumerable<Event>> GetFeaturedEventsAsync(int count = 10);
-    Task<IEnumerable<Event>> GetUpcomingEventsAsync(int count = 10);
+    // fromDate is the calendar day from which events count as upcoming (Europe/Sofia "today").
+    Task<IEnumerable<Event>> GetFeaturedEventsAsync(DateTime fromDate, int count = 10);
+    Task<IEnumerable<Event>> GetUpcomingEventsAsync(DateTime fromDate, int count = 10);
     Task<int> GetTotalEventsCountAsync(EventStatus? status = null);
 
     /// <summary>

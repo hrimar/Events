@@ -12,6 +12,7 @@ using Events.Services.Implementations;
 using Events.Services.Import;
 using Events.Services.Import.Parsers;
 using Events.Services.Interfaces;
+using Events.Services.Time;
 using Events.Web.Options;
 using Events.Web.Services.Email;
 using Microsoft.AspNetCore.Identity;
@@ -267,6 +268,7 @@ static void RegisterServices(WebApplicationBuilder builder)
     // This IMemoryCache is shared - also used below by EventImportBatchCache for the bulk create from .xlsx/.csv admin feature.
     builder.Services.AddMemoryCache();
     builder.Services.AddSingleton<IEventCacheInvalidator, EventCacheInvalidator>();
+    builder.Services.AddSofiaClock();
     builder.Services.AddScoped<IEventService, EventService>();
     builder.Services.AddScoped<ITagService, TagService>();
     builder.Services.AddScoped<ISubCategoryService, SubCategoryService>();

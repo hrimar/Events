@@ -1,6 +1,7 @@
 using Events.Data.Repositories.Interfaces;
 using Events.Models.Entities;
 using Events.Services.Implementations;
+using Events.Services.Time;
 using Microsoft.Extensions.Logging;
 using Moq;
 
@@ -10,8 +11,9 @@ public class VenueServiceTests
 {
     private readonly Mock<IVenueRepository> _repositoryMock = new();
     private readonly Mock<ILogger<VenueService>> _loggerMock = new();
+    private readonly Mock<ISofiaClock> _clockMock = new();
 
-    private VenueService CreateVenueService() => new(_repositoryMock.Object, _loggerMock.Object);
+    private VenueService CreateVenueService() => new(_repositoryMock.Object, _loggerMock.Object, _clockMock.Object);
 
     private static CanonicalVenue CreateVenue(int id = 1, string name = "NDK") =>
         new() { Id = id, Name = name, NameEn = name, Slug = "ndk", City = "Sofia" };

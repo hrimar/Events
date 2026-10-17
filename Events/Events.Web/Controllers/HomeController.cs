@@ -3,6 +3,7 @@ using System.Security.Claims;
 using Events.Models;
 using Events.Models.Enums;
 using Events.Services.Interfaces;
+using Events.Services.Time;
 using Events.Web.Infrastructure;
 using Events.Web.Localization;
 using Events.Web.Models;
@@ -21,6 +22,7 @@ namespace Events.Web.Controllers
         private readonly ISiteContentService _siteContentService;
         private readonly ISeoMetaService _seoMetaService;
         private readonly IStringLocalizer<SharedResources> _localizer;
+        private readonly ISofiaClock _clock;
 
         public HomeController(
             ILogger<HomeController> logger,
@@ -29,7 +31,8 @@ namespace Events.Web.Controllers
             IUserFavoriteEventService favoriteEventService,
             ISiteContentService siteContentService,
             ISeoMetaService seoMetaService,
-            IStringLocalizer<SharedResources> localizer)
+            IStringLocalizer<SharedResources> localizer,
+            ISofiaClock clock)
         {
             _logger = logger;
             _eventService = eventService;
@@ -38,13 +41,14 @@ namespace Events.Web.Controllers
             _siteContentService = siteContentService;
             _seoMetaService = seoMetaService;
             _localizer = localizer;
+            _clock = clock;
         }
 
         public async Task<IActionResult> Index()
         {
             try
             {
-                var today = DateTime.Today;
+                var today = _clock.Today;
                 var dayWindowEnd = today.AddDays(5);
 
                 var localizedCategories = EventsPageViewModel.GetAvailableCategories(_localizer);
@@ -63,7 +67,7 @@ namespace Events.Web.Controllers
                     var favorites = await _favoriteEventService.GetUserFavoritesAsync(userId);
                     savedEvents = favorites
                         .Where(f => f.Event != null && f.Event.Date >= today)
-                        .Select(f => EventViewModel.FromEntity(f.Event!))
+                        .Select(f => EventViewModel.FromEntity(f.Event!, today))
                         .OrderByDescending(e => e.Date)
                         .ToList();
                 }
@@ -128,7 +132,7 @@ namespace Events.Web.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error loading home page");
-                return View(new HomePageViewModel());
+                return View(new HomePageViewModel { WeeklyEvents = WeeklyEventsViewModel.Empty(_clock.Today) });
             }
         }
 
@@ -137,7 +141,7 @@ namespace Events.Web.Controllers
         {
             try
             {
-                var from = (fromDate ?? DateTime.Today).Date;
+                var from = (fromDate ?? _clock.Today).Date;
                 var to = from.AddDays(5);
                 var localizedCategories = EventsPageViewModel.GetAvailableCategories(_localizer);
                 var weeklyEvents = await BuildWeeklyEventsViewModelAsync(from, to, localizedCategories);
@@ -146,7 +150,7 @@ namespace Events.Web.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error loading weekly events partial for date {FromDate}", fromDate);
-                return PartialView("_WeeklyEvents", new WeeklyEventsViewModel());
+                return PartialView("_WeeklyEvents", WeeklyEventsViewModel.Empty(_clock.Today));
             }
         }
 
@@ -155,6 +159,8 @@ namespace Events.Web.Controllers
             DateTime to,
             List<CategoryDisplayItem> localizedCategories)
         {
+            var today = _clock.Today;
+
             // Compute weekend bounds first so we can include them in the single DB query.
             // Rule: if from is Mon-Thu ? next Fri-Sun; if from is Fri ? this Fri-Sun;
             //       if from is Sat ? last Fri-Sun (Fri+Sat+Sun); if from is Sun ? last Fri-Sun.
@@ -174,7 +180,7 @@ namespace Events.Web.Controllers
             var fetchEnd = new[] { calMonthEnd, weekendEnd }.Max();
 
             var allFetchedEvents = await _eventService.GetEventsByDateRangeAsync(fetchStart, fetchEnd);
-            var allPublished = EventViewModel.FromEntities(allFetchedEvents.Where(e => e.Status == EventStatus.Published).OrderBy(e => e.Date)).ToList();
+            var allPublished = EventViewModel.FromEntities(allFetchedEvents.Where(e => e.Status == EventStatus.Published).OrderBy(e => e.Date), today).ToList();
 
             // Subset for tabs 1-2: only the selected 7-day window
             var windowEvents = allPublished.Where(e => e.Date.Date >= from && e.Date.Date <= to).ToList();
@@ -187,6 +193,7 @@ namespace Events.Web.Controllers
                 return new DayEventsViewModel
                 {
                     Date = date,
+                    IsToday = date == today,
                     Events = windowEvents.Where(e => e.Date.Date == date).ToList()
                 };
             }).ToList();
@@ -218,6 +225,7 @@ namespace Events.Web.Controllers
 
             return new WeeklyEventsViewModel
             {
+                Today = today,
                 ByDay = byDay,
                 ByCategory = byCategory,
                 WeekendEvents = weekendEvents,

@@ -3,6 +3,10 @@
 @using Events.Web.Localization
 @using Microsoft.Extensions.Localization
 @inject IStringLocalizer<SharedResources> Localizer
+@inject Events.Services.Time.ISofiaClock SofiaClock
+@{
+    var sofiaToday = SofiaClock.Today;
+}
 
 @* Title/MetaDescription are set in HomeController.Index (default + admin PageSeoMeta
    override) - not here, so this view doesn't clobber the admin-configured value. *@
@@ -120,8 +124,8 @@
             </div>
             <div class="col-md-2">
                 <a asp-action="Index" asp-controller="Events"
-                   asp-route-fromDate="@DateTime.Today.ToString("yyyy-MM-dd")"
-                   asp-route-toDate="@DateTime.Today.ToString("yyyy-MM-dd")"
+                   asp-route-fromDate="@sofiaToday.ToString("yyyy-MM-dd")"
+                   asp-route-toDate="@sofiaToday.ToString("yyyy-MM-dd")"
                    class="text-decoration-none text-body stat-card">
                     <h3 class="text-success">@Model.TodayEvents</h3>
                     <p class="text-muted mb-0">@Localizer["Home_TodayEvents"]</p>
@@ -129,8 +133,8 @@
             </div>
             <div class="col-md-2">
                 <a asp-action="Index" asp-controller="Events"
-                   asp-route-fromDate="@DateTime.Today.ToString("yyyy-MM-dd")"
-                   asp-route-toDate="@DateTime.Today.AddDays(6).ToString("yyyy-MM-dd")"
+                   asp-route-fromDate="@sofiaToday.ToString("yyyy-MM-dd")"
+                   asp-route-toDate="@sofiaToday.AddDays(6).ToString("yyyy-MM-dd")"
                    class="text-decoration-none text-body stat-card">
                     <h3 class="text-info">@Model.Next7DaysEvents</h3>
                     <p class="text-muted mb-0">@Localizer["Home_Next7Days"]</p>

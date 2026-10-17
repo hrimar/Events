@@ -1,6 +1,7 @@
 using System.Text;
 using Events.Models.Enums;
 using Events.Services.Interfaces;
+using Events.Services.Time;
 using Events.Web.Infrastructure;
 using Events.Web.Infrastructure.Sitemap;
 using Microsoft.AspNetCore.Mvc;
@@ -12,12 +13,14 @@ public class SeoController : Controller
     private readonly IEventService _eventService;
     private readonly IVenueService _venueService;
     private readonly ISiteUrlProvider _siteUrlProvider;
+    private readonly ISofiaClock _clock;
 
-    public SeoController(IEventService eventService, IVenueService venueService, ISiteUrlProvider siteUrlProvider)
+    public SeoController(IEventService eventService, IVenueService venueService, ISiteUrlProvider siteUrlProvider, ISofiaClock clock)
     {
         _eventService = eventService;
         _venueService = venueService;
         _siteUrlProvider = siteUrlProvider;
+        _clock = clock;
     }
 
     // GET /sitemap.xml
@@ -44,7 +47,7 @@ public class SeoController : Controller
 
         // Only published, not-yet-past events - a stale sitemap entry for a finished
         // event has no SEO value and Google discourages listing past events at all.
-        var (upcomingEvents, _) = await _eventService.GetPagedEventsAsync(1, int.MaxValue, EventStatus.Published, fromDate: DateTime.Today);
+        var (upcomingEvents, _) = await _eventService.GetPagedEventsAsync(1, int.MaxValue, EventStatus.Published, fromDate: _clock.Today);
 
         entries.AddRange(upcomingEvents.Select(e => new SitemapEntry($"{baseUrl}/Events/Details/{e.Id}", e.UpdatedAt)));
 

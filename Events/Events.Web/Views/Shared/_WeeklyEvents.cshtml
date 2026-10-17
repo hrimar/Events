@@ -12,8 +12,8 @@
     var nextFromDesktop = Model.FromDate.AddDays(desktopDayCount).ToString("yyyy-MM-dd");
     var prevFromMobile = Model.FromDate.AddDays(-mobileDayCount).ToString("yyyy-MM-dd");
     var nextFromMobile = Model.FromDate.AddDays(mobileDayCount).ToString("yyyy-MM-dd");
-    var todayFrom = DateTime.Today.ToString("yyyy-MM-dd");
-    var isCurrentWeek = Model.FromDate.Date == DateTime.Today.Date;
+    var todayFrom = Model.Today.ToString("yyyy-MM-dd");
+    var isCurrentWeek = Model.FromDate.Date == Model.Today.Date;
     var desktopPeriodLabel = Model.FromDate.ToString("d MMM", displayCulture) + " – " + Model.FromDate.AddDays(desktopDayCount - 1).ToString("d MMM yyyy", displayCulture);
     var mobilePeriodLabel = Model.FromDate.ToString("d MMM", displayCulture) + " – " + Model.FromDate.AddDays(mobileDayCount - 1).ToString("d MMM yyyy", displayCulture);
     var sectionTitle = isCurrentWeek ? Localizer["Home_WeeklySectionTitle"].Value : Localizer["Home_UpcomingSectionTitle"].Value;
@@ -496,7 +496,7 @@
                                                 {
                                                     var cellDate = mCalStart.AddDays(cell + col);
                                                     var isCurrentMonth = cellDate.Month == monthStart.Month;
-                                                    var isTodayCell = cellDate.Date == DateTime.Today;
+                                                    var isTodayCell = cellDate.Date == Model.Today.Date;
                                                     var isInPeriod = isCurrentMonth
                                                         && cellDate.Date >= Model.FromDate.Date
                                                         && cellDate.Date <= Model.ToDate.Date;

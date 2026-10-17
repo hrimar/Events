@@ -3,6 +3,7 @@ using Events.Models.DTOs;
 using Events.Models.Entities;
 using Events.Services.Helpers;
 using Events.Services.Interfaces;
+using Events.Services.Time;
 using Microsoft.Extensions.Logging;
 
 namespace Events.Services.Implementations;
@@ -11,11 +12,13 @@ public class VenueService : IVenueService
 {
     private readonly IVenueRepository _repository;
     private readonly ILogger<VenueService> _logger;
+    private readonly ISofiaClock _clock;
 
-    public VenueService(IVenueRepository repository, ILogger<VenueService> logger)
+    public VenueService(IVenueRepository repository, ILogger<VenueService> logger, ISofiaClock clock)
     {
         _repository = repository;
         _logger = logger;
+        _clock = clock;
     }
 
     public async Task<CanonicalVenue?> GetByIdAsync(int id) => await _repository.GetByIdAsync(id);
@@ -25,13 +28,13 @@ public class VenueService : IVenueService
     public async Task<IEnumerable<CanonicalVenue>> GetAllAsync() => await _repository.GetAllAsync();
 
     public async Task<IEnumerable<VenueWithStatsDto>> GetAllWithStatsAsync() =>
-        await _repository.GetAllWithStatsAsync();
+        await _repository.GetAllWithStatsAsync(_clock.Today);
 
     public async Task<IEnumerable<UnmappedLocationDto>> GetUnmappedLocationsAsync() =>
         await _repository.GetUnmappedLocationsAsync();
 
     public async Task<IEnumerable<Event>> GetUpcomingEventsByVenueAsync(int venueId) =>
-        await _repository.GetUpcomingEventsByVenueAsync(venueId);
+        await _repository.GetUpcomingEventsByVenueAsync(venueId, _clock.Today);
 
     public async Task<CanonicalVenue> CreateAsync(CanonicalVenue venue) => await _repository.AddAsync(venue);
 

@@ -250,7 +250,7 @@ public class EventRepositoryTests : IDisposable
         _context.Events.AddRange(featuredFuture, featuredPast, notFeatured, featuredDraft);
         await _context.SaveChangesAsync();
 
-        var result = await CreateEventRepository().GetFeaturedEventsAsync();
+        var result = await CreateEventRepository().GetFeaturedEventsAsync(today);
 
         Assert.Equal("FeaturedFuture", Assert.Single(result).Name);
     }

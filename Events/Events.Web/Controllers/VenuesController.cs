@@ -1,6 +1,7 @@
 using Events.Models;
 using Events.Models.Entities;
 using Events.Services.Interfaces;
+using Events.Services.Time;
 using Events.Web.Infrastructure;
 using Events.Web.Infrastructure.JsonLd;
 using Events.Web.Localization;
@@ -18,19 +19,22 @@ public class VenuesController : Controller
     private readonly ISiteUrlProvider _siteUrlProvider;
     private readonly ISeoMetaService _seoMetaService;
     private readonly IStringLocalizer<SharedResources> _localizer;
+    private readonly ISofiaClock _clock;
 
     public VenuesController(
         IVenueService venueService,
         ILogger<VenuesController> logger,
         ISiteUrlProvider siteUrlProvider,
         ISeoMetaService seoMetaService,
-        IStringLocalizer<SharedResources> localizer)
+        IStringLocalizer<SharedResources> localizer,
+        ISofiaClock clock)
     {
         _venueService = venueService;
         _logger = logger;
         _siteUrlProvider = siteUrlProvider;
         _seoMetaService = seoMetaService;
         _localizer = localizer;
+        _clock = clock;
     }
 
     public async Task<IActionResult> Index(string? search = null)
@@ -105,7 +109,7 @@ public class VenuesController : Controller
             return NotFound();
 
         var upcomingEvents = (await _venueService.GetUpcomingEventsByVenueAsync(venue.Id)).ToList();
-        var eventViewModels = EventViewModel.FromEntities(upcomingEvents).AsReadOnly();
+        var eventViewModels = EventViewModel.FromEntities(upcomingEvents, _clock.Today).AsReadOnly();
 
         var baseUrl = _siteUrlProvider.BaseUrl;
 

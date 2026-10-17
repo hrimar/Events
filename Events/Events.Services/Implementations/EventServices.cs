@@ -1,5 +1,6 @@
 using Events.Services.Caching;
 using Events.Services.Interfaces;
+using Events.Services.Time;
 using Events.Data.Repositories.Interfaces;
 using Events.Models.Entities;
 using Events.Models.Enums;
@@ -23,17 +24,20 @@ public class EventService : IEventService
     private readonly ILogger<EventService> _logger;
     private readonly IMemoryCache _cache;
     private readonly IEventCacheInvalidator _cacheInvalidator;
+    private readonly ISofiaClock _clock;
 
     public EventService(
         IEventRepository eventRepository,
         ILogger<EventService> logger,
         IMemoryCache cache,
-        IEventCacheInvalidator cacheInvalidator)
+        IEventCacheInvalidator cacheInvalidator,
+        ISofiaClock clock)
     {
         _eventRepository = eventRepository;
         _logger = logger;
         _cache = cache;
         _cacheInvalidator = cacheInvalidator;
+        _clock = clock;
     }
 
     public async Task<Event?> GetEventByIdAsync(int id, CancellationToken cancellationToken = default)
@@ -184,7 +188,7 @@ public class EventService : IEventService
         try
         {
             count = Math.Min(count, 50);
-            return await _eventRepository.GetFeaturedEventsAsync(count);
+            return await _eventRepository.GetFeaturedEventsAsync(_clock.Today, count);
         }
         catch (Exception ex)
         {
@@ -198,7 +202,7 @@ public class EventService : IEventService
         try
         {
             count = Math.Min(count, 100);
-            return await _eventRepository.GetUpcomingEventsAsync(count);
+            return await _eventRepository.GetUpcomingEventsAsync(_clock.Today, count);
         }
         catch (Exception ex)
         {

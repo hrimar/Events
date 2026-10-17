@@ -8,6 +8,7 @@ using Events.Data.Repositories.Interfaces;
 using Events.Services.Caching;
 using Events.Services.Implementations;
 using Events.Services.Interfaces;
+using Events.Services.Time;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -63,6 +64,8 @@ var host = new HostBuilder()
         // is its own process/DI container, so this cache never persists or interacts with Events.Web's.
         services.AddMemoryCache();
         services.AddSingleton<IEventCacheInvalidator, EventCacheInvalidator>();
+        // Required by EventService/VenueService constructors (Europe/Sofia "today").
+        services.AddSofiaClock();
         services.AddScoped<IEventService, EventService>();
         services.AddScoped<ISubCategoryService, SubCategoryService>();
         services.AddScoped<ITagService, TagService>();

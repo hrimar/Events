@@ -20,12 +20,13 @@ public interface IVenueRepository
     Task<VenueAlias> AddAliasAsync(VenueAlias alias);
     Task DeleteAliasAsync(int aliasId);
 
-    // Returns venues with precomputed alias count and event counts for admin list
-    Task<IEnumerable<VenueWithStatsDto>> GetAllWithStatsAsync();
+    // Returns venues with precomputed alias count and event counts for admin list.
+    // fromDate is the calendar day from which events count as upcoming (Europe/Sofia "today").
+    Task<IEnumerable<VenueWithStatsDto>> GetAllWithStatsAsync(DateTime fromDate);
 
     // Returns distinct unmapped location strings grouped by count, ordered by EventCount desc
     Task<IEnumerable<UnmappedLocationDto>> GetUnmappedLocationsAsync();
 
     // Returns upcoming published events for a given venue, ordered by date
-    Task<IEnumerable<Event>> GetUpcomingEventsByVenueAsync(int venueId);
+    Task<IEnumerable<Event>> GetUpcomingEventsByVenueAsync(int venueId, DateTime fromDate);
 }
