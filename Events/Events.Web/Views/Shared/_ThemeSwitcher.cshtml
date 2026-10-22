@@ -1,25 +1,15 @@
-<div class="dropdown theme-switcher">
-    <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" id="themeDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-        <i class="fas fa-palette me-1"></i>
-        <span id="current-theme-name">Theme</span>
-    </button>
-    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="themeDropdown">
-        <li>
-            <h6 class="dropdown-header">Choose Theme</h6>
-        </li>
-        <li>
-            <a class="dropdown-item theme-option" href="#" data-theme="light">
-                <i class="fas fa-sun me-2 text-warning"></i>
-                Light Theme
-                <small class="d-block text-muted">Bright and clean</small>
-            </a>
-        </li>
-        <li>
-            <a class="dropdown-item theme-option" href="#" data-theme="dark">
-                <i class="fas fa-moon me-2 text-info"></i>
-                Dark Theme
-                <small class="d-block text-muted">Easy on the eyes</small>
-            </a>
-        </li>
-    </ul>
-</div>
+@using Events.Web.Resources
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<SharedResources> Localizer
+
+@* Icon-only theme toggle: moon in the light theme, sun in the dark theme (icons switch via CSS on
+   html[data-theme], so there is no flash). aria-label/title name the theme the button switches to
+   and are updated by theme-switcher.js. *@
+<button type="button" class="btn btn-link theme-toggle p-1"
+        data-label-dark="@Localizer["Theme_SwitchToDark"]"
+        data-label-light="@Localizer["Theme_SwitchToLight"]"
+        aria-label="@Localizer["Theme_SwitchToDark"]"
+        title="@Localizer["Theme_SwitchToDark"]">
+    <i class="fas fa-moon theme-toggle-icon-dark" aria-hidden="true"></i>
+    <i class="fas fa-sun theme-toggle-icon-light" aria-hidden="true"></i>
+</button>

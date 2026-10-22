@@ -125,7 +125,10 @@
                         <div class="text-end">
                             @if (User.Identity?.IsAuthenticated ?? false)
                             {
-                                <button class="btn btn-outline-danger mb-2" onclick="toggleFavorite(@Model.Id)">
+                                <button class="btn btn-outline-danger mb-2" onclick="toggleFavorite(@Model.Id)"
+                                        data-title-add="@Localizer["Favorites_AddTitle"]"
+                                        data-title-remove="@Localizer["Favorites_RemoveTitle"]"
+                                        data-error-message="@Localizer["Favorites_Error"]">
                                     <i class="fas fa-heart"></i> @Localizer["Details_Save"]
                                 </button>
                             }

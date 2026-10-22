@@ -1,4 +1,5 @@
 @model Events.Web.Models.EventsPageViewModel
+@using System.Globalization
 @using Events.Web.Resources
 @using Events.Web.Localization
 @using Microsoft.Extensions.Localization
@@ -6,6 +7,8 @@
 
 @{
     ViewData["Title"] = Model.PageTitle;
+    var isEnglish = CultureHelper.IsEnglish();
+    var shortDateFormat = CultureHelper.ShortDateFormat(isEnglish);
     if (!string.IsNullOrWhiteSpace(Model.PageMetaDescription))
     {
         ViewData["MetaDescription"] = Model.PageMetaDescription;
@@ -65,15 +68,15 @@
             <!-- Date From -->
             <div class="col-md-2">
                 <label for="fromDate" class="form-label">@Localizer["Events_FromDate"]</label>
-                <input type="date" class="form-control" id="fromDate" name="fromDate" 
-                       value="@Model.FromDate?.ToString("yyyy-MM-dd")">
+                <input type="text" class="form-control js-date-input" id="fromDate" name="fromDate"
+                       value="@Model.FromDate?.ToString("yyyy-MM-dd")" autocomplete="off">
             </div>
 
             <!-- Date To -->
             <div class="col-md-2">
                 <label for="toDate" class="form-label">@Localizer["Events_ToDate"]</label>
-                <input type="date" class="form-control" id="toDate" name="toDate" 
-                       value="@Model.ToDate?.ToString("yyyy-MM-dd")">
+                <input type="text" class="form-control js-date-input" id="toDate" name="toDate"
+                       value="@Model.ToDate?.ToString("yyyy-MM-dd")" autocomplete="off">
             </div>
 
             <!-- Actions -->
@@ -91,15 +94,17 @@
         @if(Model.PopularTags.Any())
         {
             <div class="mt-4">
-                <div class="d-flex align-items-center justify-content-between mb-3">
-                    <h6 class="mb-0">@Localizer["Events_PopularTags"]</h6>
-                    <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#tagCloud">
+                <div class="d-flex align-items-center mb-3">
+                    <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#tagCloud"
+                            aria-expanded="@(Model.SelectedTags.Any() ? "true" : "false")" aria-controls="tagCloud">
                         <i class="fas fa-tags"></i> @Localizer["Events_BrowseTags"]
                     </button>
                 </div>
                 
+                @* The "Popular tags" heading lives inside the collapsible panel, so it is only shown together with the tags. *@
                 <div class="collapse @(Model.SelectedTags.Any() ? "show" : "")" id="tagCloud">
                     <div class="bg-surface p-3 rounded border">
+                        <h6 class="mb-3">@Localizer["Events_PopularTags"]</h6>
                         <!-- Selected Tags -->
                         @if(Model.SelectedTags.Any())
                         {
@@ -271,7 +276,7 @@
         <!-- Results Header -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
-                <h2>@Model.PageTitle</h2>
+                <h1 class="h2">@Model.Heading</h1>
                 @if(Model.HasActiveFilters)
                 {
                     <p class="text-muted mb-0">
@@ -289,18 +294,34 @@
                         {
                             <span class="badge bg-success">@Localizer["Events_FilterFreeEvents"]</span>
                         }
+                        @if(Model.IsFreeFilter == false)
+                        {
+                            <span class="badge bg-warning">@Localizer["Events_FilterPaidEvents"]</span>
+                        }
+                        @if(Model.HasCustomFromDate && Model.FromDate.HasValue)
+                        {
+                            <span class="badge bg-secondary">@Localizer["Events_FilterFromDate"] @Model.FromDate.Value.ToString(shortDateFormat, CultureInfo.InvariantCulture)</span>
+                        }
+                        @if(Model.ToDate.HasValue)
+                        {
+                            <span class="badge bg-secondary">@Localizer["Events_FilterToDate"] @Model.ToDate.Value.ToString(shortDateFormat, CultureInfo.InvariantCulture)</span>
+                        }
                         @if(Model.SelectedTags.Any())
                         {
-                            <span class="badge bg-secondary">@Model.SelectedTags.Count @Localizer["Events_Tag"]@(Model.SelectedTags.Count != 1 ? "s" : "")</span>
+                            <span class="badge bg-secondary">@Localizer["Events_Tags"]: @Model.SelectedTags.Count</span>
                         }
                     </p>
                 }
             </div>
-            <small class="text-muted">
-                @Localizer["Events_Showing"] @((Model.Events.CurrentPage - 1) * Model.Events.PageSize + 1) - 
-                @Math.Min(Model.Events.CurrentPage * Model.Events.PageSize, Model.Events.TotalCount) 
-                @Localizer["Events_Of"] @Model.Events.TotalCount events
-            </small>
+            @if (Model.Events.TotalCount > 0)
+            {
+                <small class="text-muted">
+                    @Localizer["Events_ShowingRange",
+                        (Model.Events.CurrentPage - 1) * Model.Events.PageSize + 1,
+                        Math.Min(Model.Events.CurrentPage * Model.Events.PageSize, Model.Events.TotalCount),
+                        Model.Events.TotalCount]
+                </small>
+            }
         </div>
         
         <!-- Events Grid -->
@@ -376,7 +397,30 @@
     </div>
 </section>
 
+@section Styles {
+    <link rel="stylesheet" href="~/lib/flatpickr/dist/flatpickr.min.css" />
+}
+
 @section Scripts {
+    <script src="~/lib/flatpickr/dist/flatpickr.min.js"></script>
+    <script src="~/lib/flatpickr/dist/l10n/bg.js"></script>
+    <script>
+        // Date filters: the visible field shows dd.mm.yyyy (BG) or dd/mm/yyyy (EN), weeks start on Monday,
+        // while the submitted value stays ISO yyyy-MM-dd (the server-side contract is unchanged).
+        (function () {
+            const isEnglish = @Json.Serialize(isEnglish);
+            const baseLocale = isEnglish ? flatpickr.l10ns.default : flatpickr.l10ns.bg;
+
+            flatpickr('.js-date-input', {
+                locale: Object.assign({}, baseLocale, { firstDayOfWeek: 1 }),
+                dateFormat: 'Y-m-d',
+                altInput: true,
+                altFormat: isEnglish ? 'd/m/Y' : 'd.m.Y',
+                allowInput: true,
+                disableMobile: true
+            });
+        })();
+    </script>
     <!-- Enhanced search and tag functionality -->
     <script>
         // Selected tags array

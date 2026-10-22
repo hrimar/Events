@@ -563,25 +563,30 @@ footer {
     border-color: var(--primary-color);
 }
 
-/* Theme Switcher Styles */
-.theme-switcher {
-    position: relative;
+/* Theme toggle: moon in the light theme, sun in the dark theme */
+.theme-toggle {
+    color: var(--text-primary);
+    font-size: 1.1rem;
+    line-height: 1;
+    text-decoration: none;
 }
 
-    .theme-switcher .dropdown-menu {
-        background-color: var(--card-bg);
-        border-color: var(--border-color);
-        box-shadow: var(--shadow);
+    .theme-toggle:hover,
+    .theme-toggle:focus-visible {
+        color: var(--primary-color);
     }
 
-    .theme-switcher .dropdown-item {
-        color: var(--text-primary);
-    }
+.theme-toggle-icon-light {
+    display: none;
+}
 
-        .theme-switcher .dropdown-item:hover {
-            background-color: var(--sidebar-bg);
-            color: var(--primary-color);
-        }
+[data-theme="dark"] .theme-toggle-icon-dark {
+    display: none;
+}
+
+[data-theme="dark"] .theme-toggle-icon-light {
+    display: inline-block;
+}
 
 /* Event Image Container - Dark Theme Friendly */
 .event-image-container {

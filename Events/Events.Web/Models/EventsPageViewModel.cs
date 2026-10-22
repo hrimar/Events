@@ -21,6 +21,12 @@ public class EventsPageViewModel
     public DateTime? FromDate { get; set; }
     public DateTime? ToDate { get; set; }
     public string PageTitle { get; set; } = string.Empty;
+
+    // Visible H1 ("All events in Sofia", "Music in Sofia"), independent of the SEO <title> (PageTitle).
+    public string Heading { get; set; } = string.Empty;
+
+    // True only when the visitor picked a start date; the implicit default (today) is not a filter.
+    public bool HasCustomFromDate { get; set; }
     public string? PageMetaDescription { get; set; }
 
     public List<SelectListItem> AvailableSubCategories { get; set; } = new();
@@ -77,15 +83,14 @@ public class EventsPageViewModel
         new() { Value = "subcategory", DisplayName = "Subcategory", IconClass = "fas fa-layer-group" }
     };
 
-    // Helper properties for UI
+    // Helper properties for UI. Sorting is not a filter, and neither is the default start date (today).
     public bool HasActiveFilters => !string.IsNullOrEmpty(CurrentCategory) ||
                                    !string.IsNullOrEmpty(SelectedSubCategory) ||
                                    IsFreeFilter.HasValue ||
                                    !string.IsNullOrEmpty(SearchTerm) ||
                                    SelectedTags.Any() || // Include tag filtering
-                                   FromDate.HasValue ||
-                                   ToDate.HasValue ||
-                                   !string.IsNullOrEmpty(SortBy);
+                                   HasCustomFromDate ||
+                                   ToDate.HasValue;
 
     public string FiltersQueryString
     {
@@ -126,9 +131,10 @@ public class EventsPageViewModel
     }
 
     // Get popular tags grouped by category
+    // Only categories with a display name (Undefined has none) - otherwise the group label renders empty.
     public Dictionary<EventCategory, List<TagViewModel>> PopularTagsByCategory =>
         PopularTags
-            .Where(t => t.Category.HasValue)
+            .Where(t => t.Category.HasValue && t.Category.Value != EventCategory.Undefined)
             .GroupBy(t => t.Category!.Value)
             .ToDictionary(g => g.Key, g => g.ToList());
 

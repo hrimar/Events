@@ -1,108 +1,41 @@
-// Simplified Theme Management System
+// Theme toggle: switches between the light and dark theme and remembers the choice in localStorage.
+// The initial theme (saved choice, else system preference) is applied by the inline script in the
+// <head> of _Layout.cshtml, before the page renders, so there is no flash of the wrong theme.
 class ThemeManager {
-    constructor() {
-        this.themes = {
-            light: { name: 'Light Theme', icon: 'fas fa-sun' },
-            dark: { name: 'Dark Theme', icon: 'fas fa-moon' }
-        };
-        
-        this.init();
+    constructor(toggleButton) {
+        this.toggleButton = toggleButton;
+        this.toggleButton.addEventListener('click', () => this.toggle());
+        this.updateToggleLabel();
     }
 
-    init() {
-        this.loadSavedTheme();
-        this.bindEvents();
-        this.updateThemeDisplay();
+    get currentTheme() {
+        return document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
     }
 
-    loadSavedTheme() {
-        // Try to get saved theme, fallback to system preference, then light
-        const savedTheme = localStorage.getItem('selectedTheme');
-        
-        if (savedTheme && this.themes[savedTheme]) {
-            this.applyTheme(savedTheme);
-        } else {
-            // Smart default - check system preference once
-            const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-            const defaultTheme = prefersDark ? 'dark' : 'light';
-            this.applyTheme(defaultTheme);
-        }
-    }
+    toggle() {
+        const nextTheme = this.currentTheme === 'dark' ? 'light' : 'dark';
 
-    bindEvents() {
-        // Theme switcher clicks
-        document.addEventListener('click', (e) => {
-            if (e.target.closest('.theme-option')) {
-                e.preventDefault();
-                const themeId = e.target.closest('.theme-option').dataset.theme;
-                this.switchTheme(themeId);
-            }
-        });
-    }
-
-    switchTheme(themeId) {
-        localStorage.setItem('selectedTheme', themeId);
-        this.applyTheme(themeId);
-        this.updateThemeDisplay();
-        this.showToast(`Switched to ${this.themes[themeId]?.name || themeId}`, 'success');
-    }
-
-    applyTheme(themeId) {
-        document.documentElement.setAttribute('data-theme', themeId);
-    }
-
-    updateThemeDisplay() {
-        const currentTheme = localStorage.getItem('selectedTheme') || 'light';
-        const themeNameElement = document.getElementById('current-theme-name');
-        
-        if (themeNameElement) {
-            themeNameElement.textContent = this.themes[currentTheme]?.name || 'Light Theme';
+        try {
+            localStorage.setItem('selectedTheme', nextTheme);
+        } catch {
+            // Storage can be unavailable (private mode, blocked site data) - the theme still switches for this page.
         }
 
-        // Update active state in dropdown
-        document.querySelectorAll('.theme-option').forEach(option => {
-            const isActive = option.dataset.theme === currentTheme;
-            option.classList.toggle('active', isActive);
-        });
+        document.documentElement.setAttribute('data-theme', nextTheme);
+        this.updateToggleLabel();
     }
 
-    showToast(message, type = 'info') {
-        const toast = document.createElement('div');
-        toast.className = `position-fixed top-0 end-0 m-3 alert alert-${type === 'success' ? 'success' : 'info'} alert-dismissible fade show`;
-        toast.style.zIndex = '9999';
-        toast.innerHTML = `
-            <i class="fas fa-${type === 'success' ? 'check' : 'info-circle'} me-2"></i>
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        `;
-        
-        document.body.appendChild(toast);
-        
-        setTimeout(() => {
-            if (document.body.contains(toast)) {
-                toast.classList.remove('show');
-                setTimeout(() => {
-                    if (document.body.contains(toast)) {
-                        document.body.removeChild(toast);
-                    }
-                }, 150);
-            }
-        }, 3000);
+    // The label names the theme the button switches to (localized texts come from data-label-* attributes).
+    updateToggleLabel() {
+        const label = this.currentTheme === 'dark'
+            ? this.toggleButton.dataset.labelLight
+            : this.toggleButton.dataset.labelDark;
+
+        this.toggleButton.setAttribute('aria-label', label);
+        this.toggleButton.setAttribute('title', label);
     }
 }
 
-// Initialize theme manager when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-    new ThemeManager();
-    
-    // Initialize theme immediately to prevent flash
-    const savedTheme = localStorage.getItem('selectedTheme');
-    
-    if (savedTheme) {
-        document.documentElement.setAttribute('data-theme', savedTheme);
-    } else {
-        // Smart default based on system preference
-        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-        document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
-    }
+    document.querySelectorAll('.theme-toggle').forEach(button => new ThemeManager(button));
 });

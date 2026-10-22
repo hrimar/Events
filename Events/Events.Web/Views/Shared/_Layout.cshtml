@@ -63,7 +63,7 @@
             <meta property="og:url" content="@ViewData["OgUrl"]" />
         }
         <meta property="og:type" content="@(ViewData["OgType"] ?? "website")" />
-        <meta property="og:site_name" content="Sofia Events" />
+        <meta property="og:site_name" content="Go Sofia" />
 
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="@(ViewData["OgTitle"] ?? ViewData["Title"])" />
@@ -80,8 +80,8 @@
 <nav class="navbar navbar-expand-lg shadow-sm">
     <div class="container-grid">
         <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">
-            <img src="~/images/logo.jpeg" alt="Go Sofia Events" class="navbar-logo" width="200" height="70" loading="eager" decoding="async" fetchpriority="high" />
-            <span class="visually-hidden">Sofia Events</span>
+            <img src="~/images/logo.jpeg" alt="Go Sofia" class="navbar-logo" width="200" height="70" loading="eager" decoding="async" fetchpriority="high" />
+            <span class="visually-hidden">Go Sofia</span>
         </a>
         
         <!-- Mobile/Tablet controls: search toggle + hamburger, kept on a single row with the logo -->
@@ -149,7 +149,7 @@
             <div class="d-none d-lg-flex flex-grow-1 mx-4 position-relative">
                 <form asp-area="" asp-controller="Events" asp-action="Index" method="get" class="d-flex w-100">
                     <input class="form-control me-2" type="search" name="search" id="navbar-search" 
-                           placeholder="Search events or #tags..." autocomplete="off">
+                           placeholder="@Localizer["Nav_SearchPlaceholder"]" autocomplete="off">
                     <button class="btn btn-primary" type="submit">
                         <i class="fas fa-search"></i>
                     </button>
@@ -176,7 +176,7 @@
         <div class="collapse d-lg-none w-100 mt-2 border-top pt-2" id="mobile-search-bar">
             <form asp-area="" asp-controller="Events" asp-action="Index" method="get" class="d-flex gap-2">
                 <input class="form-control" type="search" name="search" id="mobile-navbar-search" 
-                       placeholder="Search events..." autocomplete="off">
+                       placeholder="@Localizer["Nav_SearchPlaceholder"]" autocomplete="off">
                 <button class="btn btn-primary" type="submit">
                     <i class="fas fa-search"></i>
                 </button>
@@ -199,7 +199,7 @@
             <!-- Brand -->
             <div class="col-md-4">
                 <a asp-area="" asp-controller="Home" asp-action="Index" class="d-inline-block mb-2">
-                    <img src="~/images/logo.jpeg" alt="Go Sofia Events" class="footer-logo" width="160" height="56" loading="lazy" decoding="async" />
+                    <img src="~/images/logo.jpeg" alt="Go Sofia" class="footer-logo" width="160" height="56" loading="lazy" decoding="async" />
                 </a>
                 <p class="text-white-50 mb-3">@Localizer["Footer_Description"]</p>
                 <a href="https://www.facebook.com/GoSofia" target="_blank" rel="noopener noreferrer"

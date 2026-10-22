@@ -9,7 +9,8 @@ const Favorites = {
      * Makes an async POST request to the API and updates the UI accordingly.
      * 
      * @param {number} eventId - The ID of the event to toggle.
-     * @param {HTMLElement} button - The favorite button element to update.
+     * @param {HTMLElement} button - The favorite button element to update. Its localized texts come from
+     *                               data-title-add, data-title-remove and data-error-message attributes.
      * @returns {Promise<void>}
      */
     toggleFavorite: async function(eventId, button) {
@@ -28,7 +29,7 @@ const Favorites = {
 
             if (!response.ok) {
                 const error = await response.json();
-                this.showMessage(error.message || 'Failed to update favorite', 'error');
+                this.showMessage(error.message || button.dataset.errorMessage, 'error');
                 button.disabled = false;
                 return;
             }
@@ -38,20 +39,20 @@ const Favorites = {
             // Update button UI based on response
             if (data.isFavorited) {
                 button.classList.add('active');
-                button.setAttribute('title', 'Remove from favorites');
+                button.setAttribute('title', button.dataset.titleRemove);
                 button.innerHTML = '<i class="fas fa-heart"></i>';
             } else {
                 button.classList.remove('active');
-                button.setAttribute('title', 'Add to favorites');
+                button.setAttribute('title', button.dataset.titleAdd);
                 button.innerHTML = '<i class="far fa-heart"></i>';
             }
 
             // Show success message
-            this.showMessage(data.message || 'Success', 'success');
+            this.showMessage(data.message, 'success');
 
         } catch (error) {
             console.error('Error toggling favorite:', error);
-            this.showMessage('An error occurred while updating your favorite', 'error');
+            this.showMessage(button.dataset.errorMessage, 'error');
         } finally {
             button.disabled = false;
         }

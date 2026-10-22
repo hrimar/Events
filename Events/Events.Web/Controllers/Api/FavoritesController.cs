@@ -1,7 +1,9 @@
 using Events.Services.Interfaces;
 using Events.Web.Models.DTOs;
+using Events.Web.Resources;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
 using System.Security.Claims;
 
 namespace Events.Web.Controllers.Api;
@@ -17,11 +19,16 @@ public class FavoritesController : ControllerBase
 {
     private readonly IUserFavoriteEventService _favoriteService;
     private readonly ILogger<FavoritesController> _logger;
+    private readonly IStringLocalizer<SharedResources> _localizer;
 
-    public FavoritesController(IUserFavoriteEventService favoriteService, ILogger<FavoritesController> logger)
+    public FavoritesController(
+        IUserFavoriteEventService favoriteService,
+        ILogger<FavoritesController> logger,
+        IStringLocalizer<SharedResources> localizer)
     {
         _favoriteService = favoriteService;
         _logger = logger;
+        _localizer = localizer;
     }
 
     /// <summary>
@@ -64,13 +71,13 @@ public class FavoritesController : ControllerBase
             {
                 EventId = eventId,
                 IsFavorited = isFavorited,
-                Message = isFavorited ? "Event added to favorites" : "Event removed from favorites"
+                Message = isFavorited ? _localizer["Favorites_Added"] : _localizer["Favorites_Removed"]
             });
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error toggling favorite for event {EventId}", eventId);
-            return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An error occurred while processing your request" });
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = _localizer["Favorites_Error"].Value });
         }
     }
 
@@ -113,7 +120,7 @@ public class FavoritesController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error checking favorite for event {EventId}", eventId);
-            return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An error occurred while processing your request" });
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = _localizer["Favorites_Error"].Value });
         }
     }
 
@@ -147,7 +154,7 @@ public class FavoritesController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting favorite count");
-            return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An error occurred while processing your request" });
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = _localizer["Favorites_Error"].Value });
         }
     }
 }

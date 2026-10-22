@@ -130,7 +130,31 @@
     <value>Админ панел</value>
   </data>
   <data name="Nav_SearchPlaceholder" xml:space="preserve">
-    <value>Търси събития или #тагове...</value>
+    <value>Търси събитие, място или изпълнител</value>
+  </data>
+  <data name="Theme_SwitchToDark" xml:space="preserve">
+    <value>Тъмна тема</value>
+  </data>
+  <data name="Theme_SwitchToLight" xml:space="preserve">
+    <value>Светла тема</value>
+  </data>
+  <data name="Home_DefaultTitle" xml:space="preserve">
+    <value>Go Sofia – събития в София</value>
+  </data>
+  <data name="Favorites_Added" xml:space="preserve">
+    <value>Събитието е добавено в любими.</value>
+  </data>
+  <data name="Favorites_Removed" xml:space="preserve">
+    <value>Събитието е премахнато от любими.</value>
+  </data>
+  <data name="Favorites_Error" xml:space="preserve">
+    <value>Възникна грешка. Моля, опитайте отново.</value>
+  </data>
+  <data name="Favorites_AddTitle" xml:space="preserve">
+    <value>Добави в любими</value>
+  </data>
+  <data name="Favorites_RemoveTitle" xml:space="preserve">
+    <value>Премахни от любими</value>
   </data>
   <data name="Nav_SearchPlaceholderMobile" xml:space="preserve">
     <value>Търси събития...</value>
@@ -333,14 +357,26 @@
   <data name="Events_FilteredResults" xml:space="preserve">
     <value>Филтрирани резултати</value>
   </data>
-  <data name="Events_Tag" xml:space="preserve">
-    <value>Таг</value>
+  <data name="Events_ShowingRange" xml:space="preserve">
+    <value>Показани {0}–{1} от {2} събития</value>
   </data>
-  <data name="Events_Showing" xml:space="preserve">
-    <value>Показват се</value>
+  <data name="Events_HeadingAll" xml:space="preserve">
+    <value>Всички събития в София</value>
   </data>
-  <data name="Events_Of" xml:space="preserve">
-    <value>от</value>
+  <data name="Events_HeadingCategory" xml:space="preserve">
+    <value>{0} в София</value>
+  </data>
+  <data name="Events_HeadingFree" xml:space="preserve">
+    <value>Безплатни събития в София</value>
+  </data>
+  <data name="Events_HeadingSearch" xml:space="preserve">
+    <value>Резултати от търсене: „{0}“</value>
+  </data>
+  <data name="Events_FilterFromDate" xml:space="preserve">
+    <value>От:</value>
+  </data>
+  <data name="Events_FilterToDate" xml:space="preserve">
+    <value>До:</value>
   </data>
   <data name="Events_NoEventsFound" xml:space="preserve">
     <value>Няма намерени събития</value>
@@ -1420,7 +1456,7 @@
     <value>Създайте профил</value>
   </data>
   <data name="Register_Subtitle" xml:space="preserve">
-    <value>Регистрация в Go-Sofia</value>
+    <value>Регистрация в Go Sofia</value>
   </data>
   <data name="Register_Submit" xml:space="preserve">
     <value>Регистрация</value>

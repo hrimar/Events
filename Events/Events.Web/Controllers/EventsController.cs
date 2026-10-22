@@ -79,7 +79,9 @@ public class EventsController : Controller
     {
         try
         {
-            // Default to showing only future events unless explicitly specified
+            // Default to showing only future events unless explicitly specified.
+            // The implicit default is not shown as an active filter.
+            var hasCustomFromDate = fromDate.HasValue && fromDate.Value.Date != _clock.Today;
             fromDate ??= _clock.Today;
 
             // Bound caller-supplied paging to sane values - a public, unauthenticated endpoint
@@ -173,6 +175,8 @@ public class EventsController : Controller
                 SortBy = sortBy,
                 SortOrder = sortOrder,
                 PageTitle = pageTitle,
+                Heading = BuildHeading(category, free, search),
+                HasCustomFromDate = hasCustomFromDate,
                 PageMetaDescription = pageMetaDescription
             };
 
@@ -448,6 +452,21 @@ public class EventsController : Controller
             return $"{category} {_localizer["PageTitle_Events"]}";
 
         return _localizer["PageTitle_AllEvents"];
+    }
+
+    // Visible H1 of the listing ("All events in Sofia", "Music in Sofia"); the SEO <title> is built separately.
+    private string BuildHeading(string? category, bool? free, string? search)
+    {
+        if (!string.IsNullOrWhiteSpace(search))
+            return _localizer["Events_HeadingSearch", search.Trim()];
+
+        if (!string.IsNullOrWhiteSpace(category) && Enum.TryParse<EventCategory>(category, ignoreCase: true, out var parsedCategory))
+            return _localizer["Events_HeadingCategory", parsedCategory.Localize(_localizer)];
+
+        if (free == true)
+            return _localizer["Events_HeadingFree"];
+
+        return _localizer["Events_HeadingAll"];
     }
 
     private async Task<List<SelectListItem>> BuildSubCategoryOptionsAsync(string? category, string? selectedSubCategory)

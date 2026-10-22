@@ -30,7 +30,7 @@ public static class EventExtensions
     // Autocomplete row: "date · time · venue"; the time is omitted when unknown (stored as 00:00).
     public static SearchSuggestionDto ToSearchSuggestionDto(this Event eventEntity, bool isEnglish, string? localizedCategory)
     {
-        var date = eventEntity.Date.ToString(isEnglish ? "dd/MM/yyyy" : "dd.MM.yyyy", CultureInfo.InvariantCulture);
+        var date = eventEntity.Date.ToString(CultureHelper.ShortDateFormat(isEnglish), CultureInfo.InvariantCulture);
 
         var time = EventDateTimeHelper.HasKnownTime(eventEntity.Date, eventEntity.StartTime)
             ? (eventEntity.StartTime ?? eventEntity.Date.TimeOfDay).ToString(@"hh\:mm", CultureInfo.InvariantCulture)
