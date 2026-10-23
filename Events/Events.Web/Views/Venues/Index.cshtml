@@ -11,7 +11,7 @@
 <section class="bg-primary text-white py-3">
     <div class="container-grid">
         <h1 class="h3 fw-bold mb-1">
-            <i class="fas fa-map-marker-alt me-2"></i>@Localizer["Venue_IndexTitle"]
+            <gs-icon name="map-pin" class="me-2" />@Localizer["Venue_IndexTitle"]
         </h1>
         <p class="mb-0 opacity-75">@Localizer["Venue_IndexSubtitle"]</p>
     </div>
@@ -27,12 +27,12 @@
                        value="@search"
                        placeholder="@Localizer["Venue_SearchPlaceholder"]" />
                 <button class="btn btn-primary" type="submit">
-                    <i class="fas fa-search"></i>
+                    <gs-icon name="search" />
                 </button>
                 @if (!string.IsNullOrWhiteSpace(search))
                 {
                     <a asp-action="Index" class="btn btn-outline-secondary">
-                        <i class="fas fa-times"></i>
+                        <gs-icon name="x" />
                     </a>
                 }
             </div>
@@ -41,7 +41,7 @@
         @if (!Model.Any())
         {
             <div class="text-center py-5 text-muted">
-                <i class="fas fa-map-marker-alt fa-3x mb-3 opacity-50"></i>
+                <gs-icon name="map-pin" size="48" class="mb-3 opacity-50" />
                 <p>@Localizer["Venue_NoVenuesFound"]</p>
             </div>
         }
@@ -65,7 +65,7 @@
                                 {
                                     <div class="bg-surface-alt d-flex align-items-center justify-content-center"
                                          style="height:160px;">
-                                        <i class="fas fa-map-marker-alt fa-3x text-muted opacity-50"></i>
+                                        <gs-icon name="map-pin" size="48" class="text-muted opacity-50" />
                                     </div>
                                 }
                                 <div class="card-body">
@@ -77,7 +77,7 @@
                                     @if (!string.IsNullOrEmpty(venue.City))
                                     {
                                         <div class="text-muted small">
-                                            <i class="fas fa-city me-1"></i>@venue.City
+                                            <gs-icon name="building-2" class="me-1" />@venue.City
                                         </div>
                                     }
                                 </div>

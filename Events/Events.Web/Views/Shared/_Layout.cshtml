@@ -5,6 +5,7 @@
 @using Microsoft.Extensions.Localization
 @inject IStringLocalizer<SharedResources> Localizer
 @inject ISiteUrlProvider SiteUrlProvider
+@inject Microsoft.AspNetCore.Mvc.ViewFeatures.IFileVersionProvider FileVersionProvider
 
 <!-- hreflang alternates are intentionally omitted: bg/en is switched via a cookie
      (LanguageController + CookieRequestCultureProvider), not via distinct per-language
@@ -12,7 +13,8 @@
      hreflang tags that both resolve to the same URL would assert content Google can't
      actually verify. Revisit only if URL-based localization is introduced. -->
 <!DOCTYPE html>
-<html lang="@System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName">
+<html lang="@System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName"
+      data-icon-sprite="@FileVersionProvider.AddFileVersionToPath(Context.Request.PathBase, "/icons/gs-icons.svg")">
 <head>
     <!-- Google Analytics tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-NL0QFW80H6"></script>
@@ -45,7 +47,6 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sofia+Sans:wght@400;500;600;700;800&family=Sofia+Sans+Condensed:wght@700;800&display=swap">
 
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
     <!-- Theme CSS Files -->
     <link rel="stylesheet" href="~/css/themes/light-theme.css" asp-append-version="true" />
@@ -122,7 +123,7 @@
                             <li>
                                 <a class="dropdown-item" asp-area="" asp-controller="Events"
                                    asp-action="Index" asp-route-category="@category.Value">
-                                    <i class="@category.IconClass me-2"></i>@category.DisplayName
+                                    <gs-icon name="@category.IconName" class="me-2" />@category.DisplayName
                                 </a>
                             </li>
                         }
@@ -312,13 +313,13 @@ $(document).ready(function() {
         }
 
         // Group labels are localized on the server (data-label-* attributes on the results container).
-        function renderGroup(label, items, iconClass) {
+        function renderGroup(label, items, iconName) {
             let html = `<div class="mb-1"><small class="text-muted fw-bold">${escapeHtml(label)}</small></div>`;
             items.forEach(item => {
                 html += `
                     <a class="navbar-search-item d-block p-2 rounded hover-bg-surface text-decoration-none text-body"
                        href="${escapeHtml(item.url)}">
-                        <i class="${iconClass} me-2"></i>
+                        ${gsIcon(iconName, 'me-2 text-primary')}
                         <strong>${escapeHtml(item.title)}</strong><br>
                         <small class="text-muted">${item.category ? escapeHtml(item.category) + ' • ' : ''}${escapeHtml(item.details)}</small>
                     </a>`;
@@ -338,14 +339,14 @@ $(document).ready(function() {
             let html = '<div class="p-2">';
 
             if (events.length > 0) {
-                html += renderGroup(resultsContainer.data('label-events'), events, 'fas fa-calendar text-primary');
+                html += renderGroup(resultsContainer.data('label-events'), events, 'calendar');
             }
 
             if (venues.length > 0) {
                 if (events.length > 0) {
                     html += '<hr class="my-2">';
                 }
-                html += renderGroup(resultsContainer.data('label-venues'), venues, 'fas fa-map-marker-alt text-primary');
+                html += renderGroup(resultsContainer.data('label-venues'), venues, 'map-pin');
             }
 
             html += '</div>';

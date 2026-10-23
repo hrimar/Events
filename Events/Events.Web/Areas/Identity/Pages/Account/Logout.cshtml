@@ -12,13 +12,13 @@
                     <div class="text-center">
                         @if (User.Identity?.IsAuthenticated ?? false)
                         {
-                            <i class="fas fa-sign-out-alt fa-3x text-warning mb-3"></i>
+                            <gs-icon name="log-out" size="48" class="text-warning mb-3" />
                             <h2 class="fw-bold mb-3">@Localizer["Logout_ReadyToLeave"]</h2>
                             <p class="text-muted mb-4">@Localizer["Logout_Prompt"]</p>
 
                             <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Page("/", new { area = "" })" method="post">
                                 <button type="submit" class="btn btn-warning btn-lg w-100">
-                                    <i class="fas fa-sign-out-alt me-2"></i>@Localizer["Logout_Submit"]
+                                    <gs-icon name="log-out" class="me-2" />@Localizer["Logout_Submit"]
                                 </button>
                             </form>
 
@@ -26,13 +26,13 @@
 
                             <p class="mb-0">
                                 <a asp-page="./Login" class="text-decoration-none">
-                                    <i class="fas fa-arrow-left me-1"></i>@Localizer["Logout_GoBack"]
+                                    <gs-icon name="arrow-left" class="me-1" />@Localizer["Logout_GoBack"]
                                 </a>
                             </p>
                         }
                         else
                         {
-                            <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                            <gs-icon name="circle-check" size="48" class="text-success mb-3" />
                             <h2 class="fw-bold mb-3">@Localizer["Logout_SuccessTitle"]</h2>
                             <p class="text-muted mb-4">@Localizer["Logout_Success"]</p>
 
@@ -40,10 +40,10 @@
 
                             <div class="d-grid gap-2">
                                 <a asp-page="/Account/Login" class="btn btn-primary btn-lg text-decoration-none">
-                                    <i class="fas fa-sign-in-alt me-2"></i>@Localizer["Logout_LoginAgain"]
+                                    <gs-icon name="log-in" class="me-2" />@Localizer["Logout_LoginAgain"]
                                 </a>
                                 <a href="/" class="btn btn-outline-secondary btn-lg text-decoration-none">
-                                    <i class="fas fa-home me-2"></i>@Localizer["Logout_ReturnHome"]
+                                    <gs-icon name="house" class="me-2" />@Localizer["Logout_ReturnHome"]
                                 </a>
                             </div>
                         }

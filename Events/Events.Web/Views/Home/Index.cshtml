@@ -22,18 +22,18 @@
                 <!-- Main CTA to Events Page -->
                 <div class="d-flex gap-2 flex-wrap">
                     <a asp-action="Index" asp-controller="Events" class="btn btn-light btn-sm">
-                        <i class="fas fa-search me-2"></i>@Localizer["Home_BrowseAll"]
+                        <gs-icon name="search" class="me-2" />@Localizer["Home_BrowseAll"]
                     </a>
                     <a asp-action="Index" asp-controller="Venues" class="btn btn-outline-light btn-sm">
-                        <i class="fas fa-map-marker-alt me-2"></i>@Localizer["Venue_BrowseVenues"]
+                        <gs-icon name="map-pin" class="me-2" />@Localizer["Venue_BrowseVenues"]
                     </a>
                     <a asp-action="Index" asp-controller="Events" asp-route-free="true" class="btn btn-success btn-sm">
-                        <i class="fas fa-gift me-2"></i>@Localizer["Home_FreeEvents"]
+                        <gs-icon name="gift" class="me-2" />@Localizer["Home_FreeEvents"]
                     </a>
                 </div>
             </div>
             <div class="col-lg-4 text-center d-none d-lg-block">
-                <i class="fas fa-calendar-alt home-hero-icon"></i>
+                <gs-icon name="calendar-days" class="home-hero-icon" />
             </div>
         </div>
     </div>
@@ -48,7 +48,7 @@
             {
                 <a asp-action="Index" asp-controller="Events" asp-route-category="@category.Value"
                    class="btn btn-outline-primary home-category-tile d-flex flex-column align-items-center justify-content-center text-decoration-none">
-                    <i class="@category.IconClass"></i>
+                    <gs-icon name="@category.IconName" />
                     <span>@category.DisplayName</span>
                 </a>
             }
@@ -64,14 +64,14 @@
             <div class="row align-items-center mb-4">
                 <div class="col-md-6">
                     <h3 class="mb-0">
-                        <i class="fas fa-tags text-info me-2"></i>
+                        <gs-icon name="tags" class="text-info me-2" />
                         Popular Event Tags
                     </h3>
                     <p class="text-muted mb-0">Discover events by popular themes and topics</p>
                 </div>
                 <div class="col-md-6 text-end">
                     <a asp-action="Index" asp-controller="Events" class="btn btn-outline-info">
-                        <i class="fas fa-th-large me-1"></i>View All Events
+                        <gs-icon name="layout-grid" class="me-1" />View All Events
                     </a>
                 </div>
             </div>
@@ -81,7 +81,7 @@
                 {
                     <a asp-action="ByTag" asp-controller="Events" asp-route-tagName="@tag.Name"
                        class="btn @tag.BadgeClass me-2 mb-2 tag-home-link @tag.Size text-decoration-none">
-                        <i class="fas fa-tag me-1"></i>@tag.Name
+                        <gs-icon name="tag" class="me-1" />@tag.Name
                         <span class="badge bg-light text-dark ms-1">@tag.EventCount</span>
                     </a>
                 }
@@ -89,7 +89,7 @@
             
             <div class="text-center mt-3">
                 <small class="text-muted">
-                    <i class="fas fa-info-circle me-1"></i>
+                    <gs-icon name="info" class="me-1" />
                     Click on any tag to find events with that theme
                 </small>
             </div>

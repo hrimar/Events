@@ -40,11 +40,11 @@ const Favorites = {
             if (data.isFavorited) {
                 button.classList.add('active');
                 button.setAttribute('title', button.dataset.titleRemove);
-                button.innerHTML = '<i class="fas fa-heart"></i>';
+                button.innerHTML = gsIcon('heart', 'gs-icon-filled');
             } else {
                 button.classList.remove('active');
                 button.setAttribute('title', button.dataset.titleAdd);
-                button.innerHTML = '<i class="far fa-heart"></i>';
+                button.innerHTML = gsIcon('heart');
             }
 
             // Show success message

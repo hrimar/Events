@@ -15,7 +15,7 @@
             <div class="card shadow-sm border-0">
                 <div class="card-body p-5">
                     <div class="text-center mb-4">
-                        <i class="fas fa-link fa-3x text-primary mb-3"></i>
+                        <gs-icon name="link" size="48" class="text-primary mb-3" />
                         <h2 class="fw-bold">@ViewData["Title"]</h2>
                         <p class="text-muted">@Localizer["Manage_ExternalLogins_Subtitle"]</p>
                     </div>
@@ -26,14 +26,14 @@
                     {
                         <div class="mb-4">
                             <h5 class="mb-3">
-                                <i class="fas fa-check-circle text-success me-2"></i>@Localizer["Manage_ExternalLogins_Connected"]
+                                <gs-icon name="circle-check" class="text-success me-2" />@Localizer["Manage_ExternalLogins_Connected"]
                             </h5>
                             <div class="list-group">
                                 @foreach (var login in Model.CurrentLogins)
                                 {
                                     <div class="list-group-item d-flex justify-content-between align-items-center">
                                         <span>
-                                            <i class="fab fa-@login.LoginProvider.ToLower() me-2"></i>
+                                            <gs-icon name="log-in" class="me-2" />
                                             @login.ProviderDisplayName
                                         </span>
                                         @if (Model.ShowRemoveButton)
@@ -42,7 +42,7 @@
                                                 <input asp-for="@login.LoginProvider" name="LoginProvider" type="hidden" />
                                                 <input asp-for="@login.ProviderKey" name="ProviderKey" type="hidden" />
                                                 <button type="submit" class="btn btn-sm btn-danger" title="@login.ProviderDisplayName">
-                                                    <i class="fas fa-trash me-1"></i>@Localizer["Manage_ExternalLogins_Remove"]
+                                                    <gs-icon name="trash-2" class="me-1" />@Localizer["Manage_ExternalLogins_Remove"]
                                                 </button>
                                             </form>
                                         }
@@ -58,7 +58,7 @@
                             <hr class="my-4">
 
                             <h5 class="mb-3">
-                                <i class="fas fa-plus-circle text-info me-2"></i>@Localizer["Manage_ExternalLogins_AddService"]
+                                <gs-icon name="circle-plus" class="text-info me-2" />@Localizer["Manage_ExternalLogins_AddService"]
                             </h5>
                             <p class="text-muted small mb-3">@Localizer["Manage_ExternalLogins_AddHint"]</p>
                             
@@ -67,7 +67,7 @@
                                     @foreach (var provider in Model.OtherLogins)
                                     {
                                         <button id="@($"link-login-button-{provider.Name}")" type="submit" class="btn btn-outline-secondary" name="provider" value="@provider.Name" title="@provider.DisplayName">
-                                            <i class="fab fa-@provider.Name.ToLower() me-2"></i>@provider.DisplayName
+                                            <gs-icon name="log-in" class="me-2" />@provider.DisplayName
                                         </button>
                                     }
                                 </div>

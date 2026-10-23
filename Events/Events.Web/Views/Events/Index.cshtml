@@ -82,7 +82,7 @@
             <!-- Actions -->
             <div class="col-md-1 d-flex align-items-end">
                 <button type="submit" class="btn btn-primary w-100">
-                    <i class="fas fa-search"></i>
+                    <gs-icon name="search" />
                 </button>
             </div>
 
@@ -97,7 +97,7 @@
                 <div class="d-flex align-items-center mb-3">
                     <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#tagCloud"
                             aria-expanded="@(Model.SelectedTags.Any() ? "true" : "false")" aria-controls="tagCloud">
-                        <i class="fas fa-tags"></i> @Localizer["Events_BrowseTags"]
+                        <gs-icon name="tags" /> @Localizer["Events_BrowseTags"]
                     </button>
                 </div>
                 
@@ -114,12 +114,12 @@
                                     @foreach(var selectedTag in Model.SelectedTags)
                                     {
                                         <span class="badge bg-primary me-1 mb-1" style="font-size: 0.9rem;">
-                                            <i class="fas fa-tag me-1"></i>@CategoryLocalizationExtensions.LocalizeTagName(selectedTag, Localizer)
+                                            <gs-icon name="tag" class="me-1" />@CategoryLocalizationExtensions.LocalizeTagName(selectedTag, Localizer)
                                             <button type="button" class="btn-close btn-close-white ms-1" style="font-size: 0.6rem;" onclick="removeTag('@selectedTag')"></button>
                                         </span>
                                     }
                                     <button type="button" class="btn btn-sm btn-outline-secondary ms-2" onclick="clearAllTags()">
-                                        <i class="fas fa-times"></i> @Localizer["Events_ClearAll"]
+                                        <gs-icon name="x" /> @Localizer["Events_ClearAll"]
                                     </button>
                                 </div>
                             </div>
@@ -133,7 +133,7 @@
                             {
                                 <div class="mb-3">
                                     <small class="text-muted d-flex align-items-center">
-                                        <i class="@Model.LocalizedCategories.FirstOrDefault(c => c.Value == categoryGroup.Key.ToString())?.IconClass me-1"></i>
+                                        <gs-icon name="@(Model.LocalizedCategories.FirstOrDefault(c => c.Value == categoryGroup.Key.ToString())?.IconName ?? "calendar")" class="me-1" />
                                         @Model.LocalizedCategories.FirstOrDefault(c => c.Value == categoryGroup.Key.ToString())?.DisplayName @Localizer["Events_Tags"]
                                     </small>
                                     <div class="mt-1">
@@ -176,41 +176,41 @@
                     {
                         var activeCatDisplay = Model.LocalizedCategories.FirstOrDefault(c => c.Value == Model.CurrentCategory);
                         <span class="badge bg-primary">
-                            <i class="fas fa-layer-group me-1"></i>@Localizer["Events_FilterCategory"] @(activeCatDisplay?.DisplayName ?? Model.CurrentCategory)
+                            <gs-icon name="layers" class="me-1" />@Localizer["Events_FilterCategory"] @(activeCatDisplay?.DisplayName ?? Model.CurrentCategory)
                         </span>
                     }
                     @if(!string.IsNullOrEmpty(Model.SelectedSubCategory))
                     {
                         <span class="badge bg-primary">
-                            <i class="fas fa-layer-group me-1"></i>@Localizer["Events_FilterSubCategory"] @CategoryLocalizationExtensions.LocalizeSubCategoryName(Model.SelectedSubCategory, Localizer)
+                            <gs-icon name="layers" class="me-1" />@Localizer["Events_FilterSubCategory"] @CategoryLocalizationExtensions.LocalizeSubCategoryName(Model.SelectedSubCategory, Localizer)
                         </span>
                     }
                     @if(Model.IsFreeFilter == true)
                     {
                         <span class="badge bg-success">
-                            <i class="fas fa-gift me-1"></i>@Localizer["Events_FilterFreeEvents"]
+                            <gs-icon name="gift" class="me-1" />@Localizer["Events_FilterFreeEvents"]
                         </span>
                     }
                     @if(Model.IsFreeFilter == false)
                     {
                         <span class="badge bg-warning">
-                            <i class="fas fa-dollar-sign me-1"></i>@Localizer["Events_FilterPaidEvents"]
+                            <gs-icon name="banknote" class="me-1" />@Localizer["Events_FilterPaidEvents"]
                         </span>
                     }
                     @if(!string.IsNullOrEmpty(Model.SearchTerm))
                     {
                         <span class="badge bg-info">
-                            <i class="fas fa-search me-1"></i>@Localizer["Events_FilterSearch"] "@Model.SearchTerm"
+                            <gs-icon name="search" class="me-1" />@Localizer["Events_FilterSearch"] "@Model.SearchTerm"
                         </span>
                     }
                     @if(Model.SelectedTags.Any())
                     {
                         <span class="badge bg-secondary">
-                            <i class="fas fa-tags me-1"></i>@Localizer["Events_Tags"]: @Model.SelectedTags.Count
+                            <gs-icon name="tags" class="me-1" />@Localizer["Events_Tags"]: @Model.SelectedTags.Count
                         </span>
                     }
                     <a href="/Events" class="btn btn-outline-secondary btn-sm">
-                        <i class="fas fa-times"></i> @Localizer["Events_ClearAll"]
+                        <gs-icon name="x" /> @Localizer["Events_ClearAll"]
                     </a>
                 </div>
             </div>
@@ -243,10 +243,10 @@
                                     page = 1
                             })" 
                                class="btn btn-sm @(isCurrentSort ? "btn-primary" : "btn-outline-secondary")">
-                                <i class="@sortOption.IconClass me-1"></i>@sortOption.DisplayName
+                                <gs-icon name="@sortOption.IconName" class="me-1" />@sortOption.DisplayName
                                 @if(isCurrentSort)
                                 {
-                                    <i class="fas fa-chevron-@(Model.SortOrder == "asc" ? "up" : "down") ms-1"></i>
+                                    <gs-icon name="@(Model.SortOrder == "asc" ? "chevron-up" : "chevron-down")" class="ms-1" />
                                 }
                             </a>
                         }
@@ -258,10 +258,10 @@
                     <span class="text-muted">@Localizer["Events_View"]</span>
                     <div class="btn-group btn-group-sm" role="group">
                         <button type="button" class="btn btn-outline-secondary active" id="grid-view">
-                            <i class="fas fa-th"></i>
+                            <gs-icon name="layout-grid" />
                         </button>
                         <button type="button" class="btn btn-outline-secondary" id="list-view">
-                            <i class="fas fa-list"></i>
+                            <gs-icon name="list" />
                         </button>
                     </div>
                 </div>
@@ -344,7 +344,7 @@
             else
             {
                 <div class="col-12 text-center py-5">
-                    <i class="fas fa-calendar-times text-muted" style="font-size: 4rem;"></i>
+                    <gs-icon name="calendar-x" class="text-muted" style="font-size: 4rem;" />
                     <h4 class="mt-3 text-muted">@Localizer["Events_NoEventsFound"]</h4>
                     <p class="text-muted">@Localizer["Events_NoEventsHint"]</p>
                     <a href="/Events" class="btn btn-primary">@Localizer["Events_ViewAllEvents"]</a>
@@ -375,7 +375,7 @@
                     {
                         <li class="page-item">
                             <a class="page-link" href="?page=@(Model.Events.CurrentPage - 1)&@Model.FiltersQueryString">
-                                <i class="fas fa-chevron-left"></i> @Localizer["Events_Previous"]
+                                <gs-icon name="chevron-left" /> @Localizer["Events_Previous"]
                             </a>
                         </li>
                     }
@@ -391,7 +391,7 @@
                     {
                         <li class="page-item">
                             <a class="page-link" href="?page=@(Model.Events.CurrentPage + 1)&@Model.FiltersQueryString">
-                                @Localizer["Events_Next"] <i class="fas fa-chevron-right"></i>
+                                @Localizer["Events_Next"] <gs-icon name="chevron-right" />
                             </a>
                         </li>
                     }

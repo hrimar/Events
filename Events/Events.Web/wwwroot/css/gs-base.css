@@ -40,6 +40,11 @@ h1, h2, .h1, .h2 {
   stroke-linejoin: round;
 }
 
+/* Filled variant (e.g. a saved favorite) */
+.gs-icon.gs-icon-filled {
+  fill: currentColor;
+}
+
 /* Typography scale (6.3) */
 .gs-h1-hero {
   margin: 0;

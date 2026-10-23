@@ -40,20 +40,20 @@
         <!-- Desktop: title left, period nav centered, view-all right -->
         <div class="d-none d-md-flex align-items-center mb-2">
             <h2 class="home-section-title flex-shrink-0">
-                <i class="fas fa-calendar-week text-primary me-2"></i>@sectionTitle
+                <gs-icon name="calendar-range" class="text-primary me-2" />@sectionTitle
             </h2>
             <div class="home-period-nav mx-auto">
                 <button class="btn btn-sm btn-outline-secondary week-nav-btn" data-from-desktop="@prevFromDesktop" data-from-mobile="@prevFromMobile">
-                    <i class="fas fa-chevron-left"></i>
+                    <gs-icon name="chevron-left" />
                 </button>
                 <span class="home-period-label text-body">@desktopPeriodLabel</span>
                 <button class="btn btn-sm btn-outline-secondary week-nav-btn" data-from-desktop="@nextFromDesktop" data-from-mobile="@nextFromMobile">
-                    <i class="fas fa-chevron-right"></i>
+                    <gs-icon name="chevron-right" />
                 </button>
                 @if (!isCurrentWeek)
                 {
                     <button class="btn btn-sm btn-outline-primary week-nav-btn ms-1" data-from-desktop="@todayFrom" data-from-mobile="@todayFrom">
-                        <i class="fas fa-home me-1"></i>@Localizer["Home_ThisWeek"]
+                        <gs-icon name="house" class="me-1" />@Localizer["Home_ThisWeek"]
                     </button>
                 }
             </div>
@@ -61,34 +61,34 @@
                asp-route-fromDate="@Model.FromDate.ToString("yyyy-MM-dd")"
                asp-route-toDate="@Model.ToDate.ToString("yyyy-MM-dd")"
                class="btn btn-sm btn-outline-primary flex-shrink-0">
-                <i class="fas fa-list me-1"></i>@Localizer["Home_ViewAllEvents"]
+                <gs-icon name="list" class="me-1" />@Localizer["Home_ViewAllEvents"]
             </a>
         </div>
 
         <!-- Mobile: title + view all, then period nav -->
         <div class="d-flex justify-content-between align-items-center mb-2 d-md-none">
             <h2 class="home-section-title">
-                <i class="fas fa-calendar-week text-primary me-2"></i>@sectionTitle
+                <gs-icon name="calendar-range" class="text-primary me-2" />@sectionTitle
             </h2>
             <a asp-controller="Events" asp-action="Index"
                asp-route-fromDate="@Model.FromDate.ToString("yyyy-MM-dd")"
                asp-route-toDate="@Model.ToDate.ToString("yyyy-MM-dd")"
                class="btn btn-sm btn-outline-primary">
-                <i class="fas fa-list me-1"></i>@Localizer["Home_ViewAllEvents"]
+                <gs-icon name="list" class="me-1" />@Localizer["Home_ViewAllEvents"]
             </a>
         </div>
         <div class="d-flex align-items-center justify-content-center gap-2 mb-3 d-md-none">
             <button class="btn btn-sm btn-outline-secondary week-nav-btn" data-from-desktop="@prevFromDesktop" data-from-mobile="@prevFromMobile">
-                <i class="fas fa-chevron-left"></i>
+                <gs-icon name="chevron-left" />
             </button>
             <span class="home-period-label text-body">@mobilePeriodLabel</span>
             <button class="btn btn-sm btn-outline-secondary week-nav-btn" data-from-desktop="@nextFromDesktop" data-from-mobile="@nextFromMobile">
-                <i class="fas fa-chevron-right"></i>
+                <gs-icon name="chevron-right" />
             </button>
             @if (!isCurrentWeek)
             {
                 <button class="btn btn-sm btn-outline-primary week-nav-btn ms-2" data-from-desktop="@todayFrom" data-from-mobile="@todayFrom">
-                    <i class="fas fa-home me-1"></i>@Localizer["Home_ThisWeek"]
+                    <gs-icon name="house" class="me-1" />@Localizer["Home_ThisWeek"]
                 </button>
             }
         </div>
@@ -98,25 +98,25 @@
             <li class="nav-item" role="presentation">
                 <button class="nav-link active" id="tab-day-btn" data-bs-toggle="tab"
                         data-bs-target="#tab-day" type="button" role="tab">
-                    <i class="fas fa-sun me-1"></i>@Localizer["Home_TabByDay"]
+                    <gs-icon name="sun" class="me-1" />@Localizer["Home_TabByDay"]
                 </button>
             </li>
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="tab-cat-btn" data-bs-toggle="tab"
                         data-bs-target="#tab-cat" type="button" role="tab">
-                    <i class="fas fa-layer-group me-1"></i>@Localizer["Home_TabByCategory"]
+                    <gs-icon name="layers" class="me-1" />@Localizer["Home_TabByCategory"]
                 </button>
             </li>
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="tab-weekend-btn" data-bs-toggle="tab"
                         data-bs-target="#tab-weekend" type="button" role="tab">
-                    <i class="fas fa-umbrella-beach me-1"></i>@Localizer["Home_TabWeekend"]
+                    <gs-icon name="tree-palm" class="me-1" />@Localizer["Home_TabWeekend"]
                 </button>
             </li>
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="tab-cal-btn" data-bs-toggle="tab"
                         data-bs-target="#tab-cal" type="button" role="tab">
-                    <i class="fas fa-calendar-alt me-1"></i>@Localizer["Home_TabCalendar"]
+                    <gs-icon name="calendar-days" class="me-1" />@Localizer["Home_TabCalendar"]
                 </button>
             </li>
         </ul>
@@ -276,7 +276,7 @@
                                 <div class="home-cat-compact-block">
                                     <div class="home-cat-compact-header">
                                         <div class="home-column-header text-body">
-                                            <i class="@cat.IconClass me-1 text-primary"></i>@cat.DisplayName
+                                            <gs-icon name="@cat.IconName" class="me-1 text-primary" />@cat.DisplayName
                                             <span class="badge bg-secondary ms-1 home-event-badge">@cat.Events.Count</span>
                                         </div>
                                         <a asp-controller="Events" asp-action="Index"
@@ -322,7 +322,7 @@
                         <div class="mb-4">
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <div class="home-column-header text-body">
-                                    <i class="@cat.IconClass me-2 text-primary"></i>@cat.DisplayName
+                                    <gs-icon name="@cat.IconName" class="me-2 text-primary" />@cat.DisplayName
                                     <span class="badge bg-secondary ms-1 home-event-badge">@cat.Events.Count</span>
                                 </div>
                                 <a asp-controller="Events" asp-action="Index"
@@ -382,7 +382,7 @@
                 @if (!Model.WeekendEvents.Any())
                 {
                     <div class="text-center py-5 text-muted">
-                        <i class="fas fa-umbrella-beach fa-2x mb-3"></i>
+                        <gs-icon name="tree-palm" size="32" class="mb-3" />
                         <p>@Localizer["Home_NoWeekendEvents"]</p>
                     </div>
                 }

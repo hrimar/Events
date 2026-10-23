@@ -8,7 +8,7 @@
             <a href="@Url.Action("ByTag", "Events", new { tagName = tag.Name })" 
                class="btn @tag.BadgeClass me-1 mb-1 tag-cloud-link text-decoration-none @tag.Size"
                title="@tag.EventCount events with this tag">
-                <i class="@tag.CategoryIcon me-1"></i>@tag.Name
+                <gs-icon name="@tag.CategoryIcon" class="me-1" />@tag.Name
                 <span class="badge bg-light text-dark ms-1">@tag.EventCount</span>
             </a>
         }

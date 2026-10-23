@@ -11,13 +11,13 @@
             <div class="card shadow-sm border-0">
                 <div class="card-body p-5">
                     <div class="text-center mb-4">
-                        <i class="fas fa-trash-alt fa-3x text-danger mb-3"></i>
+                        <gs-icon name="trash-2" size="48" class="text-danger mb-3" />
                         <h2 class="fw-bold">@ViewData["Title"]</h2>
                         <p class="text-muted">@Localizer["Manage_Delete_Subtitle"]</p>
                     </div>
 
                     <div class="alert alert-danger" role="alert">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <gs-icon name="triangle-alert" class="me-2" />
                         @Localizer["Manage_Delete_Warning"]
                     </div>
 
@@ -28,7 +28,7 @@
                         {
                             <div class="mb-4">
                                 <label asp-for="Input.Password" class="form-label">
-                                    <i class="fas fa-lock me-2"></i>@Localizer["Manage_Delete_ConfirmPassword"]
+                                    <gs-icon name="lock" class="me-2" />@Localizer["Manage_Delete_ConfirmPassword"]
                                 </label>
                                 <input asp-for="Input.Password" class="form-control form-control-lg" type="password" autocomplete="current-password" aria-required="true" placeholder="@Localizer["Manage_Delete_PasswordPlaceholder"]" />
                                 <span asp-validation-for="Input.Password" class="text-danger"></span>
@@ -40,10 +40,10 @@
                         
                         <div class="d-grid gap-2">
                             <button class="btn btn-danger btn-lg" type="submit">
-                                <i class="fas fa-trash-alt me-2"></i>@Localizer["Manage_Delete_Submit"]
+                                <gs-icon name="trash-2" class="me-2" />@Localizer["Manage_Delete_Submit"]
                             </button>
                             <a asp-page="./PersonalData" class="btn btn-outline-secondary btn-lg text-decoration-none">
-                                <i class="fas fa-times me-2"></i>@Localizer["Account_Cancel"]
+                                <gs-icon name="x" class="me-2" />@Localizer["Account_Cancel"]
                             </a>
                         </div>
 
@@ -51,7 +51,7 @@
 
                         <div class="text-center">
                             <small class="text-muted">
-                                <i class="fas fa-info-circle me-1"></i>
+                                <gs-icon name="info" class="me-1" />
                                 @Localizer["Manage_Delete_Permanent"]
                             </small>
                         </div>

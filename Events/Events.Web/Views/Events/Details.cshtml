@@ -82,7 +82,7 @@
                                 @if(!string.IsNullOrEmpty(Model.CategoryName))
                                 {
                                     <a href="/Events/Category/@Model.CategoryName" class="badge bg-primary text-decoration-none me-2">
-                                        <i class="fas fa-layer-group me-1"></i>
+                                        <gs-icon name="layers" class="me-1" />
                                         @CategoryLocalizationExtensions.LocalizeCategoryName(Model.CategoryName, Localizer)
                                     </a>
                                 }
@@ -90,7 +90,7 @@
                                 {
                                     <a href="@Url.Action("Index", "Events", new { subCategory = Model.SubCategoryName })" 
                                        class="badge bg-secondary text-decoration-none">
-                                        <i class="fas fa-tags me-1"></i>
+                                        <gs-icon name="tags" class="me-1" />
                                         @CategoryLocalizationExtensions.LocalizeSubCategoryName(Model.SubCategoryName, Localizer)
                                     </a>
                                 }
@@ -101,21 +101,21 @@
                             {
                                 <div class="mb-3">
                                     <small class="text-muted d-block mb-2">
-                                        <i class="fas fa-tags me-1"></i>@Localizer["Details_EventTags"]
+                                        <gs-icon name="tags" class="me-1" />@Localizer["Details_EventTags"]
                                     </small>
                                     <div class="event-tags-detailed">
                                         @foreach(var tag in Model.Tags)
                                         {
                                             <a href="@Url.Action("ByTag", "Events", new { tagName = tag })" 
                                                class="badge bg-info text-white text-decoration-none me-2 mb-2 tag-detail-link">
-                                                <i class="fas fa-tag me-1"></i>@CategoryLocalizationExtensions.LocalizeTagName(tag, Localizer)
+                                                <gs-icon name="tag" class="me-1" />@CategoryLocalizationExtensions.LocalizeTagName(tag, Localizer)
                                             </a>
                                         }
                                         @if(Model.Tags.Count >= 3)
                                         {
                                             <a href="@Url.Action("Index", "Events", new { tags = string.Join(",", Model.Tags.Take(3)) })" 
                                                class="btn btn-sm btn-outline-info ms-2">
-                                                <i class="fas fa-search me-1"></i>@Localizer["Details_FindSimilar"]
+                                                <gs-icon name="search" class="me-1" />@Localizer["Details_FindSimilar"]
                                             </a>
                                         }
                                     </div>
@@ -129,34 +129,34 @@
                                         data-title-add="@Localizer["Favorites_AddTitle"]"
                                         data-title-remove="@Localizer["Favorites_RemoveTitle"]"
                                         data-error-message="@Localizer["Favorites_Error"]">
-                                    <i class="fas fa-heart"></i> @Localizer["Details_Save"]
+                                    <gs-icon name="heart" class="gs-icon-filled" /> @Localizer["Details_Save"]
                                 </button>
                             }
                             else
                             {
                                 <a href="/Identity/Account/Login?returnUrl=@Url.Action("Details", "Events", 
                                     new { id = Model.Id })" class="btn btn-outline-secondary mb-2">
-                                    <i class="fas fa-heart"></i> @Localizer["Details_LoginToSave"]
+                                    <gs-icon name="heart" class="gs-icon-filled" /> @Localizer["Details_LoginToSave"]
                                 </a>
                             }
                             <br>
                             <div class="dropdown">
                                 <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                    <i class="fas fa-share-alt"></i> @Localizer["Details_Share"]
+                                    <gs-icon name="share-2" /> @Localizer["Details_Share"]
                                 </button>
                                 <ul class="dropdown-menu">
                                     <li><a class="dropdown-item" href="#" onclick="shareEvent('facebook')">
-                                        <i class="fab fa-facebook-f text-primary me-2"></i>Facebook
+                                        <gs-icon name="facebook" class="text-primary me-2" />Facebook
                                     </a></li>
                                     <li><a class="dropdown-item" href="#" onclick="shareEvent('twitter')">
-                                        <i class="fab fa-twitter text-info me-2"></i>Twitter
+                                        <gs-icon name="twitter" class="text-info me-2" />Twitter
                                     </a></li>
                                     <li><a class="dropdown-item" href="#" onclick="shareEvent('whatsapp')">
-                                        <i class="fab fa-whatsapp text-success me-2"></i>WhatsApp
+                                        <gs-icon name="message-circle" class="text-success me-2" />WhatsApp
                                     </a></li>
                                     <li><hr class="dropdown-divider"></li>
                                     <li><a class="dropdown-item" href="#" onclick="copyLink()">
-                                        <i class="fas fa-link me-2"></i>@Localizer["Details_CopyLink"]
+                                        <gs-icon name="link" class="me-2" />@Localizer["Details_CopyLink"]
                                     </a></li>
                                 </ul>
                             </div>
@@ -167,7 +167,7 @@
                     <div class="row mb-4">
                         <div class="col-md-6">
                             <div class="d-flex align-items-center mb-3">
-                                <i class="fas fa-calendar text-primary me-3" style="width: 20px;"></i>
+                                <gs-icon name="calendar" class="text-primary me-3" style="width: 20px;" />
                                 <div>
                                     <strong>@Localizer[Model.HasKnownTime ? "Details_DateAndTime" : "Details_Date"]</strong><br>
                                     <span class="text-muted">@Model.FormattedDate@(Model.HasKnownTime ? " at " + Model.FormattedTime : "")</span>
@@ -177,7 +177,7 @@
                         
                         <div class="col-md-6">
                             <div class="d-flex align-items-center mb-3">
-                                <i class="fas fa-map-marker-alt text-primary me-3" style="width: 20px;"></i>
+                                <gs-icon name="map-pin" class="text-primary me-3" style="width: 20px;" />
                                 <div>
                                     <strong>@Localizer["Details_Location"]</strong><br>
                                     @if (!string.IsNullOrEmpty(Model.VenueSlug))
@@ -198,7 +198,7 @@
                         
                         @*<div class="col-md-6">
                             <div class="d-flex align-items-center mb-3">
-                                <i class="fas fa-clock text-primary me-3" style="width: 20px;"></i>
+                                <gs-icon name="clock" class="text-primary me-3" style="width: 20px;" />
                                 <div>
                                     <strong>@Localizer["Details_Status"]</strong><br>
                                     <span class="badge bg-success">@Model.Status.Localize(Localizer)</span>
@@ -223,16 +223,16 @@
                         @if(!string.IsNullOrEmpty(Model.CategoryName))
                         {
                             <a href="@Url.Action("Index", "Events", new { category = Model.CategoryName })" class="btn btn-outline-secondary btn-sm">
-                                <i class="fas fa-layer-group me-1"></i>@Localizer["Details_MoreCategoryEvents"] @CategoryLocalizationExtensions.LocalizeCategoryName(Model.CategoryName, Localizer)
+                                <gs-icon name="layers" class="me-1" />@Localizer["Details_MoreCategoryEvents"] @CategoryLocalizationExtensions.LocalizeCategoryName(Model.CategoryName, Localizer)
                             </a>
                         }
                         <a href="@Url.Action("Index", "Events", new { search = Model.City })" class="btn btn-outline-secondary btn-sm">
-                            <i class="fas fa-map-marker-alt me-1"></i>@Localizer["Details_EventsIn"] @Model.City
+                            <gs-icon name="map-pin" class="me-1" />@Localizer["Details_EventsIn"] @Model.City
                         </a>
                         @if(Model.IsFree)
                         {
                             <a href="@Url.Action("Index", "Events", new { free = true })" class="btn btn-outline-success btn-sm">
-                                <i class="fas fa-gift me-1"></i>@Localizer["Details_MoreFreeEvents"]
+                                <gs-icon name="gift" class="me-1" />@Localizer["Details_MoreFreeEvents"]
                             </a>
                         }
                     </div>
@@ -248,14 +248,14 @@
                     @if(Model.HasTicketUrl)
                     {
                         <a href="@Model.TicketUrl" target="_blank" class="btn btn-primary btn-lg w-100 mb-3">
-                            <i class="fas fa-ticket-alt me-2"></i>@Localizer["Details_BuyTickets"]
+                            <gs-icon name="ticket" class="me-2" />@Localizer["Details_BuyTickets"]
                         </a>
                         <small class="text-muted">@Localizer["Details_TicketRedirect"]</small>
                     }
                     else
                     {
                         <div class="alert alert-info">
-                            <i class="fas fa-info-circle"></i>
+                            <gs-icon name="info" />
                             @Localizer["Details_TicketNotAvailable"]
                         </div>
                     }
@@ -269,7 +269,7 @@
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <h6 class="card-title mb-0">
-                                <i class="fas fa-lightbulb text-warning me-1"></i>
+                                <gs-icon name="lightbulb" class="text-warning me-1" />
                                 @Localizer["Details_YouMightLike"]
                             </h6>
                         </div>
@@ -289,10 +289,10 @@
                                         </a>
                                     </h6>
                                     <small class="text-muted d-block">
-                                        <i class="fas fa-calendar me-1"></i>@relatedEvent.FormattedDate
+                                        <gs-icon name="calendar" class="me-1" />@relatedEvent.FormattedDate
                                     </small>
                                     <small class="text-muted">
-                                        <i class="fas fa-map-marker-alt me-1"></i>@relatedEvent.Location
+                                        <gs-icon name="map-pin" class="me-1" />@relatedEvent.Location
                                     </small>
                                     @if (!string.IsNullOrEmpty(relatedEvent.CategoryName))
                                     {
@@ -327,7 +327,7 @@
                             {
                                 <a href="@Url.Action("Index", "Events", new { category = Model.CategoryName, subCategory = Model.SubCategoryName })"
                                    class="btn btn-outline-primary btn-sm w-100">
-                                    <i class="fas fa-th-list me-1"></i>
+                                    <gs-icon name="list" class="me-1" />
                                     @Localizer["Details_ViewAllCategoryEvents"] @CategoryLocalizationExtensions.LocalizeSubCategoryName(Model.SubCategoryName, Localizer)
                                 </a>
                             }
@@ -335,7 +335,7 @@
                             {
                                 <a href="@Url.Action("Index", "Events", new { category = Model.CategoryName })"
                                    class="btn btn-outline-primary btn-sm w-100">
-                                    <i class="fas fa-th-list me-1"></i>
+                                    <gs-icon name="list" class="me-1" />
                                     @Localizer["Details_ViewAllCategoryEvents"] @CategoryLocalizationExtensions.LocalizeCategoryName(Model.CategoryName, Localizer)
                                 </a>
                             }

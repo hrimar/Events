@@ -11,19 +11,19 @@
             <div class="card shadow-sm border-0">
                 <div class="card-body p-5">
                     <div class="text-center mb-4">
-                        <i class="fas fa-download fa-3x text-primary mb-3"></i>
+                        <gs-icon name="download" size="48" class="text-primary mb-3" />
                         <h2 class="fw-bold">@ViewData["Title"]</h2>
                         <p class="text-muted">Export your personal data</p>
                     </div>
 
                     <div class="alert alert-info" role="alert">
-                        <i class="fas fa-info-circle me-2"></i>
+                        <gs-icon name="info" class="me-2" />
                         Your data is being prepared. Please wait while your personal information is being compiled into a downloadable file.
                     </div>
 
                     <div class="d-grid">
                         <a asp-page="./PersonalData" class="btn btn-outline-secondary btn-lg text-decoration-none">
-                            <i class="fas fa-arrow-left me-2"></i>Back to Personal Data
+                            <gs-icon name="arrow-left" class="me-2" />Back to Personal Data
                         </a>
                     </div>
                 </div>

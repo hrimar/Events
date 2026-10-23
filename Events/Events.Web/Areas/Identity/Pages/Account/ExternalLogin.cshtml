@@ -10,13 +10,13 @@
             <div class="card shadow-sm border-0">
                 <div class="card-body p-5">
                     <div class="text-center mb-4">
-                        <i class="fab fa-@Model.ProviderDisplayName.ToLower() fa-3x text-primary mb-3" style="max-width:60px;"></i>
+                        <gs-icon name="log-in" size="48" class="text-primary mb-3" />
                         <h2 class="fw-bold">@ViewData["Title"]</h2>
                         <p class="text-muted">@string.Format(Localizer["ExternalLogin_Subtitle"], Model.ProviderDisplayName)</p>
                     </div>
 
                     <div class="alert alert-info" role="alert">
-                        <i class="fas fa-check-circle me-2"></i>
+                        <gs-icon name="circle-check" class="me-2" />
                         <strong>@Localizer["ExternalLogin_Success"]</strong> @string.Format(Localizer["ExternalLogin_AuthenticatedWith"], Model.ProviderDisplayName)
                     </div>
 
@@ -29,7 +29,7 @@
                         
                         <div class="mb-4">
                             <label asp-for="Input.Email" class="form-label">
-                                <i class="fas fa-envelope me-2"></i>@Localizer["Account_EmailAddress"]
+                                <gs-icon name="mail" class="me-2" />@Localizer["Account_EmailAddress"]
                             </label>
                             <input asp-for="Input.Email" class="form-control form-control-lg" autocomplete="email" placeholder="@Localizer["Account_PlaceholderEmail"]" />
                             <span asp-validation-for="Input.Email" class="text-danger"></span>
@@ -37,7 +37,7 @@
 
                         <div class="d-grid mb-3">
                             <button type="submit" class="btn btn-primary btn-lg">
-                                <i class="fas fa-user-plus me-2"></i>@Localizer["ExternalLogin_Complete"]
+                                <gs-icon name="user-plus" class="me-2" />@Localizer["ExternalLogin_Complete"]
                             </button>
                         </div>
 
@@ -45,7 +45,7 @@
 
                         <div class="text-center">
                             <a asp-page="./Login" class="text-decoration-none">
-                                <i class="fas fa-arrow-left me-1"></i>@Localizer["Account_BackToLogin"]
+                                <gs-icon name="arrow-left" class="me-1" />@Localizer["Account_BackToLogin"]
                             </a>
                         </div>
                     </form>

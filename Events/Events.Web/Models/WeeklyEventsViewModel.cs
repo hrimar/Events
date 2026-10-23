@@ -34,6 +34,6 @@ public class CategoryEventsViewModel
 {
     public string CategoryKey { get; set; } = string.Empty;
     public string DisplayName { get; set; } = string.Empty;
-    public string IconClass { get; set; } = string.Empty;
+    public string IconName { get; set; } = string.Empty;
     public List<EventViewModel> Events { get; set; } = new();
 }

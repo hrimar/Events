@@ -47,7 +47,7 @@ public class EventsPageViewModel
             {
                 Value = category.ToString(),
                 DisplayName = category.Localize(localizer),
-                IconClass = category.LocalizeIcon()
+                IconName = category.LocalizeIcon()
             })
             .ToList();
 
@@ -59,28 +59,28 @@ public class EventsPageViewModel
             {
                 Value = category.ToString(),
                 DisplayName = GetCategoryDisplayName(category),
-                IconClass = category.LocalizeIcon()
+                IconName = category.LocalizeIcon()
             })
             .ToList();
 
     // Sort options - localized
     public static List<SortOption> GetAvailableSortOptions(IStringLocalizer<SharedResources> localizer) => new()
     {
-        new() { Value = "date",        DisplayName = localizer["Sort_Date"],        IconClass = "fas fa-calendar" },
-        new() { Value = "name",        DisplayName = localizer["Sort_Name"],        IconClass = "fas fa-sort-alpha-up" },
-        new() { Value = "price",       DisplayName = localizer["Sort_Price"],       IconClass = "fas fa-dollar-sign" },
-        new() { Value = "category",    DisplayName = localizer["Sort_Category"],    IconClass = "fas fa-tags" },
-        new() { Value = "subcategory", DisplayName = localizer["Sort_Subcategory"], IconClass = "fas fa-layer-group" }
+        new() { Value = "date",        DisplayName = localizer["Sort_Date"],        IconName = "calendar" },
+        new() { Value = "name",        DisplayName = localizer["Sort_Name"],        IconName = "arrow-down-a-z" },
+        new() { Value = "price",       DisplayName = localizer["Sort_Price"],       IconName = "banknote" },
+        new() { Value = "category",    DisplayName = localizer["Sort_Category"],    IconName = "tags" },
+        new() { Value = "subcategory", DisplayName = localizer["Sort_Subcategory"], IconName = "layers" }
     };
 
     // Sort options - static fallback (Bulgarian)
     public static List<SortOption> AvailableSortOptions => new()
     {
-        new() { Value = "date",        DisplayName = "Date",        IconClass = "fas fa-calendar" },
-        new() { Value = "name",        DisplayName = "Name",        IconClass = "fas fa-sort-alpha-up" },
-        new() { Value = "price",       DisplayName = "Price",       IconClass = "fas fa-dollar-sign" },
-        new() { Value = "category",    DisplayName = "Category",    IconClass = "fas fa-tags" },
-        new() { Value = "subcategory", DisplayName = "Subcategory", IconClass = "fas fa-layer-group" }
+        new() { Value = "date",        DisplayName = "Date",        IconName = "calendar" },
+        new() { Value = "name",        DisplayName = "Name",        IconName = "arrow-down-a-z" },
+        new() { Value = "price",       DisplayName = "Price",       IconName = "banknote" },
+        new() { Value = "category",    DisplayName = "Category",    IconName = "tags" },
+        new() { Value = "subcategory", DisplayName = "Subcategory", IconName = "layers" }
     };
 
     // Helper properties for UI. Sorting is not a filter, and neither is the default start date (today).
@@ -167,5 +167,5 @@ public class SortOption
 {
     public string Value { get; set; } = string.Empty;
     public string DisplayName { get; set; } = string.Empty;
-    public string IconClass { get; set; } = string.Empty;
+    public string IconName { get; set; } = string.Empty;
 }

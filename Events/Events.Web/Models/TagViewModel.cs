@@ -29,18 +29,18 @@ public class TagViewModel
 
     public string CategoryIcon => Category switch
     {
-        EventCategory.Music => "fas fa-music",
-        EventCategory.Sports => "fas fa-running",
-        EventCategory.Theatre => "fas fa-theater-masks",
-        EventCategory.Cinema => "fas fa-film",
-        EventCategory.Art => "fas fa-palette",
-        EventCategory.Festivals => "fas fa-glass-cheers",
-        EventCategory.Exhibitions => "fas fa-images",
-        EventCategory.Conferences => "fas fa-users",
-        EventCategory.Workshops => "fas fa-tools",
-        EventCategory.Entertainment => "fas fa-cocktail",
-        EventCategory.FoodDrink => "fas fa-utensils",
-        EventCategory.Markets => "fas fa-store",
-        _ => "fas fa-tag"
+        EventCategory.Music => "music",
+        EventCategory.Sports => "trophy",
+        EventCategory.Theatre => "drama",
+        EventCategory.Cinema => "film",
+        EventCategory.Art => "palette",
+        EventCategory.Festivals => "party-popper",
+        EventCategory.Exhibitions => "images",
+        EventCategory.Conferences => "users",
+        EventCategory.Workshops => "wrench",
+        EventCategory.Entertainment => "martini",
+        EventCategory.FoodDrink => "utensils",
+        EventCategory.Markets => "store",
+        _ => "tag"
     };
 }

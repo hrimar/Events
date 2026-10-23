@@ -335,8 +335,7 @@
     }
 
 /* Active sort indicator */
-.btn-primary .fa-chevron-up,
-.btn-primary .fa-chevron-down {
+.btn-primary .gs-icon {
     animation: pulse 1s ease-in-out;
 }
 
@@ -945,7 +944,7 @@ footer {
     line-height: 1.15;
 }
 
-.home-category-tile i {
+.home-category-tile .gs-icon {
     font-size: 1.1rem;
     margin-bottom: 0.2rem;
 }

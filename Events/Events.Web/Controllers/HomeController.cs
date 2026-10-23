@@ -204,7 +204,7 @@ namespace Events.Web.Controllers
                 {
                     CategoryKey = cat.Value,
                     DisplayName = cat.DisplayName,
-                    IconClass = cat.IconClass,
+                    IconName = cat.IconName,
                     Events = windowEvents
                         .Where(e => string.Equals(e.CategoryName, cat.Value, StringComparison.OrdinalIgnoreCase))
                         .ToList()
