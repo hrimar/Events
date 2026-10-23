@@ -33,6 +33,11 @@
   --gs-badge-past-bg: #5A6478;
   --gs-shadow-card: 0 12px 28px rgba(21, 33, 58, 0.20);
 
+  /* Footer text: the footer background is dark in both themes */
+  --gs-footer-text: #C9D3E3;
+  --gs-footer-heading: #FFFFFF;
+  --gs-footer-line: rgba(255, 255, 255, 0.14);
+
   --gs-radius-card: 14px;
   --gs-font: "Sofia Sans", system-ui, sans-serif;
   --gs-font-display: "Sofia Sans Condensed", "Sofia Sans", sans-serif;

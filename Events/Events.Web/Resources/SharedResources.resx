@@ -2139,4 +2139,13 @@
   <data name="Venue_BrowseVenues" xml:space="preserve">
     <value>Места</value>
   </data>
+  <data name="Nav_Free" xml:space="preserve">
+    <value>Безплатни</value>
+  </data>
+  <data name="Nav_Menu" xml:space="preserve">
+    <value>Меню</value>
+  </data>
+  <data name="Nav_MainNavigation" xml:space="preserve">
+    <value>Основна навигация</value>
+  </data>
 </root>

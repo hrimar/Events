@@ -1,27 +1,35 @@
 ﻿@using System.Globalization
 
+@* Language switcher. The header shows only the other language ("EN" in BG, "БГ" in EN, GS-REQ-006 6.6);
+   the footer shows both, with the current one marked. Pass ViewData["OtherLanguageOnly"] = true for the header. *@
 @{
     var currentCulture = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName.ToLower();
     var returnUrl = Context.Request.Path + Context.Request.QueryString;
+    var otherLanguageOnly = ViewData["OtherLanguageOnly"] is true;
+
+    var languages = new[]
+    {
+        (Culture: "bg", Label: "БГ", Name: "Български"),
+        (Culture: "en", Label: "EN", Name: "English")
+    };
 }
 
 <div class="language-switcher d-flex gap-1">
-    <form asp-area="" asp-controller="Language" asp-action="SetLanguage" method="post">
-        <input type="hidden" name="culture" value="bg" />
-        <input type="hidden" name="returnUrl" value="@returnUrl" />
-        <button type="submit"
-                class="btn btn-sm @(currentCulture == "bg" ? "btn-primary" : "btn-outline-secondary")"
-                title="Български">
-            БГ
-        </button>
-    </form>
-    <form asp-area="" asp-controller="Language" asp-action="SetLanguage" method="post">
-        <input type="hidden" name="culture" value="en" />
-        <input type="hidden" name="returnUrl" value="@returnUrl" />
-        <button type="submit"
-                class="btn btn-sm @(currentCulture == "en" ? "btn-primary" : "btn-outline-secondary")"
-                title="English">
-            EN
-        </button>
-    </form>
+    @foreach (var language in languages)
+    {
+        var isCurrent = language.Culture == currentCulture;
+        if (otherLanguageOnly && isCurrent)
+        {
+            continue;
+        }
+
+        <form asp-area="" asp-controller="Language" asp-action="SetLanguage" method="post">
+            <input type="hidden" name="culture" value="@language.Culture" />
+            <input type="hidden" name="returnUrl" value="@returnUrl" />
+            <button type="submit" class="gs-lang-btn @(isCurrent ? "is-current" : "")"
+                    title="@language.Name" lang="@language.Culture" aria-current="@(isCurrent ? "true" : null)">
+                @language.Label
+            </button>
+        </form>
+    }
 </div>

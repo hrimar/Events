@@ -6,25 +6,35 @@
 @inject UserManager<User> UserManager
 @inject IStringLocalizer<SharedResources> Localizer
 
-<ul class="navbar-nav">
+@* Header account area (GS-REQ-006, 6.6): "Login" button for guests; a menu with the user name for signed-in users.
+   "Register" is a link on the login page. *@
 @if (SignInManager.IsSignedIn(User))
 {
-    <li class="nav-item">
-        <a class="nav-link" asp-area="Identity" asp-page="/Account/Manage/Index" title="@Localizer["Nav_Manage"]">@User.Identity?.Name</a>
-    </li>
-    <li class="nav-item">
-        <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Page("/Index", new { area = "" })">
-            <button type="submit" class="nav-link btn btn-link">@Localizer["Nav_Logout"]</button>
-        </form>
-    </li>
+    <div class="dropdown">
+        <button type="button" class="gs-btn gs-btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+            <gs-icon name="user" size="18" />
+            <span class="gs-user-name">@User.Identity?.Name</span>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end">
+            <li>
+                <a class="dropdown-item" asp-area="Identity" asp-page="/Account/Manage/Index">@Localizer["Nav_Manage"]</a>
+            </li>
+            @if (User.IsInRole("Administrator") || User.IsInRole("EventManager"))
+            {
+                <li>
+                    <a class="dropdown-item" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">@Localizer["Nav_AdminPanel"]</a>
+                </li>
+            }
+            <li><hr class="dropdown-divider"></li>
+            <li>
+                <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Page("/Index", new { area = "" })">
+                    <button type="submit" class="dropdown-item">@Localizer["Nav_Logout"]</button>
+                </form>
+            </li>
+        </ul>
+    </div>
 }
 else
 {
-    <li class="nav-item">
-        <a class="nav-link" asp-area="Identity" asp-page="/Account/Register">@Localizer["Nav_Register"]</a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link" asp-area="Identity" asp-page="/Account/Login">@Localizer["Nav_Login"]</a>
-    </li>
+    <a class="gs-btn gs-btn-secondary" asp-area="Identity" asp-page="/Account/Login">@Localizer["Nav_Login"]</a>
 }
-</ul>

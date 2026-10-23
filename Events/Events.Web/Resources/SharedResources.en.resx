@@ -814,5 +814,8 @@
   <data name="Venue_UpcomingEventsCount" xml:space="preserve"><value>upcoming events</value></data>
   <data name="Venue_NoVenuesFound" xml:space="preserve"><value>No venues found.</value></data>
   <data name="Venue_BrowseVenues" xml:space="preserve"><value>Venues</value></data>
+  <data name="Nav_Free" xml:space="preserve"><value>Free</value></data>
+  <data name="Nav_Menu" xml:space="preserve"><value>Menu</value></data>
+  <data name="Nav_MainNavigation" xml:space="preserve"><value>Main navigation</value></data>
 
 </root>

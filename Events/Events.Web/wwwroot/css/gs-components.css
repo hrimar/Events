@@ -135,3 +135,271 @@
     font-size: 13px;
   }
 }
+
+/* Buttons (6.5): fully rounded; primary = --gs-ink fill, secondary = --gs-ink outline */
+.gs-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid var(--gs-ink);
+  border-radius: 999px;
+  font-family: var(--gs-font);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.gs-btn-primary {
+  background: var(--gs-ink);
+  color: var(--gs-on-ink);
+}
+
+.gs-btn-primary:hover {
+  background: var(--gs-text-2);
+  border-color: var(--gs-text-2);
+  color: var(--gs-on-ink);
+}
+
+.gs-btn-secondary {
+  background: transparent;
+  color: var(--gs-ink);
+}
+
+.gs-btn-secondary:hover,
+.gs-btn-secondary[aria-expanded="true"] {
+  background: var(--gs-ink);
+  color: var(--gs-on-ink);
+}
+
+.gs-btn:focus-visible,
+.gs-icon-btn:focus-visible,
+.gs-lang-btn:focus-visible {
+  outline: 3px solid var(--gs-accent);
+  outline-offset: 2px;
+}
+
+/* Round icon-only button (theme toggle, hamburger); needs an aria-label */
+.gs-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--gs-ink);
+  cursor: pointer;
+}
+
+.gs-icon-btn:hover {
+  background: var(--gs-bg-alt);
+}
+
+/* Theme toggle: moon in the light theme, sun in the dark theme */
+.theme-toggle .theme-toggle-icon-light,
+:root[data-theme="dark"] .theme-toggle .theme-toggle-icon-dark {
+  display: none;
+}
+
+:root[data-theme="dark"] .theme-toggle .theme-toggle-icon-light {
+  display: inline-block;
+}
+
+/* Search field (6.6): pill with a magnifier icon */
+.gs-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  height: 44px;
+  margin: 0;
+  padding: 0 16px;
+  border: 1px solid var(--gs-line-strong);
+  border-radius: 999px;
+  background: var(--gs-bg-alt);
+  color: var(--gs-muted);
+  cursor: text;
+}
+
+.gs-search:focus-within {
+  border-color: var(--gs-link);
+  box-shadow: 0 0 0 0.25rem rgba(var(--gs-link-rgb), 0.25);
+}
+
+.gs-search input {
+  flex-grow: 1;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  font: inherit;
+  font-size: 15px;
+  color: var(--gs-ink);
+}
+
+.gs-search input::placeholder {
+  color: var(--gs-muted);
+}
+
+/* Header (6.6) */
+.gs-header {
+  min-height: 76px;
+  padding-block: 0;
+  background: var(--gs-surface) !important;
+  border-bottom: 1px solid var(--gs-line);
+  box-shadow: none;
+}
+
+.gs-header > .container-grid {
+  min-height: 76px;
+}
+
+.gs-logo {
+  padding: 0;
+  margin-right: 36px;
+}
+
+.gs-logo img {
+  display: block;
+  height: 40px;
+  width: auto;
+}
+
+/* The logo is a JPEG with a white background: a rounded plate in the dark theme */
+:root[data-theme="dark"] .gs-logo img,
+.gs-footer .footer-logo {
+  border-radius: 6px;
+}
+
+.gs-nav .nav-link {
+  font-size: 16px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.gs-nav .nav-link:hover,
+.gs-nav .nav-link:focus-visible {
+  color: var(--gs-link) !important;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.gs-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.gs-user-name {
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Language switcher: text button in the header, current language marked in the footer */
+.gs-lang-btn {
+  min-width: 44px;
+  height: 44px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--gs-ink);
+  font-family: var(--gs-font);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.gs-lang-btn:hover {
+  background: var(--gs-bg-alt);
+}
+
+/* Hamburger menu below 1200px: links, then the search-free actions row */
+@media (max-width: 1199.98px) {
+  .gs-nav {
+    padding-block: 8px;
+    border-bottom: 1px solid var(--gs-line);
+  }
+
+  .gs-header-actions {
+    padding-block: 12px;
+  }
+
+  .gs-header-actions .dropdown {
+    margin-left: auto;
+  }
+}
+
+@media (min-width: 1200px) {
+  .gs-nav {
+    gap: 10px;
+  }
+
+  .gs-header-search {
+    flex: 0 1 380px;
+    min-width: 220px;
+    margin-left: auto;
+    margin-right: 16px;
+  }
+}
+
+/* Footer: new colors, the 3-column structure is unchanged */
+.gs-footer {
+  color: var(--gs-footer-text);
+  border-top: 0;
+}
+
+.gs-footer-heading {
+  margin-bottom: 1rem;
+  font-family: var(--gs-font);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--gs-footer-heading);
+}
+
+.gs-footer-link {
+  color: var(--gs-footer-text);
+  font-size: 15px;
+  text-decoration: none;
+}
+
+.gs-footer-link:hover,
+.gs-footer-link:focus-visible {
+  color: var(--gs-footer-heading);
+  text-decoration: underline;
+}
+
+.gs-footer-divider {
+  border-color: var(--gs-footer-line);
+  opacity: 1;
+}
+
+.gs-footer .footer-logo {
+  max-height: 40px;
+  height: auto;
+  width: auto;
+}
+
+.gs-footer .gs-lang-btn {
+  min-width: 40px;
+  height: 36px;
+  color: var(--gs-footer-text);
+}
+
+.gs-footer .gs-lang-btn:hover,
+.gs-footer .gs-lang-btn.is-current {
+  background: transparent;
+  color: var(--gs-footer-heading);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
