@@ -22,6 +22,8 @@ class ThemeManager {
         }
 
         document.documentElement.setAttribute('data-theme', nextTheme);
+        // Bootstrap 5.3 color modes follow the site theme
+        document.documentElement.setAttribute('data-bs-theme', nextTheme);
         this.updateToggleLabel();
     }
 

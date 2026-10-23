@@ -32,6 +32,8 @@
                 t = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
             }
             document.documentElement.setAttribute('data-theme', t);
+            // Bootstrap 5.3 color modes: keeps Bootstrap components (forms, dropdowns, modals) in the same theme
+            document.documentElement.setAttribute('data-bs-theme', t);
         })();
     </script>
     <title>@(ViewData["PageTitle"] ?? ViewData["Title"])</title>
