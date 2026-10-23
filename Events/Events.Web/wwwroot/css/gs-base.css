@@ -26,6 +26,20 @@ h1, h2, .h1, .h2 {
   transition: none !important;
 }
 
+/* Icons (6.4): Lucide line icons from wwwroot/icons/gs-icons.svg, rendered by <gs-icon> */
+.gs-icon {
+  display: inline-block;
+  flex-shrink: 0;
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.125em;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 /* Typography scale (6.3) */
 .gs-h1-hero {
   margin: 0;
