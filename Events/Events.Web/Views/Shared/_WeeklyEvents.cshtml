@@ -40,7 +40,7 @@
         <!-- Desktop: title left, period nav centered, view-all right -->
         <div class="d-none d-md-flex align-items-center mb-2">
             <h2 class="home-section-title flex-shrink-0">
-                <gs-icon name="calendar-range" class="text-primary me-2" />@sectionTitle
+                <gs-icon name="calendar-range" class="gs-text-link me-2" />@sectionTitle
             </h2>
             <div class="home-period-nav mx-auto">
                 <button class="btn btn-sm btn-outline-secondary week-nav-btn" data-from-desktop="@prevFromDesktop" data-from-mobile="@prevFromMobile">
@@ -52,7 +52,7 @@
                 </button>
                 @if (!isCurrentWeek)
                 {
-                    <button class="btn btn-sm btn-outline-primary week-nav-btn ms-1" data-from-desktop="@todayFrom" data-from-mobile="@todayFrom">
+                    <button class="gs-btn gs-btn-secondary week-nav-btn ms-1" data-from-desktop="@todayFrom" data-from-mobile="@todayFrom">
                         <gs-icon name="house" class="me-1" />@Localizer["Home_ThisWeek"]
                     </button>
                 }
@@ -60,7 +60,7 @@
             <a asp-controller="Events" asp-action="Index"
                asp-route-fromDate="@Model.FromDate.ToString("yyyy-MM-dd")"
                asp-route-toDate="@Model.ToDate.ToString("yyyy-MM-dd")"
-               class="btn btn-sm btn-outline-primary flex-shrink-0">
+               class="gs-btn gs-btn-secondary flex-shrink-0">
                 <gs-icon name="list" class="me-1" />@Localizer["Home_ViewAllEvents"]
             </a>
         </div>
@@ -68,12 +68,12 @@
         <!-- Mobile: title + view all, then period nav -->
         <div class="d-flex justify-content-between align-items-center mb-2 d-md-none">
             <h2 class="home-section-title">
-                <gs-icon name="calendar-range" class="text-primary me-2" />@sectionTitle
+                <gs-icon name="calendar-range" class="gs-text-link me-2" />@sectionTitle
             </h2>
             <a asp-controller="Events" asp-action="Index"
                asp-route-fromDate="@Model.FromDate.ToString("yyyy-MM-dd")"
                asp-route-toDate="@Model.ToDate.ToString("yyyy-MM-dd")"
-               class="btn btn-sm btn-outline-primary">
+               class="gs-btn gs-btn-secondary">
                 <gs-icon name="list" class="me-1" />@Localizer["Home_ViewAllEvents"]
             </a>
         </div>
@@ -87,7 +87,7 @@
             </button>
             @if (!isCurrentWeek)
             {
-                <button class="btn btn-sm btn-outline-primary week-nav-btn ms-2" data-from-desktop="@todayFrom" data-from-mobile="@todayFrom">
+                <button class="gs-btn gs-btn-secondary week-nav-btn ms-2" data-from-desktop="@todayFrom" data-from-mobile="@todayFrom">
                     <gs-icon name="house" class="me-1" />@Localizer["Home_ThisWeek"]
                 </button>
             }
@@ -134,7 +134,7 @@
                             var day = dayList[i];
                             <div class="weekly-day-column">
                                 <div class="card border-@(day.IsToday ? "primary" : "light") shadow-sm">
-                                    <div class="card-header py-2 @(day.IsToday ? "bg-primary text-white" : "bg-surface-alt text-body") text-center">
+                                    <div class="card-header py-2 @(day.IsToday ? "gs-bg-accent" : "bg-surface-alt text-body") text-center">
                                         <div class="home-column-header text-capitalize">
                                             @if (day.IsToday)
                                             {
@@ -170,7 +170,7 @@
                                                             }
                                                             @if (ev.IsFree)
                                                             {
-                                                                <span class="badge bg-success home-event-badge">@Localizer["Home_Free"]</span>
+                                                                <span class="gs-badge-free-inline home-event-badge">@Localizer["Home_Free"]</span>
                                                             }
                                                             @if (ev.IsPastEvent)
                                                             {
@@ -239,11 +239,11 @@
                                                     <div class="home-event-meta">@ev.Location</div>
                                                     @if (ev.HasKnownTime)
                                                     {
-                                                        <div class="home-event-meta text-primary fw-semibold">@ev.FormattedTime</div>
+                                                        <div class="home-event-meta gs-text-link fw-semibold">@ev.FormattedTime</div>
                                                     }
                                                     @if (ev.IsFree)
                                                     {
-                                                        <span class="badge bg-success home-event-badge">@Localizer["Home_Free"]</span>
+                                                        <span class="gs-badge-free-inline home-event-badge">@Localizer["Home_Free"]</span>
                                                     }
                                                     @if (ev.IsPastEvent)
                                                     {
@@ -276,7 +276,7 @@
                                 <div class="home-cat-compact-block">
                                     <div class="home-cat-compact-header">
                                         <div class="home-column-header text-body">
-                                            <gs-icon name="@cat.IconName" class="me-1 text-primary" />@cat.DisplayName
+                                            <gs-icon name="@cat.IconName" class="me-1 gs-text-link" />@cat.DisplayName
                                             <span class="badge bg-secondary ms-1 home-event-badge">@cat.Events.Count</span>
                                         </div>
                                         <a asp-controller="Events" asp-action="Index"
@@ -302,7 +302,7 @@
                                                     </div>
                                                     @if (ev.IsFree)
                                                     {
-                                                        <span class="badge bg-success home-event-badge">@Localizer["Home_Free"]</span>
+                                                        <span class="gs-badge-free-inline home-event-badge">@Localizer["Home_Free"]</span>
                                                     }
                                                     @if (ev.IsPastEvent)
                                                     {
@@ -322,7 +322,7 @@
                         <div class="mb-4">
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <div class="home-column-header text-body">
-                                    <gs-icon name="@cat.IconName" class="me-2 text-primary" />@cat.DisplayName
+                                    <gs-icon name="@cat.IconName" class="me-2 gs-text-link" />@cat.DisplayName
                                     <span class="badge bg-secondary ms-1 home-event-badge">@cat.Events.Count</span>
                                 </div>
                                 <a asp-controller="Events" asp-action="Index"
@@ -350,7 +350,7 @@
                                                     </div>
                                                     @if (ev.IsFree)
                                                     {
-                                                        <span class="badge bg-success home-event-badge">@Localizer["Home_Free"]</span>
+                                                        <span class="gs-badge-free-inline home-event-badge">@Localizer["Home_Free"]</span>
                                                     }
                                                     @if (ev.IsPastEvent)
                                                     {
@@ -460,7 +460,7 @@
                                                                asp-route-toDate="@cellDate.ToString("yyyy-MM-dd")"
                                                                class="text-decoration-none text-body d-flex flex-column align-items-center">
                                                                 <span>@cellDate.Day</span>
-                                                                <span class="badge bg-primary home-event-badge">@count</span>
+                                                                <span class="gs-tag home-event-badge">@count</span>
                                                             </a>
                                                         }
                                                         else

@@ -403,3 +403,52 @@
   text-decoration: underline;
   text-underline-offset: 4px;
 }
+
+/* Small helpers that replace Bootstrap's primary/success classes in the public views (6.2) */
+.gs-text-link {
+  color: var(--gs-link) !important;
+}
+
+.gs-bg-accent {
+  background: var(--gs-accent) !important;
+  color: var(--gs-on-accent) !important;
+  font-weight: 700;
+}
+
+/* "Free" badge inside text (not over an image) */
+.gs-badge-free-inline {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+  background: var(--gs-badge-free);
+  color: var(--gs-on-badge-free);
+}
+
+a.gs-tag {
+  text-decoration: none;
+}
+
+a.gs-tag:hover,
+a.gs-tag:focus-visible {
+  color: var(--gs-tag-text);
+  text-decoration: underline;
+}
+
+/* Page title band of inner pages, instead of the old blue band */
+.gs-page-header {
+  padding-block: 32px 24px;
+  border-bottom: 1px solid var(--gs-line);
+}
+
+/* Clear button inside the search field */
+.gs-search-clear {
+  display: inline-flex;
+  color: var(--gs-muted);
+}
+
+.gs-search-clear:hover {
+  color: var(--gs-ink);
+}

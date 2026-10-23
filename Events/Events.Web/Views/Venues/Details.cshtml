@@ -41,7 +41,7 @@
         <div class="card-body">
             <div class="row align-items-start">
                 <div class="col-lg-8">
-                    <h1 class="h2 mb-1">@Model.DisplayName</h1>
+                    <h1 class="gs-h1 mb-1">@Model.DisplayName</h1>
                     @if (!string.IsNullOrEmpty(Model.ShortName))
                     {
                         <span class="badge bg-secondary mb-2">@Model.ShortName</span>
@@ -56,13 +56,13 @@
                         @if (!string.IsNullOrEmpty(Model.Address))
                         {
                             <span class="text-muted">
-                                <gs-icon name="map-pin" class="me-1 text-primary" />@Model.Address
+                                <gs-icon name="map-pin" class="me-1 gs-text-link" />@Model.Address
                             </span>
                         }
                         @if (Model.Capacity.HasValue)
                         {
                             <span class="text-muted">
-                                <gs-icon name="users" class="me-1 text-primary" />
+                                <gs-icon name="users" class="me-1 gs-text-link" />
                                 @Localizer["Venue_Capacity"]: @Model.Capacity
                             </span>
                         }
@@ -78,7 +78,7 @@
                 <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
                     <a asp-controller="Events" asp-action="Index"
                        asp-route-fromDate="@SofiaClock.Today.ToString("yyyy-MM-dd")"
-                       class="btn btn-outline-primary">
+                       class="gs-btn gs-btn-secondary">
                         <gs-icon name="calendar" class="me-1" />@Localizer["Venue_AllEvents"]
                     </a>
                 </div>
@@ -90,10 +90,10 @@
         <!-- Upcoming Events -->
         <div class="col-lg-@(Model.HasMap ? "8" : "12")">
             <h2 class="h4 mb-3">
-                <gs-icon name="calendar-days" class="me-2 text-primary" />@Localizer["Venue_EventsAtVenue"]
+                <gs-icon name="calendar-days" class="me-2 gs-text-link" />@Localizer["Venue_EventsAtVenue"]
                 @if (Model.UpcomingEvents.Any())
                 {
-                    <span class="badge bg-primary ms-1">@Model.UpcomingEvents.Count</span>
+                    <span class="gs-tag ms-1">@Model.UpcomingEvents.Count</span>
                 }
             </h2>
 
@@ -122,7 +122,7 @@
         {
             <div class="col-lg-4">
                 <h2 class="h4 mb-3">
-                    <gs-icon name="map" class="me-2 text-primary" />@Localizer["Venue_Location"]
+                    <gs-icon name="map" class="me-2 gs-text-link" />@Localizer["Venue_Location"]
                 </h2>
                 <div class="card border-0 shadow-sm">
                     <div class="card-body p-0 overflow-hidden rounded">

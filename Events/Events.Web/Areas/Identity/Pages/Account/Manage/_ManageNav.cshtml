@@ -36,23 +36,24 @@
 
 <style>
     .list-group-item {
-        color: #495057;
+        color: var(--gs-text-2);
         transition: all 0.3s ease;
     }
 
     .list-group-item:hover {
-        background-color: #f8f9fa;
-        color: #0d6efd;
+        background-color: var(--gs-bg-alt);
+        color: var(--gs-link);
         transform: translateX(4px);
     }
 
     .list-group-item.active {
-        background-color: #0d6efd;
-        color: white;
+        background-color: var(--gs-ink);
+        border-color: var(--gs-ink);
+        color: var(--gs-on-ink);
         font-weight: 500;
     }
 
-    .list-group-item i {
+    .list-group-item .gs-icon {
         width: 20px;
         text-align: center;
     }

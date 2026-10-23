@@ -166,7 +166,7 @@ h1, h2, .h1, .h2 {
 }
 
 /*
- * Bootstrap components with compiled-in #0d6efd (6.2).
+ * Bootstrap components with the default Bootstrap blue compiled in (6.2).
  * They follow the button styles from 6.5: primary = --gs-ink, secondary = --gs-ink outline.
  */
 .btn-primary {

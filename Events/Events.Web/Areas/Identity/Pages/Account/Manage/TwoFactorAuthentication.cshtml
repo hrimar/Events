@@ -18,7 +18,7 @@
                     <partial name="_StatusMessage" for="StatusMessage" />
 
                     <div class="text-center mb-4">
-                        <gs-icon name="shield" size="48" class="text-primary mb-3" />
+                        <gs-icon name="shield" size="48" class="gs-text-link mb-3" />
                         <h2 class="fw-bold">@ViewData["Title"]</h2>
                         <p class="text-muted">@Localizer["Manage_2FA_Subtitle"]</p>
                     </div>
@@ -98,13 +98,13 @@
                             <div class="d-grid gap-2">
                                 @if (!Model.HasAuthenticator)
                                 {
-                                    <a id="enable-authenticator" asp-page="./EnableAuthenticator" class="btn btn-primary">
+                                    <a id="enable-authenticator" asp-page="./EnableAuthenticator" class="gs-btn gs-btn-primary">
                                         <gs-icon name="plus" class="me-1" />@Localizer["Manage_2FA_AddApp"]
                                     </a>
                                 }
                                 else
                                 {
-                                    <a id="enable-authenticator" asp-page="./EnableAuthenticator" class="btn btn-primary">
+                                    <a id="enable-authenticator" asp-page="./EnableAuthenticator" class="gs-btn gs-btn-primary">
                                         <gs-icon name="settings" class="me-1" />@Localizer["Manage_2FA_ConfigureApp"]
                                     </a>
                                     <a id="reset-authenticator" asp-page="./ResetAuthenticator" class="btn btn-outline-warning">

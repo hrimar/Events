@@ -319,7 +319,7 @@ $(document).ready(function() {
                 html += `
                     <a class="navbar-search-item d-block p-2 rounded hover-bg-surface text-decoration-none text-body"
                        href="${escapeHtml(item.url)}">
-                        ${gsIcon(iconName, 'me-2 text-primary')}
+                        ${gsIcon(iconName, 'me-2 gs-text-link')}
                         <strong>${escapeHtml(item.title)}</strong><br>
                         <small class="text-muted">${item.category ? escapeHtml(item.category) + ' • ' : ''}${escapeHtml(item.details)}</small>
                     </a>`;

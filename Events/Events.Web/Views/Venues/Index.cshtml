@@ -8,12 +8,10 @@
     var search = ViewBag.Search as string;
 }
 
-<section class="bg-primary text-white py-3">
+<section class="gs-page-header">
     <div class="container-grid">
-        <h1 class="h3 fw-bold mb-1">
-            <gs-icon name="map-pin" class="me-2" />@Localizer["Venue_IndexTitle"]
-        </h1>
-        <p class="mb-0 opacity-75">@Localizer["Venue_IndexSubtitle"]</p>
+        <h1 class="gs-h1 mb-2">@Localizer["Venue_IndexTitle"]</h1>
+        <p class="gs-lead mb-0">@Localizer["Venue_IndexSubtitle"]</p>
     </div>
 </section>
 
@@ -21,21 +19,18 @@
     <div class="container-grid">
 
         <!-- Search -->
-        <form method="get" class="mb-4">
-            <div class="input-group" style="max-width:420px;">
-                <input type="text" class="form-control" name="search"
-                       value="@search"
-                       placeholder="@Localizer["Venue_SearchPlaceholder"]" />
-                <button class="btn btn-primary" type="submit">
-                    <gs-icon name="search" />
-                </button>
+        <form method="get" class="mb-4" role="search" style="max-width:420px;">
+            <label class="gs-search">
+                <gs-icon name="search" size="18" />
+                <input type="search" name="search" value="@search"
+                       placeholder="@Localizer["Venue_SearchPlaceholder"]" aria-label="@Localizer["Venue_SearchPlaceholder"]" />
                 @if (!string.IsNullOrWhiteSpace(search))
                 {
-                    <a asp-action="Index" class="btn btn-outline-secondary">
-                        <gs-icon name="x" />
+                    <a asp-action="Index" class="gs-search-clear" aria-label="@Localizer["Events_ClearAll"]" title="@Localizer["Events_ClearAll"]">
+                        <gs-icon name="x" size="18" />
                     </a>
                 }
-            </div>
+            </label>
         </form>
 
         @if (!Model.Any())
@@ -84,7 +79,7 @@
                                 @if (venue.UpcomingEventsCount > 0)
                                 {
                                     <div class="card-footer bg-transparent border-0 pt-0">
-                                        <span class="badge bg-primary">
+                                        <span class="gs-tag">
                                             @venue.UpcomingEventsCount @Localizer["Venue_UpcomingEventsCount"]
                                         </span>
                                     </div>
