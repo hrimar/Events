@@ -21,10 +21,17 @@ class ThemeManager {
             // Storage can be unavailable (private mode, blocked site data) - the theme still switches for this page.
         }
 
-        document.documentElement.setAttribute('data-theme', nextTheme);
+        // Transitions are disabled while the theme changes, otherwise every element animates its colors at once
+        const root = document.documentElement;
+        root.classList.add('gs-theme-switching');
+
+        root.setAttribute('data-theme', nextTheme);
         // Bootstrap 5.3 color modes follow the site theme
-        document.documentElement.setAttribute('data-bs-theme', nextTheme);
+        root.setAttribute('data-bs-theme', nextTheme);
         this.updateToggleLabel();
+
+        // Two frames: the first one renders the new theme without transitions, the second one restores them
+        requestAnimationFrame(() => requestAnimationFrame(() => root.classList.remove('gs-theme-switching')));
     }
 
     // The label names the theme the button switches to (localized texts come from data-label-* attributes).
