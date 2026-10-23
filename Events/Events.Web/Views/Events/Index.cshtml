@@ -115,7 +115,7 @@
                                     {
                                         <span class="gs-tag me-1 mb-1" style="font-size: 0.9rem;">
                                             <gs-icon name="tag" class="me-1" />@CategoryLocalizationExtensions.LocalizeTagName(selectedTag, Localizer)
-                                            <button type="button" class="btn-close btn-close-white ms-1" style="font-size: 0.6rem;" onclick="removeTag('@selectedTag')"></button>
+                                            <button type="button" class="btn-close ms-1" style="font-size: 0.6rem;" onclick="removeTag('@selectedTag')"></button>
                                         </span>
                                     }
                                     <button type="button" class="btn btn-sm btn-outline-secondary ms-2" onclick="clearAllTags()">
@@ -193,19 +193,19 @@
                     }
                     @if(Model.IsFreeFilter == false)
                     {
-                        <span class="badge bg-warning">
+                        <span class="gs-tag">
                             <gs-icon name="banknote" class="me-1" />@Localizer["Events_FilterPaidEvents"]
                         </span>
                     }
                     @if(!string.IsNullOrEmpty(Model.SearchTerm))
                     {
-                        <span class="badge bg-info">
+                        <span class="gs-tag">
                             <gs-icon name="search" class="me-1" />@Localizer["Events_FilterSearch"] "@Model.SearchTerm"
                         </span>
                     }
                     @if(Model.SelectedTags.Any())
                     {
-                        <span class="badge bg-secondary">
+                        <span class="gs-tag">
                             <gs-icon name="tags" class="me-1" />@Localizer["Events_Tags"]: @Model.SelectedTags.Count
                         </span>
                     }
@@ -296,19 +296,19 @@
                         }
                         @if(Model.IsFreeFilter == false)
                         {
-                            <span class="badge bg-warning">@Localizer["Events_FilterPaidEvents"]</span>
+                            <span class="gs-tag">@Localizer["Events_FilterPaidEvents"]</span>
                         }
                         @if(Model.HasCustomFromDate && Model.FromDate.HasValue)
                         {
-                            <span class="badge bg-secondary">@Localizer["Events_FilterFromDate"] @Model.FromDate.Value.ToString(shortDateFormat, CultureInfo.InvariantCulture)</span>
+                            <span class="gs-tag">@Localizer["Events_FilterFromDate"] @Model.FromDate.Value.ToString(shortDateFormat, CultureInfo.InvariantCulture)</span>
                         }
                         @if(Model.ToDate.HasValue)
                         {
-                            <span class="badge bg-secondary">@Localizer["Events_FilterToDate"] @Model.ToDate.Value.ToString(shortDateFormat, CultureInfo.InvariantCulture)</span>
+                            <span class="gs-tag">@Localizer["Events_FilterToDate"] @Model.ToDate.Value.ToString(shortDateFormat, CultureInfo.InvariantCulture)</span>
                         }
                         @if(Model.SelectedTags.Any())
                         {
-                            <span class="badge bg-secondary">@Localizer["Events_Tags"]: @Model.SelectedTags.Count</span>
+                            <span class="gs-tag">@Localizer["Events_Tags"]: @Model.SelectedTags.Count</span>
                         }
                     </p>
                 }

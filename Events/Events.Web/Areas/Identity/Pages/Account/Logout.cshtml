@@ -17,7 +17,7 @@
                             <p class="text-muted mb-4">@Localizer["Logout_Prompt"]</p>
 
                             <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Page("/", new { area = "" })" method="post">
-                                <button type="submit" class="btn btn-warning btn-lg w-100">
+                                <button type="submit" class="gs-btn gs-btn-primary w-100">
                                     <gs-icon name="log-out" class="me-2" />@Localizer["Logout_Submit"]
                                 </button>
                             </form>

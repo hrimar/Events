@@ -71,17 +71,6 @@
         transition: color 0.2s ease;
     }
 
-.event-date {
-    color: var(--text-secondary, #666);
-    font-size: 0.9rem;
-    margin-bottom: 4px;
-}
-
-.event-venue {
-    color: var(--text-muted, #888);
-    font-size: 0.85rem;
-}
-
 .event-tags .badge {
     font-size: 0.7rem;
     margin-bottom: 2px;
@@ -95,14 +84,14 @@
 
 /* Pagination styles */
 .pagination .page-link {
-    color: #007bff;
+    color: var(--primary-color);
     border-radius: 6px;
     margin: 0 2px;
 }
 
 .pagination .page-item.active .page-link {
-    background-color: #007bff;
-    border-color: #007bff;
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
 }
 
 /* Mobile optimizations */
@@ -222,94 +211,6 @@
     transition: transform 0.2s ease;
 }
 
-/* Related events list */
-.related-event-item {
-    transition: background-color 0.2s ease;
-}
-
-    .related-event-item:hover {
-        background-color: var(--sidebar-bg, #f8f9fa);
-        border-radius: 8px;
-    }
-
-/* Autocomplete Styling */
-.ui-autocomplete {
-    max-height: 300px;
-    overflow-y: auto;
-    overflow-x: hidden;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    z-index: 1000;
-}
-
-    .ui-autocomplete .ui-menu-item {
-        padding: 0;
-        margin: 0;
-    }
-
-.autocomplete-item {
-    padding: 12px 16px;
-    border-bottom: 1px solid #f0f0f0;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-}
-
-    .autocomplete-item:hover,
-    .ui-state-focus .autocomplete-item {
-        background-color: #f8f9fa;
-    }
-
-.ui-state-active .autocomplete-item {
-    background-color: #007bff;
-    color: white;
-}
-
-    .ui-state-active .autocomplete-item .text-muted {
-        color: rgba(255, 255, 255, 0.8) !important;
-    }
-
-/* Search input enhancements */
-#search {
-    border-radius: 8px;
-    border: 2px solid #e9ecef;
-    transition: border-color 0.2s ease;
-}
-
-    #search:focus {
-        border-color: #007bff;
-        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-    }
-
-/* Loading indicator for search */
-.search-loading {
-    position: relative;
-}
-
-    .search-loading::after {
-        content: '';
-        position: absolute;
-        right: 10px;
-        top: 50%;
-        transform: translateY(-50%);
-        width: 16px;
-        height: 16px;
-        border: 2px solid #f3f3f3;
-        border-top: 2px solid #007bff;
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-    }
-
-@keyframes spin {
-    0% {
-        transform: translateY(-50%) rotate(0deg);
-    }
-
-    100% {
-        transform: translateY(-50%) rotate(360deg);
-    }
-}
-
 /* Sorting and view controls */
 .sorting-controls {
     background: var(--sidebar-bg);
@@ -383,15 +284,6 @@
     z-index: 1000;
 }
 
-.loading-spinner {
-    width: 40px;
-    height: 40px;
-    border: 4px solid #f3f3f3;
-    border-top: 4px solid #007bff;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
-
 /* Enhanced filter badges */
 .filter-badge {
     display: inline-flex;
@@ -416,21 +308,9 @@
         }
 
 /* Base Theme Support */
-* {
-    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
-}
-
 body {
     background-color: var(--body-bg);
     color: var(--text-primary);
-}
-
-.navbar-logo {
-    max-height: 48px;
-    height: auto;
-    width: auto;
-    display: block;
-    object-fit: contain;
 }
 
 /* Navigation */
@@ -592,31 +472,6 @@ footer {
     background-color: var(--sidebar-bg);
     border: 1px solid var(--border-light);
 }
-
-/* Autocomplete Dark Theme Support */
-.ui-autocomplete {
-    background-color: var(--card-bg) !important;
-    border-color: var(--border-color) !important;
-    box-shadow: var(--shadow) !important;
-}
-
-    .ui-autocomplete .ui-menu-item {
-        color: var(--text-primary) !important;
-    }
-
-        .ui-autocomplete .ui-menu-item:hover,
-        .ui-state-focus {
-            background-color: var(--sidebar-bg) !important;
-            color: var(--primary-color) !important;
-        }
-
-.autocomplete-item {
-    color: var(--text-primary) !important;
-}
-
-    .autocomplete-item .text-muted {
-        color: var(--text-muted) !important;
-    }
 
 /* Semantic theme-aware utilities */
 .bg-page {
@@ -820,10 +675,6 @@ footer {
 
 [data-theme="dark"] .bg-primary.bg-opacity-10 {
     background-color: rgba(77, 159, 255, 0.12) !important;
-}
-
-[data-theme="dark"] .related-event-item:hover {
-    background-color: var(--sidebar-bg);
 }
 
 [data-theme="dark"] .sorting-controls {

@@ -29,8 +29,9 @@
 <style>
     .day-chips::-webkit-scrollbar { height: 6px; }
     .day-chips::-webkit-scrollbar-track { background: transparent; }
-    .day-chips::-webkit-scrollbar-thumb { background: #c7ccd1; border-radius: 3px; }
-    .day-chip.active { background: var(--bs-primary, #1f6feb); border-color: var(--bs-primary, #1f6feb); color: #fff; }
+    .day-chips::-webkit-scrollbar-thumb { background: var(--gs-line-strong); border-radius: 3px; }
+    /* Active chip (GS-REQ-006, 6.5): accent fill with dark text */
+    .day-chip.active { background: var(--gs-accent); border-color: var(--gs-accent); color: var(--gs-on-accent); font-weight: 700; }
     .day-chip.active .badge { background: rgba(255,255,255,.25) !important; }
 </style>
 
@@ -174,7 +175,7 @@
                                                             }
                                                             @if (ev.IsPastEvent)
                                                             {
-                                                                <span class="badge bg-secondary home-event-badge">@Localizer["Home_PastEvent"]</span>
+                                                                <span class="gs-badge-past-inline home-event-badge">@Localizer["Home_PastEvent"]</span>
                                                             }
                                                         </div>
                                                     </div>
@@ -210,7 +211,7 @@
                                     @(day.IsToday ? Localizer["Home_Today"].Value : day.Date.ToString("ddd", displayCulture))
                                 </div>
                                 <div class="fw-bold" style="font-size:0.95rem;">@day.Date.Day</div>
-                                <span class="badge bg-secondary home-event-badge">@day.Events.Count</span>
+                                <span class="gs-tag home-event-badge">@day.Events.Count</span>
                             </div>
                         }
                     </div>
@@ -247,7 +248,7 @@
                                                     }
                                                     @if (ev.IsPastEvent)
                                                     {
-                                                        <span class="badge bg-secondary home-event-badge">@Localizer["Home_PastEvent"]</span>
+                                                        <span class="gs-badge-past-inline home-event-badge">@Localizer["Home_PastEvent"]</span>
                                                     }
                                                 </div>
                                             </div>
@@ -277,7 +278,7 @@
                                     <div class="home-cat-compact-header">
                                         <div class="home-column-header text-body">
                                             <gs-icon name="@cat.IconName" class="me-1 gs-text-link" />@cat.DisplayName
-                                            <span class="badge bg-secondary ms-1 home-event-badge">@cat.Events.Count</span>
+                                            <span class="gs-tag ms-1 home-event-badge">@cat.Events.Count</span>
                                         </div>
                                         <a asp-controller="Events" asp-action="Index"
                                            asp-route-category="@cat.CategoryKey"
@@ -306,7 +307,7 @@
                                                     }
                                                     @if (ev.IsPastEvent)
                                                     {
-                                                        <span class="badge bg-secondary home-event-badge">@Localizer["Home_PastEvent"]</span>
+                                                        <span class="gs-badge-past-inline home-event-badge">@Localizer["Home_PastEvent"]</span>
                                                     }
                                                 </div>
                                             </div>
@@ -323,7 +324,7 @@
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <div class="home-column-header text-body">
                                     <gs-icon name="@cat.IconName" class="me-2 gs-text-link" />@cat.DisplayName
-                                    <span class="badge bg-secondary ms-1 home-event-badge">@cat.Events.Count</span>
+                                    <span class="gs-tag ms-1 home-event-badge">@cat.Events.Count</span>
                                 </div>
                                 <a asp-controller="Events" asp-action="Index"
                                    asp-route-category="@cat.CategoryKey"
@@ -354,7 +355,7 @@
                                                     }
                                                     @if (ev.IsPastEvent)
                                                     {
-                                                        <span class="badge bg-secondary home-event-badge">@Localizer["Home_PastEvent"]</span>
+                                                        <span class="gs-badge-past-inline home-event-badge">@Localizer["Home_PastEvent"]</span>
                                                     }
                                                 </div>
                                             </div>

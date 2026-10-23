@@ -59,7 +59,7 @@
                     <img src="@Model.DefaultImage" 
                          alt="@Model.Name" 
                          class="w-100"
-                         style="height: 400px; object-fit: contain; background: #f8f9fa;"
+                         style="height: 400px; object-fit: contain; background: var(--gs-bg-alt);"
                          onerror="this.src='/images/default_event_image.jpeg'">
                     @* Show 'Free' badge only for free events *@
                     @if (Model.IsFree)
@@ -89,7 +89,7 @@
                                 @if(!string.IsNullOrEmpty(Model.SubCategoryName))
                                 {
                                     <a href="@Url.Action("Index", "Events", new { subCategory = Model.SubCategoryName })" 
-                                       class="badge bg-secondary text-decoration-none">
+                                       class="gs-tag text-decoration-none">
                                         <gs-icon name="tags" class="me-1" />
                                         @CategoryLocalizationExtensions.LocalizeSubCategoryName(Model.SubCategoryName, Localizer)
                                     </a>
@@ -107,7 +107,7 @@
                                         @foreach(var tag in Model.Tags)
                                         {
                                             <a href="@Url.Action("ByTag", "Events", new { tagName = tag })" 
-                                               class="badge bg-info text-white text-decoration-none me-2 mb-2 tag-detail-link">
+                                               class="gs-tag text-decoration-none me-2 mb-2 tag-detail-link">
                                                 <gs-icon name="tag" class="me-1" />@CategoryLocalizationExtensions.LocalizeTagName(tag, Localizer)
                                             </a>
                                         }
@@ -149,7 +149,7 @@
                                         <gs-icon name="facebook" class="gs-text-link me-2" />Facebook
                                     </a></li>
                                     <li><a class="dropdown-item" href="#" onclick="shareEvent('twitter')">
-                                        <gs-icon name="twitter" class="text-info me-2" />Twitter
+                                        <gs-icon name="twitter" class="gs-text-link me-2" />Twitter
                                     </a></li>
                                     <li><a class="dropdown-item" href="#" onclick="shareEvent('whatsapp')">
                                         <gs-icon name="message-circle" class="text-success me-2" />WhatsApp
@@ -302,7 +302,7 @@
                                             </span>
                                             @if (!string.IsNullOrEmpty(relatedEvent.SubCategoryName))
                                             {
-                                                <span class="badge bg-secondary" style="font-size: 0.7rem;">
+                                                <span class="gs-tag" style="font-size: 0.7rem;">
                                                     @CategoryLocalizationExtensions.LocalizeSubCategoryName(relatedEvent.SubCategoryName, Localizer)
                                                 </span>
                                             }

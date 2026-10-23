@@ -452,3 +452,15 @@ a.gs-tag:focus-visible {
 .gs-search-clear:hover {
   color: var(--gs-ink);
 }
+
+/* "Past" label inside text (GS-BUG-002), same color as on the card image */
+.gs-badge-past-inline {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+  background: var(--gs-badge-past-bg);
+  color: var(--gs-on-badge-free);
+}
