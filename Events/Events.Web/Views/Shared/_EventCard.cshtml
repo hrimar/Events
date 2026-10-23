@@ -1,0 +1,48 @@
+@model Events.Web.Models.EventCardViewModel
+@using System.Globalization
+@using Events.Web.Resources
+@using Events.Web.Localization
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<SharedResources> Localizer
+
+@* Standard event card (GS-REQ-006, 6.5): the whole card is one link, without buttons inside. *@
+@{
+    var badge = EventCardFormatter.FormatBadge(Model, CultureInfo.CurrentCulture);
+    // Genre tag: the subcategory, else the category; published events always have a category (the crawler saves
+    // uncategorized events as Draft), so a card without both shows no tag
+    var tag = !string.IsNullOrEmpty(Model.SubCategoryName)
+        ? CategoryLocalizationExtensions.LocalizeSubCategoryName(Model.SubCategoryName, Localizer)
+        : !string.IsNullOrEmpty(Model.CategoryName)
+            ? CategoryLocalizationExtensions.LocalizeCategoryName(Model.CategoryName, Localizer)
+            : null;
+}
+<a class="gs-card" asp-area="" asp-controller="Events" asp-action="Details" asp-route-id="@Model.Id">
+    <div class="gs-card-media">
+        @* The same image twice: blurred as the background, whole (contain) in front, so posters are never cropped *@
+        <img class="gs-card-bg" src="@Model.ImageUrl" alt="" aria-hidden="true" loading="lazy" decoding="async"
+             onerror="this.onerror=null;this.src='/images/default_event_image.jpeg'">
+        <img class="gs-card-img" src="@Model.ImageUrl" alt="@Model.Name" loading="lazy" decoding="async"
+             onerror="this.onerror=null;this.src='/images/default_event_image.jpeg'">
+        @if (badge is not null)
+        {
+            <span class="gs-badge gs-badge-time">@badge</span>
+        }
+        @if (Model.IsFree)
+        {
+            <span class="gs-badge gs-badge-free">@Localizer["Events_Free"]</span>
+        }
+        @if (Model.IsPast)
+        {
+            <span class="gs-badge gs-badge-past">@Localizer["Events_PastEvent"]</span>
+        }
+    </div>
+    <h3 class="gs-event-title">@Model.Name</h3>
+    @if (!string.IsNullOrWhiteSpace(Model.Venue))
+    {
+        <p class="gs-card-venue">@Model.Venue</p>
+    }
+    @if (tag is not null)
+    {
+        <span class="gs-tag">@tag</span>
+    }
+</a>

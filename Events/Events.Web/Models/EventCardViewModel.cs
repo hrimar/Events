@@ -23,7 +23,14 @@ public class EventCardViewModel
 
     public bool HasKnownTime => TimeText is not null;
 
-    public static EventCardViewModel FromEvent(EventViewModel eventModel) => new()
+    // Past event (GS-BUG-002): the card shows the "Past" label
+    public bool IsPast { get; init; }
+
+    // The badge includes the date in lists that are not split by day (search, venue page, paged list);
+    // under a day heading only the time is shown
+    public bool ShowDate { get; init; } = true;
+
+    public static EventCardViewModel FromEvent(EventViewModel eventModel, bool showDate = true) => new()
     {
         Id = eventModel.Id,
         Name = eventModel.Name,
@@ -36,9 +43,11 @@ public class EventCardViewModel
         Date = eventModel.Date.Date,
         TimeText = eventModel.HasKnownTime
             ? (eventModel.StartTime ?? eventModel.Date.TimeOfDay).ToString(@"hh\:mm", CultureInfo.InvariantCulture)
-            : null
+            : null,
+        IsPast = eventModel.IsPastEvent,
+        ShowDate = showDate
     };
 
-    public static List<EventCardViewModel> FromEvents(IEnumerable<EventViewModel> events) =>
-        events.Select(FromEvent).ToList();
+    public static List<EventCardViewModel> FromEvents(IEnumerable<EventViewModel> events, bool showDate = true) =>
+        events.Select(e => FromEvent(e, showDate)).ToList();
 }

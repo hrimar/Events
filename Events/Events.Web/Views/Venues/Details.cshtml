@@ -110,51 +110,7 @@
                     @foreach (var ev in Model.UpcomingEvents)
                     {
                         <div class="col-md-6 mb-4">
-                            <div class="card event-card h-100">
-                                <a asp-controller="Events" asp-action="Details" asp-route-id="@ev.Id"
-                                   class="text-decoration-none">
-                                    <div class="event-image-container">
-                                        <img src="@ev.DefaultImage"
-                                             alt="@ev.Name"
-                                             class="event-image-full"
-                                             style="aspect-ratio: 16/9; object-fit: cover;"
-                                             onerror="this.src='/images/default_event_image.jpeg'">
-                                        @if (ev.IsFree)
-                                        {
-                                            <div class="event-price event-free">@Localizer["Venue_Free"]</div>
-                                        }
-                                    </div>
-                                </a>
-                                <div class="card-body d-flex flex-column">
-                                    <h5 class="event-title">
-                                        <a asp-controller="Events" asp-action="Details" asp-route-id="@ev.Id"
-                                           class="text-decoration-none text-body">@ev.Name</a>
-                                    </h5>
-                                    <div class="event-date mb-2">
-                                        <i class="fas fa-calendar me-1"></i>
-                                        @ev.FormattedDate@(ev.HasKnownTime ? " " + ev.FormattedTime : "")
-                                    </div>
-                                    @if (!string.IsNullOrEmpty(ev.ShortDescription))
-                                    {
-                                        <p class="text-muted small flex-grow-1">@ev.ShortDescription</p>
-                                    }
-                                </div>
-                                <div class="card-footer bg-transparent">
-                                    <div class="d-flex justify-content-between">
-                                        <a asp-controller="Events" asp-action="Details" asp-route-id="@ev.Id"
-                                           class="btn btn-outline-primary btn-sm">
-                                            <i class="fas fa-info-circle me-1"></i>@Localizer["Venue_Details"]
-                                        </a>
-                                        @if (ev.HasTicketUrl)
-                                        {
-                                            <a href="@ev.TicketUrl" target="_blank"
-                                               class="btn btn-primary btn-sm">
-                                                <i class="fas fa-ticket-alt me-1"></i>@Localizer["Venue_Tickets"]
-                                            </a>
-                                        }
-                                    </div>
-                                </div>
-                            </div>
+                            <partial name="_EventCard" model="EventCardViewModel.FromEvent(ev)" />
                         </div>
                     }
                 </div>

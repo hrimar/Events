@@ -26,6 +26,13 @@
   /* Text on a --gs-ink background (primary button, category tile band). White in light theme. */
   --gs-on-ink: #FFFFFF;
 
+  /* Badges on the card image (Appendix B): the same in both themes, because they sit on a photo */
+  --gs-badge-time-bg: #FFFFFF;
+  --gs-badge-time-text: #15213A;
+  --gs-on-badge-free: #FFFFFF;
+  --gs-badge-past-bg: #5A6478;
+  --gs-shadow-card: 0 12px 28px rgba(21, 33, 58, 0.20);
+
   --gs-radius-card: 14px;
   --gs-font: "Sofia Sans", system-ui, sans-serif;
   --gs-font-display: "Sofia Sans Condensed", "Sofia Sans", sans-serif;

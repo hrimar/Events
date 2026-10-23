@@ -330,7 +330,9 @@
             {
                 @foreach(var eventItem in Model.Events.Items)
                 {
-                    <partial name="_EventListCard" model="eventItem" />
+                    <div class="col-lg-4 col-md-6 mb-4">
+                        <partial name="_EventCard" model="EventCardViewModel.FromEvent(eventItem)" />
+                    </div>
                 }
             }
             else if (!string.IsNullOrWhiteSpace(Model.SearchTerm))
@@ -357,7 +359,9 @@
             <div class="row">
                 @foreach (var pastItem in Model.PastSearchResults)
                 {
-                    <partial name="_EventListCard" model="pastItem" />
+                    <div class="col-lg-4 col-md-6 mb-4">
+                        <partial name="_EventCard" model="EventCardViewModel.FromEvent(pastItem)" />
+                    </div>
                 }
             </div>
         }

@@ -74,6 +74,23 @@ public class EventCardViewModelTests
     }
 
     [Fact]
+    public void FromEvent_ShowsDateByDefaultAndCopiesThePastFlag()
+    {
+        var card = EventCardViewModel.FromEvent(new EventViewModel { Id = 1, Name = "A", Date = Friday, IsPastEvent = true });
+
+        Assert.True(card.ShowDate);
+        Assert.True(card.IsPast);
+    }
+
+    [Fact]
+    public void FromEvents_UnderDayHeading_HidesTheDate()
+    {
+        var cards = EventCardViewModel.FromEvents(new[] { new EventViewModel { Id = 1, Name = "A", Date = Friday } }, showDate: false);
+
+        Assert.False(Assert.Single(cards).ShowDate);
+    }
+
+    [Fact]
     public void FromEvents_KeepsOneCardPerPerformanceInInputOrder()
     {
         var events = new[]
