@@ -1,0 +1,12 @@
+@model Events.Web.Models.HomePageViewModel
+
+@* Phone layout (GS-REQ-007, general requirement 1): content stacked vertically, no desktop-only sections.
+   The hero and category tiles were already hidden below 768px, so they are no longer rendered here.
+   Rebuilt from the new components in 7k. *@
+
+<!-- Weekly Events -->
+@await Html.PartialAsync("_WeeklyEvents", Model.WeeklyEvents)
+
+<partial name="_HomeUserSections" model="Model" />
+
+<partial name="_HomeStats" model="Model" />

@@ -249,6 +249,7 @@ static void RegisterServices(WebApplicationBuilder builder)
     builder.Services.AddHttpContextAccessor();
     builder.Services.AddScoped<ISiteUrlProvider, SiteUrlProvider>();
     builder.Services.AddSingleton<ContactFormTimingProtector>();
+    builder.Services.AddSingleton<IDeviceClassResolver, DeviceClassResolver>();
     // /health, checked by the App Service platform (health_check_path in Terraform) and available
     // for manual/external monitoring - verifies the app can actually reach the database.
     builder.Services.AddHealthChecks().AddDbContextCheck<EventsDbContext>();
@@ -276,6 +277,7 @@ static void RegisterServices(WebApplicationBuilder builder)
     builder.Services.AddScoped<IUserFavoriteEventService, UserFavoriteEventService>();
     builder.Services.AddScoped<IAdminUserService, AdminUserService>();
     builder.Services.AddScoped<IEventFilterOptionsBuilder, EventFilterOptionsBuilder>();
+    builder.Services.AddSingleton<IHomePageCache, HomePageCache>();
     builder.Services.AddScoped<IVenueService, VenueService>();
     builder.Services.AddScoped<ISiteContentService, SiteContentService>();
     builder.Services.AddScoped<ISeoMetaService, SeoMetaService>();

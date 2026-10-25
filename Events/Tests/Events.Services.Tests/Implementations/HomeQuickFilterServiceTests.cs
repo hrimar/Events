@@ -1,4 +1,5 @@
 using Events.Data.Repositories.Interfaces;
+using Events.Services.Caching;
 using Events.Models.Entities;
 using Events.Models.Enums;
 using Events.Services.Implementations;
@@ -11,6 +12,7 @@ namespace Events.Services.Tests.Implementations;
 public class HomeQuickFilterServiceTests
 {
     private readonly Mock<IHomeQuickFilterRepository> _repositoryMock = new();
+    private readonly Mock<IEventCacheInvalidator> _cacheInvalidatorMock = new();
     private readonly Mock<ILogger<HomeQuickFilterService>> _loggerMock = new();
     private readonly List<HomeQuickFilter> _filters = new();
 
@@ -22,7 +24,7 @@ public class HomeQuickFilterServiceTests
             .Returns(Task.CompletedTask);
     }
 
-    private HomeQuickFilterService CreateService() => new(_repositoryMock.Object, _loggerMock.Object);
+    private HomeQuickFilterService CreateService() => new(_repositoryMock.Object, _cacheInvalidatorMock.Object, _loggerMock.Object);
 
     private void AddFilters(int count, bool isActive = true)
     {
@@ -54,6 +56,7 @@ public class HomeQuickFilterServiceTests
         var created = _filters.Last();
         Assert.Equal(new[] { "Business", "Conferences" }, created.Values);
         Assert.Equal(3, created.SortOrder);
+        _cacheInvalidatorMock.Verify(c => c.Invalidate(), Times.Once);
     }
 
     [Theory]
@@ -66,6 +69,7 @@ public class HomeQuickFilterServiceTests
 
         Assert.False(result.Succeeded);
         _repositoryMock.Verify(r => r.AddAsync(It.IsAny<HomeQuickFilter>()), Times.Never);
+        _cacheInvalidatorMock.Verify(c => c.Invalidate(), Times.Never);
     }
 
     [Fact]

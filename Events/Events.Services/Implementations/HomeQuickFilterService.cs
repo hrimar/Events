@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Events.Data.Repositories.Interfaces;
+using Events.Services.Caching;
 using Events.Models.Entities;
 using Events.Models.Enums;
 using Events.Services.Interfaces;
@@ -15,11 +16,16 @@ public class HomeQuickFilterService : IHomeQuickFilterService
     private const int MaxValuesJsonLength = 500;
 
     private readonly IHomeQuickFilterRepository _repository;
+    private readonly IEventCacheInvalidator _cacheInvalidator;
     private readonly ILogger<HomeQuickFilterService> _logger;
 
-    public HomeQuickFilterService(IHomeQuickFilterRepository repository, ILogger<HomeQuickFilterService> logger)
+    public HomeQuickFilterService(
+        IHomeQuickFilterRepository repository,
+        IEventCacheInvalidator cacheInvalidator,
+        ILogger<HomeQuickFilterService> logger)
     {
         _repository = repository;
+        _cacheInvalidator = cacheInvalidator;
         _logger = logger;
     }
 
@@ -53,6 +59,7 @@ public class HomeQuickFilterService : IHomeQuickFilterService
         };
 
         await _repository.AddAsync(filter);
+        _cacheInvalidator.Invalidate();
         _logger.LogInformation("Homepage quick filter {QuickFilterId} '{Label}' created", filter.Id, filter.LabelEn);
         return HomeQuickFilterResult.Success();
     }
@@ -79,6 +86,7 @@ public class HomeQuickFilterService : IHomeQuickFilterService
         filter.UpdatedAt = DateTime.UtcNow;
 
         await _repository.SaveChangesAsync();
+        _cacheInvalidator.Invalidate();
         _logger.LogInformation("Homepage quick filter {QuickFilterId} '{Label}' updated", filter.Id, filter.LabelEn);
         return HomeQuickFilterResult.Success();
     }
@@ -90,6 +98,7 @@ public class HomeQuickFilterService : IHomeQuickFilterService
             return NotFound();
 
         await _repository.DeleteAsync(filter);
+        _cacheInvalidator.Invalidate();
         _logger.LogInformation("Homepage quick filter {QuickFilterId} '{Label}' deleted", filter.Id, filter.LabelEn);
         return HomeQuickFilterResult.Success();
     }
@@ -111,6 +120,7 @@ public class HomeQuickFilterService : IHomeQuickFilterService
         filter.UpdatedAt = DateTime.UtcNow;
 
         await _repository.SaveChangesAsync();
+        _cacheInvalidator.Invalidate();
         _logger.LogInformation("Homepage quick filter {QuickFilterId} active = {IsActive}", filter.Id, isActive);
         return HomeQuickFilterResult.Success();
     }
@@ -140,6 +150,7 @@ public class HomeQuickFilterService : IHomeQuickFilterService
         }
 
         await _repository.SaveChangesAsync();
+        _cacheInvalidator.Invalidate();
         return HomeQuickFilterResult.Success();
     }
 

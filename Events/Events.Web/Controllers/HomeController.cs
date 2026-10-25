@@ -8,8 +8,10 @@ using Events.Web.Infrastructure;
 using Events.Web.Localization;
 using Events.Web.Models;
 using Events.Web.Resources;
+using Events.Web.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
+using Microsoft.Net.Http.Headers;
 
 namespace Events.Web.Controllers
 {
@@ -21,8 +23,14 @@ namespace Events.Web.Controllers
         private readonly IUserFavoriteEventService _favoriteEventService;
         private readonly ISiteContentService _siteContentService;
         private readonly ISeoMetaService _seoMetaService;
+        // Homepage cache sections (see IHomePageCache).
+        private const string WeeklyEventsCacheSection = "WeeklyEvents";
+        private const string StatsCacheSection = "Stats";
+
         private readonly IStringLocalizer<SharedResources> _localizer;
         private readonly ISofiaClock _clock;
+        private readonly IDeviceClassResolver _deviceClassResolver;
+        private readonly IHomePageCache _homePageCache;
 
         public HomeController(
             ILogger<HomeController> logger,
@@ -32,7 +40,9 @@ namespace Events.Web.Controllers
             ISiteContentService siteContentService,
             ISeoMetaService seoMetaService,
             IStringLocalizer<SharedResources> localizer,
-            ISofiaClock clock)
+            ISofiaClock clock,
+            IDeviceClassResolver deviceClassResolver,
+            IHomePageCache homePageCache)
         {
             _logger = logger;
             _eventService = eventService;
@@ -42,22 +52,35 @@ namespace Events.Web.Controllers
             _seoMetaService = seoMetaService;
             _localizer = localizer;
             _clock = clock;
+            _deviceClassResolver = deviceClassResolver;
+            _homePageCache = homePageCache;
         }
 
         public async Task<IActionResult> Index()
         {
+            // Phones get the mobile layout, everything else the desktop one; desktop-only sections
+            // are not rendered for phones at all. The HTML differs per device class, hence Vary.
+            var deviceClass = _deviceClassResolver.Resolve(Request);
+            Response.Headers.Append(HeaderNames.Vary, DeviceClassResolver.VaryHeaderValue);
+
             try
             {
                 var today = _clock.Today;
                 var dayWindowEnd = today.AddDays(5);
 
                 var localizedCategories = EventsPageViewModel.GetAvailableCategories(_localizer);
-                var weeklyEvents = await BuildWeeklyEventsViewModelAsync(today, dayWindowEnd, localizedCategories);
+
+                // Contains localized category names (By category tab), so it is cached per UI culture.
+                var weeklyEvents = await _homePageCache.GetOrCreateAsync(
+                    HomePageCache.ForCulture(WeeklyEventsCacheSection),
+                    HomePageCache.EventsDuration,
+                    () => BuildWeeklyEventsViewModelAsync(today, dayWindowEnd, localizedCategories));
 
                 // Stats
-                var totalEvents = await _eventService.GetEventsCountInRangeAsync(today, DateTime.MaxValue, EventStatus.Published);
-                var todayEvents = await _eventService.GetEventsCountInRangeAsync(today, today, EventStatus.Published);
-                var next7DaysEvents = await _eventService.GetEventsCountInRangeAsync(today, today.AddDays(6), EventStatus.Published);
+                var (totalEvents, todayEvents, next7DaysEvents) = await _homePageCache.GetOrCreateAsync(
+                    StatsCacheSection,
+                    HomePageCache.EventsDuration,
+                    () => GetEventStatsAsync(today));
 
                 // Saved + Recommended (authenticated users only)
                 var savedEvents = new List<EventViewModel>();
@@ -109,6 +132,7 @@ namespace Events.Web.Controllers
 
                 var viewModel = new HomePageViewModel
                 {
+                    DeviceClass = deviceClass,
                     HeroTitle = siteContent.LocalizedHeroTitle(isEnglish),
                     HeroSubtitle = siteContent.LocalizedHeroSubtitle(isEnglish),
                     WeeklyEvents = weeklyEvents,
@@ -132,8 +156,17 @@ namespace Events.Web.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error loading home page");
-                return View(new HomePageViewModel { WeeklyEvents = WeeklyEventsViewModel.Empty(_clock.Today) });
+                return View(new HomePageViewModel { DeviceClass = deviceClass, WeeklyEvents = WeeklyEventsViewModel.Empty(_clock.Today) });
             }
+        }
+
+        // Upcoming, today and next-7-days counts of published events.
+        private async Task<(int Total, int Today, int Next7Days)> GetEventStatsAsync(DateTime today)
+        {
+            var totalEvents = await _eventService.GetEventsCountInRangeAsync(today, DateTime.MaxValue, EventStatus.Published);
+            var todayEvents = await _eventService.GetEventsCountInRangeAsync(today, today, EventStatus.Published);
+            var next7DaysEvents = await _eventService.GetEventsCountInRangeAsync(today, today.AddDays(6), EventStatus.Published);
+            return (totalEvents, todayEvents, next7DaysEvents);
         }
 
         [HttpGet]
