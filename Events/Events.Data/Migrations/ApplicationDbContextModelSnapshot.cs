@@ -365,6 +365,129 @@ namespace Events.Data.Migrations
                     b.ToTable("EventTags");
                 });
 
+            modelBuilder.Entity("Events.Models.Entities.HomeQuickFilter", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("LabelBg")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("LabelEn")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("Values")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SortOrder");
+
+                    b.ToTable("HomeQuickFilters");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            IsActive = true,
+                            LabelBg = "Театър",
+                            LabelEn = "Theatre",
+                            SortOrder = 1,
+                            Type = 1,
+                            UpdatedAt = new DateTime(2026, 10, 25, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Values = "[\"Theatre\"]"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            IsActive = true,
+                            LabelBg = "Музика",
+                            LabelEn = "Music",
+                            SortOrder = 2,
+                            Type = 1,
+                            UpdatedAt = new DateTime(2026, 10, 25, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Values = "[\"Music\"]"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            IsActive = true,
+                            LabelBg = "Кино",
+                            LabelEn = "Cinema",
+                            SortOrder = 3,
+                            Type = 1,
+                            UpdatedAt = new DateTime(2026, 10, 25, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Values = "[\"Cinema\"]"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            IsActive = true,
+                            LabelBg = "Бизнес",
+                            LabelEn = "Business",
+                            SortOrder = 4,
+                            Type = 1,
+                            UpdatedAt = new DateTime(2026, 10, 25, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Values = "[\"Business\",\"Conferences\"]"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            IsActive = true,
+                            LabelBg = "Уъркшопи",
+                            LabelEn = "Workshops",
+                            SortOrder = 5,
+                            Type = 1,
+                            UpdatedAt = new DateTime(2026, 10, 25, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Values = "[\"Workshops\"]"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            IsActive = true,
+                            LabelBg = "За деца",
+                            LabelEn = "For kids",
+                            SortOrder = 6,
+                            Type = 2,
+                            UpdatedAt = new DateTime(2026, 10, 25, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Values = "[\"For kids\",\"Family-friendly\"]"
+                        },
+                        new
+                        {
+                            Id = 7,
+                            IsActive = true,
+                            LabelBg = "Безплатни",
+                            LabelEn = "Free",
+                            SortOrder = 7,
+                            Type = 3,
+                            UpdatedAt = new DateTime(2026, 10, 25, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Values = "[]"
+                        });
+                });
+
             modelBuilder.Entity("Events.Models.Entities.PageSeoMeta", b =>
                 {
                     b.Property<int>("Id")

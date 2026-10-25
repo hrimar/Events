@@ -263,6 +263,7 @@ static void RegisterServices(WebApplicationBuilder builder)
     builder.Services.AddScoped<IVenueRepository, VenueRepository>();
     builder.Services.AddScoped<ISiteContentRepository, SiteContentRepository>();
     builder.Services.AddScoped<IPageSeoMetaRepository, PageSeoMetaRepository>();
+    builder.Services.AddScoped<IHomeQuickFilterRepository, HomeQuickFilterRepository>();
 
     // Services
     // This IMemoryCache is shared - also used below by EventImportBatchCache for the bulk create from .xlsx/.csv admin feature.
@@ -278,6 +279,7 @@ static void RegisterServices(WebApplicationBuilder builder)
     builder.Services.AddScoped<IVenueService, VenueService>();
     builder.Services.AddScoped<ISiteContentService, SiteContentService>();
     builder.Services.AddScoped<ISeoMetaService, SeoMetaService>();
+    builder.Services.AddScoped<IHomeQuickFilterService, HomeQuickFilterService>();
 
     // Event import (bulk create from .xlsx/.csv)
     builder.Services.AddScoped<IEventImportFileParser, XlsxEventImportParser>();
