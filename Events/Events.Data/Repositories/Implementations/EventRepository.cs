@@ -77,20 +77,28 @@ public class EventRepository : IEventRepository
             query = query.Where(e => e.Status == status);
         }
 
-        // Priority: subCategoryName > categoryName
+        // Priority: subCategoryName > categoryNames
         var subCategoryName = eventQuery.SubCategoryName;
-        var categoryName = eventQuery.CategoryName;
+        var categoryNames = eventQuery.CategoryNames.Where(c => !string.IsNullOrWhiteSpace(c)).ToList();
         if (!string.IsNullOrEmpty(subCategoryName))
         {
             query = query.Where(e =>
                 e.SubCategory != null &&
                 e.SubCategory.Name == subCategoryName);
         }
-        else if (!string.IsNullOrEmpty(categoryName))
+        else if (categoryNames.Count == 1)
         {
+            // Single category keeps the plain equality predicate (same SQL as before).
+            var categoryName = categoryNames[0];
             query = query.Where(e =>
                 e.Category != null &&
                 e.Category.Name == categoryName);
+        }
+        else if (categoryNames.Count > 1)
+        {
+            query = query.Where(e =>
+                e.Category != null &&
+                categoryNames.Contains(e.Category.Name));
         }
 
         if (eventQuery.IsFree.HasValue)

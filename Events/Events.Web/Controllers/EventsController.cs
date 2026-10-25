@@ -73,6 +73,7 @@ public class EventsController : Controller
         string? tags = null,
         DateTime? fromDate = null,
         DateTime? toDate = null,
+        string? period = null,
         string? sortBy = null,
         string? sortOrder = "asc",
         CancellationToken cancellationToken = default)
@@ -89,10 +90,17 @@ public class EventsController : Controller
             if (page < 1) page = 1;
             if (pageSize < 1 || pageSize > 100) pageSize = DefaultPageSize;
 
-            var tagList = tags?.Split(',', StringSplitOptions.RemoveEmptyEntries)
-                .Select(t => t.Trim())
-                .Where(t => !string.IsNullOrEmpty(t))
-                .ToList() ?? new List<string>();
+            var tagList = SplitListParameter(tags);
+
+            // "category" accepts a comma-separated list (any of them matches); a single value works as before.
+            var categoryList = SplitListParameter(category);
+            var singleCategory = TryGetSingleCategory(categoryList);
+
+            // A named period is resolved to dates on the server; explicit fromDate and toDate together win over it.
+            var selectedPeriod = ResolvePeriod(period, fromDate, toDate);
+            var (queryFromDate, queryToDate) = selectedPeriod.HasValue
+                ? EventPeriodCalculator.GetRange(selectedPeriod.Value, _clock.Today)
+                : (fromDate.Value, toDate);
 
             // Filtering, search, sorting and pagination all happen in SQL via a single query -
             // fetching the entire matching dataset and paginating in memory was the root cause
@@ -102,11 +110,11 @@ public class EventsController : Controller
                 Page = page,
                 PageSize = pageSize,
                 Status = EventStatus.Published,
-                CategoryName = category,
+                CategoryNames = categoryList,
                 SubCategoryName = subCategory,
                 IsFree = free,
-                FromDate = fromDate,
-                ToDate = toDate,
+                FromDate = queryFromDate,
+                ToDate = queryToDate,
                 TagNames = tagList,
                 Search = search,
                 SortBy = sortBy,
@@ -114,6 +122,19 @@ public class EventsController : Controller
             };
 
             var (pagedEvents, totalCount) = await _eventService.GetPagedEventsAsync(listQuery, cancellationToken);
+
+            // An empty "next 7 days" list widens to 30 days with a notice (GS-REQ-007, 7.3.4).
+            // Recomputed on every request, so paging through the widened list stays consistent.
+            string? periodFallbackMessage = null;
+            if (totalCount == 0 && selectedPeriod == EventPeriod.Next7)
+            {
+                var (_, fallbackToDate) = EventPeriodCalculator.GetFallbackRange(_clock.Today);
+                listQuery = listQuery with { ToDate = fallbackToDate };
+                (pagedEvents, totalCount) = await _eventService.GetPagedEventsAsync(listQuery, cancellationToken);
+
+                if (totalCount > 0)
+                    periodFallbackMessage = BuildPeriodFallbackMessage(categoryList, tagList, free);
+            }
 
             var eventViewModels = EventViewModel.FromEntities(pagedEvents, _clock.Today);
             var paginatedEvents = new PaginatedList<EventViewModel>(eventViewModels, totalCount, page, pageSize);
@@ -124,14 +145,15 @@ public class EventsController : Controller
                 : await GetPastSearchResultsAsync(listQuery, cancellationToken);
             var popularTags = await GetPopularTagsAsync(cancellationToken);
 
-            var pageTitle = BuildPageTitle(category, free, search);
+            var pageTitle = BuildPageTitle(categoryList, free, search);
 
             // Default description until an admin configures PageSeoMeta for this page -
             // set before the lookup (not clobbered after), mirroring the Home page fix.
             var pageMetaDescription = _localizer["PageMetaDescription_AllEvents"].Value;
 
-            EventCategory parsedCategory = default;
-            var hasValidCategory = !string.IsNullOrWhiteSpace(category) && Enum.TryParse(category, ignoreCase: true, out parsedCategory);
+            // Per-category SEO and canonical apply only to a single category; a list is treated like "All events".
+            var hasValidCategory = singleCategory.HasValue;
+            var parsedCategory = singleCategory.GetValueOrDefault();
 
             // "All events" (no category) has its own PageSeoMeta key (SeoPageKeys.AllEvents),
             // separate from the per-category keys, so an admin can configure both independently.
@@ -164,23 +186,26 @@ public class EventsController : Controller
             {
                 Events = paginatedEvents,
                 PastSearchResults = pastSearchResults,
-                CurrentCategory = category,
+                CurrentCategory = categoryList.Count > 0 ? string.Join(",", categoryList) : null,
+                SelectedCategories = categoryList,
                 SelectedSubCategory = subCategory,
                 IsFreeFilter = free,
                 FromDate = fromDate,
                 ToDate = toDate,
+                Period = selectedPeriod,
+                PeriodFallbackMessage = periodFallbackMessage,
                 SearchTerm = search,
                 SelectedTags = tagList,
                 PopularTags = popularTags,
                 SortBy = sortBy,
                 SortOrder = sortOrder,
                 PageTitle = pageTitle,
-                Heading = BuildHeading(category, free, search),
+                Heading = BuildHeading(categoryList, free, search),
                 HasCustomFromDate = hasCustomFromDate,
                 PageMetaDescription = pageMetaDescription
             };
 
-            viewModel.AvailableSubCategories = await BuildSubCategoryOptionsAsync(category, subCategory);
+            viewModel.AvailableSubCategories = await BuildSubCategoryOptionsAsync(singleCategory, subCategory);
             viewModel.LocalizedCategories = EventsPageViewModel.GetAvailableCategories(_localizer);
             viewModel.LocalizedSortOptions = EventsPageViewModel.GetAvailableSortOptions(_localizer);
 
@@ -343,7 +368,7 @@ public class EventsController : Controller
                 {
                     PageSize = RelatedEventsCount + 1,
                     Status = EventStatus.Published,
-                    CategoryName = eventEntity.Category?.Name,
+                    CategoryNames = CategoryNamesOf(eventEntity),
                     SubCategoryName = eventEntity.SubCategory!.Name,
                     FromDate = _clock.Today
                 }, cancellationToken);
@@ -369,7 +394,7 @@ public class EventsController : Controller
                     {
                         PageSize = RelatedEventsCount + 1,
                         Status = EventStatus.Published,
-                        CategoryName = eventEntity.Category?.Name,
+                        CategoryNames = CategoryNamesOf(eventEntity),
                         FromDate = _clock.Today,
                         TagNames = eventTagNames
                     }, cancellationToken);
@@ -435,7 +460,7 @@ public class EventsController : Controller
         return items;
     }
 
-    private string BuildPageTitle(string? category, bool? free, string? search)
+    private string BuildPageTitle(IReadOnlyList<string> categories, bool? free, string? search)
     {
         if (!string.IsNullOrWhiteSpace(search))
             return $"{_localizer["PageTitle_SearchResults"]}: \"{search}\"";
@@ -443,25 +468,21 @@ public class EventsController : Controller
         if (free == true)
             return _localizer["PageTitle_FreeEvents"];
 
-        if (!string.IsNullOrWhiteSpace(category) && Enum.TryParse<EventCategory>(category, ignoreCase: true, out var parsedCategory))
-        {
-            return $"{parsedCategory.Localize(_localizer)} {_localizer["PageTitle_Events"]}";
-        }
-
-        if (!string.IsNullOrWhiteSpace(category))
-            return $"{category} {_localizer["PageTitle_Events"]}";
+        if (categories.Count > 0)
+            return $"{JoinLocalizedCategoryNames(categories)} {_localizer["PageTitle_Events"]}";
 
         return _localizer["PageTitle_AllEvents"];
     }
 
     // Visible H1 of the listing ("All events in Sofia", "Music in Sofia"); the SEO <title> is built separately.
-    private string BuildHeading(string? category, bool? free, string? search)
+    private string BuildHeading(IReadOnlyList<string> categories, bool? free, string? search)
     {
         if (!string.IsNullOrWhiteSpace(search))
             return _localizer["Events_HeadingSearch", search.Trim()];
 
-        if (!string.IsNullOrWhiteSpace(category) && Enum.TryParse<EventCategory>(category, ignoreCase: true, out var parsedCategory))
-            return _localizer["Events_HeadingCategory", parsedCategory.Localize(_localizer)];
+        // Unknown category names keep the generic heading (as before the category list was supported).
+        if (categories.Count > 0 && categories.Any(c => TryParseCategory(c).HasValue))
+            return _localizer["Events_HeadingCategory", JoinLocalizedCategoryNames(categories)];
 
         if (free == true)
             return _localizer["Events_HeadingFree"];
@@ -469,14 +490,63 @@ public class EventsController : Controller
         return _localizer["Events_HeadingAll"];
     }
 
-    private async Task<List<SelectListItem>> BuildSubCategoryOptionsAsync(string? category, string? selectedSubCategory)
+    // "Business, Conferences" -> "Бизнес, Конференции"; unknown names are shown as given.
+    private string JoinLocalizedCategoryNames(IEnumerable<string> categories) =>
+        string.Join(", ", categories.Select(c => TryParseCategory(c)?.Localize(_localizer) ?? c));
+
+    // Notice above a "next 7 days" list that was widened to 30 days, naming the active filter when there is one.
+    private string BuildPeriodFallbackMessage(IReadOnlyList<string> categories, IReadOnlyList<string> tags, bool? free)
     {
-        if (string.IsNullOrWhiteSpace(category) || !Enum.TryParse<EventCategory>(category, true, out var parsedCategory))
+        var filterLabels = categories
+            .Select(c => TryParseCategory(c)?.Localize(_localizer) ?? c)
+            .Concat(tags.Select(t => CategoryLocalizationExtensions.LocalizeTagName(t, _localizer)))
+            .ToList();
+
+        if (free == true)
+            filterLabels.Add(_localizer["Events_FilterFreeEvents"].Value);
+
+        return filterLabels.Count > 0
+            ? _localizer["Events_PeriodFallbackFiltered", string.Join(", ", filterLabels)].Value
+            : _localizer["Events_PeriodFallback"].Value;
+    }
+
+    // Splits a comma-separated query value ("Business,Conferences"), trimming blanks and duplicates.
+    private static List<string> SplitListParameter(string? value) =>
+        value?.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList() ?? new List<string>();
+
+    // Enum.TryParse alone is not enough: it accepts numbers and combines comma-separated names into one value.
+    private static EventCategory? TryParseCategory(string category) =>
+        Enum.TryParse<EventCategory>(category, ignoreCase: true, out var parsed)
+        && Enum.IsDefined(parsed)
+        && !category.Contains(',')
+            ? parsed
+            : null;
+
+    private static EventCategory? TryGetSingleCategory(IReadOnlyList<string> categories) =>
+        categories.Count == 1 ? TryParseCategory(categories[0]) : null;
+
+    // The named period applies unless both explicit dates are given (they take priority).
+    private static EventPeriod? ResolvePeriod(string? period, DateTime? fromDate, DateTime? toDate)
+    {
+        if (fromDate.HasValue && toDate.HasValue)
+            return null;
+
+        return EventPeriodCalculator.TryParse(period, out var parsedPeriod) ? parsedPeriod : null;
+    }
+
+    private static IReadOnlyList<string> CategoryNamesOf(Event eventEntity) =>
+        eventEntity.Category?.Name is { } categoryName ? new[] { categoryName } : Array.Empty<string>();
+
+    private async Task<List<SelectListItem>> BuildSubCategoryOptionsAsync(EventCategory? category, string? selectedSubCategory)
+    {
+        if (!category.HasValue)
         {
             return new List<SelectListItem>();
         }
 
-        var subCategories = await _subCategoryRepository.GetByCategoryAsync(parsedCategory);
+        var subCategories = await _subCategoryRepository.GetByCategoryAsync(category.Value);
         return subCategories
             .Select(subCategory => new SelectListItem
             {

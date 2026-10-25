@@ -312,13 +312,31 @@ public class EventRepositoryTests : IDisposable
             CreateEvent(2, "OtherMusic", new DateTime(2026, 6, 2), _musicCategory.Id));
         await _context.SaveChangesAsync();
 
-        // Act - both categoryName and subCategoryName given; subCategoryName must win
+        // Act - both categoryNames and subCategoryName given; subCategoryName must win
         var (events, totalCount) = await CreateEventRepository().GetPagedEventsAsync(
-            new PublicEventQuery { PageSize = 10, CategoryName = "Music", SubCategoryName = "Rock" });
+            new PublicEventQuery { PageSize = 10, CategoryNames = new[] { "Music" }, SubCategoryName = "Rock" });
 
         // Assert
         Assert.Equal(1, totalCount);
         Assert.Equal("RockShow", Assert.Single(events).Name);
+    }
+
+    [Fact]
+    public async Task GetPagedEventsAsync_SeveralCategoryNames_MatchesEventsInAnyOfThem()
+    {
+        var theatreCategory = new Category { Id = 3, Name = "Theatre", CategoryType = EventCategory.Theatre };
+        _context.Categories.AddRange(_musicCategory, _sportsCategory, theatreCategory);
+        _context.Events.AddRange(
+            CreateEvent(1, "Concert", new DateTime(2026, 6, 1), _musicCategory.Id),
+            CreateEvent(2, "Match", new DateTime(2026, 6, 2), _sportsCategory.Id),
+            CreateEvent(3, "Play", new DateTime(2026, 6, 3), theatreCategory.Id));
+        await _context.SaveChangesAsync();
+
+        var (events, totalCount) = await CreateEventRepository().GetPagedEventsAsync(
+            new PublicEventQuery { PageSize = 10, CategoryNames = new[] { "Music", "Sports" } });
+
+        Assert.Equal(2, totalCount);
+        Assert.Equal(new[] { "Concert", "Match" }, events.Select(e => e.Name).OrderBy(n => n));
     }
 
     [Fact]
@@ -468,7 +486,7 @@ public class EventRepositoryTests : IDisposable
         await _context.SaveChangesAsync();
 
         var (events, _) = await CreateEventRepository().GetPagedEventsAsync(
-            new PublicEventQuery { PageSize = 10, CategoryName = _musicCategory.Name, Search = "Jazz" });
+            new PublicEventQuery { PageSize = 10, CategoryNames = new[] { _musicCategory.Name }, Search = "Jazz" });
 
         Assert.Equal("Jazz Concert", Assert.Single(events).Name);
     }

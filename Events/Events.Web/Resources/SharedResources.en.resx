@@ -131,6 +131,13 @@
   <data name="Events_HeadingSearch" xml:space="preserve"><value>Search results: “{0}”</value></data>
   <data name="Events_FilterFromDate" xml:space="preserve"><value>From:</value></data>
   <data name="Events_FilterToDate" xml:space="preserve"><value>To:</value></data>
+  <data name="Events_FilterPeriod" xml:space="preserve"><value>Period:</value></data>
+  <data name="Events_PeriodFallbackFiltered" xml:space="preserve"><value>There are no events in “{0}” in the next 7 days. Showing the next 30 days.</value></data>
+  <data name="Events_PeriodFallback" xml:space="preserve"><value>There are no events in the next 7 days. Showing the next 30 days.</value></data>
+  <data name="Period_Today" xml:space="preserve"><value>Today</value></data>
+  <data name="Period_Tomorrow" xml:space="preserve"><value>Tomorrow</value></data>
+  <data name="Period_Weekend" xml:space="preserve"><value>This weekend</value></data>
+  <data name="Period_Next7" xml:space="preserve"><value>7 days</value></data>
   <data name="Events_NoEventsFound" xml:space="preserve"><value>No events found</value></data>
   <data name="Events_NoEventsHint" xml:space="preserve"><value>Try adjusting your search criteria or browse all events.</value></data>
   <data name="Events_ViewAllEvents" xml:space="preserve"><value>View All Events</value></data>

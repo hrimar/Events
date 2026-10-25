@@ -116,7 +116,7 @@ public class EventService : IEventService
             _logger.LogInformation(
                 "Getting paged events: Page {Page}, PageSize {PageSize}, Status {Status}, Category {Category}," +
                 "SubCategory {SubCategory}, FromDate {FromDate}, SortBy {SortBy}, SortOrder {SortOrder}, Search {Search}",
-                eventQuery.Page, eventQuery.PageSize, eventQuery.Status, eventQuery.CategoryName, eventQuery.SubCategoryName,
+                eventQuery.Page, eventQuery.PageSize, eventQuery.Status, string.Join(",", eventQuery.CategoryNames), eventQuery.SubCategoryName,
                 eventQuery.FromDate, eventQuery.SortBy, eventQuery.SortOrder, eventQuery.Search);
 
             // Search terms are free user input (autocomplete fires on every keystroke) - caching them would
@@ -384,11 +384,12 @@ public class EventService : IEventService
 
     private static string BuildPagedEventsCacheKey(PublicEventQuery eventQuery)
     {
-        // Sorted so the same set of tags in a different order still hits the same cache entry.
+        // Sorted so the same set of tags (or categories) in a different order still hits the same cache entry.
         var sortedTags = string.Join(",", eventQuery.TagNames.OrderBy(t => t, StringComparer.OrdinalIgnoreCase));
+        var sortedCategories = string.Join(",", eventQuery.CategoryNames.OrderBy(c => c, StringComparer.OrdinalIgnoreCase));
 
         return string.Join("|", "PagedEvents", eventQuery.Page, eventQuery.PageSize, eventQuery.Status,
-            eventQuery.CategoryName, eventQuery.SubCategoryName, eventQuery.IsFree, eventQuery.FromDate?.ToString("O"),
+            sortedCategories, eventQuery.SubCategoryName, eventQuery.IsFree, eventQuery.FromDate?.ToString("O"),
             eventQuery.SortBy, eventQuery.SortOrder, eventQuery.ToDate?.ToString("O"), sortedTags);
     }
 }

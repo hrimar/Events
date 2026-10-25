@@ -378,6 +378,27 @@
   <data name="Events_FilterToDate" xml:space="preserve">
     <value>До:</value>
   </data>
+  <data name="Events_FilterPeriod" xml:space="preserve">
+    <value>Период:</value>
+  </data>
+  <data name="Events_PeriodFallbackFiltered" xml:space="preserve">
+    <value>През следващите 7 дни няма събития в „{0}“. Показваме следващите 30 дни.</value>
+  </data>
+  <data name="Events_PeriodFallback" xml:space="preserve">
+    <value>През следващите 7 дни няма събития. Показваме следващите 30 дни.</value>
+  </data>
+  <data name="Period_Today" xml:space="preserve">
+    <value>Днес</value>
+  </data>
+  <data name="Period_Tomorrow" xml:space="preserve">
+    <value>Утре</value>
+  </data>
+  <data name="Period_Weekend" xml:space="preserve">
+    <value>Този уикенд</value>
+  </data>
+  <data name="Period_Next7" xml:space="preserve">
+    <value>7 дни</value>
+  </data>
   <data name="Events_NoEventsFound" xml:space="preserve">
     <value>Няма намерени събития</value>
   </data>

@@ -12,8 +12,9 @@ public sealed record PublicEventQuery
     public int PageSize { get; init; } = 12;
     public EventStatus? Status { get; init; }
 
-    // SubCategoryName takes priority over CategoryName when both are set.
-    public string? CategoryName { get; init; }
+    // Matches events in any of these categories (e.g. Business and Conferences for one homepage quick filter).
+    // SubCategoryName takes priority over CategoryNames when both are set.
+    public IReadOnlyList<string> CategoryNames { get; init; } = Array.Empty<string>();
     public string? SubCategoryName { get; init; }
 
     public bool? IsFree { get; init; }

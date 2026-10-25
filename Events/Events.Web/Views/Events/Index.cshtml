@@ -24,6 +24,14 @@
                 <label for="category" class="form-label">@Localizer["Events_Category"]</label>
                 <select class="form-select" id="category" name="category">
                     <option value="">@Localizer["Events_AllCategories"]</option>
+                    @* A category list from a homepage quick filter stays selected, so submitting the form keeps it. *@
+                    @if (Model.SelectedCategories.Count > 1)
+                    {
+                        <option value="@Model.CurrentCategory" selected>
+                            @string.Join(", ", Model.SelectedCategories.Select(c =>
+                                Model.LocalizedCategories.FirstOrDefault(l => string.Equals(l.Value, c, StringComparison.OrdinalIgnoreCase))?.DisplayName ?? c))
+                        </option>
+                    }
                     @foreach(var cat in Model.LocalizedCategories)
                     {
                         <option value="@cat.Value" selected="@(Model.CurrentCategory == cat.Value)">
@@ -88,6 +96,12 @@
 
             <!-- Hidden field for selected tags -->
             <input type="hidden" id="tags" name="tags" value="@string.Join(",", Model.SelectedTags)">
+
+            @* Keeps the homepage period while other filters change; explicit from/to dates still take priority. *@
+            @if (Model.Period.HasValue)
+            {
+                <input type="hidden" name="period" value="@Model.PeriodQueryValue">
+            }
         </form>
         
         <!-- Tag Cloud Section -->
@@ -172,11 +186,17 @@
             <div class="mt-3">
                 <div class="d-flex align-items-center gap-2 flex-wrap">
                     <span class="text-muted">@Localizer["Events_ActiveFilters"]</span>
-                    @if(!string.IsNullOrEmpty(Model.CurrentCategory))
+                    @foreach(var selectedCategory in Model.SelectedCategories)
                     {
-                        var activeCatDisplay = Model.LocalizedCategories.FirstOrDefault(c => c.Value == Model.CurrentCategory);
+                        var activeCatDisplay = Model.LocalizedCategories.FirstOrDefault(c => string.Equals(c.Value, selectedCategory, StringComparison.OrdinalIgnoreCase));
                         <span class="gs-tag">
-                            <gs-icon name="layers" class="me-1" />@Localizer["Events_FilterCategory"] @(activeCatDisplay?.DisplayName ?? Model.CurrentCategory)
+                            <gs-icon name="layers" class="me-1" />@Localizer["Events_FilterCategory"] @(activeCatDisplay?.DisplayName ?? selectedCategory)
+                        </span>
+                    }
+                    @if(Model.Period.HasValue)
+                    {
+                        <span class="gs-tag">
+                            <gs-icon name="calendar" class="me-1" />@Localizer["Events_FilterPeriod"] @Model.Period.Value.Localize(Localizer)
                         </span>
                     }
                     @if(!string.IsNullOrEmpty(Model.SelectedSubCategory))
@@ -238,6 +258,7 @@
                                     tags = string.Join(",", Model.SelectedTags),
                                     fromDate = Model.FromDate?.ToString("yyyy-MM-dd"),
                                     toDate = Model.ToDate?.ToString("yyyy-MM-dd"),
+                                    period = Model.PeriodQueryValue,
                                     sortBy = sortOption.Value,
                                     sortOrder = newSortOrder,
                                     page = 1
@@ -281,10 +302,14 @@
                 {
                     <p class="text-muted mb-0">
                         @Localizer["Events_FilteredResults"]
-                        @if(!string.IsNullOrEmpty(Model.CurrentCategory))
+                        @foreach(var selectedCategory in Model.SelectedCategories)
                         {
-                            var resultCatDisplay = Model.LocalizedCategories.FirstOrDefault(c => c.Value == Model.CurrentCategory);
-                            <span class="gs-tag">@(resultCatDisplay?.DisplayName ?? Model.CurrentCategory)</span>
+                            var resultCatDisplay = Model.LocalizedCategories.FirstOrDefault(c => string.Equals(c.Value, selectedCategory, StringComparison.OrdinalIgnoreCase));
+                            <span class="gs-tag">@(resultCatDisplay?.DisplayName ?? selectedCategory)</span>
+                        }
+                        @if(Model.Period.HasValue)
+                        {
+                            <span class="gs-tag">@Model.Period.Value.Localize(Localizer)</span>
                         }
                         @if(!string.IsNullOrEmpty(Model.SelectedSubCategory))
                         {
@@ -324,6 +349,11 @@
             }
         </div>
         
+        @if (!string.IsNullOrEmpty(Model.PeriodFallbackMessage))
+        {
+            <div class="alert alert-info" role="status">@Model.PeriodFallbackMessage</div>
+        }
+
         <!-- Events Grid -->
         <div class="row">
             @if(Model.Events.Items.Any())
