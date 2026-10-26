@@ -1,0 +1,43 @@
+@model Events.Web.Models.HomeVenuesViewModel
+@using Events.Web.Localization
+@using Events.Web.Resources
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<SharedResources> Localizer
+
+@* "Venues" (GS-REQ-007, 7.10): the 4 venues with a photo and the most events in the next 30 days. *@
+@{
+    var isEnglish = CultureHelper.IsEnglish();
+}
+
+<section class="gs-home-section" aria-labelledby="gs-venues-title">
+    <div class="container-grid">
+        <div class="gs-section-head">
+            <div class="gs-section-titles">
+                <p class="gs-eyebrow">@Localizer["Home_VenuesEyebrow", Model.TotalCount]</p>
+                <h2 id="gs-venues-title" class="gs-h2 gs-section-title">@Localizer["Home_VenuesHeading"]</h2>
+            </div>
+            <div class="gs-section-actions">
+                @* Secondary button style (GS-REQ-007, 7.10.1) *@
+                <a class="gs-btn gs-btn-secondary" asp-controller="Venues" asp-action="Index">@Localizer["Home_VenuesAll", Model.TotalCount]</a>
+            </div>
+        </div>
+
+        <ul class="gs-venue-grid">
+            @foreach (var venue in Model.Venues)
+            {
+                var name = venue.LocalizedName(isEnglish);
+                <li>
+                    <a class="gs-venue-card" asp-controller="Venues" asp-action="Details" asp-route-slug="@venue.Slug">
+                        <div class="gs-venue-card-media">
+                            @* Decorative: the venue name is the link text *@
+                            <img src="@venue.PhotoUrl" alt="" loading="lazy" decoding="async"
+                                 onerror="this.onerror=null;this.src='/images/default_event_image.jpeg'">
+                        </div>
+                        <h3 class="gs-venue-card-name gs-clamp-2">@name</h3>
+                        <p class="gs-venue-card-count">@venue.UpcomingEventsCount @Localizer["Venue_UpcomingEventsCount"]</p>
+                    </a>
+                </li>
+            }
+        </ul>
+    </div>
+</section>

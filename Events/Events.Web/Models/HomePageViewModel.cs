@@ -25,6 +25,9 @@ public class HomePageViewModel
     // Desktop "Free this week" band (GS-REQ-007, 7.9); null for phones or with fewer than 3 free events.
     public HomeFreeThisWeekViewModel? FreeThisWeek { get; set; }
 
+    // Desktop "Venues" (GS-REQ-007, 7.10); null for phones or when no venue qualifies.
+    public HomeVenuesViewModel? Venues { get; set; }
+
     public WeeklyEventsViewModel WeeklyEvents { get; set; } = new();
     public EventsSectionViewModel SavedSection { get; set; } = new();
     public EventsSectionViewModel RecommendedSection { get; set; } = new();

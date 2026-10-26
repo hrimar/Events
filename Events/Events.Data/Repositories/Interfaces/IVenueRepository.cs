@@ -24,6 +24,13 @@ public interface IVenueRepository
     // fromDate is the calendar day from which events count as upcoming (Europe/Sofia "today").
     Task<IEnumerable<VenueWithStatsDto>> GetAllWithStatsAsync(DateTime fromDate);
 
+    // Venues with a photo and the most published events between fromDate and toDate (calendar days, inclusive),
+    // most first; UpcomingEventsCount is the count in that period (homepage "Venues", GS-REQ-007, 7.10.2).
+    Task<List<VenueWithStatsDto>> GetTopVenuesWithPhotoAsync(DateTime fromDate, DateTime toDate, int count);
+
+    // Number of venues in the catalog.
+    Task<int> CountAsync();
+
     // Returns distinct unmapped location strings grouped by count, ordered by EventCount desc
     Task<IEnumerable<UnmappedLocationDto>> GetUnmappedLocationsAsync();
 

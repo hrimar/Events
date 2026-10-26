@@ -1,10 +1,8 @@
 @model Events.Web.Models.HomePageViewModel
-@using Events.Web.Resources
-@using Microsoft.Extensions.Localization
-@inject IStringLocalizer<SharedResources> Localizer
 
-@* Desktop and tablet layout. The new hero is in place; the remaining previous sections ("This week",
-   stats) are replaced one by one with the new ones in GS-REQ-007 steps 7e-7j. *@
+@* Desktop and tablet layout (GS-REQ-007, structure table): hero, Tonight, This weekend, Don't miss,
+   Browse by interest, Free this week, Venues. It replaces the previous "This week" block and the stats row
+   (00-kontekst, "Заменя се на десктоп"); both stay in the mobile layout. *@
 
 @* Hero (GS-REQ-007, 7.1-7.4): replaces the blue hero and the 13 category buttons (GS-REQ-005, 5.1 and 5.6) *@
 @if (Model.Hero != null)
@@ -40,6 +38,12 @@
 @if (Model.FreeThisWeek != null)
 {
     <partial name="_HomeFreeThisWeek" model="Model.FreeThisWeek" />
+}
+
+@* Venues (GS-REQ-007, 7.10); not rendered when no venue with a photo has events in the next 30 days *@
+@if (Model.Venues != null)
+{
+    <partial name="_HomeVenues" model="Model.Venues" />
 }
 
 @* <!-- Popular Tags Section -->
@@ -83,9 +87,5 @@
     </section>
 } *@
 
-<!-- Weekly Events -->
-@await Html.PartialAsync("_WeeklyEvents", Model.WeeklyEvents)
-
+@* Saved and recommended events of a signed-in user *@
 <partial name="_HomeUserSections" model="Model" />
-
-<partial name="_HomeStats" model="Model" />

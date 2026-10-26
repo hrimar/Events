@@ -2280,4 +2280,13 @@
   <data name="Home_FreeAll" xml:space="preserve">
     <value>Всички безплатни</value>
   </data>
+  <data name="Home_VenuesEyebrow" xml:space="preserve">
+    <value>{0} места в града</value>
+  </data>
+  <data name="Home_VenuesHeading" xml:space="preserve">
+    <value>Места</value>
+  </data>
+  <data name="Home_VenuesAll" xml:space="preserve">
+    <value>Всички {0} места</value>
+  </data>
 </root>

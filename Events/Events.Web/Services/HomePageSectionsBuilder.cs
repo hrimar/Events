@@ -39,6 +39,9 @@ public interface IHomePageSectionsBuilder
 
     // Desktop "Free this week" (GS-REQ-007, 7.9); null when fewer than 3 free events are coming up.
     Task<HomeFreeThisWeekViewModel?> BuildFreeThisWeekAsync();
+
+    // Desktop "Venues" (GS-REQ-007, 7.10); null when no venue with a photo has events in the next 30 days.
+    Task<HomeVenuesViewModel?> BuildVenuesAsync();
 }
 
 public sealed class HomePageSectionsBuilder : IHomePageSectionsBuilder
@@ -51,6 +54,7 @@ public sealed class HomePageSectionsBuilder : IHomePageSectionsBuilder
     private const string WeekendEventsSection = "WeekendEvents";
     private const string TopCategoriesSection = "TopCategories";
     private const string FreeThisWeekSection = "FreeThisWeek";
+    private const string TopVenuesSection = "TopVenues";
 
     private const int MaxCarouselSlides = 5;
 
@@ -64,6 +68,9 @@ public sealed class HomePageSectionsBuilder : IHomePageSectionsBuilder
     private const int MaxFreeCards = 6;
     private const int MinFreeCards = 3;
     private const int MaxFreeEventsFetchCount = 200;
+
+    // Four venue cards, by the number of events in the next 30 days (GS-REQ-007, 7.10.2).
+    private const int VenueCardsCount = 4;
 
     // Enough featured performances to fill the carousel and "Don't miss" after merging repeated performances.
     private const int FeaturedEventsFetchCount = 50;
@@ -81,17 +88,20 @@ public sealed class HomePageSectionsBuilder : IHomePageSectionsBuilder
     private const int MaxWeekendEvents = 1000;
 
     private readonly IEventService _eventService;
+    private readonly IVenueService _venueService;
     private readonly IHomeQuickFilterService _quickFilterService;
     private readonly IHomePageCache _homePageCache;
     private readonly ISofiaClock _clock;
 
     public HomePageSectionsBuilder(
         IEventService eventService,
+        IVenueService venueService,
         IHomeQuickFilterService quickFilterService,
         IHomePageCache homePageCache,
         ISofiaClock clock)
     {
         _eventService = eventService;
+        _venueService = venueService;
         _quickFilterService = quickFilterService;
         _homePageCache = homePageCache;
         _clock = clock;
@@ -250,6 +260,35 @@ public sealed class HomePageSectionsBuilder : IHomePageSectionsBuilder
             ToDate = toDate,
             Cards = EventCardViewModel.FromEvents(freeEvents)
         };
+    }
+
+    public async Task<HomeVenuesViewModel?> BuildVenuesAsync()
+    {
+        // Slow-changing aggregates, recomputed at most once per hour.
+        var venues = await _homePageCache.GetOrCreateAsync(TopVenuesSection, HomePageCache.AggregatesDuration, async () =>
+        {
+            var topVenues = await _venueService.GetTopVenuesWithPhotoAsync(EventPeriodCalculator.FallbackDays, VenueCardsCount);
+            var totalCount = await _venueService.GetCountAsync();
+
+            return new HomeVenuesViewModel
+            {
+                TotalCount = totalCount,
+
+                // Venues without a photo are already left out by the query (GS-REQ-007, 7.10.2).
+                Venues = topVenues
+                    .Select(v => new HomeVenueCardViewModel
+                    {
+                        Slug = v.Slug,
+                        Name = v.Name,
+                        NameEn = v.NameEn,
+                        PhotoUrl = v.PhotoUrl!,
+                        UpcomingEventsCount = v.UpcomingEventsCount
+                    })
+                    .ToList()
+            };
+        });
+
+        return venues.Venues.Count > 0 ? venues : null;
     }
 
     // Featured events from today on, nearest first, one entry per event: repeated performances

@@ -626,6 +626,74 @@
   list-style: none;
 }
 
+/* "Venues" (GS-REQ-007, 7.10.2): 4 venue cards */
+.gs-venue-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 24px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Venue card (GS-REQ-006, 6.5): 3:2 photo (cover), name 19px / 800 up to 2 lines, upcoming events 14px */
+.gs-venue-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.gs-venue-card:hover,
+.gs-venue-card:focus {
+  color: inherit;
+}
+
+.gs-venue-card-media {
+  aspect-ratio: 3 / 2;
+  overflow: hidden;
+  border-radius: var(--gs-radius-card);
+  background: var(--gs-media-bg);
+  transition: box-shadow 0.2s ease;
+}
+
+.gs-venue-card-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.gs-venue-card:hover .gs-venue-card-media {
+  box-shadow: var(--gs-shadow-card);
+}
+
+.gs-venue-card:hover .gs-venue-card-name {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.gs-venue-card:focus-visible {
+  outline: 3px solid var(--gs-accent);
+  outline-offset: 4px;
+  border-radius: 16px;
+}
+
+.gs-venue-card-name {
+  margin: 0;
+  font-family: var(--gs-font);
+  font-size: 19px;
+  font-weight: 800;
+  line-height: 1.25;
+  color: var(--gs-ink);
+}
+
+.gs-venue-card-count {
+  margin: -8px 0 0;
+  font-size: 14px;
+  color: var(--gs-muted);
+}
+
 /* Tablet (768-1199): two narrower columns, then one column (Etap 3 plan, tablet adaptations) */
 @media (max-width: 1199.98px) {
   .gs-card-row {
@@ -671,6 +739,11 @@
 
   .gs-feature-grid {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* 2 x 2 venue cards (Etap 3 plan, tablet adaptations) */
+  .gs-venue-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   /* The filter chips go under the tabs (Etap 3 plan, tablet adaptations) */

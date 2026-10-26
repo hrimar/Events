@@ -76,12 +76,6 @@ namespace Events.Web.Controllers
 
                 var localizedCategories = EventsPageViewModel.GetAvailableCategories(_localizer);
 
-                // Contains localized category names (By category tab), so it is cached per UI culture.
-                var weeklyEvents = await _homePageCache.GetOrCreateAsync(
-                    HomePageCache.ForCulture(WeeklyEventsCacheSection),
-                    HomePageCache.EventsDuration,
-                    () => BuildWeeklyEventsViewModelAsync(today, dayWindowEnd, localizedCategories));
-
                 // Stats
                 var eventCounts = await _sectionsBuilder.GetEventCountsAsync();
 
@@ -97,6 +91,16 @@ namespace Events.Web.Controllers
                         .OrderByDescending(e => e.Date)
                         .ToList();
                 }
+
+                // "This week" belongs to the mobile layout; the desktop layout replaced it (GS-REQ-007) and only
+                // needs its events for the recommendations of users with saved events.
+                // Contains localized category names (By category tab), so it is cached per UI culture.
+                var weeklyEvents = deviceClass == DeviceClass.Mobile || savedEvents.Any()
+                    ? await _homePageCache.GetOrCreateAsync(
+                        HomePageCache.ForCulture(WeeklyEventsCacheSection),
+                        HomePageCache.EventsDuration,
+                        () => BuildWeeklyEventsViewModelAsync(today, dayWindowEnd, localizedCategories))
+                    : WeeklyEventsViewModel.Empty(today);
 
                 var recommendedEvents = new List<EventViewModel>();
                 if (savedEvents.Any())
@@ -143,6 +147,7 @@ namespace Events.Web.Controllers
                     DontMiss = deviceClass == DeviceClass.Desktop ? await _sectionsBuilder.BuildDontMissAsync() : new(),
                     Interests = deviceClass == DeviceClass.Desktop ? await _sectionsBuilder.BuildInterestTilesAsync() : new(),
                     FreeThisWeek = deviceClass == DeviceClass.Desktop ? await _sectionsBuilder.BuildFreeThisWeekAsync() : null,
+                    Venues = deviceClass == DeviceClass.Desktop ? await _sectionsBuilder.BuildVenuesAsync() : null,
                     WeeklyEvents = weeklyEvents,
                     SavedSection = EventsSectionViewModel.CreateSavedSection(
                         events: savedEvents,

@@ -862,4 +862,7 @@
   <data name="Home_AllCategories" xml:space="preserve"><value>All {0} categories</value></data>
   <data name="Home_FreeHeading" xml:space="preserve"><value>Free this week</value></data>
   <data name="Home_FreeAll" xml:space="preserve"><value>All free events</value></data>
+  <data name="Home_VenuesEyebrow" xml:space="preserve"><value>{0} venues in the city</value></data>
+  <data name="Home_VenuesHeading" xml:space="preserve"><value>Venues</value></data>
+  <data name="Home_VenuesAll" xml:space="preserve"><value>All {0} venues</value></data>
 </root>

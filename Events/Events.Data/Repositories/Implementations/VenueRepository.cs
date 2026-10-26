@@ -119,6 +119,34 @@ public class VenueRepository : IVenueRepository
             .ToListAsync();
     }
 
+    public async Task<List<VenueWithStatsDto>> GetTopVenuesWithPhotoAsync(DateTime fromDate, DateTime toDate, int count)
+    {
+        var from = fromDate.Date;
+        var exclusiveEnd = toDate.Date.AddDays(1);
+
+        return await _context.CanonicalVenues
+            .AsNoTracking()
+            .Where(v => v.PhotoUrl != null && v.PhotoUrl != "")
+            .Select(v => new VenueWithStatsDto
+            {
+                Id = v.Id,
+                Name = v.Name,
+                NameEn = v.NameEn,
+                ShortName = v.ShortName,
+                PhotoUrl = v.PhotoUrl,
+                Slug = v.Slug,
+                City = v.City,
+                UpcomingEventsCount = v.Events.Count(e => e.Status == EventStatus.Published && e.Date >= from && e.Date < exclusiveEnd)
+            })
+            .Where(v => v.UpcomingEventsCount > 0)
+            .OrderByDescending(v => v.UpcomingEventsCount)
+            .ThenBy(v => v.Name)
+            .Take(count)
+            .ToListAsync();
+    }
+
+    public async Task<int> CountAsync() => await _context.CanonicalVenues.CountAsync();
+
     public async Task<IEnumerable<UnmappedLocationDto>> GetUnmappedLocationsAsync()
     {
         return await _context.Events

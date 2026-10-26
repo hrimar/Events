@@ -9,6 +9,11 @@ public interface IVenueService
     Task<CanonicalVenue?> GetBySlugAsync(string slug);
     Task<IEnumerable<CanonicalVenue>> GetAllAsync();
     Task<IEnumerable<VenueWithStatsDto>> GetAllWithStatsAsync();
+
+    // Venues with a photo and the most published events from today on for the given number of days (GS-REQ-007, 7.10.2).
+    Task<List<VenueWithStatsDto>> GetTopVenuesWithPhotoAsync(int days, int count);
+
+    Task<int> GetCountAsync();
     Task<IEnumerable<UnmappedLocationDto>> GetUnmappedLocationsAsync();
     Task<IEnumerable<Event>> GetUpcomingEventsByVenueAsync(int venueId);
 
