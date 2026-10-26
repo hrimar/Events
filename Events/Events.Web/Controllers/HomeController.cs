@@ -17,20 +17,20 @@ namespace Events.Web.Controllers
 {
     public class HomeController : Controller
     {
+        // Homepage cache section of the mobile "This week" block (see IHomePageCache).
+        private const string WeeklyEventsCacheSection = "WeeklyEvents";
+
         private readonly ILogger<HomeController> _logger;
         private readonly IEventService _eventService;
         private readonly ITagService _tagService;
         private readonly IUserFavoriteEventService _favoriteEventService;
         private readonly ISiteContentService _siteContentService;
         private readonly ISeoMetaService _seoMetaService;
-        // Homepage cache sections (see IHomePageCache).
-        private const string WeeklyEventsCacheSection = "WeeklyEvents";
-        private const string StatsCacheSection = "Stats";
-
         private readonly IStringLocalizer<SharedResources> _localizer;
         private readonly ISofiaClock _clock;
         private readonly IDeviceClassResolver _deviceClassResolver;
         private readonly IHomePageCache _homePageCache;
+        private readonly IHomePageSectionsBuilder _sectionsBuilder;
 
         public HomeController(
             ILogger<HomeController> logger,
@@ -42,7 +42,8 @@ namespace Events.Web.Controllers
             IStringLocalizer<SharedResources> localizer,
             ISofiaClock clock,
             IDeviceClassResolver deviceClassResolver,
-            IHomePageCache homePageCache)
+            IHomePageCache homePageCache,
+            IHomePageSectionsBuilder sectionsBuilder)
         {
             _logger = logger;
             _eventService = eventService;
@@ -54,6 +55,7 @@ namespace Events.Web.Controllers
             _clock = clock;
             _deviceClassResolver = deviceClassResolver;
             _homePageCache = homePageCache;
+            _sectionsBuilder = sectionsBuilder;
         }
 
         public async Task<IActionResult> Index()
@@ -77,10 +79,7 @@ namespace Events.Web.Controllers
                     () => BuildWeeklyEventsViewModelAsync(today, dayWindowEnd, localizedCategories));
 
                 // Stats
-                var (totalEvents, todayEvents, next7DaysEvents) = await _homePageCache.GetOrCreateAsync(
-                    StatsCacheSection,
-                    HomePageCache.EventsDuration,
-                    () => GetEventStatsAsync(today));
+                var eventCounts = await _sectionsBuilder.GetEventCountsAsync();
 
                 // Saved + Recommended (authenticated users only)
                 var savedEvents = new List<EventViewModel>();
@@ -120,7 +119,6 @@ namespace Events.Web.Controllers
 
                 var popularTags = await GetPopularTagsAsync();
 
-                var isEnglish = CultureHelper.IsEnglish();
                 var siteContent = await _siteContentService.GetAsync();
 
                 // Default title until an admin configures PageSeoMeta for "home" - must be
@@ -133,8 +131,9 @@ namespace Events.Web.Controllers
                 var viewModel = new HomePageViewModel
                 {
                     DeviceClass = deviceClass,
-                    HeroTitle = siteContent.LocalizedHeroTitle(isEnglish),
-                    HeroSubtitle = siteContent.LocalizedHeroSubtitle(isEnglish),
+
+                    // Desktop-only sections are not built for phones at all.
+                    Hero = deviceClass == DeviceClass.Desktop ? await _sectionsBuilder.BuildHeroAsync(siteContent) : null,
                     WeeklyEvents = weeklyEvents,
                     SavedSection = EventsSectionViewModel.CreateSavedSection(
                         events: savedEvents,
@@ -144,9 +143,9 @@ namespace Events.Web.Controllers
                         events: recommendedEvents,
                         categories: localizedCategories,
                         title: _localizer["Home_RecommendedEvents"]),
-                    TotalEvents = totalEvents,
-                    TodayEvents = todayEvents,
-                    Next7DaysEvents = next7DaysEvents,
+                    TotalEvents = eventCounts.Total,
+                    TodayEvents = eventCounts.Today,
+                    Next7DaysEvents = eventCounts.Next7Days,
                     PopularTags = popularTags.Take(15).ToList(),
                     LocalizedCategories = localizedCategories
                 };
@@ -158,15 +157,6 @@ namespace Events.Web.Controllers
                 _logger.LogError(ex, "Error loading home page");
                 return View(new HomePageViewModel { DeviceClass = deviceClass, WeeklyEvents = WeeklyEventsViewModel.Empty(_clock.Today) });
             }
-        }
-
-        // Upcoming, today and next-7-days counts of published events.
-        private async Task<(int Total, int Today, int Next7Days)> GetEventStatsAsync(DateTime today)
-        {
-            var totalEvents = await _eventService.GetEventsCountInRangeAsync(today, DateTime.MaxValue, EventStatus.Published);
-            var todayEvents = await _eventService.GetEventsCountInRangeAsync(today, today, EventStatus.Published);
-            var next7DaysEvents = await _eventService.GetEventsCountInRangeAsync(today, today.AddDays(6), EventStatus.Published);
-            return (totalEvents, todayEvents, next7DaysEvents);
         }
 
         [HttpGet]

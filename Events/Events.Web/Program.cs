@@ -278,6 +278,7 @@ static void RegisterServices(WebApplicationBuilder builder)
     builder.Services.AddScoped<IAdminUserService, AdminUserService>();
     builder.Services.AddScoped<IEventFilterOptionsBuilder, EventFilterOptionsBuilder>();
     builder.Services.AddSingleton<IHomePageCache, HomePageCache>();
+    builder.Services.AddScoped<IHomePageSectionsBuilder, HomePageSectionsBuilder>();
     builder.Services.AddScoped<IVenueService, VenueService>();
     builder.Services.AddScoped<ISiteContentService, SiteContentService>();
     builder.Services.AddScoped<ISeoMetaService, SeoMetaService>();

@@ -2169,4 +2169,37 @@
   <data name="Nav_MainNavigation" xml:space="preserve">
     <value>Основна навигация</value>
   </data>
+  <data name="Home_HeroWhen" xml:space="preserve">
+    <value>Кога</value>
+  </data>
+  <data name="Home_HeroWhat" xml:space="preserve">
+    <value>Какво</value>
+  </data>
+  <data name="Home_ChipToday" xml:space="preserve">
+    <value>Днес · {0}</value>
+  </data>
+  <data name="Home_ChipDate" xml:space="preserve">
+    <value>Дата</value>
+  </data>
+  <data name="Home_ChipDateAria" xml:space="preserve">
+    <value>Избери ден от календара</value>
+  </data>
+  <data name="Home_FeaturedBadge" xml:space="preserve">
+    <value>Препоръчано</value>
+  </data>
+  <data name="Home_FeaturedCarousel" xml:space="preserve">
+    <value>Препоръчани събития</value>
+  </data>
+  <data name="Home_CarouselPrevious" xml:space="preserve">
+    <value>Предишно събитие</value>
+  </data>
+  <data name="Home_CarouselNext" xml:space="preserve">
+    <value>Следващо събитие</value>
+  </data>
+  <data name="Home_CarouselSlide" xml:space="preserve">
+    <value>Слайд {0} от {1}</value>
+  </data>
+  <data name="Home_HeroFilters" xml:space="preserve">
+    <value>Бързи филтри</value>
+  </data>
 </root>

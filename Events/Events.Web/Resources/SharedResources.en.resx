@@ -825,4 +825,15 @@
   <data name="Nav_Menu" xml:space="preserve"><value>Menu</value></data>
   <data name="Nav_MainNavigation" xml:space="preserve"><value>Main navigation</value></data>
 
+  <data name="Home_HeroWhen" xml:space="preserve"><value>When</value></data>
+  <data name="Home_HeroWhat" xml:space="preserve"><value>What</value></data>
+  <data name="Home_ChipToday" xml:space="preserve"><value>Today · {0}</value></data>
+  <data name="Home_ChipDate" xml:space="preserve"><value>Date</value></data>
+  <data name="Home_ChipDateAria" xml:space="preserve"><value>Pick a day from the calendar</value></data>
+  <data name="Home_FeaturedBadge" xml:space="preserve"><value>Featured</value></data>
+  <data name="Home_FeaturedCarousel" xml:space="preserve"><value>Featured events</value></data>
+  <data name="Home_CarouselPrevious" xml:space="preserve"><value>Previous event</value></data>
+  <data name="Home_CarouselNext" xml:space="preserve"><value>Next event</value></data>
+  <data name="Home_CarouselSlide" xml:space="preserve"><value>Slide {0} of {1}</value></data>
+  <data name="Home_HeroFilters" xml:space="preserve"><value>Quick filters</value></data>
 </root>

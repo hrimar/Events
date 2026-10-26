@@ -27,15 +27,32 @@ public static class EventCardFormatter
     {
         var isEnglish = culture.TwoLetterISOLanguageName.Equals("en", StringComparison.OrdinalIgnoreCase);
 
-        var dayName = culture.DateTimeFormat.GetAbbreviatedDayName(date.DayOfWeek);
-        if (dayName.Length > 0)
-        {
-            dayName = culture.TextInfo.ToUpper(dayName[0]) + dayName[1..];
-        }
+        var dayName = Capitalize(culture.DateTimeFormat.GetAbbreviatedDayName(date.DayOfWeek), culture);
 
         // Day and month in the BG/EN numeric order from GS-BUG-004, without the year
         var dayMonth = date.ToString(isEnglish ? "dd'/'MM" : "dd'.'MM", CultureInfo.InvariantCulture);
 
         return $"{dayName} {dayMonth}";
     }
+
+    // "Сб 26 септември" / "Sat 26 September" (hero carousel meta line, GS-REQ-007, 7.4.4)
+    public static string FormatDayAndMonthName(DateTime date, CultureInfo culture)
+    {
+        var dayName = Capitalize(culture.DateTimeFormat.GetAbbreviatedDayName(date.DayOfWeek), culture);
+        var monthName = culture.DateTimeFormat.GetMonthName(date.Month);
+
+        return $"{dayName} {date.Day} {monthName}";
+    }
+
+    // "Петък, 25 септември" / "Friday, 25 September" (hero eyebrow, GS-REQ-007, 7.1.1)
+    public static string FormatWeekdayAndDate(DateTime date, CultureInfo culture)
+    {
+        var dayName = Capitalize(culture.DateTimeFormat.GetDayName(date.DayOfWeek), culture);
+        var monthName = culture.DateTimeFormat.GetMonthName(date.Month);
+
+        return $"{dayName}, {date.Day} {monthName}";
+    }
+
+    private static string Capitalize(string text, CultureInfo culture) =>
+        text.Length > 0 ? culture.TextInfo.ToUpper(text[0]) + text[1..] : text;
 }

@@ -15,7 +15,18 @@ else
     <partial name="_HomeDesktop" model="Model" />
 }
 
+@section Scripts {
+    @if (Model.DeviceClass == DeviceClass.Desktop)
+    {
+        <script src="~/js/home.js" asp-append-version="true" defer></script>
+    }
+}
+
 @section Styles {
+    @if (Model.DeviceClass == DeviceClass.Desktop)
+    {
+        <link rel="stylesheet" href="~/css/gs-home.css" asp-append-version="true" />
+    }
     <style>
         .tag-cloud-home {
             text-align: center;

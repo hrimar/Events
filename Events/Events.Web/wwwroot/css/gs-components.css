@@ -464,3 +464,70 @@ a.gs-tag:focus-visible {
   background: var(--gs-badge-past-bg);
   color: var(--gs-on-badge-free);
 }
+
+/* Chip (GS-REQ-006, 6.5): a link when it opens another page (hero), a button when it filters in place */
+.gs-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid var(--gs-line-strong);
+  border-radius: 999px;
+  background: var(--gs-surface);
+  color: var(--gs-ink);
+  font-family: var(--gs-font);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.gs-chip:hover {
+  border-color: var(--gs-ink);
+  color: var(--gs-ink);
+}
+
+.gs-chip.is-active,
+.gs-chip[aria-current="true"],
+.gs-chip[aria-pressed="true"] {
+  border-color: var(--gs-accent);
+  background: var(--gs-accent);
+  color: var(--gs-on-accent);
+  font-weight: 700;
+}
+
+.gs-chip:focus-visible {
+  outline: 3px solid var(--gs-accent);
+  outline-offset: 2px;
+}
+
+/* Smaller outline chip (hero "What" row) */
+.gs-chip-sm {
+  min-height: 40px;
+  padding: 0 16px;
+  background: transparent;
+}
+
+/* "Free" chip: link-colored outline, as in the mockup */
+.gs-chip-free {
+  border-color: var(--gs-link);
+  color: var(--gs-link);
+  font-weight: 700;
+}
+
+.gs-chip-free:hover {
+  color: var(--gs-link);
+}
+
+@media (min-width: 1200px) {
+  .gs-chip {
+    font-size: 16px;
+  }
+
+  .gs-chip-sm {
+    font-size: 15px;
+  }
+}

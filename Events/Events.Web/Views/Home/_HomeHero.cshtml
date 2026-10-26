@@ -1,0 +1,137 @@
+@model Events.Web.Models.HomeHeroViewModel
+@using Events.Models.Enums
+@using Events.Services.Time
+@using Events.Web.Localization
+@using Events.Web.Resources
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<SharedResources> Localizer
+@inject ISofiaClock SofiaClock
+
+@* Desktop hero (GS-REQ-007, 7.1-7.4). *@
+@{
+    var slideCount = Model.Slides.Count;
+    var hasControls = Model.HasFeaturedEvents && slideCount > 1;
+    string PeriodValue(EventPeriod period) => EventPeriodCalculator.ToQueryValue(period);
+}
+
+<section class="gs-hero container-grid" aria-labelledby="gs-hero-title">
+    <div class="gs-hero-intro">
+        <div class="gs-hero-heading">
+            <p class="gs-eyebrow">@Model.DateText</p>
+            <h1 id="gs-hero-title" class="gs-h1-hero">@Model.Title</h1>
+            @if (!string.IsNullOrWhiteSpace(Model.Subtitle))
+            {
+                <p class="gs-lead gs-hero-subtitle">@Model.Subtitle</p>
+            }
+        </div>
+
+        <nav class="d-flex flex-column gap-4" aria-label="@Localizer["Home_HeroFilters"]">
+            @* "When" chips (GS-REQ-007, 7.2): all open "All events" for a period; "Today" is highlighted by default *@
+            <div class="gs-chip-group">
+                <p class="gs-chip-group-label" id="gs-hero-when">@Localizer["Home_HeroWhen"]</p>
+                <ul class="gs-chip-row" aria-labelledby="gs-hero-when">
+                    <li>
+                        <a class="gs-chip is-active" asp-controller="Events" asp-action="Index"
+                           asp-route-period="@PeriodValue(EventPeriod.Today)">@Localizer["Home_ChipToday", Model.TodayCount]</a>
+                    </li>
+                    <li>
+                        <a class="gs-chip" asp-controller="Events" asp-action="Index"
+                           asp-route-period="@PeriodValue(EventPeriod.Tomorrow)">@EventPeriod.Tomorrow.Localize(Localizer)</a>
+                    </li>
+                    <li>
+                        <a class="gs-chip" asp-controller="Events" asp-action="Index"
+                           asp-route-period="@PeriodValue(EventPeriod.Weekend)">@EventPeriod.Weekend.Localize(Localizer)</a>
+                    </li>
+                    <li>
+                        <a class="gs-chip" asp-controller="Events" asp-action="Index"
+                           asp-route-period="@PeriodValue(EventPeriod.Next7)">@EventPeriod.Next7.Localize(Localizer)</a>
+                    </li>
+                    <li>
+                        @* Opens a calendar (home.js); the picked day opens the list for that day *@
+                        <button type="button" class="gs-chip" data-gs-date-chip aria-haspopup="dialog"
+                                title="@Localizer["Home_ChipDateAria"]"
+                                data-url="@Url.Action("Index", "Events")"
+                                data-min-date="@SofiaClock.Today.ToString("yyyy-MM-dd")"
+                                data-locale="@(CultureHelper.IsEnglish() ? "en" : "bg")"
+                                data-assets="@Url.Content("~/lib/flatpickr/dist")">
+                            <gs-icon name="calendar" />@Localizer["Home_ChipDate"]
+                        </button>
+                    </li>
+                </ul>
+            </div>
+
+            @* "What" chips (GS-REQ-007, 7.3): managed in the admin "Site Content" screen *@
+            @if (Model.QuickFilters.Any())
+            {
+                <div class="gs-chip-group">
+                    <p class="gs-chip-group-label" id="gs-hero-what">@Localizer["Home_HeroWhat"]</p>
+                    <ul class="gs-chip-row" aria-labelledby="gs-hero-what">
+                        @foreach (var chip in Model.QuickFilters)
+                        {
+                            <li>
+                                <a class="gs-chip gs-chip-sm @(chip.IsFree ? "gs-chip-free" : "")"
+                                   href="@Url.Action("Index", "Events", chip.RouteValues)">@chip.Label</a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            }
+        </nav>
+    </div>
+
+    @if (slideCount > 0)
+    {
+        <div class="gs-hero-carousel" data-gs-carousel data-interval="6000"
+             role="region" aria-roledescription="carousel" aria-label="@Localizer["Home_FeaturedCarousel"]">
+            <div class="gs-hero-slides" data-gs-slides aria-live="off">
+                @for (var i = 0; i < slideCount; i++)
+                {
+                    var slide = Model.Slides[i];
+                    var isFirst = i == 0;
+                    @* Only the first image loads at once, with high priority (GS-REQ-007, 7.4.8); the others load lazily *@
+                    <div class="gs-hero-slide" data-gs-slide role="group" aria-roledescription="slide"
+                         aria-label="@Localizer["Home_CarouselSlide", i + 1, slideCount]" hidden="@(!isFirst)">
+                        <a class="gs-hero-card" asp-controller="Events" asp-action="Details" asp-route-id="@slide.Id">
+                            <div class="gs-hero-media">
+                                <img class="gs-hero-media-bg" src="@slide.ImageUrl" alt="" aria-hidden="true"
+                                     loading="@(isFirst ? "eager" : "lazy")" decoding="async"
+                                     onerror="this.onerror=null;this.src='/images/default_event_image.jpeg'">
+                                <img class="gs-hero-media-img" src="@slide.ImageUrl" alt="@slide.Name" data-gs-orientation
+                                     loading="@(isFirst ? "eager" : "lazy")" fetchpriority="@(isFirst ? "high" : "auto")" decoding="async"
+                                     onerror="this.onerror=null;this.src='/images/default_event_image.jpeg'">
+                                @if (Model.HasFeaturedEvents)
+                                {
+                                    <span class="gs-hero-badge">@Localizer["Home_FeaturedBadge"]</span>
+                                }
+                            </div>
+                            <div class="gs-hero-card-text">
+                                <h2 class="gs-h-hero-card gs-clamp-2 gs-hero-card-title">@slide.Name</h2>
+                                <p class="gs-hero-card-meta">@slide.MetaText</p>
+                            </div>
+                        </a>
+                    </div>
+                }
+            </div>
+
+            @if (hasControls)
+            {
+                <div class="gs-hero-arrows">
+                    <button type="button" class="gs-hero-arrow" data-gs-prev aria-label="@Localizer["Home_CarouselPrevious"]">
+                        <gs-icon name="chevron-left" />
+                    </button>
+                    <button type="button" class="gs-hero-arrow" data-gs-next aria-label="@Localizer["Home_CarouselNext"]">
+                        <gs-icon name="chevron-right" />
+                    </button>
+                </div>
+                <div class="gs-hero-dots">
+                    @for (var i = 0; i < slideCount; i++)
+                    {
+                        <button type="button" class="gs-hero-dot" data-gs-dot="@i"
+                                aria-label="@Localizer["Home_CarouselSlide", i + 1, slideCount]"
+                                aria-current="@(i == 0 ? "true" : "false")"></button>
+                    }
+                </div>
+            }
+        </div>
+    }
+</section>

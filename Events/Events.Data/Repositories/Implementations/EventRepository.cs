@@ -281,6 +281,7 @@ public class EventRepository : IEventRepository
             // comparing against "now" would drop today's events hours before their actual start time.
             .Where(e => e.IsFeatured && e.Status == EventStatus.Published && e.Date >= fromDate.Date)
             .OrderBy(e => e.Date)
+            .ThenBy(e => e.StartTime)
             .Take(count)
             .ToListAsync();
     }

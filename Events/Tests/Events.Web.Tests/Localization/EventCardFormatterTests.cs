@@ -61,4 +61,22 @@ public class EventCardFormatterTests
     {
         Assert.Equal(expected, EventCardFormatter.FormatShortDate(new DateTime(year, month, day), Bulgarian));
     }
+
+    [Fact]
+    public void FormatWeekdayAndDate_MatchesTheHeroEyebrow()
+    {
+        var friday = new DateTime(2026, 9, 25);
+
+        Assert.Equal("Петък, 25 септември", EventCardFormatter.FormatWeekdayAndDate(friday, Bulgarian));
+        Assert.Equal("Friday, 25 September", EventCardFormatter.FormatWeekdayAndDate(friday, English));
+    }
+
+    [Fact]
+    public void FormatDayAndMonthName_MatchesTheCarouselMetaLine()
+    {
+        var saturday = new DateTime(2026, 9, 26);
+
+        Assert.Equal("Сб 26 септември", EventCardFormatter.FormatDayAndMonthName(saturday, Bulgarian));
+        Assert.Equal("Sat 26 September", EventCardFormatter.FormatDayAndMonthName(saturday, English));
+    }
 }

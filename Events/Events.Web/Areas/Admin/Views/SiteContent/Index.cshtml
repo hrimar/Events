@@ -74,6 +74,12 @@
                             <textarea asp-for="Hero.HeroSubtitleEn" class="form-control" rows="2"></textarea>
                             <span asp-validation-for="Hero.HeroSubtitleEn" class="text-danger"></span>
                         </div>
+                        <div class="col-12">
+                            <div class="form-text">
+                                Use <code>{broi7}</code> in the title or subtitle for the number of events in the next 7 days,
+                                e.g. "{broi7} събития през следващите 7 дни. Обновено днес."
+                            </div>
+                        </div>
                     </div>
                     <div class="d-flex justify-content-end mt-4">
                         <button type="submit" class="btn btn-primary">

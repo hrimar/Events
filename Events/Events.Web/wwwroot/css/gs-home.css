@@ -1,0 +1,280 @@
+/*
+ * Desktop homepage sections (GS-REQ-007). Loaded only by the desktop layout of Home/Index.
+ * Requires gs-tokens.css, gs-base.css and gs-components.css.
+ */
+
+/* Hero (GS-REQ-007, 7.1-7.4): title and quick filters on the left, featured carousel on the right */
+.gs-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 500px) minmax(0, 1fr);
+  gap: 56px;
+  align-items: start;
+  padding-block: 56px 64px;
+}
+
+.gs-hero-intro {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  padding-top: 12px;
+}
+
+.gs-hero-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.gs-hero-subtitle {
+  margin: 0;
+}
+
+.gs-chip-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.gs-chip-group-label {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--gs-muted);
+}
+
+.gs-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Hidden input that only anchors the "Date" chip calendar */
+.gs-date-chip-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Featured carousel (GS-REQ-007, 7.4) */
+.gs-hero-carousel {
+  --gs-hero-media-height: 452px;
+  position: relative;
+}
+
+.gs-hero-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.gs-hero-card:hover,
+.gs-hero-card:focus {
+  color: inherit;
+}
+
+.gs-hero-card:focus-visible {
+  outline: 3px solid var(--gs-accent);
+  outline-offset: 4px;
+  border-radius: 22px;
+}
+
+.gs-hero-media {
+  position: relative;
+  height: var(--gs-hero-media-height);
+  overflow: hidden;
+  border-radius: 20px;
+  background: var(--gs-media-bg);
+  transition: box-shadow 0.2s ease;
+}
+
+.gs-hero-card:hover .gs-hero-media {
+  box-shadow: var(--gs-shadow-card);
+}
+
+/* Portrait posters: whole image (contain) on a blurred copy (GS-REQ-006, 6.5); landscape images: cover (set by home.js) */
+.gs-hero-media-bg,
+.gs-hero-media-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.gs-hero-media-bg {
+  object-fit: cover;
+  filter: blur(18px) brightness(0.72);
+  transform: scale(1.25);
+}
+
+.gs-hero-media-img {
+  object-fit: contain;
+}
+
+.gs-hero-media.is-landscape .gs-hero-media-img {
+  object-fit: cover;
+}
+
+.gs-hero-media.is-landscape .gs-hero-media-bg {
+  display: none;
+}
+
+.gs-hero-badge {
+  position: absolute;
+  top: 18px;
+  left: 18px;
+  padding: 7px 12px;
+  border-radius: 8px;
+  background: var(--gs-ink);
+  color: var(--gs-on-ink);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+/* Room on the right for the slide dots */
+.gs-hero-card-text {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-right: 120px;
+}
+
+.gs-hero-card-title {
+  margin: 0;
+}
+
+.gs-hero-card:hover .gs-hero-card-title {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.gs-hero-card-meta {
+  margin: 0;
+  font-size: 16px;
+  color: var(--gs-text-2);
+}
+
+/* Arrows: bottom right over the image */
+.gs-hero-arrows {
+  position: absolute;
+  top: calc(var(--gs-hero-media-height) - 62px);
+  right: 18px;
+  display: flex;
+  gap: 8px;
+}
+
+/* Fixed light circle: it always sits on an image, in both themes */
+.gs-hero-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #15213A;
+  cursor: pointer;
+}
+
+.gs-hero-arrow:hover {
+  background: #FFFFFF;
+}
+
+.gs-hero-arrow:focus-visible,
+.gs-hero-dot:focus-visible {
+  outline: 3px solid var(--gs-accent);
+  outline-offset: 2px;
+}
+
+/* Dots: right of the title, under the image */
+.gs-hero-dots {
+  position: absolute;
+  top: calc(var(--gs-hero-media-height) + 16px);
+  right: 0;
+  display: flex;
+}
+
+/* 24px hit area around the small visible dot */
+.gs-hero-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.gs-hero-dot::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--gs-muted);
+  opacity: 0.55;
+}
+
+.gs-hero-dot[aria-current="true"] {
+  min-width: 30px;
+}
+
+.gs-hero-dot[aria-current="true"]::before {
+  width: 22px;
+  background: var(--gs-ink);
+  opacity: 1;
+}
+
+/* Tablet (768-1199): two narrower columns, then one column (Etap 3 plan, tablet adaptations) */
+@media (max-width: 1199.98px) {
+  .gs-hero {
+    grid-template-columns: minmax(0, 42fr) minmax(0, 58fr);
+    gap: 32px;
+    padding-block: 40px 48px;
+  }
+
+  .gs-hero-carousel {
+    --gs-hero-media-height: 380px;
+  }
+}
+
+@media (max-width: 991.98px) {
+  .gs-hero {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .gs-hero-intro {
+    padding-top: 0;
+  }
+}
+
+/* Narrow desktop windows: no horizontal scroll */
+@media (max-width: 575.98px) {
+  .gs-hero-carousel {
+    --gs-hero-media-height: 260px;
+  }
+
+  .gs-hero-card-text {
+    padding-right: 0;
+    padding-bottom: 28px;
+  }
+
+  .gs-hero-dots {
+    top: auto;
+    bottom: 0;
+  }
+}
