@@ -97,10 +97,14 @@ public class EventsController : Controller
             var singleCategory = TryGetSingleCategory(categoryList);
 
             // A named period is resolved to dates on the server; explicit fromDate and toDate together win over it.
-            var selectedPeriod = ResolvePeriod(period, fromDate, toDate);
+            var selectedPeriod = ResolvePeriod(period, fromDate, toDate, _clock.Today);
             var (queryFromDate, queryToDate) = selectedPeriod.HasValue
                 ? EventPeriodCalculator.GetRange(selectedPeriod.Value, _clock.Today)
                 : (fromDate.Value, toDate);
+
+            // With a period, the date fields show its dates and the period itself is the active filter, not "From".
+            if (selectedPeriod.HasValue)
+                hasCustomFromDate = false;
 
             // Filtering, search, sorting and pagination all happen in SQL via a single query -
             // fetching the entire matching dataset and paginating in memory was the root cause
@@ -190,8 +194,10 @@ public class EventsController : Controller
                 SelectedCategories = categoryList,
                 SelectedSubCategory = subCategory,
                 IsFreeFilter = free,
-                FromDate = fromDate,
-                ToDate = toDate,
+
+                // The date fields show the dates actually listed, also for a period (e.g. tomorrow - tomorrow).
+                FromDate = queryFromDate,
+                ToDate = queryToDate,
                 Period = selectedPeriod,
                 PeriodFallbackMessage = periodFallbackMessage,
                 SearchTerm = search,
@@ -527,13 +533,19 @@ public class EventsController : Controller
     private static EventCategory? TryGetSingleCategory(IReadOnlyList<string> categories) =>
         categories.Count == 1 ? TryParseCategory(categories[0]) : null;
 
-    // The named period applies unless both explicit dates are given (they take priority).
-    private static EventPeriod? ResolvePeriod(string? period, DateTime? fromDate, DateTime? toDate)
+    // The named period applies unless both explicit dates are given (they take priority). The filter form sends
+    // the period's own dates back together with the hidden period field, so dates equal to the period keep it;
+    // only dates the visitor changed are an explicit choice.
+    private static EventPeriod? ResolvePeriod(string? period, DateTime? fromDate, DateTime? toDate, DateTime today)
     {
-        if (fromDate.HasValue && toDate.HasValue)
+        if (!EventPeriodCalculator.TryParse(period, out var parsedPeriod))
             return null;
 
-        return EventPeriodCalculator.TryParse(period, out var parsedPeriod) ? parsedPeriod : null;
+        if (!fromDate.HasValue || !toDate.HasValue)
+            return parsedPeriod;
+
+        var (periodFrom, periodTo) = EventPeriodCalculator.GetRange(parsedPeriod, today);
+        return fromDate.Value.Date == periodFrom && toDate.Value.Date == periodTo ? parsedPeriod : null;
     }
 
     private static IReadOnlyList<string> CategoryNamesOf(Event eventEntity) =>

@@ -327,7 +327,8 @@
                         {
                             <span class="gs-tag">@Localizer["Events_FilterFromDate"] @Model.FromDate.Value.ToString(shortDateFormat, CultureInfo.InvariantCulture)</span>
                         }
-                        @if(Model.ToDate.HasValue)
+                        @* With a period the dates are its own, already shown by the period tag *@
+                        @if(Model.ToDate.HasValue && !Model.Period.HasValue)
                         {
                             <span class="gs-tag">@Localizer["Events_FilterToDate"] @Model.ToDate.Value.ToString(shortDateFormat, CultureInfo.InvariantCulture)</span>
                         }
