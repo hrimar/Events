@@ -30,6 +30,9 @@ public interface IHomePageSectionsBuilder
 
     // A page of weekend cards for a day tab, a filter chip or "Show more"; null when the day is not in this weekend.
     Task<HomeWeekendCardsViewModel?> GetWeekendPageAsync(DateTime day, HomeWeekendFilter filter, int skip);
+
+    // Desktop "Don't miss" (GS-REQ-007, 7.7): the featured events after the carousel; empty when there are none.
+    Task<List<HomeFeatureCardViewModel>> BuildDontMissAsync();
 }
 
 public sealed class HomePageSectionsBuilder : IHomePageSectionsBuilder
@@ -42,6 +45,9 @@ public sealed class HomePageSectionsBuilder : IHomePageSectionsBuilder
     private const string WeekendEventsSection = "WeekendEvents";
 
     private const int MaxCarouselSlides = 5;
+
+    // Three horizontal cards in "Don't miss" (GS-REQ-007, 7.7.2).
+    private const int MaxDontMissCards = 3;
 
     // Enough featured performances to fill the carousel and "Don't miss" after merging repeated performances.
     private const int FeaturedEventsFetchCount = 50;
@@ -153,6 +159,30 @@ public sealed class HomePageSectionsBuilder : IHomePageSectionsBuilder
 
         var events = await GetWeekendEventsAsync();
         return HomeWeekendSelector.SelectPage(events, day, filter, skip);
+    }
+
+    public async Task<List<HomeFeatureCardViewModel>> BuildDontMissAsync()
+    {
+        var culture = CultureInfo.CurrentCulture;
+        var featuredEvents = await GetFeaturedEventsAsync();
+
+        // The next featured events in the same order, after the ones in the hero carousel (GS-REQ-007, 7.7.3).
+        return featuredEvents
+            .Skip(MaxCarouselSlides)
+            .Take(MaxDontMissCards)
+            .Select(e => new HomeFeatureCardViewModel
+            {
+                Id = e.Id,
+                Name = e.Name,
+                ImageUrl = string.IsNullOrWhiteSpace(e.ImageUrl) ? DefaultEventImageUrl : e.ImageUrl,
+                DateText = e.HasKnownTime
+                    ? $"{EventCardFormatter.FormatShortDate(e.Date, culture)} · {e.FormattedTime}"
+                    : EventCardFormatter.FormatShortDate(e.Date, culture),
+                IsFree = e.IsFree,
+                Excerpt = EventExcerptBuilder.Build(e.Description, e.Name),
+                Venue = e.Location
+            })
+            .ToList();
     }
 
     // Featured events from today on, nearest first, one entry per event: repeated performances

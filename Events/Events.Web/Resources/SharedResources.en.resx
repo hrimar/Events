@@ -856,4 +856,6 @@
   <data name="Home_WeekendEmpty" xml:space="preserve"><value>No events match this filter.</value></data>
   <data name="Home_WeekendSeeDay" xml:space="preserve"><value>See all for the day</value></data>
   <data name="Home_LoadError" xml:space="preserve"><value>Could not load. Please try again.</value></data>
+  <data name="Home_DontMissEyebrow" xml:space="preserve"><value>Featured events</value></data>
+  <data name="Home_DontMissHeading" xml:space="preserve"><value>Don't miss</value></data>
 </root>

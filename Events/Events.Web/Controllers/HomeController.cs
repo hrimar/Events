@@ -140,6 +140,7 @@ namespace Events.Web.Controllers
                     Hero = deviceClass == DeviceClass.Desktop ? await _sectionsBuilder.BuildHeroAsync(siteContent) : null,
                     Tonight = deviceClass == DeviceClass.Desktop ? await _sectionsBuilder.BuildTonightAsync() : null,
                     Weekend = deviceClass == DeviceClass.Desktop ? await _sectionsBuilder.BuildWeekendAsync() : null,
+                    DontMiss = deviceClass == DeviceClass.Desktop ? await _sectionsBuilder.BuildDontMissAsync() : new(),
                     WeeklyEvents = weeklyEvents,
                     SavedSection = EventsSectionViewModel.CreateSavedSection(
                         events: savedEvents,

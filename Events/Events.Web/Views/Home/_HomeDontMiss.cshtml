@@ -1,0 +1,43 @@
+@model List<Events.Web.Models.HomeFeatureCardViewModel>
+@using Events.Web.Resources
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<SharedResources> Localizer
+
+@* "Don't miss" (GS-REQ-007, 7.7): three horizontal cards (GS-REQ-006, 6.5), each one link to the event. *@
+<section class="gs-home-section" aria-labelledby="gs-dont-miss-title">
+    <div class="container-grid">
+        <div class="gs-section-head">
+            <div class="gs-section-titles">
+                <p class="gs-eyebrow">@Localizer["Home_DontMissEyebrow"]</p>
+                <h2 id="gs-dont-miss-title" class="gs-h2 gs-section-title">@Localizer["Home_DontMissHeading"]</h2>
+            </div>
+        </div>
+
+        <ul class="gs-feature-grid">
+            @foreach (var card in Model)
+            {
+                var dateLine = card.IsFree ? $"{card.DateText} · {Localizer["Events_Free"]}" : card.DateText;
+                <li>
+                    <a class="gs-feature-card" asp-controller="Events" asp-action="Details" asp-route-id="@card.Id">
+                        <div class="gs-feature-media">
+                            <img src="@card.ImageUrl" alt="@card.Name" loading="lazy" decoding="async"
+                                 onerror="this.onerror=null;this.src='/images/default_event_image.jpeg'">
+                        </div>
+                        <div class="gs-feature-body">
+                            <p class="gs-feature-date">@dateLine</p>
+                            <h3 class="gs-h-feature gs-clamp-2 gs-feature-title">@card.Name</h3>
+                            @if (!string.IsNullOrEmpty(card.Excerpt))
+                            {
+                                <p class="gs-clamp-3 gs-feature-excerpt">@card.Excerpt</p>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(card.Venue))
+                            {
+                                <p class="gs-feature-venue">@card.Venue</p>
+                            }
+                        </div>
+                    </a>
+                </li>
+            }
+        </ul>
+    </div>
+</section>

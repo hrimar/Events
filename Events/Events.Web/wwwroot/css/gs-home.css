@@ -453,6 +453,99 @@
   display: none;
 }
 
+/* "Don't miss" (GS-REQ-007, 7.7): 3 horizontal cards (GS-REQ-006, 6.5) */
+.gs-feature-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gs-feature-card {
+  display: flex;
+  gap: 20px;
+  height: 100%;
+  padding: 16px;
+  border: 1px solid var(--gs-line);
+  border-radius: 18px;
+  background: var(--gs-surface);
+  color: inherit;
+  text-decoration: none;
+  transition: box-shadow 0.2s ease;
+}
+
+.gs-feature-card:hover,
+.gs-feature-card:focus {
+  color: inherit;
+}
+
+.gs-feature-card:hover {
+  box-shadow: var(--gs-shadow-card);
+}
+
+.gs-feature-card:hover .gs-feature-title {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.gs-feature-card:focus-visible {
+  outline: 3px solid var(--gs-accent);
+  outline-offset: 4px;
+}
+
+/* Poster 150x200px, cover, radius 12px */
+.gs-feature-media {
+  flex-shrink: 0;
+  width: 150px;
+  height: 200px;
+  overflow: hidden;
+  border-radius: 12px;
+  background: var(--gs-media-bg);
+}
+
+.gs-feature-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.gs-feature-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  padding-top: 4px;
+}
+
+.gs-feature-date {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--gs-link);
+}
+
+.gs-feature-title {
+  margin: 0;
+}
+
+.gs-feature-excerpt {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--gs-text-2);
+}
+
+/* The venue sits at the bottom of the card */
+.gs-feature-venue {
+  margin: auto 0 0;
+  font-size: 14px;
+  color: var(--gs-muted);
+}
+
 /* Tablet (768-1199): two narrower columns, then one column (Etap 3 plan, tablet adaptations) */
 @media (max-width: 1199.98px) {
   .gs-card-row {
@@ -461,6 +554,10 @@
 
   .gs-weekend-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .gs-feature-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .gs-hero {
@@ -481,6 +578,10 @@
 
   .gs-weekend-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .gs-feature-grid {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   /* The filter chips go under the tabs (Etap 3 plan, tablet adaptations) */
@@ -506,6 +607,11 @@
 
   .gs-weekend-grid {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .gs-feature-media {
+    width: 110px;
+    height: 147px;
   }
 
   .gs-hero-carousel {

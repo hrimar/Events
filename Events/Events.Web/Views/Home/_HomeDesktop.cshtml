@@ -24,6 +24,12 @@
     <partial name="_HomeWeekend" model="Model.Weekend" />
 }
 
+@* Don't miss (GS-REQ-007, 7.7); not rendered when there are no featured events after the carousel *@
+@if (Model.DontMiss.Any())
+{
+    <partial name="_HomeDontMiss" model="Model.DontMiss" />
+}
+
 @* <!-- Popular Tags Section -->
 @if(Model.PopularTags.Any())
 {

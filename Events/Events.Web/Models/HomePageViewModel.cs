@@ -15,6 +15,9 @@ public class HomePageViewModel
 
     // Desktop "This weekend" band (GS-REQ-007, 7.6); null for phones or when the weekend has no events.
     public HomeWeekendViewModel? Weekend { get; set; }
+
+    // Desktop "Don't miss" cards (GS-REQ-007, 7.7); empty for phones or when there are no more featured events.
+    public List<HomeFeatureCardViewModel> DontMiss { get; set; } = new();
     public WeeklyEventsViewModel WeeklyEvents { get; set; } = new();
     public EventsSectionViewModel SavedSection { get; set; } = new();
     public EventsSectionViewModel RecommendedSection { get; set; } = new();
