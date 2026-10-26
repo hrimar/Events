@@ -1,0 +1,28 @@
+@model Events.Web.Models.HomeWeekendCardsViewModel
+@using Events.Web.Resources
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<SharedResources> Localizer
+
+@* One page of "This weekend" cards (GS-REQ-007, 7.6.5). Rendered with the page and returned by Home/WeekendEvents;
+   home.js replaces the grid for a new tab or chip and appends the items for "Show more". *@
+@if (Model.Cards.Count == 0 && Model.Skip == 0)
+{
+    @* Nothing for this day and filter (GS-REQ-007, 7.6.6) *@
+    <div class="gs-weekend-empty" data-gs-weekend-grid data-has-more="false">
+        <p class="mb-2">@Localizer["Home_WeekendEmpty"]</p>
+        <a class="gs-section-link" asp-controller="Events" asp-action="Index"
+           asp-route-fromDate="@Model.Day.ToString("yyyy-MM-dd")"
+           asp-route-toDate="@Model.Day.ToString("yyyy-MM-dd")">@Localizer["Home_WeekendSeeDay"]</a>
+    </div>
+}
+else
+{
+    <ul class="gs-weekend-grid" data-gs-weekend-grid data-has-more="@(Model.HasMore ? "true" : "false")">
+        @foreach (var card in Model.Cards)
+        {
+            <li>
+                <partial name="_EventCard" model="card" />
+            </li>
+        }
+    </ul>
+}

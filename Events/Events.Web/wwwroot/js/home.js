@@ -1,5 +1,5 @@
 // Desktop homepage: hero featured carousel (GS-REQ-007, 7.4), "Date" chip (GS-REQ-007, 7.2)
-// and card rows with arrows (GS-REQ-007, 7.5).
+// card rows with arrows (GS-REQ-007, 7.5) and the "This weekend" tabs and filters (GS-REQ-007, 7.6).
 (function () {
     'use strict';
 
@@ -142,6 +142,163 @@
         updateButtons();
     }
 
+    // "This weekend" (GS-REQ-007, 7.6): day tabs (role="tablist", arrow keys) and filter chips reload the grid in
+    // place from Home/WeekendEvents; "Show more" appends the next 8 cards and moves the focus to the first new one.
+    function initWeekend(root) {
+        var url = root.getAttribute('data-url');
+        var panel = root.querySelector('[data-gs-weekend-panel]');
+        var moreButton = root.querySelector('[data-gs-weekend-more]');
+        var errorText = root.querySelector('[data-gs-weekend-error]');
+        var tabs = Array.prototype.slice.call(root.querySelectorAll('[role="tab"]'));
+        var chips = Array.prototype.slice.call(root.querySelectorAll('[data-filter]'));
+        if (!url || !panel || tabs.length === 0) {
+            return;
+        }
+
+        var state = { day: tabs[0].getAttribute('data-day'), filter: 'all' };
+        var requestId = 0;
+
+        function currentGrid() {
+            return panel.querySelector('[data-gs-weekend-grid]');
+        }
+
+        function updateMoreButton(grid) {
+            if (moreButton) {
+                moreButton.hidden = !grid || grid.getAttribute('data-has-more') !== 'true';
+            }
+        }
+
+        function load(append) {
+            var grid = currentGrid();
+            var skip = append && grid ? grid.querySelectorAll('li').length : 0;
+            var id = ++requestId;
+            var query = '?day=' + encodeURIComponent(state.day) + '&filter=' + encodeURIComponent(state.filter) + '&skip=' + skip;
+
+            panel.setAttribute('aria-busy', 'true');
+            if (moreButton) {
+                moreButton.disabled = true;
+            }
+
+            return fetch(url + query, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(function (response) {
+                    if (!response.ok) {
+                        throw new Error('HTTP ' + response.status);
+                    }
+                    return response.text();
+                })
+                .then(function (html) {
+                    // A newer tab or chip click won: drop this answer.
+                    if (id !== requestId) {
+                        return;
+                    }
+
+                    var template = document.createElement('template');
+                    template.innerHTML = html.trim();
+                    var newGrid = template.content.querySelector('[data-gs-weekend-grid]');
+                    if (!newGrid) {
+                        throw new Error('Unexpected response');
+                    }
+
+                    if (append && grid && grid.tagName === 'UL') {
+                        var newItems = Array.prototype.slice.call(newGrid.children);
+                        newItems.forEach(function (item) { grid.appendChild(item); });
+                        grid.setAttribute('data-has-more', newGrid.getAttribute('data-has-more'));
+                        updateMoreButton(grid);
+
+                        var firstLink = newItems.length > 0 ? newItems[0].querySelector('a') : null;
+                        if (firstLink) {
+                            firstLink.focus();
+                        }
+                    } else {
+                        if (grid) {
+                            grid.replaceWith(newGrid);
+                        } else {
+                            panel.appendChild(newGrid);
+                        }
+                        updateMoreButton(newGrid);
+                    }
+
+                    if (errorText) {
+                        errorText.hidden = true;
+                    }
+                })
+                .catch(function (error) {
+                    if (id === requestId && errorText) {
+                        errorText.hidden = false;
+                    }
+                    console.error('Could not load weekend events', error);
+                })
+                .then(function () {
+                    if (id === requestId) {
+                        panel.removeAttribute('aria-busy');
+                        if (moreButton) {
+                            moreButton.disabled = false;
+                        }
+                    }
+                });
+        }
+
+        function selectTab(tab, moveFocus) {
+            tabs.forEach(function (other) {
+                var isSelected = other === tab;
+                other.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+                other.tabIndex = isSelected ? 0 : -1;
+            });
+            panel.setAttribute('aria-labelledby', tab.id);
+            if (moveFocus) {
+                tab.focus();
+            }
+
+            var day = tab.getAttribute('data-day');
+            if (day !== state.day) {
+                state.day = day;
+                load(false);
+            }
+        }
+
+        tabs.forEach(function (tab, index) {
+            tab.addEventListener('click', function () { selectTab(tab, false); });
+
+            // Arrow keys, Home and End move between the tabs (WAI-ARIA tabs pattern).
+            tab.addEventListener('keydown', function (e) {
+                var target = null;
+                if (e.key === 'ArrowRight') {
+                    target = tabs[(index + 1) % tabs.length];
+                } else if (e.key === 'ArrowLeft') {
+                    target = tabs[(index - 1 + tabs.length) % tabs.length];
+                } else if (e.key === 'Home') {
+                    target = tabs[0];
+                } else if (e.key === 'End') {
+                    target = tabs[tabs.length - 1];
+                }
+
+                if (target) {
+                    e.preventDefault();
+                    selectTab(target, true);
+                }
+            });
+        });
+
+        chips.forEach(function (chip) {
+            chip.addEventListener('click', function () {
+                var filter = chip.getAttribute('data-filter');
+                if (filter === state.filter) {
+                    return;
+                }
+
+                chips.forEach(function (other) {
+                    other.setAttribute('aria-pressed', other === chip ? 'true' : 'false');
+                });
+                state.filter = filter;
+                load(false);
+            });
+        });
+
+        if (moreButton) {
+            moreButton.addEventListener('click', function () { load(true); });
+        }
+    }
+
     function loadScript(src) {
         return new Promise(function (resolve, reject) {
             var script = document.createElement('script');
@@ -210,5 +367,6 @@
 
     document.querySelectorAll('[data-gs-carousel]').forEach(initCarousel);
     document.querySelectorAll('[data-gs-card-row]').forEach(initCardRow);
+    document.querySelectorAll('[data-gs-weekend]').forEach(initWeekend);
     document.querySelectorAll('[data-gs-date-chip]').forEach(initDateChip);
 })();

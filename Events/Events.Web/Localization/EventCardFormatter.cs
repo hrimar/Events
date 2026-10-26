@@ -57,6 +57,31 @@ public static class EventCardFormatter
     public static string FormatWeekday(DateTime date, CultureInfo culture) =>
         Capitalize(culture.DateTimeFormat.GetDayName(date.DayOfWeek), culture);
 
+    // "Събота, 31 окт" / "Saturday, 31 Oct" (weekend day tabs, GS-REQ-007, 7.6.3). The month is shortened to
+    // its first 3 letters, because the abbreviations from the culture data differ between ICU versions ("окт.").
+    public static string FormatWeekdayAndShortMonth(DateTime date, CultureInfo culture)
+    {
+        var monthName = culture.DateTimeFormat.GetMonthName(date.Month);
+        var shortMonth = monthName.Length > 3 ? monthName[..3] : monthName;
+
+        return $"{FormatWeekday(date, culture)}, {date.Day} {shortMonth}";
+    }
+
+    // "26–27 септември", "31 октомври – 1 ноември" or "1 ноември" for a single day
+    // (weekend eyebrow, GS-REQ-007, 7.6.2)
+    public static string FormatDayRange(DateTime fromDate, DateTime toDate, CultureInfo culture)
+    {
+        var format = culture.DateTimeFormat;
+
+        if (fromDate.Date == toDate.Date)
+            return $"{toDate.Day} {format.GetMonthName(toDate.Month)}";
+
+        if (fromDate.Month == toDate.Month)
+            return $"{fromDate.Day}–{toDate.Day} {format.GetMonthName(toDate.Month)}";
+
+        return $"{fromDate.Day} {format.GetMonthName(fromDate.Month)} – {toDate.Day} {format.GetMonthName(toDate.Month)}";
+    }
+
     private static string Capitalize(string text, CultureInfo culture) =>
         text.Length > 0 ? culture.TextInfo.ToUpper(text[0]) + text[1..] : text;
 }

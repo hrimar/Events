@@ -18,6 +18,12 @@
     <partial name="_HomeTonight" model="Model.Tonight" />
 }
 
+@* This weekend (GS-REQ-007, 7.6); not rendered when the weekend has no events *@
+@if (Model.Weekend != null)
+{
+    <partial name="_HomeWeekend" model="Model.Weekend" />
+}
+
 @* <!-- Popular Tags Section -->
 @if(Model.PopularTags.Any())
 {

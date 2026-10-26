@@ -23,10 +23,12 @@ public static class HomeTonightRowSelector
         var eventList = events.ToList();
 
         var todayEvents = eventList.Where(e => e.Date.Date == today).ToList();
-        var tomorrowEvents = OrderByStartTime(eventList.Where(e => e.Date.Date == tomorrow)).ToList();
+        var tomorrowEvents = HomeEventOrdering.ByStartTime(eventList.Where(e => e.Date.Date == tomorrow)).ToList();
 
         // Events that have already started stay active in the lists, but are not shown here (GS-REQ-007, 7.5.2).
-        var remainingTodayEvents = OrderByStartTime(todayEvents.Where(e => !e.HasKnownTime || GetStartTime(e) > now.TimeOfDay)).ToList();
+        var remainingTodayEvents = HomeEventOrdering
+            .ByStartTime(todayEvents.Where(e => !e.HasKnownTime || HomeEventOrdering.GetStartTime(e) > now.TimeOfDay))
+            .ToList();
 
         if (remainingTodayEvents.Count < MinRemainingTodayEvents && tomorrowEvents.Count > 0)
             return Create(HomeTonightDay.Tomorrow, tomorrow, tomorrowEvents.Count, tomorrowEvents);
@@ -48,13 +50,4 @@ public static class HomeTonightRowSelector
             // One day only, so the card badges show just the time (GS-REQ-006, 6.5.4).
             Cards = EventCardViewModel.FromEvents(events.Take(MaxCards), showDate: false)
         };
-
-    // By start time; events without a known time go last (GS-REQ-007, 7.5.2).
-    private static IEnumerable<EventViewModel> OrderByStartTime(IEnumerable<EventViewModel> events) =>
-        events
-            .OrderBy(e => e.HasKnownTime ? 0 : 1)
-            .ThenBy(GetStartTime)
-            .ThenBy(e => e.Name, StringComparer.CurrentCulture);
-
-    private static TimeSpan GetStartTime(EventViewModel eventModel) => eventModel.StartTime ?? eventModel.Date.TimeOfDay;
 }

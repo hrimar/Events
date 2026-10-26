@@ -12,6 +12,9 @@ public class HomePageViewModel
 
     // Desktop "Tonight" row (GS-REQ-007, 7.5); null for phones or when there is nothing to show.
     public HomeTonightViewModel? Tonight { get; set; }
+
+    // Desktop "This weekend" band (GS-REQ-007, 7.6); null for phones or when the weekend has no events.
+    public HomeWeekendViewModel? Weekend { get; set; }
     public WeeklyEventsViewModel WeeklyEvents { get; set; } = new();
     public EventsSectionViewModel SavedSection { get; set; } = new();
     public EventsSectionViewModel RecommendedSection { get; set; } = new();

@@ -79,4 +79,22 @@ public class EventCardFormatterTests
         Assert.Equal("Сб 26 септември", EventCardFormatter.FormatDayAndMonthName(saturday, Bulgarian));
         Assert.Equal("Sat 26 September", EventCardFormatter.FormatDayAndMonthName(saturday, English));
     }
+
+    [Fact]
+    public void FormatWeekdayAndShortMonth_MatchesTheWeekendTabs()
+    {
+        var saturday = new DateTime(2026, 9, 26);
+
+        Assert.Equal("Събота, 26 сеп", EventCardFormatter.FormatWeekdayAndShortMonth(saturday, Bulgarian));
+        Assert.Equal("Saturday, 26 Sep", EventCardFormatter.FormatWeekdayAndShortMonth(saturday, English));
+    }
+
+    [Theory]
+    [InlineData(2026, 9, 26, 2026, 9, 27, "26–27 септември")]
+    [InlineData(2026, 10, 31, 2026, 11, 1, "31 октомври – 1 ноември")]
+    [InlineData(2026, 9, 27, 2026, 9, 27, "27 септември")]
+    public void FormatDayRange_SameMonthOtherMonthAndSingleDay(int y1, int m1, int d1, int y2, int m2, int d2, string expected)
+    {
+        Assert.Equal(expected, EventCardFormatter.FormatDayRange(new DateTime(y1, m1, d1), new DateTime(y2, m2, d2), Bulgarian));
+    }
 }

@@ -10,6 +10,7 @@ using Events.Web.Models;
 using Events.Web.Resources;
 using Events.Web.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Localization;
 using Microsoft.Net.Http.Headers;
 
@@ -19,6 +20,9 @@ namespace Events.Web.Controllers
     {
         // Homepage cache section of the mobile "This week" block (see IHomePageCache).
         private const string WeeklyEventsCacheSection = "WeeklyEvents";
+
+        // Upper bound for "Show more" in "This weekend": a public endpoint must not page without limit.
+        private const int MaxWeekendSkip = 1000;
 
         private readonly ILogger<HomeController> _logger;
         private readonly IEventService _eventService;
@@ -135,6 +139,7 @@ namespace Events.Web.Controllers
                     // Desktop-only sections are not built for phones at all.
                     Hero = deviceClass == DeviceClass.Desktop ? await _sectionsBuilder.BuildHeroAsync(siteContent) : null,
                     Tonight = deviceClass == DeviceClass.Desktop ? await _sectionsBuilder.BuildTonightAsync() : null,
+                    Weekend = deviceClass == DeviceClass.Desktop ? await _sectionsBuilder.BuildWeekendAsync() : null,
                     WeeklyEvents = weeklyEvents,
                     SavedSection = EventsSectionViewModel.CreateSavedSection(
                         events: savedEvents,
@@ -157,6 +162,27 @@ namespace Events.Web.Controllers
             {
                 _logger.LogError(ex, "Error loading home page");
                 return View(new HomePageViewModel { DeviceClass = deviceClass, WeeklyEvents = WeeklyEventsViewModel.Empty(_clock.Today) });
+            }
+        }
+
+        // Cards of "This weekend" for a day tab, a filter chip or "Show more" (GS-REQ-007, 7.6.4 and 7.6.5),
+        // loaded in place by home.js. day must be a day of this weekend; filter: all, morning, evening, kids.
+        [HttpGet]
+        [EnableRateLimiting("events")]
+        public async Task<IActionResult> WeekendEvents(DateTime day, string? filter = null, int skip = 0)
+        {
+            try
+            {
+                if (skip < 0 || skip > MaxWeekendSkip)
+                    return BadRequest();
+
+                var page = await _sectionsBuilder.GetWeekendPageAsync(day, HomeWeekendSelector.ParseFilter(filter), skip);
+                return page == null ? NotFound() : PartialView("_HomeWeekendCards", page);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading weekend events for {Day}, filter {Filter}, skip {Skip}", day, filter, skip);
+                return StatusCode(StatusCodes.Status500InternalServerError);
             }
         }
 

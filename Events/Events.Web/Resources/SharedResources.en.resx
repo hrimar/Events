@@ -844,4 +844,16 @@
   <data name="Home_AllForTomorrow" xml:space="preserve"><value>All {0} for tomorrow</value></data>
   <data name="Home_RowPrevious" xml:space="preserve"><value>Previous events</value></data>
   <data name="Home_RowNext" xml:space="preserve"><value>Next events</value></data>
+  <data name="Home_WeekendHeading" xml:space="preserve"><value>This weekend</value></data>
+  <data name="Home_WeekendAll" xml:space="preserve"><value>The whole weekend</value></data>
+  <data name="Home_WeekendDays" xml:space="preserve"><value>Weekend days</value></data>
+  <data name="Home_WeekendFilters" xml:space="preserve"><value>Filter</value></data>
+  <data name="Home_WeekendFilterAll" xml:space="preserve"><value>All</value></data>
+  <data name="Home_WeekendFilterMorning" xml:space="preserve"><value>Morning</value></data>
+  <data name="Home_WeekendFilterEvening" xml:space="preserve"><value>Evening</value></data>
+  <data name="Home_WeekendFilterKids" xml:space="preserve"><value>With kids</value></data>
+  <data name="Home_ShowMore" xml:space="preserve"><value>Show more</value></data>
+  <data name="Home_WeekendEmpty" xml:space="preserve"><value>No events match this filter.</value></data>
+  <data name="Home_WeekendSeeDay" xml:space="preserve"><value>See all for the day</value></data>
+  <data name="Home_LoadError" xml:space="preserve"><value>Could not load. Please try again.</value></data>
 </root>

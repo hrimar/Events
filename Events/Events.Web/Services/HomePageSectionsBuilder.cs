@@ -24,6 +24,12 @@ public interface IHomePageSectionsBuilder
 
     // Desktop "Tonight" row (GS-REQ-007, 7.5); null when there is nothing to show.
     Task<HomeTonightViewModel?> BuildTonightAsync();
+
+    // Desktop "This weekend" band (GS-REQ-007, 7.6); null when the weekend has no events.
+    Task<HomeWeekendViewModel?> BuildWeekendAsync();
+
+    // A page of weekend cards for a day tab, a filter chip or "Show more"; null when the day is not in this weekend.
+    Task<HomeWeekendCardsViewModel?> GetWeekendPageAsync(DateTime day, HomeWeekendFilter filter, int skip);
 }
 
 public sealed class HomePageSectionsBuilder : IHomePageSectionsBuilder
@@ -33,6 +39,7 @@ public sealed class HomePageSectionsBuilder : IHomePageSectionsBuilder
     private const string HeroFallbackEventSection = "HeroFallbackEvent";
     private const string QuickFiltersSection = "QuickFilters";
     private const string TodayAndTomorrowEventsSection = "TodayAndTomorrowEvents";
+    private const string WeekendEventsSection = "WeekendEvents";
 
     private const int MaxCarouselSlides = 5;
 
@@ -47,8 +54,9 @@ public sealed class HomePageSectionsBuilder : IHomePageSectionsBuilder
 
     private const string DefaultEventImageUrl = "/images/default_event_image.jpeg";
 
-    // Safety limit for the today + tomorrow query (a busy day has well under 100 events).
+    // Safety limit for the today + tomorrow and weekend queries (a busy day has well under 100 events).
     private const int MaxTodayAndTomorrowEvents = 1000;
+    private const int MaxWeekendEvents = 1000;
 
     private readonly IEventService _eventService;
     private readonly IHomeQuickFilterService _quickFilterService;
@@ -117,6 +125,34 @@ public sealed class HomePageSectionsBuilder : IHomePageSectionsBuilder
             TodayAndTomorrowEventsSection, HomePageCache.EventsDuration, LoadTodayAndTomorrowEventsAsync);
 
         return HomeTonightRowSelector.Select(events, _clock.Now);
+    }
+
+    public async Task<HomeWeekendViewModel?> BuildWeekendAsync()
+    {
+        var (fromDate, toDate) = EventPeriodCalculator.GetWeekendRange(_clock.Today);
+        var events = await GetWeekendEventsAsync();
+        if (events.Count == 0)
+            return null;
+
+        var days = Enumerable.Range(0, (toDate - fromDate).Days + 1).Select(offset => fromDate.AddDays(offset)).ToList();
+
+        return new HomeWeekendViewModel
+        {
+            FromDate = fromDate,
+            ToDate = toDate,
+            Days = days,
+            FirstPage = HomeWeekendSelector.SelectPage(events, days[0], HomeWeekendFilter.All, skip: 0)
+        };
+    }
+
+    public async Task<HomeWeekendCardsViewModel?> GetWeekendPageAsync(DateTime day, HomeWeekendFilter filter, int skip)
+    {
+        var (fromDate, toDate) = EventPeriodCalculator.GetWeekendRange(_clock.Today);
+        if (day.Date < fromDate || day.Date > toDate)
+            return null;
+
+        var events = await GetWeekendEventsAsync();
+        return HomeWeekendSelector.SelectPage(events, day, filter, skip);
     }
 
     // Featured events from today on, nearest first, one entry per event: repeated performances
@@ -193,6 +229,23 @@ public sealed class HomePageSectionsBuilder : IHomePageSectionsBuilder
 
         return EventViewModel.FromEntities(events, today);
     }
+
+    // All published events of this weekend (Saturday and Sunday, or only Sunday on a Sunday).
+    private Task<List<EventViewModel>> GetWeekendEventsAsync() =>
+        _homePageCache.GetOrCreateAsync(WeekendEventsSection, HomePageCache.EventsDuration, async () =>
+        {
+            var today = _clock.Today;
+            var (fromDate, toDate) = EventPeriodCalculator.GetWeekendRange(today);
+            var (events, _) = await _eventService.GetPagedEventsAsync(new PublicEventQuery
+            {
+                PageSize = MaxWeekendEvents,
+                Status = EventStatus.Published,
+                FromDate = fromDate,
+                ToDate = toDate
+            });
+
+            return EventViewModel.FromEntities(events, today);
+        });
 
     private static HomeHeroSlideViewModel ToSlide(EventViewModel eventModel, CultureInfo culture)
     {

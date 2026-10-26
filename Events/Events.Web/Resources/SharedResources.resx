@@ -2226,4 +2226,40 @@
   <data name="Home_RowNext" xml:space="preserve">
     <value>Следващи събития</value>
   </data>
+  <data name="Home_WeekendHeading" xml:space="preserve">
+    <value>Този уикенд</value>
+  </data>
+  <data name="Home_WeekendAll" xml:space="preserve">
+    <value>Целият уикенд</value>
+  </data>
+  <data name="Home_WeekendDays" xml:space="preserve">
+    <value>Дни от уикенда</value>
+  </data>
+  <data name="Home_WeekendFilters" xml:space="preserve">
+    <value>Филтър</value>
+  </data>
+  <data name="Home_WeekendFilterAll" xml:space="preserve">
+    <value>Всички</value>
+  </data>
+  <data name="Home_WeekendFilterMorning" xml:space="preserve">
+    <value>Сутрин</value>
+  </data>
+  <data name="Home_WeekendFilterEvening" xml:space="preserve">
+    <value>Вечер</value>
+  </data>
+  <data name="Home_WeekendFilterKids" xml:space="preserve">
+    <value>С деца</value>
+  </data>
+  <data name="Home_ShowMore" xml:space="preserve">
+    <value>Покажи още</value>
+  </data>
+  <data name="Home_WeekendEmpty" xml:space="preserve">
+    <value>Няма събития по този филтър.</value>
+  </data>
+  <data name="Home_WeekendSeeDay" xml:space="preserve">
+    <value>Виж всички за деня</value>
+  </data>
+  <data name="Home_LoadError" xml:space="preserve">
+    <value>Неуспешно зареждане. Опитай отново.</value>
+  </data>
 </root>
