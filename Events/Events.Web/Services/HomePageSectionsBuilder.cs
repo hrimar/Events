@@ -21,6 +21,9 @@ public interface IHomePageSectionsBuilder
 
     // Desktop hero: date, H1/subtitle from Site Content, "When" and "What" chips, featured carousel.
     Task<HomeHeroViewModel> BuildHeroAsync(SiteContent siteContent);
+
+    // Desktop "Tonight" row (GS-REQ-007, 7.5); null when there is nothing to show.
+    Task<HomeTonightViewModel?> BuildTonightAsync();
 }
 
 public sealed class HomePageSectionsBuilder : IHomePageSectionsBuilder
@@ -29,6 +32,7 @@ public sealed class HomePageSectionsBuilder : IHomePageSectionsBuilder
     private const string FeaturedEventsSection = "FeaturedEvents";
     private const string HeroFallbackEventSection = "HeroFallbackEvent";
     private const string QuickFiltersSection = "QuickFilters";
+    private const string TodayAndTomorrowEventsSection = "TodayAndTomorrowEvents";
 
     private const int MaxCarouselSlides = 5;
 
@@ -42,6 +46,9 @@ public sealed class HomePageSectionsBuilder : IHomePageSectionsBuilder
     private const string Next7DaysPlaceholder = "{broi7}";
 
     private const string DefaultEventImageUrl = "/images/default_event_image.jpeg";
+
+    // Safety limit for the today + tomorrow query (a busy day has well under 100 events).
+    private const int MaxTodayAndTomorrowEvents = 1000;
 
     private readonly IEventService _eventService;
     private readonly IHomeQuickFilterService _quickFilterService;
@@ -103,6 +110,15 @@ public sealed class HomePageSectionsBuilder : IHomePageSectionsBuilder
         };
     }
 
+    public async Task<HomeTonightViewModel?> BuildTonightAsync()
+    {
+        // Cached for both days; what has already started depends on the current time, so it is selected per request.
+        var events = await _homePageCache.GetOrCreateAsync(
+            TodayAndTomorrowEventsSection, HomePageCache.EventsDuration, LoadTodayAndTomorrowEventsAsync);
+
+        return HomeTonightRowSelector.Select(events, _clock.Now);
+    }
+
     // Featured events from today on, nearest first, one entry per event: repeated performances
     // (same name and venue) keep only the nearest one (decision of 25.10.2026), so one featured
     // event never fills several slides. Shared with "Don't miss" (GS-REQ-007, 7.7), which starts after the carousel.
@@ -161,6 +177,21 @@ public sealed class HomePageSectionsBuilder : IHomePageSectionsBuilder
         }
 
         return filtersWithEvents;
+    }
+
+    // All published events of today and tomorrow (both days count as calendar days in Sofia).
+    private async Task<List<EventViewModel>> LoadTodayAndTomorrowEventsAsync()
+    {
+        var today = _clock.Today;
+        var (events, _) = await _eventService.GetPagedEventsAsync(new PublicEventQuery
+        {
+            PageSize = MaxTodayAndTomorrowEvents,
+            Status = EventStatus.Published,
+            FromDate = today,
+            ToDate = today.AddDays(1)
+        });
+
+        return EventViewModel.FromEntities(events, today);
     }
 
     private static HomeHeroSlideViewModel ToSlide(EventViewModel eventModel, CultureInfo culture)

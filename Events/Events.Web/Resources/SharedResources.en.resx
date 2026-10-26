@@ -836,4 +836,12 @@
   <data name="Home_CarouselNext" xml:space="preserve"><value>Next event</value></data>
   <data name="Home_CarouselSlide" xml:space="preserve"><value>Slide {0} of {1}</value></data>
   <data name="Home_HeroFilters" xml:space="preserve"><value>Quick filters</value></data>
+  <data name="Home_TonightEyebrow" xml:space="preserve"><value>{0} evening</value></data>
+  <data name="Home_TonightHeading" xml:space="preserve"><value>Tonight</value></data>
+  <data name="Home_SectionToday" xml:space="preserve"><value>Today</value></data>
+  <data name="Home_SectionTomorrow" xml:space="preserve"><value>Tomorrow</value></data>
+  <data name="Home_AllForToday" xml:space="preserve"><value>All {0} for today</value></data>
+  <data name="Home_AllForTomorrow" xml:space="preserve"><value>All {0} for tomorrow</value></data>
+  <data name="Home_RowPrevious" xml:space="preserve"><value>Previous events</value></data>
+  <data name="Home_RowNext" xml:space="preserve"><value>Next events</value></data>
 </root>

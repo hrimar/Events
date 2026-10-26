@@ -9,6 +9,9 @@ public class HomePageViewModel
 
     // Desktop hero (GS-REQ-007, 7.1-7.4); null for phones.
     public HomeHeroViewModel? Hero { get; set; }
+
+    // Desktop "Tonight" row (GS-REQ-007, 7.5); null for phones or when there is nothing to show.
+    public HomeTonightViewModel? Tonight { get; set; }
     public WeeklyEventsViewModel WeeklyEvents { get; set; } = new();
     public EventsSectionViewModel SavedSection { get; set; } = new();
     public EventsSectionViewModel RecommendedSection { get; set; } = new();

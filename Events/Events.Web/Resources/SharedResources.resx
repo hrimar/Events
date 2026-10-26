@@ -2202,4 +2202,28 @@
   <data name="Home_HeroFilters" xml:space="preserve">
     <value>Бързи филтри</value>
   </data>
+  <data name="Home_TonightEyebrow" xml:space="preserve">
+    <value>{0} вечер</value>
+  </data>
+  <data name="Home_TonightHeading" xml:space="preserve">
+    <value>Довечера</value>
+  </data>
+  <data name="Home_SectionToday" xml:space="preserve">
+    <value>Днес</value>
+  </data>
+  <data name="Home_SectionTomorrow" xml:space="preserve">
+    <value>Утре</value>
+  </data>
+  <data name="Home_AllForToday" xml:space="preserve">
+    <value>Всички {0} за днес</value>
+  </data>
+  <data name="Home_AllForTomorrow" xml:space="preserve">
+    <value>Всички {0} за утре</value>
+  </data>
+  <data name="Home_RowPrevious" xml:space="preserve">
+    <value>Предишни събития</value>
+  </data>
+  <data name="Home_RowNext" xml:space="preserve">
+    <value>Следващи събития</value>
+  </data>
 </root>

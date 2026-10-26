@@ -53,6 +53,10 @@ public static class EventCardFormatter
         return $"{dayName}, {date.Day} {monthName}";
     }
 
+    // "Петък" / "Friday" (section eyebrows, e.g. "Петък вечер", GS-REQ-007, 7.5.1)
+    public static string FormatWeekday(DateTime date, CultureInfo culture) =>
+        Capitalize(culture.DateTimeFormat.GetDayName(date.DayOfWeek), culture);
+
     private static string Capitalize(string text, CultureInfo culture) =>
         text.Length > 0 ? culture.TextInfo.ToUpper(text[0]) + text[1..] : text;
 }

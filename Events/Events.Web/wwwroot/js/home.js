@@ -1,4 +1,5 @@
-// Desktop homepage hero: featured carousel (GS-REQ-007, 7.4) and the "Date" chip (GS-REQ-007, 7.2).
+// Desktop homepage: hero featured carousel (GS-REQ-007, 7.4), "Date" chip (GS-REQ-007, 7.2)
+// and card rows with arrows (GS-REQ-007, 7.5).
 (function () {
     'use strict';
 
@@ -108,6 +109,39 @@
         schedule();
     }
 
+    // Card row ("Tonight", GS-REQ-007, 7.5.3): the arrows scroll by the visible width (5, 4 or 3 cards)
+    // and are disabled at the start and the end. Native scrolling keeps keyboard focus and touch working.
+    function initCardRow(root) {
+        var track = root.querySelector('[data-gs-row-track]');
+        var prevButton = root.querySelector('[data-gs-row-prev]');
+        var nextButton = root.querySelector('[data-gs-row-next]');
+        if (!track || !prevButton || !nextButton) {
+            return;
+        }
+
+        var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+        function updateButtons() {
+            var maxScroll = track.scrollWidth - track.clientWidth;
+            prevButton.disabled = track.scrollLeft <= 1;
+            nextButton.disabled = track.scrollLeft >= maxScroll - 1;
+        }
+
+        function scrollByPage(direction) {
+            var gap = parseFloat(window.getComputedStyle(track).columnGap) || 0;
+            track.scrollBy({
+                left: direction * (track.clientWidth + gap),
+                behavior: reducedMotion.matches ? 'auto' : 'smooth'
+            });
+        }
+
+        prevButton.addEventListener('click', function () { scrollByPage(-1); });
+        nextButton.addEventListener('click', function () { scrollByPage(1); });
+        track.addEventListener('scroll', updateButtons, { passive: true });
+        window.addEventListener('resize', updateButtons);
+        updateButtons();
+    }
+
     function loadScript(src) {
         return new Promise(function (resolve, reject) {
             var script = document.createElement('script');
@@ -175,5 +209,6 @@
     }
 
     document.querySelectorAll('[data-gs-carousel]').forEach(initCarousel);
+    document.querySelectorAll('[data-gs-card-row]').forEach(initCardRow);
     document.querySelectorAll('[data-gs-date-chip]').forEach(initDateChip);
 })();

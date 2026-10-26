@@ -12,6 +12,12 @@
     <partial name="_HomeHero" model="Model.Hero" />
 }
 
+@* Tonight (GS-REQ-007, 7.5); not rendered when no event of today or tomorrow is left *@
+@if (Model.Tonight != null)
+{
+    <partial name="_HomeTonight" model="Model.Tonight" />
+}
+
 @* <!-- Popular Tags Section -->
 @if(Model.PopularTags.Any())
 {

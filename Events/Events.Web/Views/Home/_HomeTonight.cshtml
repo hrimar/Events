@@ -1,0 +1,58 @@
+@model Events.Web.Models.HomeTonightViewModel
+@using System.Globalization
+@using Events.Models.Enums
+@using Events.Services.Time
+@using Events.Web.Localization
+@using Events.Web.Models
+@using Events.Web.Resources
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<SharedResources> Localizer
+
+@* "Tonight" row (GS-REQ-007, 7.5): up to 20 standard cards, the arrows move by the number of visible cards. *@
+@{
+    var weekday = EventCardFormatter.FormatWeekday(Model.Date, CultureInfo.CurrentCulture);
+    var isTomorrow = Model.Day == HomeTonightDay.Tomorrow;
+
+    var eyebrow = Model.Day == HomeTonightDay.Tonight ? Localizer["Home_TonightEyebrow", weekday].Value : weekday;
+    var heading = Model.Day switch
+    {
+        HomeTonightDay.Tonight => Localizer["Home_TonightHeading"].Value,
+        HomeTonightDay.Tomorrow => Localizer["Home_SectionTomorrow"].Value,
+        _ => Localizer["Home_SectionToday"].Value
+    };
+    var allLinkText = isTomorrow
+        ? Localizer["Home_AllForTomorrow", Model.TotalCount].Value
+        : Localizer["Home_AllForToday", Model.TotalCount].Value;
+    var allLinkPeriod = EventPeriodCalculator.ToQueryValue(isTomorrow ? EventPeriod.Tomorrow : EventPeriod.Today);
+}
+
+<section class="gs-home-section gs-home-section-tight-top" aria-labelledby="gs-tonight-title" data-gs-card-row>
+    <div class="container-grid">
+        <div class="gs-section-head">
+            <div class="gs-section-titles">
+                <p class="gs-eyebrow">@eyebrow</p>
+                <h2 id="gs-tonight-title" class="gs-h2 gs-section-title">@heading</h2>
+            </div>
+            <div class="gs-section-actions">
+                <a class="gs-section-link" asp-controller="Events" asp-action="Index" asp-route-period="@allLinkPeriod">@allLinkText</a>
+                <div class="gs-row-arrows">
+                    <button type="button" class="gs-row-arrow" data-gs-row-prev aria-label="@Localizer["Home_RowPrevious"]" disabled>
+                        <gs-icon name="chevron-left" />
+                    </button>
+                    <button type="button" class="gs-row-arrow gs-row-arrow-next" data-gs-row-next aria-label="@Localizer["Home_RowNext"]">
+                        <gs-icon name="chevron-right" />
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <ul class="gs-card-row" data-gs-row-track>
+            @foreach (var card in Model.Cards)
+            {
+                <li class="gs-card-row-item">
+                    <partial name="_EventCard" model="card" />
+                </li>
+            }
+        </ul>
+    </div>
+</section>
