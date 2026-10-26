@@ -36,6 +36,12 @@
     <partial name="_HomeInterests" model="Model.Interests" />
 }
 
+@* Free this week (GS-REQ-007, 7.9); not rendered with fewer than 3 free events in the next 7 days *@
+@if (Model.FreeThisWeek != null)
+{
+    <partial name="_HomeFreeThisWeek" model="Model.FreeThisWeek" />
+}
+
 @* <!-- Popular Tags Section -->
 @if(Model.PopularTags.Any())
 {

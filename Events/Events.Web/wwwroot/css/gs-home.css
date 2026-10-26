@@ -616,6 +616,16 @@
   outline-offset: 3px;
 }
 
+/* "Free this week" (GS-REQ-007, 7.9.2): 6 compact cards in 3 columns x 2 rows */
+.gs-compact-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px 24px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
 /* Tablet (768-1199): two narrower columns, then one column (Etap 3 plan, tablet adaptations) */
 @media (max-width: 1199.98px) {
   .gs-card-row {
@@ -633,6 +643,10 @@
   /* 3 x 2 tiles (Etap 3 plan, tablet adaptations) */
   .gs-interest-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .gs-compact-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .gs-hero {
@@ -695,6 +709,10 @@
 
   .gs-category-tile {
     height: 180px;
+  }
+
+  .gs-compact-grid {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .gs-hero-carousel {

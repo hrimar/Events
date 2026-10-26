@@ -2274,4 +2274,10 @@
   <data name="Home_AllCategories" xml:space="preserve">
     <value>Всички {0} категории</value>
   </data>
+  <data name="Home_FreeHeading" xml:space="preserve">
+    <value>Безплатно тази седмица</value>
+  </data>
+  <data name="Home_FreeAll" xml:space="preserve">
+    <value>Всички безплатни</value>
+  </data>
 </root>

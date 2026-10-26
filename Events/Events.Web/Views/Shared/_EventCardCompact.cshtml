@@ -1,0 +1,29 @@
+@model Events.Web.Models.EventCardViewModel
+@using System.Globalization
+@using Events.Web.Localization
+
+@* Compact event card (GS-REQ-006, 6.5): 96x96 thumbnail, day and time, title, venue; the whole card is one link. *@
+@{
+    var dateLine = EventCardFormatter.FormatBadge(Model, CultureInfo.CurrentCulture);
+
+    // The thumbnail is enough for 96px when the event has one
+    var imageUrl = string.IsNullOrWhiteSpace(Model.ThumbnailUrl) ? Model.ImageUrl : Model.ThumbnailUrl;
+}
+<a class="gs-card-compact" asp-area="" asp-controller="Events" asp-action="Details" asp-route-id="@Model.Id">
+    <div class="gs-card-compact-media">
+        @* Decorative: the title is the link text *@
+        <img src="@imageUrl" alt="" loading="lazy" decoding="async"
+             onerror="this.onerror=null;this.src='/images/default_event_image.jpeg'">
+    </div>
+    <div class="gs-card-compact-body">
+        @if (dateLine is not null)
+        {
+            <p class="gs-card-compact-date">@dateLine</p>
+        }
+        <h3 class="gs-card-compact-title gs-clamp-2">@Model.Name</h3>
+        @if (!string.IsNullOrWhiteSpace(Model.Venue))
+        {
+            <p class="gs-card-compact-venue">@Model.Venue</p>
+        }
+    </div>
+</a>

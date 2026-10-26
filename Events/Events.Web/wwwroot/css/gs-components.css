@@ -465,6 +465,96 @@ a.gs-tag:focus-visible {
   color: var(--gs-on-badge-free);
 }
 
+/* Compact event card (GS-REQ-006, 6.5): Views/Shared/_EventCardCompact.cshtml */
+.gs-card-compact {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: 100%;
+  padding: 12px;
+  border: 1px solid var(--gs-line);
+  border-radius: 16px;
+  background: var(--gs-surface);
+  color: inherit;
+  text-decoration: none;
+  transition: box-shadow 0.2s ease;
+}
+
+.gs-card-compact:hover,
+.gs-card-compact:focus {
+  color: inherit;
+}
+
+.gs-card-compact:hover {
+  box-shadow: var(--gs-shadow-card);
+}
+
+.gs-card-compact:hover .gs-card-compact-title {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.gs-card-compact:focus-visible {
+  outline: 3px solid var(--gs-accent);
+  outline-offset: 3px;
+}
+
+/* 96x96 thumbnail, cover, radius 10px */
+.gs-card-compact-media {
+  flex-shrink: 0;
+  width: 96px;
+  height: 96px;
+  overflow: hidden;
+  border-radius: 10px;
+  background: var(--gs-media-bg);
+}
+
+.gs-card-compact-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.gs-card-compact-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.gs-card-compact-date {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--gs-link);
+}
+
+.gs-card-compact-title {
+  margin: 0;
+  font-family: var(--gs-font);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--gs-ink);
+}
+
+.gs-card-compact-venue {
+  margin: 0;
+  font-size: 14px;
+  color: var(--gs-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (min-width: 1200px) {
+  .gs-card-compact-title {
+    font-size: 17px;
+  }
+}
+
 /* Chip (GS-REQ-006, 6.5): a link when it opens another page (hero), a button when it filters in place */
 .gs-chip {
   display: inline-flex;

@@ -22,6 +22,9 @@ public class HomePageViewModel
     // Desktop "Browse by interest" tiles (GS-REQ-007, 7.8); empty for phones or when no category has events.
     public List<HomeCategoryTileViewModel> Interests { get; set; } = new();
 
+    // Desktop "Free this week" band (GS-REQ-007, 7.9); null for phones or with fewer than 3 free events.
+    public HomeFreeThisWeekViewModel? FreeThisWeek { get; set; }
+
     public WeeklyEventsViewModel WeeklyEvents { get; set; } = new();
     public EventsSectionViewModel SavedSection { get; set; } = new();
     public EventsSectionViewModel RecommendedSection { get; set; } = new();

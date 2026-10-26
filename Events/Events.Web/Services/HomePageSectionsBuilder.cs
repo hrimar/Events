@@ -36,6 +36,9 @@ public interface IHomePageSectionsBuilder
 
     // Desktop "Browse by interest" (GS-REQ-007, 7.8): the 6 categories with the most events in the next 30 days.
     Task<List<HomeCategoryTileViewModel>> BuildInterestTilesAsync();
+
+    // Desktop "Free this week" (GS-REQ-007, 7.9); null when fewer than 3 free events are coming up.
+    Task<HomeFreeThisWeekViewModel?> BuildFreeThisWeekAsync();
 }
 
 public sealed class HomePageSectionsBuilder : IHomePageSectionsBuilder
@@ -47,6 +50,7 @@ public sealed class HomePageSectionsBuilder : IHomePageSectionsBuilder
     private const string TodayAndTomorrowEventsSection = "TodayAndTomorrowEvents";
     private const string WeekendEventsSection = "WeekendEvents";
     private const string TopCategoriesSection = "TopCategories";
+    private const string FreeThisWeekSection = "FreeThisWeek";
 
     private const int MaxCarouselSlides = 5;
 
@@ -55,6 +59,11 @@ public sealed class HomePageSectionsBuilder : IHomePageSectionsBuilder
 
     // Six category tiles, by the number of events in the next 30 days (GS-REQ-007, 7.8.2).
     private const int InterestTilesCount = 6;
+
+    // "Free this week": 6 compact cards, hidden with fewer than 3 (GS-REQ-007, 7.9.2 and 7.9.3).
+    private const int MaxFreeCards = 6;
+    private const int MinFreeCards = 3;
+    private const int MaxFreeEventsFetchCount = 200;
 
     // Enough featured performances to fill the carousel and "Don't miss" after merging repeated performances.
     private const int FeaturedEventsFetchCount = 50;
@@ -208,6 +217,39 @@ public sealed class HomePageSectionsBuilder : IHomePageSectionsBuilder
                 ImageUrl = FirstNonEmpty(c.DefaultImageUrl, c.NearestEventImageUrl) ?? DefaultEventImageUrl
             })
             .ToList();
+    }
+
+    public async Task<HomeFreeThisWeekViewModel?> BuildFreeThisWeekAsync()
+    {
+        var (fromDate, toDate) = EventPeriodCalculator.GetRange(EventPeriod.Next7, _clock.Today);
+
+        var freeEvents = await _homePageCache.GetOrCreateAsync(FreeThisWeekSection, HomePageCache.EventsDuration, async () =>
+        {
+            var (events, _) = await _eventService.GetPagedEventsAsync(new PublicEventQuery
+            {
+                PageSize = MaxFreeEventsFetchCount,
+                Status = EventStatus.Published,
+                IsFree = true,
+                FromDate = fromDate,
+                ToDate = toDate
+            });
+
+            // One card per event: repeated performances keep the nearest one (GS-REQ-007, 7.9.2), as for featured events.
+            return HomeEventOrdering.ByDateAndStartTime(EventViewModel.FromEntities(events, _clock.Today))
+                .DistinctBy(GetPerformanceGroupKey)
+                .Take(MaxFreeCards)
+                .ToList();
+        });
+
+        if (freeEvents.Count < MinFreeCards)
+            return null;
+
+        return new HomeFreeThisWeekViewModel
+        {
+            FromDate = fromDate,
+            ToDate = toDate,
+            Cards = EventCardViewModel.FromEvents(freeEvents)
+        };
     }
 
     // Featured events from today on, nearest first, one entry per event: repeated performances

@@ -860,4 +860,6 @@
   <data name="Home_DontMissHeading" xml:space="preserve"><value>Don't miss</value></data>
   <data name="Home_InterestsHeading" xml:space="preserve"><value>Browse by interest</value></data>
   <data name="Home_AllCategories" xml:space="preserve"><value>All {0} categories</value></data>
+  <data name="Home_FreeHeading" xml:space="preserve"><value>Free this week</value></data>
+  <data name="Home_FreeAll" xml:space="preserve"><value>All free events</value></data>
 </root>

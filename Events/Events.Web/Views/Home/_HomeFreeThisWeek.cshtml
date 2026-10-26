@@ -1,0 +1,33 @@
+@model Events.Web.Models.HomeFreeThisWeekViewModel
+@using System.Globalization
+@using Events.Models.Enums
+@using Events.Services.Time
+@using Events.Web.Localization
+@using Events.Web.Resources
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<SharedResources> Localizer
+
+@* "Free this week" band (GS-REQ-007, 7.9): free events of the next 7 days, by date and time. *@
+<section class="gs-home-section gs-home-band" aria-labelledby="gs-free-title">
+    <div class="container-grid">
+        <div class="gs-section-head">
+            <div class="gs-section-titles">
+                <p class="gs-eyebrow">@EventCardFormatter.FormatDayRange(Model.FromDate, Model.ToDate, CultureInfo.CurrentCulture)</p>
+                <h2 id="gs-free-title" class="gs-h2 gs-section-title">@Localizer["Home_FreeHeading"]</h2>
+            </div>
+            <div class="gs-section-actions">
+                <a class="gs-section-link" asp-controller="Events" asp-action="Index"
+                   asp-route-period="@EventPeriodCalculator.ToQueryValue(EventPeriod.Next7)" asp-route-free="true">@Localizer["Home_FreeAll"]</a>
+            </div>
+        </div>
+
+        <ul class="gs-compact-grid">
+            @foreach (var card in Model.Cards)
+            {
+                <li>
+                    <partial name="_EventCardCompact" model="card" />
+                </li>
+            }
+        </ul>
+    </div>
+</section>
