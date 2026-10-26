@@ -14,8 +14,8 @@
 <!-- Info Card -->
 <div class="alert alert-info mb-4">
     <i class="fas fa-info-circle me-2"></i>
-    <strong>Featured events</strong> are displayed on the homepage. 
-    You can have up to @Model.MaxFeaturedEvents featured events at a time. 
+    <strong>Featured events</strong> are displayed on the homepage, sorted by date:
+    the first 5 upcoming ones in the carousel, all the others in "Don't miss". Past events are listed last.
     Currently featuring: <strong>@Model.FeaturedEvents.Count</strong>
 </div>
 
@@ -23,7 +23,7 @@
 <div class="card mb-4">
     <div class="card-header bg-primary text-white">
         <h5 class="mb-0">
-            <i class="fas fa-star me-2"></i>Currently Featured Events (@Model.FeaturedEvents.Count/@Model.MaxFeaturedEvents)
+            <i class="fas fa-star me-2"></i>Currently Featured Events (@Model.FeaturedEvents.Count)
         </h5>
     </div>
     <div class="card-body">
@@ -85,10 +85,6 @@
     <div class="card-header bg-white">
         <div class="d-flex justify-content-between align-items-center">
             <h5 class="mb-0"><i class="fas fa-plus-circle me-2"></i>Add Events to Featured</h5>
-            @if(!Model.CanAddMore)
-            {
-                <span class="badge bg-warning">Maximum featured events reached</span>
-            }
         </div>
     </div>
     <div class="card-body">
@@ -157,8 +153,7 @@
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="id" value="@evt.Id" />
                                         <input type="hidden" name="isFeatured" value="true" />
-                                        <button type="submit" class="btn btn-sm btn-warning w-100" 
-                                                @(!Model.CanAddMore ? "disabled" : "")>
+                                        <button type="submit" class="btn btn-sm btn-warning w-100">
                                             <i class="fas fa-star me-1"></i>Feature
                                         </button>
                                     </form>

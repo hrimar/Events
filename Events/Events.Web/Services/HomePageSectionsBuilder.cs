@@ -31,7 +31,7 @@ public interface IHomePageSectionsBuilder
     // A page of weekend cards for a day tab, a filter chip or "Show more"; null when the day is not in this weekend.
     Task<HomeWeekendCardsViewModel?> GetWeekendPageAsync(DateTime day, HomeWeekendFilter filter, int skip);
 
-    // Desktop "Don't miss" (GS-REQ-007, 7.7): the featured events after the carousel; empty when there are none.
+    // Desktop "Don't miss" (GS-REQ-007, 7.7): all featured events after the carousel; empty when there are none.
     Task<List<HomeFeatureCardViewModel>> BuildDontMissAsync();
 
     // Desktop "Browse by interest" (GS-REQ-007, 7.8): the 6 categories with the most events in the next 30 days.
@@ -58,9 +58,6 @@ public sealed class HomePageSectionsBuilder : IHomePageSectionsBuilder
 
     private const int MaxCarouselSlides = 5;
 
-    // Three horizontal cards in "Don't miss" (GS-REQ-007, 7.7.2).
-    private const int MaxDontMissCards = 3;
-
     // Six category tiles, by the number of events in the next 30 days (GS-REQ-007, 7.8.2).
     private const int InterestTilesCount = 6;
 
@@ -72,7 +69,8 @@ public sealed class HomePageSectionsBuilder : IHomePageSectionsBuilder
     // Four venue cards, by the number of events in the next 30 days (GS-REQ-007, 7.10.2).
     private const int VenueCardsCount = 4;
 
-    // Enough featured performances to fill the carousel and "Don't miss" after merging repeated performances.
+    // Safety limit of featured performances (the service allows at most 50); there is no limit on featured events
+    // as such (owner's decision of 26.10.2026): 5 go to the carousel, all the others to "Don't miss".
     private const int FeaturedEventsFetchCount = 50;
 
     // Upcoming events checked for the fallback slide (the first one with its own image is used).
@@ -192,10 +190,10 @@ public sealed class HomePageSectionsBuilder : IHomePageSectionsBuilder
         var culture = CultureInfo.CurrentCulture;
         var featuredEvents = await GetFeaturedEventsAsync();
 
-        // The next featured events in the same order, after the ones in the hero carousel (GS-REQ-007, 7.7.3).
+        // All the next featured events in the same order, after the ones in the hero carousel (GS-REQ-007, 7.7.3).
+        // Not only 3 as in 7.7.2: the owner decided on 26.10.2026 that every other featured event is shown here.
         return featuredEvents
             .Skip(MaxCarouselSlides)
-            .Take(MaxDontMissCards)
             .Select(e => new HomeFeatureCardViewModel
             {
                 Id = e.Id,

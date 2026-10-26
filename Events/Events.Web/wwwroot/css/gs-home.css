@@ -453,7 +453,7 @@
   display: none;
 }
 
-/* "Don't miss" (GS-REQ-007, 7.7): 3 horizontal cards (GS-REQ-006, 6.5) */
+/* "Don't miss" (GS-REQ-007, 7.7): horizontal cards (GS-REQ-006, 6.5) in rows of 3 */
 .gs-feature-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
