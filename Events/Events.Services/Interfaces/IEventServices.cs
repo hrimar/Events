@@ -1,3 +1,4 @@
+using Events.Models.DTOs;
 using Events.Models.Entities;
 using Events.Models.Enums;
 using Events.Models.Queries;
@@ -22,6 +23,9 @@ public interface IEventService
     Task<(IEnumerable<Event> Events, int TotalCount)> GetFilteredEventsAsync(EventListCriteria criteria);
 
     Task<IEnumerable<Event>> GetFeaturedEventsAsync(int count = 10);
+
+    // The categories with the most published events from today on for the given number of days (GS-REQ-007, 7.8.2).
+    Task<List<CategoryUpcomingSummaryDto>> GetTopUpcomingCategoriesAsync(int days, int count, string excludedImageUrl);
     Task<IEnumerable<Event>> GetUpcomingEventsAsync(int count = 10);
     // Unfiltered search over all events (any status and date) - for the admin panel only.
     // Public search goes through GetPagedEventsAsync with PublicEventQuery.Search.

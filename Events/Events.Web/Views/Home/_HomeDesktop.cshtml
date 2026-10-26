@@ -30,6 +30,12 @@
     <partial name="_HomeDontMiss" model="Model.DontMiss" />
 }
 
+@* Browse by interest (GS-REQ-007, 7.8); not rendered when no category has events in the next 30 days *@
+@if (Model.Interests.Any())
+{
+    <partial name="_HomeInterests" model="Model.Interests" />
+}
+
 @* <!-- Popular Tags Section -->
 @if(Model.PopularTags.Any())
 {

@@ -546,6 +546,76 @@
   color: var(--gs-muted);
 }
 
+/* Section link that opens a menu ("All 13 categories") looks like the other section links */
+.gs-link-button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.gs-link-button:focus-visible {
+  outline: 3px solid var(--gs-accent);
+  outline-offset: 2px;
+}
+
+/* "Browse by interest" (GS-REQ-007, 7.8): 6 category tiles in one row */
+.gs-interest-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Category tile (GS-REQ-006, 6.5): image 230px high (cover), radius 16px, solid --gs-ink band with the name, no gradient */
+.gs-category-tile {
+  position: relative;
+  display: block;
+  height: 230px;
+  overflow: hidden;
+  border-radius: 16px;
+  background: var(--gs-media-bg);
+  color: var(--gs-on-ink);
+  text-decoration: none;
+  transition: box-shadow 0.2s ease;
+}
+
+.gs-category-tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.gs-category-tile-name {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  padding: 14px 16px;
+  background: var(--gs-ink);
+  color: var(--gs-on-ink);
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.gs-category-tile:hover {
+  box-shadow: var(--gs-shadow-card);
+  color: var(--gs-on-ink);
+}
+
+.gs-category-tile:hover .gs-category-tile-name {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.gs-category-tile:focus-visible {
+  outline: 3px solid var(--gs-accent);
+  outline-offset: 3px;
+}
+
 /* Tablet (768-1199): two narrower columns, then one column (Etap 3 plan, tablet adaptations) */
 @media (max-width: 1199.98px) {
   .gs-card-row {
@@ -558,6 +628,11 @@
 
   .gs-feature-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* 3 x 2 tiles (Etap 3 plan, tablet adaptations) */
+  .gs-interest-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .gs-hero {
@@ -612,6 +687,14 @@
   .gs-feature-media {
     width: 110px;
     height: 147px;
+  }
+
+  .gs-interest-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .gs-category-tile {
+    height: 180px;
   }
 
   .gs-hero-carousel {

@@ -18,6 +18,10 @@ public class HomePageViewModel
 
     // Desktop "Don't miss" cards (GS-REQ-007, 7.7); empty for phones or when there are no more featured events.
     public List<HomeFeatureCardViewModel> DontMiss { get; set; } = new();
+
+    // Desktop "Browse by interest" tiles (GS-REQ-007, 7.8); empty for phones or when no category has events.
+    public List<HomeCategoryTileViewModel> Interests { get; set; } = new();
+
     public WeeklyEventsViewModel WeeklyEvents { get; set; } = new();
     public EventsSectionViewModel SavedSection { get; set; } = new();
     public EventsSectionViewModel RecommendedSection { get; set; } = new();

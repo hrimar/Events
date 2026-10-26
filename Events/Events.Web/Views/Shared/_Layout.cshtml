@@ -118,15 +118,7 @@
                         @Localizer["Nav_Categories"]
                     </a>
                     <ul class="dropdown-menu">
-                        @foreach(var category in EventsPageViewModel.GetAvailableCategories(Localizer))
-                        {
-                            <li>
-                                <a class="dropdown-item" asp-area="" asp-controller="Events"
-                                   asp-action="Index" asp-route-category="@category.Value">
-                                    <gs-icon name="@category.IconName" class="me-2" />@category.DisplayName
-                                </a>
-                            </li>
-                        }
+                        <partial name="_CategoryLinks" />
                     </ul>
                 </li>
                 <li class="nav-item">

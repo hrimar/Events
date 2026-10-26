@@ -2268,4 +2268,10 @@
   <data name="Home_DontMissHeading" xml:space="preserve">
     <value>Не пропускай</value>
   </data>
+  <data name="Home_InterestsHeading" xml:space="preserve">
+    <value>Разгледай по интерес</value>
+  </data>
+  <data name="Home_AllCategories" xml:space="preserve">
+    <value>Всички {0} категории</value>
+  </data>
 </root>

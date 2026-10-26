@@ -33,6 +33,9 @@ public interface IHomePageSectionsBuilder
 
     // Desktop "Don't miss" (GS-REQ-007, 7.7): the featured events after the carousel; empty when there are none.
     Task<List<HomeFeatureCardViewModel>> BuildDontMissAsync();
+
+    // Desktop "Browse by interest" (GS-REQ-007, 7.8): the 6 categories with the most events in the next 30 days.
+    Task<List<HomeCategoryTileViewModel>> BuildInterestTilesAsync();
 }
 
 public sealed class HomePageSectionsBuilder : IHomePageSectionsBuilder
@@ -43,11 +46,15 @@ public sealed class HomePageSectionsBuilder : IHomePageSectionsBuilder
     private const string QuickFiltersSection = "QuickFilters";
     private const string TodayAndTomorrowEventsSection = "TodayAndTomorrowEvents";
     private const string WeekendEventsSection = "WeekendEvents";
+    private const string TopCategoriesSection = "TopCategories";
 
     private const int MaxCarouselSlides = 5;
 
     // Three horizontal cards in "Don't miss" (GS-REQ-007, 7.7.2).
     private const int MaxDontMissCards = 3;
+
+    // Six category tiles, by the number of events in the next 30 days (GS-REQ-007, 7.8.2).
+    private const int InterestTilesCount = 6;
 
     // Enough featured performances to fill the carousel and "Don't miss" after merging repeated performances.
     private const int FeaturedEventsFetchCount = 50;
@@ -185,6 +192,24 @@ public sealed class HomePageSectionsBuilder : IHomePageSectionsBuilder
             .ToList();
     }
 
+    public async Task<List<HomeCategoryTileViewModel>> BuildInterestTilesAsync()
+    {
+        // Recomputed at most once per hour (GS-REQ-007, 7.8.2).
+        var categories = await _homePageCache.GetOrCreateAsync(TopCategoriesSection, HomePageCache.AggregatesDuration, () =>
+            _eventService.GetTopUpcomingCategoriesAsync(EventPeriodCalculator.FallbackDays, InterestTilesCount, DefaultEventImageUrl));
+
+        return categories
+            .Select(c => new HomeCategoryTileViewModel
+            {
+                Category = c.CategoryType,
+                CategoryKey = c.Name,
+
+                // An image set for the category wins over the nearest event's image (GS-REQ-007, 7.8.3).
+                ImageUrl = FirstNonEmpty(c.DefaultImageUrl, c.NearestEventImageUrl) ?? DefaultEventImageUrl
+            })
+            .ToList();
+    }
+
     // Featured events from today on, nearest first, one entry per event: repeated performances
     // (same name and venue) keep only the nearest one (decision of 25.10.2026), so one featured
     // event never fills several slides. Shared with "Don't miss" (GS-REQ-007, 7.7), which starts after the carousel.
@@ -303,6 +328,8 @@ public sealed class HomePageSectionsBuilder : IHomePageSectionsBuilder
 
         return $"{name}|{venue}";
     }
+
+    private static string? FirstNonEmpty(params string?[] values) => values.FirstOrDefault(v => !string.IsNullOrWhiteSpace(v));
 
     private static string ReplaceNext7DaysCount(string text, int next7DaysCount) =>
         text.Replace(Next7DaysPlaceholder, next7DaysCount.ToString(CultureInfo.CurrentCulture), StringComparison.Ordinal);

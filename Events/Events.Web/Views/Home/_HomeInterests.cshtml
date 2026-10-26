@@ -1,0 +1,46 @@
+@model List<Events.Web.Models.HomeCategoryTileViewModel>
+@using Events.Models.Enums
+@using Events.Web.Localization
+@using Events.Web.Resources
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<SharedResources> Localizer
+
+@* "Browse by interest" (GS-REQ-007, 7.8): 6 category tiles (GS-REQ-006, 6.5), each opening the category
+   without a period; "All 13 categories" opens the same category menu as the header. *@
+@{
+    var allCategoriesCount = Enum.GetValues<EventCategory>().Count(c => c != EventCategory.Undefined);
+}
+
+<section class="gs-home-section" aria-labelledby="gs-interests-title">
+    <div class="container-grid">
+        <div class="gs-section-head">
+            <div class="gs-section-titles">
+                <h2 id="gs-interests-title" class="gs-h2 gs-section-title">@Localizer["Home_InterestsHeading"]</h2>
+            </div>
+            <div class="gs-section-actions dropdown">
+                <button type="button" class="gs-section-link gs-link-button dropdown-toggle"
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                    @Localizer["Home_AllCategories", allCategoriesCount]
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <partial name="_CategoryLinks" />
+                </ul>
+            </div>
+        </div>
+
+        <ul class="gs-interest-grid">
+            @foreach (var tile in Model)
+            {
+                var name = tile.Category.Localize(Localizer);
+                <li>
+                    <a class="gs-category-tile" asp-controller="Events" asp-action="Index" asp-route-category="@tile.CategoryKey">
+                        @* Decorative: the category name is the link text *@
+                        <img src="@tile.ImageUrl" alt="" loading="lazy" decoding="async"
+                             onerror="this.onerror=null;this.src='/images/default_event_image.jpeg'">
+                        <span class="gs-category-tile-name">@name</span>
+                    </a>
+                </li>
+            }
+        </ul>
+    </div>
+</section>

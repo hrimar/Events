@@ -1,0 +1,16 @@
+@using Events.Web.Models
+@using Events.Web.Resources
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<SharedResources> Localizer
+
+@* Dropdown items with all categories, shared by the header "Categories" menu and the homepage
+   "All 13 categories" link (GS-REQ-007, 7.8.1). *@
+@foreach (var category in EventsPageViewModel.GetAvailableCategories(Localizer))
+{
+    <li>
+        <a class="dropdown-item" asp-area="" asp-controller="Events"
+           asp-action="Index" asp-route-category="@category.Value">
+            <gs-icon name="@category.IconName" class="me-2" />@category.DisplayName
+        </a>
+    </li>
+}

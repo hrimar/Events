@@ -858,4 +858,6 @@
   <data name="Home_LoadError" xml:space="preserve"><value>Could not load. Please try again.</value></data>
   <data name="Home_DontMissEyebrow" xml:space="preserve"><value>Featured events</value></data>
   <data name="Home_DontMissHeading" xml:space="preserve"><value>Don't miss</value></data>
+  <data name="Home_InterestsHeading" xml:space="preserve"><value>Browse by interest</value></data>
+  <data name="Home_AllCategories" xml:space="preserve"><value>All {0} categories</value></data>
 </root>

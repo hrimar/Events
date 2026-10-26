@@ -1,6 +1,7 @@
 ﻿using System;
 using Events.Data.Context;
 using Events.Data.Repositories.Interfaces;
+using Events.Models.DTOs;
 using Events.Models.Entities;
 using Events.Models.Enums;
 using Events.Models.Queries;
@@ -284,6 +285,62 @@ public class EventRepository : IEventRepository
             .ThenBy(e => e.StartTime)
             .Take(count)
             .ToListAsync();
+    }
+
+    public async Task<List<CategoryUpcomingSummaryDto>> GetTopUpcomingCategoriesAsync(
+        DateTime fromDate, DateTime toDate, int count, string excludedImageUrl)
+    {
+        var from = fromDate.Date;
+        var exclusiveEnd = toDate.Date.AddDays(1);
+
+        // Counted in SQL (GROUP BY), only the top categories come back.
+        var topCounts = await _context.Events
+            .AsNoTracking()
+            .Where(e => e.Status == EventStatus.Published && e.Date >= from && e.Date < exclusiveEnd)
+            .Where(e => e.Category.CategoryType != EventCategory.Undefined)
+            .GroupBy(e => e.CategoryId)
+            .Select(g => new { CategoryId = g.Key, Count = g.Count() })
+            .OrderByDescending(g => g.Count)
+            .Take(count)
+            .ToListAsync();
+
+        var categoryIds = topCounts.Select(c => c.CategoryId).ToList();
+
+        // One row per category; the nearest event image comes from a correlated subquery (no events are loaded).
+        var categories = await _context.Categories
+            .AsNoTracking()
+            .Where(c => categoryIds.Contains(c.Id))
+            .Select(c => new
+            {
+                c.Id,
+                c.Name,
+                c.CategoryType,
+                c.DefaultImageUrl,
+                NearestEventImageUrl = c.Events
+                    .Where(e => e.Status == EventStatus.Published && e.Date >= from
+                        && e.ImageUrl != null && e.ImageUrl != "" && e.ImageUrl != excludedImageUrl)
+                    .OrderBy(e => e.Date)
+                    .ThenBy(e => e.StartTime)
+                    .Select(e => e.ImageUrl)
+                    .FirstOrDefault()
+            })
+            .ToDictionaryAsync(c => c.Id);
+
+        return topCounts
+            .Where(c => categories.ContainsKey(c.CategoryId))
+            .Select(c =>
+            {
+                var category = categories[c.CategoryId];
+                return new CategoryUpcomingSummaryDto
+                {
+                    CategoryType = category.CategoryType,
+                    Name = category.Name,
+                    UpcomingEventsCount = c.Count,
+                    DefaultImageUrl = category.DefaultImageUrl,
+                    NearestEventImageUrl = category.NearestEventImageUrl
+                };
+            })
+            .ToList();
     }
 
     public async Task<IEnumerable<Event>> GetUpcomingEventsAsync(DateTime fromDate, int count = 10)

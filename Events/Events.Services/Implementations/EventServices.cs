@@ -2,6 +2,7 @@ using Events.Services.Caching;
 using Events.Services.Interfaces;
 using Events.Services.Time;
 using Events.Data.Repositories.Interfaces;
+using Events.Models.DTOs;
 using Events.Models.Entities;
 using Events.Models.Enums;
 using Events.Models.Queries;
@@ -186,6 +187,20 @@ public class EventService : IEventService
         {
             _logger.LogError(ex, "Error getting featured events");
             throw new ApplicationException("Failed to retrieve featured events", ex);
+        }
+    }
+
+    public async Task<List<CategoryUpcomingSummaryDto>> GetTopUpcomingCategoriesAsync(int days, int count, string excludedImageUrl)
+    {
+        try
+        {
+            var today = _clock.Today;
+            return await _eventRepository.GetTopUpcomingCategoriesAsync(today, today.AddDays(days - 1), count, excludedImageUrl);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting top upcoming categories");
+            throw new ApplicationException("Failed to retrieve top upcoming categories", ex);
         }
     }
 
