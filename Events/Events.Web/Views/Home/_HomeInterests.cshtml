@@ -35,7 +35,7 @@
                 <li>
                     <a class="gs-category-tile" asp-controller="Events" asp-action="Index" asp-route-category="@tile.CategoryKey">
                         @* Decorative: the category name is the link text *@
-                        <img src="@tile.ImageUrl" alt="" loading="lazy" decoding="async"
+                        <img src="@tile.ImageUrl" alt="" width="200" height="230" loading="lazy" decoding="async"
                              onerror="this.onerror=null;this.src='/images/default_event_image.jpeg'">
                         <span class="gs-category-tile-name">@name</span>
                     </a>

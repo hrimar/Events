@@ -386,7 +386,20 @@ static void ConfigureHttpPipeline(WebApplication app)
     });
 
     app.UseHttpsRedirection();
-    app.UseStaticFiles();
+
+    // Browser caching of static files (GS-REQ-007, 7.11; Lighthouse "efficient cache lifetimes"): files linked with
+    // asp-append-version ("?v=hash") get a new URL on every change, so they can be cached for a year; the others
+    // (libraries, icons, images) for a week, so an update reaches visitors within days.
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        OnPrepareResponse = context =>
+        {
+            var isVersioned = context.Context.Request.Query.ContainsKey("v");
+            context.Context.Response.Headers.CacheControl = isVersioned
+                ? "public, max-age=31536000, immutable"
+                : "public, max-age=604800";
+        }
+    });
     app.UseRequestLocalization();
     app.UseRouting();
     app.UseRateLimiter();

@@ -88,15 +88,17 @@
                 {
                     var slide = Model.Slides[i];
                     var isFirst = i == 0;
-                    @* Only the first image loads at once, with high priority (GS-REQ-007, 7.4.8); the others load lazily *@
+                    @* Only the first image loads at once, with high priority (GS-REQ-007, 7.4.8); the others load lazily.
+                       Both copies of the first image ask for high priority: they are one download, and the browser
+                       starts it with the priority of the first copy in the page (the blurred one). *@
                     <div class="gs-hero-slide" data-gs-slide role="group" aria-roledescription="slide"
                          aria-label="@Localizer["Home_CarouselSlide", i + 1, slideCount]" hidden="@(!isFirst)">
                         <a class="gs-hero-card" asp-controller="Events" asp-action="Details" asp-route-id="@slide.Id">
                             <div class="gs-hero-media">
-                                <img class="gs-hero-media-bg" src="@slide.ImageUrl" alt="" aria-hidden="true"
-                                     loading="@(isFirst ? "eager" : "lazy")" decoding="async"
+                                <img class="gs-hero-media-bg" src="@slide.ImageUrl" alt="" aria-hidden="true" width="740" height="452"
+                                     loading="@(isFirst ? "eager" : "lazy")" fetchpriority="@(isFirst ? "high" : "auto")" decoding="async"
                                      onerror="this.onerror=null;this.src='/images/default_event_image.jpeg'">
-                                <img class="gs-hero-media-img" src="@slide.ImageUrl" alt="@slide.Name" data-gs-orientation
+                                <img class="gs-hero-media-img" src="@slide.ImageUrl" alt="@slide.Name" data-gs-orientation width="740" height="452"
                                      loading="@(isFirst ? "eager" : "lazy")" fetchpriority="@(isFirst ? "high" : "auto")" decoding="async"
                                      onerror="this.onerror=null;this.src='/images/default_event_image.jpeg'">
                                 @if (Model.HasFeaturedEvents)
