@@ -19,6 +19,9 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.WebEncoders;
+using System.Text.Encodings.Web;
+using System.Text.Unicode;
 using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -44,6 +47,13 @@ RegisterServices(builder);
 ConfigureLocalization(builder);
 ConfigureRateLimiting(builder);
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+
+// Razor output keeps Cyrillic (and all other) letters as they are instead of "&#x422;" entities, which made
+// every Bulgarian text 3-4 times larger (GS-REQ-007, 7.11.4: homepage HTML under 200 KB). HTML-sensitive
+// characters (<, >, &, quotes) are still encoded, so this does not weaken XSS protection.
+builder.Services.Configure<WebEncoderOptions>(options =>
+    options.TextEncoderSettings = new TextEncoderSettings(UnicodeRanges.All));
+
 builder.Services.AddRazorPages()
     .AddViewLocalization()
     .AddDataAnnotationsLocalization(options =>

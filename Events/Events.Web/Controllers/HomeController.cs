@@ -26,7 +26,6 @@ namespace Events.Web.Controllers
 
         private readonly ILogger<HomeController> _logger;
         private readonly IEventService _eventService;
-        private readonly ITagService _tagService;
         private readonly IUserFavoriteEventService _favoriteEventService;
         private readonly ISiteContentService _siteContentService;
         private readonly ISeoMetaService _seoMetaService;
@@ -39,7 +38,6 @@ namespace Events.Web.Controllers
         public HomeController(
             ILogger<HomeController> logger,
             IEventService eventService,
-            ITagService tagService,
             IUserFavoriteEventService favoriteEventService,
             ISiteContentService siteContentService,
             ISeoMetaService seoMetaService,
@@ -51,7 +49,6 @@ namespace Events.Web.Controllers
         {
             _logger = logger;
             _eventService = eventService;
-            _tagService = tagService;
             _favoriteEventService = favoriteEventService;
             _siteContentService = siteContentService;
             _seoMetaService = seoMetaService;
@@ -125,8 +122,6 @@ namespace Events.Web.Controllers
                         .ToList();
                 }
 
-                var popularTags = await GetPopularTagsAsync();
-
                 var siteContent = await _siteContentService.GetAsync();
 
                 // Default title until an admin configures PageSeoMeta for "home" - must be
@@ -159,9 +154,7 @@ namespace Events.Web.Controllers
                         title: _localizer["Home_RecommendedEvents"]),
                     TotalEvents = eventCounts.Total,
                     TodayEvents = eventCounts.Today,
-                    Next7DaysEvents = eventCounts.Next7Days,
-                    PopularTags = popularTags.Take(15).ToList(),
-                    LocalizedCategories = localizedCategories
+                    Next7DaysEvents = eventCounts.Next7Days
                 };
 
                 return View(viewModel);
@@ -292,31 +285,6 @@ namespace Events.Web.Controllers
                 FromDate = from,
                 ToDate = to
             };
-        }
-
-        // Get popular tags for homepage display
-        private async Task<List<TagViewModel>> GetPopularTagsAsync()
-        {
-            try
-            {
-                var tags = await _tagService.GetAllTagsAsync();
-
-                return tags
-                    .Where(t => t.EventTags.Any()) // Only tags with events
-                    .Select(t => new TagViewModel
-                    {
-                        Name = t.Name,
-                        EventCount = t.EventTags.Count,
-                        Category = t.Category
-                    })
-                    .OrderByDescending(t => t.EventCount)
-                    .ToList();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting popular tags for homepage");
-                return new List<TagViewModel>();
-            }
         }
 
         public async Task<IActionResult> AboutUs()

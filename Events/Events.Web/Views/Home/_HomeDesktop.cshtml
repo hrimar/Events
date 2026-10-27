@@ -46,46 +46,5 @@
     <partial name="_HomeVenues" model="Model.Venues" />
 }
 
-@* <!-- Popular Tags Section -->
-@if(Model.PopularTags.Any())
-{
-    <section class="py-4 bg-white border-top border-bottom">
-        <div class="container">
-            <div class="row align-items-center mb-4">
-                <div class="col-md-6">
-                    <h3 class="mb-0">
-                        <gs-icon name="tags" class="text-info me-2" />
-                        Popular Event Tags
-                    </h3>
-                    <p class="text-muted mb-0">Discover events by popular themes and topics</p>
-                </div>
-                <div class="col-md-6 text-end">
-                    <a asp-action="Index" asp-controller="Events" class="btn btn-outline-info">
-                        <gs-icon name="layout-grid" class="me-1" />View All Events
-                    </a>
-                </div>
-            </div>
-            
-            <div class="tag-cloud-home">
-                @foreach(var tag in Model.PopularTags)
-                {
-                    <a asp-action="ByTag" asp-controller="Events" asp-route-tagName="@tag.Name"
-                       class="btn @tag.BadgeClass me-2 mb-2 tag-home-link @tag.Size text-decoration-none">
-                        <gs-icon name="tag" class="me-1" />@tag.Name
-                        <span class="badge bg-light text-dark ms-1">@tag.EventCount</span>
-                    </a>
-                }
-            </div>
-            
-            <div class="text-center mt-3">
-                <small class="text-muted">
-                    <gs-icon name="info" class="me-1" />
-                    Click on any tag to find events with that theme
-                </small>
-            </div>
-        </div>
-    </section>
-} *@
-
 @* Saved and recommended events of a signed-in user *@
 <partial name="_HomeUserSections" model="Model" />
