@@ -1,0 +1,291 @@
+/*
+ * Mobile homepage (GS-REQ-007, step 7k): the "This week" block built from the new components.
+ * Loaded only by the mobile layout of Home/Index. Requires gs-tokens.css, gs-base.css and gs-components.css.
+ * Content is stacked vertically; nothing scrolls sideways (general requirement 2).
+ */
+
+.gs-weekly {
+  padding-block: 24px 40px;
+}
+
+/* When the title and "See all events" do not fit on one line, the link keeps to the right on its own line */
+.gs-weekly .gs-section-actions {
+  margin-left: auto;
+}
+
+/* Previous / next 6 days */
+.gs-weekly-period {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px 12px;
+  margin-bottom: 16px;
+}
+
+.gs-weekly-period-label {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--gs-ink);
+}
+
+/* Four tabs; they wrap instead of scrolling on narrow screens */
+.gs-weekly-tabs {
+  flex-wrap: wrap;
+  gap: 0 18px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--gs-line);
+}
+
+.gs-weekly-tabs .gs-tab {
+  height: 44px;
+  font-size: 15px;
+}
+
+/* Day chips: the 6 days share the width in equal columns, so all of them are visible on any phone */
+.gs-day-chips {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.gs-day-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  padding: 8px 2px;
+  border: 1px solid var(--gs-line-strong);
+  border-radius: 14px;
+  background: var(--gs-surface);
+  color: var(--gs-ink);
+  font-family: var(--gs-font);
+  cursor: pointer;
+}
+
+.gs-day-chip:hover {
+  border-color: var(--gs-ink);
+}
+
+/* Active chip (GS-REQ-006, 6.5): accent fill with dark text */
+.gs-day-chip[aria-pressed="true"] {
+  border-color: var(--gs-accent);
+  background: var(--gs-accent);
+  color: var(--gs-on-accent);
+}
+
+.gs-day-chip:focus-visible {
+  outline: 3px solid var(--gs-accent);
+  outline-offset: 2px;
+}
+
+.gs-day-chip-name {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.gs-day-chip-number {
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.gs-day-chip-count {
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--gs-tag-bg);
+  color: var(--gs-tag-text);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.gs-day-chip[aria-pressed="true"] .gs-day-chip-count {
+  background: var(--gs-on-accent);
+  color: var(--gs-accent);
+}
+
+/* Vertical lists of compact cards */
+.gs-weekly-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gs-weekly-empty {
+  padding: 24px 0;
+  text-align: center;
+  color: var(--gs-text-2);
+}
+
+/* By category */
+.gs-weekly-category + .gs-weekly-category {
+  margin-top: 28px;
+}
+
+.gs-weekly-category-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+  margin-bottom: 10px;
+}
+
+.gs-weekly-category-title {
+  margin: 0;
+  font-family: var(--gs-font);
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--gs-ink);
+}
+
+.gs-weekly-more {
+  width: 100%;
+  margin-top: 10px;
+}
+
+/* Weekend: standard cards, one column, two on wider phones */
+.gs-weekly-cards {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 24px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 576px) {
+  .gs-weekly-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Calendar: number of events per day */
+.gs-weekly-month + .gs-weekly-month {
+  margin-top: 24px;
+}
+
+.gs-weekly-month .gs-weekly-category-title {
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.gs-calendar {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 3px;
+  table-layout: fixed;
+  text-align: center;
+}
+
+.gs-calendar th {
+  padding: 4px 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--gs-muted);
+  text-transform: capitalize;
+}
+
+.gs-calendar td {
+  height: 52px;
+  padding: 4px 0;
+  border: 1px solid var(--gs-line);
+  border-radius: 10px;
+  background: var(--gs-surface);
+  font-size: 14px;
+  vertical-align: top;
+  color: var(--gs-ink);
+}
+
+.gs-calendar td a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.gs-calendar td .gs-tag {
+  align-self: center;
+  padding: 1px 6px;
+  font-size: 11px;
+}
+
+.gs-calendar td.is-in-period {
+  border-color: var(--gs-line-strong);
+  background: var(--gs-bg-alt);
+}
+
+.gs-calendar td.is-today {
+  border-color: var(--gs-accent);
+  font-weight: 800;
+}
+
+.gs-calendar td.is-other-month {
+  border-color: transparent;
+  background: transparent;
+}
+
+/* Other sections of the mobile page ("Saved", "Recommended"): less space than on desktop */
+.gs-home-section:not(.gs-weekly) {
+  padding-block: 32px;
+}
+
+/* Stats row: three tiles in one row */
+.gs-stats {
+  padding-block: 24px;
+  border-block: 1px solid var(--gs-line);
+  background: var(--gs-bg-alt);
+}
+
+.gs-stats-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gs-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 12px 4px;
+  border-radius: 14px;
+  color: inherit;
+  text-align: center;
+  text-decoration: none;
+}
+
+.gs-stat:hover,
+.gs-stat:focus {
+  background: var(--gs-surface);
+  color: inherit;
+}
+
+.gs-stat:focus-visible {
+  outline: 3px solid var(--gs-accent);
+  outline-offset: 2px;
+}
+
+.gs-stat-number {
+  font-family: var(--gs-font-display);
+  font-size: 32px;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--gs-ink);
+}
+
+.gs-stat-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gs-muted);
+}

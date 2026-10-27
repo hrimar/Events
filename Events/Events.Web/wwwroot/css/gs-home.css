@@ -239,92 +239,6 @@
   opacity: 1;
 }
 
-/* Homepage section: 64-72px apart (GS-REQ-007, structure table) */
-.gs-home-section {
-  padding-block: 64px;
-}
-
-/* Directly after the hero, whose own bottom padding already separates them */
-.gs-home-section-tight-top {
-  padding-top: 24px;
-}
-
-/* Section header (GS-REQ-006, 6.5): eyebrow and H2 on the left; link and arrows on the right, on the H2 baseline */
-.gs-section-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 16px 24px;
-  margin-bottom: 24px;
-}
-
-.gs-section-titles {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.gs-section-title {
-  margin: 0;
-}
-
-.gs-section-actions {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.gs-section-link {
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--gs-link);
-}
-
-.gs-section-link:hover {
-  color: var(--gs-ink);
-}
-
-/* Row arrows (GS-REQ-006, 6.5): 44px, "back" in the secondary style, "forward" in the primary style */
-.gs-row-arrows {
-  display: flex;
-  gap: 8px;
-}
-
-.gs-row-arrow {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  padding: 0;
-  border: 1px solid var(--gs-line-strong);
-  border-radius: 999px;
-  background: var(--gs-surface);
-  color: var(--gs-ink);
-  cursor: pointer;
-}
-
-.gs-row-arrow-next {
-  border-color: var(--gs-ink);
-  background: var(--gs-ink);
-  color: var(--gs-on-ink);
-}
-
-.gs-row-arrow:hover:not(:disabled) {
-  border-color: var(--gs-ink);
-}
-
-.gs-row-arrow:disabled {
-  opacity: 0.4;
-  cursor: default;
-}
-
-.gs-row-arrow:focus-visible {
-  outline: 3px solid var(--gs-accent);
-  outline-offset: 2px;
-}
-
 /* Card row ("Tonight", GS-REQ-007, 7.5.3): --gs-row-cols visible cards, the rest scrolled with the arrows */
 .gs-card-row {
   --gs-row-cols: 5;
@@ -356,12 +270,6 @@
   height: 180px;
 }
 
-/* Band with the alternative background and lines above and below ("This weekend", "Free this week") */
-.gs-home-band {
-  border-block: 1px solid var(--gs-line);
-  background: var(--gs-bg-alt);
-}
-
 /* "This weekend" (GS-REQ-007, 7.6): day tabs on the left, filter chips on the right of the same row */
 .gs-weekend-bar {
   display: flex;
@@ -371,41 +279,6 @@
   gap: 12px 28px;
   margin-bottom: 28px;
   border-bottom: 1px solid var(--gs-line);
-}
-
-.gs-tabs {
-  display: flex;
-  gap: 28px;
-}
-
-/* Active tab: 18px / 800 with a 3px accent line (GS-REQ-007, 7.6.3) */
-.gs-tab {
-  height: 48px;
-  margin-bottom: -1px;
-  padding: 0 2px;
-  border: 0;
-  border-bottom: 3px solid transparent;
-  background: transparent;
-  font-family: var(--gs-font);
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--gs-muted);
-  cursor: pointer;
-}
-
-.gs-tab:hover {
-  color: var(--gs-ink);
-}
-
-.gs-tab[aria-selected="true"] {
-  border-bottom-color: var(--gs-accent);
-  font-weight: 800;
-  color: var(--gs-ink);
-}
-
-.gs-tab:focus-visible {
-  outline: 3px solid var(--gs-accent);
-  outline-offset: 2px;
 }
 
 .gs-weekend-filters {
@@ -544,20 +417,6 @@
   margin: auto 0 0;
   font-size: 14px;
   color: var(--gs-muted);
-}
-
-/* Section link that opens a menu ("All 13 categories") looks like the other section links */
-.gs-link-button {
-  padding: 0;
-  border: 0;
-  background: transparent;
-  text-decoration: underline;
-  cursor: pointer;
-}
-
-.gs-link-button:focus-visible {
-  outline: 3px solid var(--gs-accent);
-  outline-offset: 2px;
 }
 
 /* "Browse by interest" (GS-REQ-007, 7.8): 6 category tiles in one row */

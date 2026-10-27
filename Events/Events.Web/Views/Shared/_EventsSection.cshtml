@@ -6,15 +6,18 @@
 
 @if(Model.Events.Any())
 {
-    <section class="py-3 bg-surface theme-section border-top">
+    @* Section header of the new visual system (GS-REQ-006, 6.5), as in the other homepage sections *@
+    <section class="gs-home-section gs-events-section">
         <div class="container-grid">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2 class="home-section-title">@Model.Title</h2>
+            <div class="gs-section-head">
+                <div class="gs-section-titles">
+                    <h2 class="gs-h2 gs-section-title">@Model.Title</h2>
+                </div>
                 @if(!string.IsNullOrEmpty(Model.ViewAllUrl))
                 {
-                    <a href="@Model.ViewAllUrl" class="gs-btn gs-btn-secondary">
-                        @Model.ViewAllText <gs-icon name="arrow-right" class="ms-1" />
-                    </a>
+                    <div class="gs-section-actions">
+                        <a href="@Model.ViewAllUrl" class="gs-section-link">@Model.ViewAllText</a>
+                    </div>
                 }
             </div>
 

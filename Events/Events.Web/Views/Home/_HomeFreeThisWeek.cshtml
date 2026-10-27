@@ -25,7 +25,8 @@
             @foreach (var card in Model.Cards)
             {
                 <li>
-                    <partial name="_EventCardCompact" model="card" />
+                    @* Every card here is free, so the "Free" label is left out *@
+                    <partial name="_EventCardCompact" model="card" view-data='new ViewDataDictionary(ViewData) { ["HideFreeLabel"] = true }' />
                 </li>
             }
         </ul>
