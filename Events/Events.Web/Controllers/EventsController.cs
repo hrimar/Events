@@ -25,7 +25,6 @@ public class EventsController : Controller
 {
     private const int OtherSubCategoryEnumValue = 99;
     private const int DefaultPageSize = 12;
-    private const int RelatedEventsCount = 4;
     private const int MinSearchQueryLength = 2;
     private const int MaxEventSuggestions = 8;
     private const int MaxVenueSuggestions = 3;
@@ -522,22 +521,22 @@ public class EventsController : Controller
 
             // EnumValue == OtherSubCategoryEnumValue represents "Other" across all subcategory enums
             var isOtherSubCategory = eventEntity.SubCategory == null || eventEntity.SubCategory.EnumValue == OtherSubCategoryEnumValue;
-            // Fetch RelatedEventsCount + 1 (not int.MaxValue) so filtering can happen in SQL - the
-            // +1 buffer covers the case where the current event itself is among the top matches.
+            // Fetch a few candidates (not int.MaxValue) so filtering can happen in SQL - the buffer covers the current
+            // event and its other performances among the top matches (RelatedEventsSelector, GS-REQ-008, 8.1).
             List<EventViewModel> relatedEvents;
             if (!isOtherSubCategory)
             {
                 // SubCategory is specific - suggest 4 events from the same SubCategory
                 var result = await _eventService.GetPagedEventsAsync(new PublicEventQuery
                 {
-                    PageSize = RelatedEventsCount + 1,
+                    PageSize = RelatedEventsSelector.CandidateCount,
                     Status = EventStatus.Published,
                     CategoryNames = CategoryNamesOf(eventEntity),
                     SubCategoryName = eventEntity.SubCategory!.Name,
                     FromDate = _clock.Today
                 }, cancellationToken);
 
-                relatedEvents = EventViewModel.FromEntities(result.Events.Where(e => e.Id != id).Take(RelatedEventsCount), _clock.Today).ToList();
+                relatedEvents = EventViewModel.FromEntities(RelatedEventsSelector.Select(result.Events, eventEntity), _clock.Today).ToList();
             }
             else
             {
@@ -556,14 +555,14 @@ public class EventsController : Controller
                 {
                     var result = await _eventService.GetPagedEventsAsync(new PublicEventQuery
                     {
-                        PageSize = RelatedEventsCount + 1,
+                        PageSize = RelatedEventsSelector.CandidateCount,
                         Status = EventStatus.Published,
                         CategoryNames = CategoryNamesOf(eventEntity),
                         FromDate = _clock.Today,
                         TagNames = eventTagNames
                     }, cancellationToken);
 
-                    relatedEvents = EventViewModel.FromEntities(result.Events.Where(e => e.Id != id).Take(RelatedEventsCount), _clock.Today).ToList();
+                    relatedEvents = EventViewModel.FromEntities(RelatedEventsSelector.Select(result.Events, eventEntity), _clock.Today).ToList();
                 }
             }
 

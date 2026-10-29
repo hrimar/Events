@@ -261,90 +261,43 @@
                     }
                 </div>
             </div>
-
-            <!-- Related Events -->
-            @if(relatedEvents.Any())
-            {
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h6 class="card-title mb-0">
-                                <gs-icon name="lightbulb" class="text-warning me-1" />
-                                @Localizer["Details_YouMightLike"]
-                            </h6>
-                        </div>
-                        
-                        @foreach(var relatedEvent in relatedEvents)
-                        {
-                            <div class="d-flex mb-3 p-2 rounded border-start border-3 border-info">
-                                <img src="@relatedEvent.DefaultImage" 
-                                     alt="@relatedEvent.Name"
-                                     class="rounded me-3"
-                                     style="width: 60px; height: 60px; object-fit: cover;"
-                                     onerror="this.src='/images/default_event_image.jpeg'">
-                                <div class="flex-grow-1">
-                                    <h6 class="mb-1">
-                                        <a href="/Events/Details/@relatedEvent.Id" class="text-decoration-none">
-                                            @relatedEvent.Name
-                                        </a>
-                                    </h6>
-                                    <small class="text-muted d-block">
-                                        <gs-icon name="calendar" class="me-1" />@relatedEvent.FormattedDate
-                                    </small>
-                                    <small class="text-muted">
-                                        <gs-icon name="map-pin" class="me-1" />@relatedEvent.Location
-                                    </small>
-                                    @if (!string.IsNullOrEmpty(relatedEvent.CategoryName))
-                                    {
-                                        <div class="mt-1">
-                                            <span class="gs-tag" style="font-size: 0.7rem;">
-                                                @CategoryLocalizationExtensions.LocalizeCategoryName(relatedEvent.CategoryName, Localizer)
-                                            </span>
-                                            @if (!string.IsNullOrEmpty(relatedEvent.SubCategoryName))
-                                            {
-                                                <span class="gs-tag" style="font-size: 0.7rem;">
-                                                    @CategoryLocalizationExtensions.LocalizeSubCategoryName(relatedEvent.SubCategoryName, Localizer)
-                                                </span>
-                                            }
-                                        </div>
-                                    }
-                                    @if(relatedEvent.Tags.Any())
-                                    {
-                                        <div class="mt-1">
-                                            @foreach(var tag in relatedEvent.Tags.Take(2))
-                                            {
-                                                <span class="badge bg-light text-dark me-1" style="font-size: 0.7rem;">@CategoryLocalizationExtensions.LocalizeTagName(tag, Localizer)</span>
-                                            }
-                                        </div>
-                                    }
-                                </div>
-                            </div>
-                        }
-                        
-                        @if(!string.IsNullOrEmpty(Model.CategoryName))
-                        {
-                            if (!isOtherSubCategory && !string.IsNullOrEmpty(Model.SubCategoryName))
-                            {
-                                <a href="@Url.Action("Index", "Events", new { category = Model.CategoryName, subCategory = Model.SubCategoryName })"
-                                   class="gs-btn gs-btn-secondary w-100">
-                                    <gs-icon name="list" class="me-1" />
-                                    @Localizer["Details_ViewAllCategoryEvents"] @CategoryLocalizationExtensions.LocalizeSubCategoryName(Model.SubCategoryName, Localizer)
-                                </a>
-                            }
-                            else
-                            {
-                                <a href="@Url.Action("Index", "Events", new { category = Model.CategoryName })"
-                                   class="gs-btn gs-btn-secondary w-100">
-                                    <gs-icon name="list" class="me-1" />
-                                    @Localizer["Details_ViewAllCategoryEvents"] @CategoryLocalizationExtensions.LocalizeCategoryName(Model.CategoryName, Localizer)
-                                </a>
-                            }
-                        }
-                    </div>
-                </div>
-            }
         </div>
     </div>
+
+    <!-- You might like: 4 standard cards in a row, without another performance of this event on the same day
+         (GS-REQ-008, 8.1, RelatedEventsSelector) -->
+    @if(relatedEvents.Any())
+    {
+        <section class="mt-5" aria-labelledby="gs-related-title">
+            <div class="gs-section-head">
+                <h2 id="gs-related-title" class="gs-h2 gs-section-title">@Localizer["Details_YouMightLike"]</h2>
+                @if(!string.IsNullOrEmpty(Model.CategoryName))
+                {
+                    <div class="gs-section-actions">
+                        @if (!isOtherSubCategory && !string.IsNullOrEmpty(Model.SubCategoryName))
+                        {
+                            <a href="@Url.Action("Index", "Events", new { category = Model.CategoryName, subCategory = Model.SubCategoryName })"
+                               class="gs-section-link">
+                                @Localizer["Details_ViewAllCategoryEvents"] @CategoryLocalizationExtensions.LocalizeSubCategoryName(Model.SubCategoryName, Localizer)
+                            </a>
+                        }
+                        else
+                        {
+                            <a href="@Url.Action("Index", "Events", new { category = Model.CategoryName })" class="gs-section-link">
+                                @Localizer["Details_ViewAllCategoryEvents"] @CategoryLocalizationExtensions.LocalizeCategoryName(Model.CategoryName, Localizer)
+                            </a>
+                        }
+                    </div>
+                }
+            </div>
+            <ul class="gs-event-grid">
+                @foreach(var relatedEvent in relatedEvents)
+                {
+                    <li><partial name="_EventCard" model="EventCardViewModel.FromEvent(relatedEvent)" /></li>
+                }
+            </ul>
+        </section>
+    }
 </div>
 
 @section Scripts {
