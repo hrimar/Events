@@ -53,6 +53,19 @@ public static class EventCardFormatter
         return $"{dayName}, {date.Day} {monthName}";
     }
 
+    // "Петък, 25 септември – четвъртък, 1 октомври" / "Friday, 25 September – Thursday, 1 October", or one day
+    // (period view line under the H1, GS-REQ-008, 8.2.3). The second day name keeps the culture's own case.
+    public static string FormatWeekdayAndDateRange(DateTime fromDate, DateTime toDate, CultureInfo culture)
+    {
+        if (fromDate.Date == toDate.Date)
+            return FormatWeekdayAndDate(fromDate, culture);
+
+        var format = culture.DateTimeFormat;
+        var toText = $"{format.GetDayName(toDate.DayOfWeek)}, {toDate.Day} {format.GetMonthName(toDate.Month)}";
+
+        return $"{FormatWeekdayAndDate(fromDate, culture)} – {toText}";
+    }
+
     // "Петък" / "Friday" (section eyebrows, e.g. "Петък вечер", GS-REQ-007, 7.5.1)
     public static string FormatWeekday(DateTime date, CultureInfo culture) =>
         Capitalize(culture.DateTimeFormat.GetDayName(date.DayOfWeek), culture);

@@ -868,4 +868,17 @@
   <data name="Home_PreviousDays" xml:space="preserve"><value>Previous days</value></data>
   <data name="Home_NextDays" xml:space="preserve"><value>Next days</value></data>
   <data name="Home_WeeklyViews" xml:space="preserve"><value>Week view</value></data>
+  <data name="Events_PeriodHeadingToday" xml:space="preserve"><value>Today in Sofia</value></data>
+  <data name="Events_PeriodHeadingTomorrow" xml:space="preserve"><value>Tomorrow in Sofia</value></data>
+  <data name="Events_PeriodHeadingWeekend" xml:space="preserve"><value>This weekend in Sofia</value></data>
+  <data name="Events_PeriodHeadingNext7" xml:space="preserve"><value>The next 7 days in Sofia</value></data>
+  <data name="Events_PeriodHeadingDate" xml:space="preserve"><value>Events on {0}</value></data>
+  <data name="Events_PeriodHeadingRange" xml:space="preserve"><value>Events: {0}</value></data>
+  <data name="Events_PeriodHeadingCategory" xml:space="preserve"><value>{0} in Sofia: {1}</value></data>
+  <data name="Events_PeriodPhraseToday" xml:space="preserve"><value>today</value></data>
+  <data name="Events_PeriodPhraseTomorrow" xml:space="preserve"><value>tomorrow</value></data>
+  <data name="Events_PeriodPhraseWeekend" xml:space="preserve"><value>this weekend</value></data>
+  <data name="Events_PeriodPhraseNext7" xml:space="preserve"><value>the next 7 days</value></data>
+  <data name="Events_EventCountOne" xml:space="preserve"><value>1 event</value></data>
+  <data name="Events_EventCount" xml:space="preserve"><value>{0} events</value></data>
 </root>

@@ -1,0 +1,75 @@
+@model Events.Web.Models.EventsPeriodPageViewModel
+@using Events.Web.Resources
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<SharedResources> Localizer
+
+@* "All events" for a period, grouped by day (GS-REQ-008, 8.2). The paged list without a period is Index.cshtml. *@
+@{
+    ViewData["Title"] = Model.Heading;
+    if (!string.IsNullOrWhiteSpace(Model.PageMetaDescription))
+    {
+        ViewData["MetaDescription"] = Model.PageMetaDescription;
+    }
+}
+
+<section class="gs-period-head container-grid">
+    @* Breadcrumbs (8.2.1) *@
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb gs-breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">@Localizer["Details_Home"]</a></li>
+            <li class="breadcrumb-item"><a asp-controller="Events" asp-action="Index">@Localizer["Nav_AllEvents"]</a></li>
+        </ol>
+    </nav>
+
+    @* H1 by period and category (8.2.2), the period's days and the number of events below it (8.2.3) *@
+    <div class="gs-period-titles">
+        <h1 class="gs-h1">@Model.Heading</h1>
+        <p class="gs-period-summary">@Model.DateRangeText · @Model.TotalCountText</p>
+    </div>
+
+    @if (!string.IsNullOrEmpty(Model.PeriodFallbackMessage))
+    {
+        <p class="alert alert-info gs-period-notice" role="status">@Model.PeriodFallbackMessage</p>
+    }
+</section>
+
+<div class="gs-period-days container-grid">
+    @if (Model.Days.Count == 0)
+    {
+        <div class="gs-period-empty">
+            <h2 class="gs-h-day text-muted">@Localizer["Events_NoEventsFound"]</h2>
+            <p class="text-muted">@Localizer["Events_NoEventsHint"]</p>
+            <a asp-controller="Events" asp-action="Index" class="gs-btn gs-btn-primary">@Localizer["Events_ViewAllEvents"]</a>
+        </div>
+    }
+
+    @* One section per day with events, in chronological order (8.2.6, 8.2.9, 8.2.12) *@
+    @foreach (var day in Model.Days)
+    {
+        var headingId = $"gs-day-{day.Day:yyyy-MM-dd}";
+        <section class="gs-period-day" aria-labelledby="@headingId">
+            <div class="gs-day-head">
+                <div class="gs-day-titles">
+                    <h2 id="@headingId" class="gs-h-day">@day.Heading</h2>
+                    @if (day.DayLabel is not null)
+                    {
+                        <span class="gs-day-label @(day.IsToday ? "is-today" : "")">@day.DayLabel</span>
+                    }
+                </div>
+                <span class="gs-day-count">@day.CountText</span>
+            </div>
+
+            @* Up to 8 cards by time, events without a time last (8.2.8); the badge shows only the time *@
+            <ul class="gs-event-grid">
+                @foreach (var card in day.Cards)
+                {
+                    <li><partial name="_EventCard" model="card" /></li>
+                }
+            </ul>
+        </section>
+    }
+</div>
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/gs-events.css" asp-append-version="true" />
+}

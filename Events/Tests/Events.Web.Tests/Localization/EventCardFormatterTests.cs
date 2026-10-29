@@ -97,4 +97,21 @@ public class EventCardFormatterTests
     {
         Assert.Equal(expected, EventCardFormatter.FormatDayRange(new DateTime(y1, m1, d1), new DateTime(y2, m2, d2), Bulgarian));
     }
+
+    [Fact]
+    public void FormatWeekdayAndDateRange_TwoDays_SecondDayKeepsCultureCase()
+    {
+        var thursday = new DateTime(2026, 10, 1);
+
+        Assert.Equal("Петък, 25 септември – четвъртък, 1 октомври",
+            EventCardFormatter.FormatWeekdayAndDateRange(Friday, thursday, Bulgarian));
+        Assert.Equal("Friday, 25 September – Thursday, 1 October",
+            EventCardFormatter.FormatWeekdayAndDateRange(Friday, thursday, English));
+    }
+
+    [Fact]
+    public void FormatWeekdayAndDateRange_OneDay_ShowsOnlyThatDay()
+    {
+        Assert.Equal("Петък, 25 септември", EventCardFormatter.FormatWeekdayAndDateRange(Friday, Friday, Bulgarian));
+    }
 }

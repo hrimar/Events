@@ -20,6 +20,14 @@ public interface IEventService
         PublicEventQuery eventQuery,
         CancellationToken cancellationToken = default);
 
+    // Id, date, time and name of every event matching the public filters (at most maxCount), for grouping
+    // a period by day (GS-REQ-008, 8.2.6). Cached like GetPagedEventsAsync.
+    Task<List<EventListingKeyDto>> GetListingKeysAsync(PublicEventQuery eventQuery, int maxCount,
+        CancellationToken cancellationToken = default);
+
+    // Full events for the given ids (the cards of a period view), in no particular order. Cached.
+    Task<List<Event>> GetEventsByIdsAsync(IReadOnlyCollection<int> ids, CancellationToken cancellationToken = default);
+
     Task<(IEnumerable<Event> Events, int TotalCount)> GetFilteredEventsAsync(EventListCriteria criteria);
 
     Task<IEnumerable<Event>> GetFeaturedEventsAsync(int count = 10);

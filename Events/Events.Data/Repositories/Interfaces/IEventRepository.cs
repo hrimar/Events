@@ -27,6 +27,14 @@ public interface IEventRepository
         PublicEventQuery eventQuery,
         CancellationToken cancellationToken = default);
 
+    // Id, date, time and name of the events matching the public filters (paging and sorting are ignored),
+    // at most maxCount, for grouping a period by day (GS-REQ-008, 8.2.6).
+    Task<List<EventListingKeyDto>> GetListingKeysAsync(PublicEventQuery eventQuery, int maxCount,
+        CancellationToken cancellationToken = default);
+
+    // Full events (category, subcategory, venue, tags) for the given ids, in no particular order.
+    Task<List<Event>> GetByIdsAsync(IReadOnlyCollection<int> ids, CancellationToken cancellationToken = default);
+
     Task<(IEnumerable<Event> Events, int TotalCount)> GetFilteredEventsAsync(EventListCriteria criteria);
 
     // fromDate is the calendar day from which events count as upcoming (Europe/Sofia "today").

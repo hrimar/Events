@@ -12,6 +12,7 @@ using Events.Web.Localization;
 using Events.Web.Models;
 using Events.Web.Models.DTOs;
 using Events.Web.Resources;
+using Events.Web.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.RateLimiting;
@@ -40,6 +41,7 @@ public class EventsController : Controller
     private readonly ISiteUrlProvider _siteUrlProvider;
     private readonly IStringLocalizer<SharedResources> _localizer;
     private readonly ISofiaClock _clock;
+    private readonly IEventsPeriodViewBuilder _periodViewBuilder;
 
     public EventsController(
         ILogger<EventsController> logger,
@@ -50,7 +52,8 @@ public class EventsController : Controller
         ISeoMetaService seoMetaService,
         ISiteUrlProvider siteUrlProvider,
         IStringLocalizer<SharedResources> localizer,
-        ISofiaClock clock)
+        ISofiaClock clock,
+        IEventsPeriodViewBuilder periodViewBuilder)
     {
         _logger = logger;
         _eventService = eventService;
@@ -61,6 +64,7 @@ public class EventsController : Controller
         _siteUrlProvider = siteUrlProvider;
         _localizer = localizer;
         _clock = clock;
+        _periodViewBuilder = periodViewBuilder;
     }
 
     public async Task<IActionResult> Index(
@@ -80,6 +84,9 @@ public class EventsController : Controller
     {
         try
         {
+            // The start date as given in the address, before the default below (GS-REQ-008, 8.2).
+            var requestedFromDate = fromDate;
+
             // Default to showing only future events unless explicitly specified.
             // The implicit default is not shown as an active filter.
             var hasCustomFromDate = fromDate.HasValue && fromDate.Value.Date != _clock.Today;
@@ -105,6 +112,14 @@ public class EventsController : Controller
             // With a period, the date fields show its dates and the period itself is the active filter, not "From".
             if (selectedPeriod.HasValue)
                 hasCustomFromDate = false;
+
+            // A period or explicit dates show the events grouped by day (GS-REQ-008, 8.2); a search keeps the paged
+            // list (with its "Past events" block, GS-BUG-003), the period still filters it.
+            if (IsPeriodView(selectedPeriod, requestedFromDate, toDate, search))
+            {
+                return await PeriodViewAsync(categoryList, subCategory, free, tagList, queryFromDate, queryToDate!.Value,
+                    selectedPeriod, cancellationToken);
+            }
 
             // Filtering, search, sorting and pagination all happen in SQL via a single query -
             // fetching the entire matching dataset and paginating in memory was the root cause
@@ -228,6 +243,53 @@ public class EventsController : Controller
             };
             return View(emptyViewModel);
         }
+    }
+
+    // "All events" grouped by day for a period or explicit dates (GS-REQ-008, 8.2).
+    private async Task<IActionResult> PeriodViewAsync(
+        List<string> categoryList,
+        string? subCategory,
+        bool? free,
+        List<string> tagList,
+        DateTime fromDate,
+        DateTime toDate,
+        EventPeriod? period,
+        CancellationToken cancellationToken)
+    {
+        var filters = new PublicEventQuery
+        {
+            Status = EventStatus.Published,
+            CategoryNames = categoryList,
+            SubCategoryName = subCategory,
+            IsFree = free,
+            TagNames = tagList
+        };
+
+        // Unknown category names keep the heading without a category, as in BuildHeading.
+        var categoryLabel = categoryList.Any(c => TryParseCategory(c).HasValue) ? JoinLocalizedCategoryNames(categoryList) : null;
+
+        var (model, isFallback) = await _periodViewBuilder.BuildAsync(
+            new EventsPeriodRequest(filters, fromDate, toDate, period, categoryLabel), cancellationToken);
+
+        model.PeriodFallbackMessage = isFallback ? BuildPeriodFallbackMessage(categoryList, tagList, free) : null;
+        model.CurrentCategory = categoryList.Count > 0 ? string.Join(",", categoryList) : null;
+        model.SelectedCategories = categoryList;
+        model.SelectedSubCategory = subCategory;
+        model.IsFreeFilter = free;
+        model.SelectedTags = tagList;
+        model.PageMetaDescription = _localizer["PageMetaDescription_AllEvents"].Value;
+
+        // Same canonical as the paged list until the period SEO (GS-REQ-008, 8.3).
+        var singleCategory = TryGetSingleCategory(categoryList);
+        var canonicalUrl = singleCategory.HasValue
+            ? _siteUrlProvider.BuildAbsoluteUrl($"/Events?category={singleCategory.Value}")
+            : _siteUrlProvider.BuildAbsoluteUrl("/Events");
+
+        ViewData["CanonicalUrl"] = canonicalUrl;
+        ViewData["OgUrl"] = canonicalUrl;
+        ViewData["OgImageUrl"] = _siteUrlProvider.BuildAbsoluteUrl("/images/logo.jpeg");
+
+        return View("Period", model);
     }
 
     [HttpGet("/Events/Tag/{tagName}")]
@@ -546,6 +608,22 @@ public class EventsController : Controller
 
         var (periodFrom, periodTo) = EventPeriodCalculator.GetRange(parsedPeriod, today);
         return fromDate.Value.Date == periodFrom && toDate.Value.Date == periodTo ? parsedPeriod : null;
+    }
+
+    // The period view is used for a named period or for both explicit dates (from <= to, at most
+    // EventsPeriodViewBuilder.MaxDays days), unless there is a search term (GS-REQ-008, 8.2).
+    private static bool IsPeriodView(EventPeriod? period, DateTime? fromDate, DateTime? toDate, string? search)
+    {
+        if (!string.IsNullOrWhiteSpace(search))
+            return false;
+
+        if (period.HasValue)
+            return true;
+
+        if (!fromDate.HasValue || !toDate.HasValue || toDate.Value.Date < fromDate.Value.Date)
+            return false;
+
+        return (toDate.Value.Date - fromDate.Value.Date).TotalDays < EventsPeriodViewBuilder.MaxDays;
     }
 
     private static IReadOnlyList<string> CategoryNamesOf(Event eventEntity) =>

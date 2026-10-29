@@ -773,3 +773,32 @@ a.gs-tag:focus-visible {
   outline: 3px solid var(--gs-accent);
   outline-offset: 2px;
 }
+
+/* Grid of standard cards in the listings (GS-REQ-008, 8.1): 4 columns from 1400px, 3 from 1200px,
+   2 on tablets, 1 on phones; 32px between rows, 24px between columns */
+.gs-event-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 32px 24px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 768px) {
+  .gs-event-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1200px) {
+  .gs-event-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1400px) {
+  .gs-event-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}

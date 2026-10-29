@@ -72,6 +72,53 @@ public class EventRepository : IEventRepository
             .AsQueryable();
         //var queryString = query.ToQueryString(); // TODO: Use this generated SQL and analize it in via MSSMS Actual Execution Plan!!!
 
+        query = ApplyPublicFilters(query, eventQuery);
+
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        var orderedQuery = ApplySorting(query, eventQuery.SortBy, eventQuery.SortOrder);
+
+        var events = await orderedQuery
+            .Skip((eventQuery.Page - 1) * eventQuery.PageSize)
+            .Take(eventQuery.PageSize)
+            .ToListAsync(cancellationToken);
+
+        return (events, totalCount);
+    }
+
+    public async Task<List<EventListingKeyDto>> GetListingKeysAsync(PublicEventQuery eventQuery, int maxCount,
+        CancellationToken cancellationToken = default)
+    {
+        return await ApplyPublicFilters(_context.Events.AsNoTracking(), eventQuery)
+            .OrderBy(e => e.Date)
+            .ThenBy(e => e.Id)
+            .Take(maxCount)
+            .Select(e => new EventListingKeyDto(e.Id, e.Date, e.StartTime, e.Name))
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<List<Event>> GetByIdsAsync(IReadOnlyCollection<int> ids, CancellationToken cancellationToken = default)
+    {
+        if (ids.Count == 0)
+        {
+            return new List<Event>();
+        }
+
+        var idList = ids.Distinct().ToList();
+        return await _context.Events
+            .AsNoTracking()
+            .Include(e => e.Category)
+            .Include(e => e.SubCategory)
+            .Include(e => e.CanonicalVenue)
+            .Include(e => e.EventTags)
+            .ThenInclude(et => et.Tag)
+            .Where(e => idList.Contains(e.Id))
+            .ToListAsync(cancellationToken);
+    }
+
+    // Status, category/subcategory, free, date range, tags and search filters shared by the public listings.
+    private static IQueryable<Event> ApplyPublicFilters(IQueryable<Event> query, PublicEventQuery eventQuery)
+    {
         if (eventQuery.Status.HasValue)
         {
             var status = eventQuery.Status.Value;
@@ -135,16 +182,7 @@ public class EventRepository : IEventRepository
             query = ApplySearch(query, eventQuery.Search);
         }
 
-        var totalCount = await query.CountAsync(cancellationToken);
-
-        var orderedQuery = ApplySorting(query, eventQuery.SortBy, eventQuery.SortOrder);
-
-        var events = await orderedQuery
-            .Skip((eventQuery.Page - 1) * eventQuery.PageSize)
-            .Take(eventQuery.PageSize)
-            .ToListAsync(cancellationToken);
-
-        return (events, totalCount);
+        return query;
     }
 
     public async Task<(IEnumerable<Event> Events, int TotalCount)> GetFilteredEventsAsync(EventListCriteria criteria)

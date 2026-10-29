@@ -127,33 +127,81 @@ public class EventService : IEventService
                 return await _eventRepository.GetPagedEventsAsync(eventQuery, cancellationToken);
             }
 
-            var cacheKey = BuildPagedEventsCacheKey(eventQuery);
-
-            // The cached value is a Lazy<Task<...>>, not the result itself: IMemoryCache.GetOrCreate
-            // only guarantees the factory delegate runs once, but concurrent callers could still each
-            // start their own DB call before the first one finishes writing to the cache. Wrapping the
-            // fetch in a Lazy makes concurrent callers for the same key await the SAME in-flight task
-            // instead of each issuing their own query (single-flight / anti "thundering herd").
-            var lazyResult = _cache.GetOrCreate(cacheKey, entry =>
-            {
-                entry.SetAbsoluteExpiration(PagedEventsCacheDuration);
-                entry.AddExpirationToken(new CancellationChangeToken(_cacheInvalidator.Token));
-
-                // CancellationToken.None, not the caller's own token: this fetch is shared across
-                // whichever concurrent requests happen to hit the same cache key. If it used the
-                // first caller's token, that caller disconnecting would cancel the query for every
-                // other caller waiting on the same Lazy<Task<...>> too, even ones still connected.
-                return new Lazy<Task<(IEnumerable<Event> Events, int TotalCount)>>(() =>
-                    _eventRepository.GetPagedEventsAsync(eventQuery, CancellationToken.None));
-            });
-
-            return await lazyResult!.Value;
+            return await GetCachedAsync(BuildPagedEventsCacheKey(eventQuery),
+                () => _eventRepository.GetPagedEventsAsync(eventQuery, CancellationToken.None));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting paged events");
             throw new ApplicationException("Failed to retrieve paged events", ex);
         }
+    }
+
+    public async Task<List<EventListingKeyDto>> GetListingKeysAsync(PublicEventQuery eventQuery, int maxCount,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            eventQuery = Normalize(eventQuery);
+
+            // Search terms are not cached, for the same reason as in GetPagedEventsAsync.
+            if (eventQuery.Search != null)
+            {
+                return await _eventRepository.GetListingKeysAsync(eventQuery, maxCount, cancellationToken);
+            }
+
+            var cacheKey = string.Join("|", "ListingKeys", maxCount, BuildPagedEventsCacheKey(eventQuery with { Page = 1, PageSize = 0 }));
+            return await GetCachedAsync(cacheKey,
+                () => _eventRepository.GetListingKeysAsync(eventQuery, maxCount, CancellationToken.None));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting event listing keys");
+            throw new ApplicationException("Failed to retrieve event listing keys", ex);
+        }
+    }
+
+    public async Task<List<Event>> GetEventsByIdsAsync(IReadOnlyCollection<int> ids, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            if (ids.Count == 0)
+            {
+                return new List<Event>();
+            }
+
+            // Sorted, so the same set of ids in a different order still hits the same cache entry.
+            var cacheKey = "EventsByIds|" + string.Join(",", ids.Distinct().OrderBy(id => id));
+            return await GetCachedAsync(cacheKey, () => _eventRepository.GetByIdsAsync(ids, CancellationToken.None));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting events by ids");
+            throw new ApplicationException("Failed to retrieve events by ids", ex);
+        }
+    }
+
+    // Caches a public listing result for PagedEventsCacheDuration; any event write invalidates it.
+    private Task<T> GetCachedAsync<T>(string cacheKey, Func<Task<T>> fetch)
+    {
+        // The cached value is a Lazy<Task<...>>, not the result itself: IMemoryCache.GetOrCreate
+        // only guarantees the factory delegate runs once, but concurrent callers could still each
+        // start their own DB call before the first one finishes writing to the cache. Wrapping the
+        // fetch in a Lazy makes concurrent callers for the same key await the SAME in-flight task
+        // instead of each issuing their own query (single-flight / anti "thundering herd").
+        var lazyResult = _cache.GetOrCreate(cacheKey, entry =>
+        {
+            entry.SetAbsoluteExpiration(PagedEventsCacheDuration);
+            entry.AddExpirationToken(new CancellationChangeToken(_cacheInvalidator.Token));
+
+            // CancellationToken.None, not the caller's own token (callers pass it in fetch): this fetch
+            // is shared across whichever concurrent requests happen to hit the same cache key. If it used
+            // the first caller's token, that caller disconnecting would cancel the query for every
+            // other caller waiting on the same Lazy<Task<...>> too, even ones still connected.
+            return new Lazy<Task<T>>(fetch);
+        });
+
+        return lazyResult!.Value;
     }
 
     public async Task<(IEnumerable<Event> Events, int TotalCount)> GetFilteredEventsAsync(EventListCriteria criteria)

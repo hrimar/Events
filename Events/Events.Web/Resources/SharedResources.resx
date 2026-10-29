@@ -2298,4 +2298,43 @@
   <data name="Home_WeeklyViews" xml:space="preserve">
     <value>Изглед на седмицата</value>
   </data>
+  <data name="Events_PeriodHeadingToday" xml:space="preserve">
+    <value>Днес в София</value>
+  </data>
+  <data name="Events_PeriodHeadingTomorrow" xml:space="preserve">
+    <value>Утре в София</value>
+  </data>
+  <data name="Events_PeriodHeadingWeekend" xml:space="preserve">
+    <value>Този уикенд в София</value>
+  </data>
+  <data name="Events_PeriodHeadingNext7" xml:space="preserve">
+    <value>Следващите 7 дни в София</value>
+  </data>
+  <data name="Events_PeriodHeadingDate" xml:space="preserve">
+    <value>Събития на {0}</value>
+  </data>
+  <data name="Events_PeriodHeadingRange" xml:space="preserve">
+    <value>Събития: {0}</value>
+  </data>
+  <data name="Events_PeriodHeadingCategory" xml:space="preserve">
+    <value>{0} в София: {1}</value>
+  </data>
+  <data name="Events_PeriodPhraseToday" xml:space="preserve">
+    <value>днес</value>
+  </data>
+  <data name="Events_PeriodPhraseTomorrow" xml:space="preserve">
+    <value>утре</value>
+  </data>
+  <data name="Events_PeriodPhraseWeekend" xml:space="preserve">
+    <value>този уикенд</value>
+  </data>
+  <data name="Events_PeriodPhraseNext7" xml:space="preserve">
+    <value>следващите 7 дни</value>
+  </data>
+  <data name="Events_EventCountOne" xml:space="preserve">
+    <value>1 събитие</value>
+  </data>
+  <data name="Events_EventCount" xml:space="preserve">
+    <value>{0} събития</value>
+  </data>
 </root>
