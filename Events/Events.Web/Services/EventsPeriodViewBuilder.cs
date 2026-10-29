@@ -25,6 +25,11 @@ public interface IEventsPeriodViewBuilder
     // The view model without the filter state (the controller fills it); PeriodFallbackMessage is left empty,
     // IsFallback tells whether an empty "next 7 days" was widened to 30 days (GS-REQ-007, 7.3.4).
     Task<(EventsPeriodPageViewModel Model, bool IsFallback)> BuildAsync(EventsPeriodRequest request, CancellationToken cancellationToken);
+
+    // Cards of one day after the first PeriodDaySelector.EventsPerDay, all at once, in the same order as the day
+    // section ("More N events on Friday", 8.2.8). Empty when the day has no more events.
+    Task<IReadOnlyList<EventCardViewModel>> BuildRemainingCardsAsync(PublicEventQuery filters, DateTime day,
+        CancellationToken cancellationToken);
 }
 
 public sealed class EventsPeriodViewBuilder : IEventsPeriodViewBuilder
@@ -90,12 +95,27 @@ public sealed class EventsPeriodViewBuilder : IEventsPeriodViewBuilder
         return (model, isFallback);
     }
 
+    public async Task<IReadOnlyList<EventCardViewModel>> BuildRemainingCardsAsync(PublicEventQuery filters, DateTime day,
+        CancellationToken cancellationToken)
+    {
+        // The same keys query as the period, for this day only, so the order and the split after the first 8 match.
+        var keys = await _eventService.GetListingKeysAsync(
+            filters with { FromDate = day.Date, ToDate = day.Date }, MaxEventsPerPeriod, cancellationToken);
+
+        var ids = PeriodDaySelector.SelectRemaining(keys, day);
+        if (ids.Count == 0)
+            return Array.Empty<EventCardViewModel>();
+
+        var eventsById = await LoadEventsByIdAsync(ids, cancellationToken);
+
+        return ToCards(ids, eventsById);
+    }
+
     private async Task<List<EventsPeriodDayViewModel>> BuildDaysAsync(IReadOnlyList<PeriodDaySelection> selectedDays,
         DateTime today, CancellationToken cancellationToken)
     {
         var ids = selectedDays.SelectMany(d => d.EventIds).ToList();
-        var events = await _eventService.GetEventsByIdsAsync(ids, cancellationToken);
-        var eventsById = EventViewModel.FromEntities(events, today).ToDictionary(e => e.Id);
+        var eventsById = await LoadEventsByIdAsync(ids, cancellationToken);
         var culture = CultureInfo.CurrentCulture;
 
         return selectedDays
@@ -109,14 +129,34 @@ public sealed class EventsPeriodViewBuilder : IEventsPeriodViewBuilder
                 IsToday = day.Day == today,
                 TotalCount = day.TotalCount,
                 CountText = FormatEventCount(day.TotalCount),
-
-                // An id missing here was deleted between the two queries; its card is skipped.
-                Cards = day.EventIds
-                    .Where(eventsById.ContainsKey)
-                    .Select(id => EventCardViewModel.FromEvent(eventsById[id], showDate: false))
-                    .ToList()
+                Cards = ToCards(day.EventIds, eventsById),
+                MoreText = day.RemainingCount > 0 ? FormatMoreOnDay(day.RemainingCount, day.Day, culture) : null
             })
             .ToList();
+    }
+
+    private async Task<Dictionary<int, EventViewModel>> LoadEventsByIdAsync(IReadOnlyCollection<int> ids,
+        CancellationToken cancellationToken)
+    {
+        var events = await _eventService.GetEventsByIdsAsync(ids, cancellationToken);
+        return EventViewModel.FromEntities(events, _clock.Today).ToDictionary(e => e.Id);
+    }
+
+    // Cards without the date, which is in the day heading. An id missing here was deleted between the two queries;
+    // its card is skipped.
+    private static List<EventCardViewModel> ToCards(IEnumerable<int> ids, IReadOnlyDictionary<int, EventViewModel> eventsById) =>
+        ids
+            .Where(eventsById.ContainsKey)
+            .Select(id => EventCardViewModel.FromEvent(eventsById[id], showDate: false))
+            .ToList();
+
+    // "Още 25 събития в петък" / "Още 1 събитие във вторник" (8.2.8)
+    private string FormatMoreOnDay(int count, DateTime day, CultureInfo culture)
+    {
+        var onDay = EventCardFormatter.FormatOnWeekday(day, culture);
+        return count == 1
+            ? _localizer["Events_MoreOnDayOne", onDay].Value
+            : _localizer["Events_MoreOnDay", count, onDay].Value;
     }
 
     // H1 by period and category (GS-REQ-008, 8.2.2): "Днес в София", "Бизнес в София: следващите 7 дни",

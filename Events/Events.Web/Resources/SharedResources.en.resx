@@ -891,4 +891,6 @@
   <data name="Events_RemoveFilter" xml:space="preserve"><value>Remove the filter “{0}”</value></data>
   <data name="Events_SortLabel" xml:space="preserve"><value>Sort:</value></data>
   <data name="Events_SortDateTime" xml:space="preserve"><value>by date and time</value></data>
+  <data name="Events_MoreOnDay" xml:space="preserve"><value>{0} more events {1}</value></data>
+  <data name="Events_MoreOnDayOne" xml:space="preserve"><value>1 more event {0}</value></data>
 </root>

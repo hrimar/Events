@@ -2367,4 +2367,10 @@
   <data name="Events_SortDateTime" xml:space="preserve">
     <value>по дата и час</value>
   </data>
+  <data name="Events_MoreOnDay" xml:space="preserve">
+    <value>Още {0} събития {1}</value>
+  </data>
+  <data name="Events_MoreOnDayOne" xml:space="preserve">
+    <value>Още 1 събитие {0}</value>
+  </data>
 </root>

@@ -66,6 +66,19 @@ public static class EventCardFormatter
         return $"{FormatWeekdayAndDate(fromDate, culture)} – {toText}";
     }
 
+    // "в петък", "във вторник" / "on Friday" (period view "More N events" button, GS-REQ-008, 8.2.8).
+    // Bulgarian uses "във" before a word that starts with "в" or "ф".
+    public static string FormatOnWeekday(DateTime date, CultureInfo culture)
+    {
+        var dayName = culture.DateTimeFormat.GetDayName(date.DayOfWeek);
+
+        if (culture.TwoLetterISOLanguageName != "bg")
+            return $"on {Capitalize(dayName, culture)}";
+
+        var preposition = dayName.StartsWith('в') || dayName.StartsWith('ф') ? "във" : "в";
+        return $"{preposition} {dayName}";
+    }
+
     // "Петък" / "Friday" (section eyebrows, e.g. "Петък вечер", GS-REQ-007, 7.5.1)
     public static string FormatWeekday(DateTime date, CultureInfo culture) =>
         Capitalize(culture.DateTimeFormat.GetDayName(date.DayOfWeek), culture);

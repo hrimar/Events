@@ -114,4 +114,11 @@ public class EventCardFormatterTests
     {
         Assert.Equal("Петък, 25 септември", EventCardFormatter.FormatWeekdayAndDateRange(Friday, Friday, Bulgarian));
     }
+    [Fact]
+    public void FormatOnWeekday_UsesVavBeforeV_InBulgarian()
+    {
+        Assert.Equal("в петък", EventCardFormatter.FormatOnWeekday(Friday, Bulgarian));
+        Assert.Equal("във вторник", EventCardFormatter.FormatOnWeekday(new DateTime(2026, 9, 29), Bulgarian));
+        Assert.Equal("on Friday", EventCardFormatter.FormatOnWeekday(Friday, English));
+    }
 }

@@ -232,6 +232,24 @@ span.gs-filter-btn {
   color: var(--gs-text-2);
 }
 
+/* "More N events on Friday" under the day's cards, secondary style (8.2.8) */
+.gs-period-more {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.gs-period-more .gs-btn {
+  max-width: 100%;
+  white-space: normal;
+}
+
+.gs-period-more-error {
+  margin: 0;
+  color: var(--gs-text-2);
+}
+
 .gs-period-empty {
   padding: 48px 0;
   text-align: center;

@@ -261,17 +261,7 @@ public class EventsController : Controller
         // The period view has only "Free only" (8.2.5); "Paid only" from the paged list's form is not applied here.
         free = free == true ? true : null;
 
-        var filters = new PublicEventQuery
-        {
-            Status = EventStatus.Published,
-            CategoryNames = categoryList,
-            SubCategoryName = subCategory,
-            IsFree = free,
-            TagNames = tagList,
-
-            // "With kids" uses the tags of the "For kids" quick filter, in addition to any selected tags (8.2.5).
-            RequiredTagNames = kids ? HomeWeekendSelector.KidsTags : Array.Empty<string>()
-        };
+        var filters = BuildPeriodFilters(categoryList, subCategory, free, tagList, kids);
 
         // Unknown category names keep the heading without a category, as in BuildHeading.
         var categoryLabel = categoryList.Any(c => TryParseCategory(c).HasValue) ? JoinLocalizedCategoryNames(categoryList) : null;
@@ -302,6 +292,51 @@ public class EventsController : Controller
 
         return View("Period", model);
     }
+
+    // The other events of one day of the period view, loaded in place by "More N events on Friday" (GS-REQ-008,
+    // 8.2.8, gs-period.js). Takes the same filters as the period view; returns the card list items.
+    [HttpGet]
+    public async Task<IActionResult> PeriodDay(
+        DateTime day,
+        string? category = null,
+        string? subCategory = null,
+        bool? free = null,
+        string? tags = null,
+        bool? kids = null,
+        CancellationToken cancellationToken = default)
+    {
+        // A day that is not a date ("day=abc")
+        if (!ModelState.IsValid)
+            return BadRequest();
+
+        try
+        {
+            var filters = BuildPeriodFilters(SplitListParameter(category), subCategory, free == true ? true : null,
+                SplitListParameter(tags), kids == true);
+
+            var cards = await _periodViewBuilder.BuildRemainingCardsAsync(filters, day, cancellationToken);
+            return PartialView("_PeriodDayCards", cards);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error loading the other events of {Day} for the period view", day);
+            return StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+
+    // Filters of the period view and its "More N events" requests (GS-REQ-008, 8.2.5).
+    private static PublicEventQuery BuildPeriodFilters(List<string> categoryList, string? subCategory, bool? free,
+        List<string> tagList, bool kids) => new()
+    {
+        Status = EventStatus.Published,
+        CategoryNames = categoryList,
+        SubCategoryName = subCategory,
+        IsFree = free,
+        TagNames = tagList,
+
+        // "With kids" uses the tags of the "For kids" quick filter, in addition to any selected tags (8.2.5).
+        RequiredTagNames = kids ? HomeWeekendSelector.KidsTags : Array.Empty<string>()
+    };
 
     [HttpGet("/Events/Tag/{tagName}")]
     public IActionResult ByTag(string tagName, int page = 1, int pageSize = DefaultPageSize)

@@ -71,4 +71,15 @@ public class EventsPeriodPageViewModelTests
         Assert.False(route.ContainsKey("fromDate"));
         Assert.Equal("Music", route["category"]);
     }
+
+    [Fact]
+    public void RouteForDay_KeepsTheFilters_AndSetsOnlyTheDay()
+    {
+        var route = Model(EventPeriod.Next7).RouteForDay(new DateTime(2026, 10, 31));
+
+        Assert.Equal("2026-10-31", route["day"]);
+        Assert.False(route.ContainsKey("period"));
+        Assert.Equal("Jazz", route["subCategory"]);
+        Assert.Equal("true", route["kids"]);
+    }
 }

@@ -1,0 +1,8 @@
+@model IEnumerable<Events.Web.Models.EventCardViewModel>
+
+@* Card list items of one day of the period view (GS-REQ-008, 8.2.8). Rendered with the day section and returned
+   by Events/PeriodDay; gs-period.js appends them to the day's list for "More N events". *@
+@foreach (var card in Model)
+{
+    <li><partial name="_EventCard" model="card" /></li>
+}

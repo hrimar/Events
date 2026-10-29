@@ -102,6 +102,14 @@ public class EventsPeriodPageViewModel
         return route;
     }
 
+    // The filters and one day, for the "More N events" request of that day (Events/PeriodDay, 8.2.8).
+    public Dictionary<string, string> RouteForDay(DateTime day)
+    {
+        var route = RouteWithoutDates();
+        route["day"] = day.ToString("yyyy-MM-dd");
+        return route;
+    }
+
     // The same period and filters with one value changed; null removes it. A new category also clears the
     // subcategory, which belongs to the previous category.
     public Dictionary<string, string> RouteWith(string key, string? value)
@@ -141,4 +149,7 @@ public class EventsPeriodDayViewModel
 
     // Events of the day not shown yet ("More N events on Friday", 8.2.8).
     public int RemainingCount => TotalCount - Cards.Count;
+
+    // Text of the "More" button ("Още 25 събития в петък"); null when all the day's events are shown.
+    public string? MoreText { get; set; }
 }
