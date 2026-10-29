@@ -110,6 +110,8 @@
 /* Vertical lists of compact cards */
 .gs-weekly-list {
   display: grid;
+  /* One column no wider than the screen, so a long venue name is cut with "..." instead of widening the list */
+  grid-template-columns: minmax(0, 1fr);
   gap: 10px;
   margin: 0;
   padding: 0;
