@@ -78,6 +78,7 @@ public class EventsController : Controller
         DateTime? fromDate = null,
         DateTime? toDate = null,
         string? period = null,
+        bool? kids = null,
         string? sortBy = null,
         string? sortOrder = "asc",
         CancellationToken cancellationToken = default)
@@ -117,8 +118,8 @@ public class EventsController : Controller
             // list (with its "Past events" block, GS-BUG-003), the period still filters it.
             if (IsPeriodView(selectedPeriod, requestedFromDate, toDate, search))
             {
-                return await PeriodViewAsync(categoryList, subCategory, free, tagList, queryFromDate, queryToDate!.Value,
-                    selectedPeriod, cancellationToken);
+                return await PeriodViewAsync(categoryList, subCategory, free, tagList, kids == true, queryFromDate,
+                    queryToDate!.Value, selectedPeriod, cancellationToken);
             }
 
             // Filtering, search, sorting and pagination all happen in SQL via a single query -
@@ -251,18 +252,25 @@ public class EventsController : Controller
         string? subCategory,
         bool? free,
         List<string> tagList,
+        bool kids,
         DateTime fromDate,
         DateTime toDate,
         EventPeriod? period,
         CancellationToken cancellationToken)
     {
+        // The period view has only "Free only" (8.2.5); "Paid only" from the paged list's form is not applied here.
+        free = free == true ? true : null;
+
         var filters = new PublicEventQuery
         {
             Status = EventStatus.Published,
             CategoryNames = categoryList,
             SubCategoryName = subCategory,
             IsFree = free,
-            TagNames = tagList
+            TagNames = tagList,
+
+            // "With kids" uses the tags of the "For kids" quick filter, in addition to any selected tags (8.2.5).
+            RequiredTagNames = kids ? HomeWeekendSelector.KidsTags : Array.Empty<string>()
         };
 
         // Unknown category names keep the heading without a category, as in BuildHeading.
@@ -271,12 +279,15 @@ public class EventsController : Controller
         var (model, isFallback) = await _periodViewBuilder.BuildAsync(
             new EventsPeriodRequest(filters, fromDate, toDate, period, categoryLabel), cancellationToken);
 
-        model.PeriodFallbackMessage = isFallback ? BuildPeriodFallbackMessage(categoryList, tagList, free) : null;
+        model.PeriodFallbackMessage = isFallback ? BuildPeriodFallbackMessage(categoryList, tagList, free, kids) : null;
         model.CurrentCategory = categoryList.Count > 0 ? string.Join(",", categoryList) : null;
         model.SelectedCategories = categoryList;
         model.SelectedSubCategory = subCategory;
         model.IsFreeFilter = free;
         model.SelectedTags = tagList;
+        model.IsKidsFilter = kids;
+        model.LocalizedCategories = EventsPageViewModel.GetAvailableCategories(_localizer);
+        model.AvailableSubCategories = await BuildSubCategoryOptionsAsync(TryGetSingleCategory(categoryList), subCategory);
         model.PageMetaDescription = _localizer["PageMetaDescription_AllEvents"].Value;
 
         // Same canonical as the paged list until the period SEO (GS-REQ-008, 8.3).
@@ -563,7 +574,8 @@ public class EventsController : Controller
         string.Join(", ", categories.Select(c => TryParseCategory(c)?.Localize(_localizer) ?? c));
 
     // Notice above a "next 7 days" list that was widened to 30 days, naming the active filter when there is one.
-    private string BuildPeriodFallbackMessage(IReadOnlyList<string> categories, IReadOnlyList<string> tags, bool? free)
+    private string BuildPeriodFallbackMessage(IReadOnlyList<string> categories, IReadOnlyList<string> tags, bool? free,
+        bool kids = false)
     {
         var filterLabels = categories
             .Select(c => TryParseCategory(c)?.Localize(_localizer) ?? c)
@@ -572,6 +584,9 @@ public class EventsController : Controller
 
         if (free == true)
             filterLabels.Add(_localizer["Events_FilterFreeEvents"].Value);
+
+        if (kids)
+            filterLabels.Add(_localizer["Events_FilterKids"].Value);
 
         return filterLabels.Count > 0
             ? _localizer["Events_PeriodFallbackFiltered", string.Join(", ", filterLabels)].Value

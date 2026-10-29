@@ -1,7 +1,13 @@
 @model Events.Web.Models.EventsPeriodPageViewModel
+@using System.Globalization
+@using Events.Models.Enums
+@using Events.Services.Time
+@using Events.Web.Localization
 @using Events.Web.Resources
+@using Microsoft.AspNetCore.Routing
 @using Microsoft.Extensions.Localization
 @inject IStringLocalizer<SharedResources> Localizer
+@inject ISofiaClock SofiaClock
 
 @* "All events" for a period, grouped by day (GS-REQ-008, 8.2). The paged list without a period is Index.cshtml. *@
 @{
@@ -10,6 +16,26 @@
     {
         ViewData["MetaDescription"] = Model.PageMetaDescription;
     }
+
+    var culture = CultureInfo.CurrentCulture;
+    var periods = new[] { EventPeriod.Today, EventPeriod.Tomorrow, EventPeriod.Weekend, EventPeriod.Next7 };
+    var hasExplicitDates = !Model.Period.HasValue;
+
+    string CategoryName(string value) =>
+        Model.LocalizedCategories.FirstOrDefault(c => string.Equals(c.Value, value, StringComparison.OrdinalIgnoreCase))?.DisplayName ?? value;
+
+    var hasCategory = Model.SelectedCategories.Count > 0;
+    var categoryText = hasCategory
+        ? string.Join(", ", Model.SelectedCategories.Select(CategoryName))
+        : Localizer["Events_FilterCategoryAll"].Value;
+    var hasSubCategory = !string.IsNullOrEmpty(Model.SelectedSubCategory);
+    var subCategoryText = hasSubCategory
+        ? CategoryLocalizationExtensions.LocalizeSubCategoryName(Model.SelectedSubCategory!, Localizer)
+        : null;
+    var isFree = Model.IsFreeFilter == true;
+    var freeText = Localizer["Events_FilterFreeOnly"].Value;
+    var kidsText = Localizer["Events_FilterKids"].Value;
+    var tagsText = string.Join(", ", Model.SelectedTags.Select(t => CategoryLocalizationExtensions.LocalizeTagName(t, Localizer)));
 }
 
 <section class="gs-period-head container-grid">
@@ -25,6 +51,155 @@
     <div class="gs-period-titles">
         <h1 class="gs-h1">@Model.Heading</h1>
         <p class="gs-period-summary">@Model.DateRangeText · @Model.TotalCountText</p>
+    </div>
+
+    <div class="gs-period-controls">
+        @* "When": the hero chips (GS-REQ-007, 7.2); the current one is active with a check mark, a new one keeps the
+           other filters (8.2.4) *@
+        <div class="gs-period-row">
+            <span class="gs-chip-group-label gs-period-row-label" id="gs-period-when">@Localizer["Home_HeroWhen"]</span>
+            <ul class="gs-chip-row" aria-labelledby="gs-period-when">
+                @foreach (var period in periods)
+                {
+                    var isCurrent = Model.Period == period;
+                    <li>
+                        <a class="gs-chip" asp-controller="Events" asp-action="Index" asp-all-route-data="@Model.RouteWithPeriod(period)"
+                           aria-current="@(isCurrent ? "true" : null)">
+                            @period.Localize(Localizer)
+                            @if (isCurrent)
+                            {
+                                <gs-icon name="check" />
+                            }
+                        </a>
+                    </li>
+                }
+                <li>
+                    @* Opens a calendar (gs-date-chip.js); the picked day keeps the other filters *@
+                    <button type="button" class="gs-chip" data-gs-date-chip aria-haspopup="dialog"
+                            aria-current="@(hasExplicitDates ? "true" : null)"
+                            title="@Localizer["Home_ChipDateAria"]"
+                            data-url="@Url.Action("Index", "Events", new RouteValueDictionary(Model.RouteWithoutDates()))"
+                            data-min-date="@SofiaClock.Today.ToString("yyyy-MM-dd")"
+                            data-selected-date="@(hasExplicitDates && Model.FromDate == Model.ToDate ? Model.FromDate.ToString("yyyy-MM-dd") : null)"
+                            data-locale="@(CultureHelper.IsEnglish() ? "en" : "bg")"
+                            data-assets="@Url.Content("~/lib/flatpickr/dist")">
+                        <gs-icon name="calendar" />
+                        @(hasExplicitDates ? EventCardFormatter.FormatDayRange(Model.FromDate, Model.ToDate, culture) : Localizer["Home_ChipDate"].Value)
+                        @if (hasExplicitDates)
+                        {
+                            <gs-icon name="check" />
+                        }
+                    </button>
+                </li>
+            </ul>
+        </div>
+
+        @* "Filters": category, subcategory, free only, with kids; an active filter has the tag colour and a × that
+           removes it. The only order in this view is by date and time (8.2.5). *@
+        <div class="gs-period-row">
+            <span class="gs-chip-group-label gs-period-row-label" id="gs-period-filters">@Localizer["Events_FiltersLabel"]</span>
+            <ul class="gs-filter-row" aria-labelledby="gs-period-filters">
+                <li class="dropdown gs-filter @(hasCategory ? "is-active" : "")">
+                    <button type="button" class="gs-filter-btn" data-bs-toggle="dropdown" aria-expanded="false">
+                        @Localizer["Events_FilterCategoryLabel", categoryText]
+                        <gs-icon name="chevron-down" />
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <a class="dropdown-item @(hasCategory ? "" : "active")" asp-controller="Events" asp-action="Index"
+                               asp-all-route-data="@Model.RouteWith("category", null)">@Localizer["Events_AllCategories"]</a>
+                        </li>
+                        @foreach (var category in Model.LocalizedCategories)
+                        {
+                            var isSelected = Model.SelectedCategories.Count == 1
+                                && string.Equals(Model.SelectedCategories[0], category.Value, StringComparison.OrdinalIgnoreCase);
+                            <li>
+                                <a class="dropdown-item @(isSelected ? "active" : "")" aria-current="@(isSelected ? "true" : null)"
+                                   asp-controller="Events" asp-action="Index"
+                                   asp-all-route-data="@Model.RouteWith("category", category.Value)">@category.DisplayName</a>
+                            </li>
+                        }
+                    </ul>
+                    @if (hasCategory)
+                    {
+                        <a class="gs-filter-clear" asp-controller="Events" asp-action="Index" asp-all-route-data="@Model.RouteWith("category", null)"
+                           aria-label="@Localizer["Events_RemoveFilter", categoryText]"><gs-icon name="x" /></a>
+                    }
+                </li>
+
+                @* Subcategories belong to one category, so the menu is available only when exactly one is selected *@
+                <li class="dropdown gs-filter @(hasSubCategory ? "is-active" : "")">
+                    @if (Model.AvailableSubCategories.Count > 0)
+                    {
+                        <button type="button" class="gs-filter-btn" data-bs-toggle="dropdown" aria-expanded="false">
+                            @(hasSubCategory ? Localizer["Events_FilterSubCategoryLabel", subCategoryText!].Value : Localizer["Events_Subcategory"].Value)
+                            <gs-icon name="chevron-down" />
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item @(hasSubCategory ? "" : "active")" asp-controller="Events" asp-action="Index"
+                                   asp-all-route-data="@Model.RouteWith("subCategory", null)">@Localizer["Events_AllSubcategories"]</a>
+                            </li>
+                            @foreach (var option in Model.AvailableSubCategories)
+                            {
+                                <li>
+                                    <a class="dropdown-item @(option.Selected ? "active" : "")" aria-current="@(option.Selected ? "true" : null)"
+                                       asp-controller="Events" asp-action="Index"
+                                       asp-all-route-data="@Model.RouteWith("subCategory", option.Value)">@option.Text</a>
+                                </li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <button type="button" class="gs-filter-btn" disabled title="@Localizer["Events_SelectCategoryFirst"]">
+                            @Localizer["Events_Subcategory"]
+                            <gs-icon name="chevron-down" />
+                        </button>
+                    }
+                    @if (hasSubCategory)
+                    {
+                        <a class="gs-filter-clear" asp-controller="Events" asp-action="Index" asp-all-route-data="@Model.RouteWith("subCategory", null)"
+                           aria-label="@Localizer["Events_RemoveFilter", subCategoryText!]"><gs-icon name="x" /></a>
+                    }
+                </li>
+
+                <li class="gs-filter @(isFree ? "is-active" : "")">
+                    <a class="gs-filter-btn" asp-controller="Events" asp-action="Index"
+                       asp-all-route-data="@Model.RouteWith("free", isFree ? null : "true")"
+                       aria-label="@(isFree ? Localizer["Events_RemoveFilter", freeText].Value : null)">
+                        @freeText
+                        @if (isFree)
+                        {
+                            <gs-icon name="x" />
+                        }
+                    </a>
+                </li>
+
+                <li class="gs-filter @(Model.IsKidsFilter ? "is-active" : "")">
+                    <a class="gs-filter-btn" asp-controller="Events" asp-action="Index"
+                       asp-all-route-data="@Model.RouteWith("kids", Model.IsKidsFilter ? null : "true")"
+                       aria-label="@(Model.IsKidsFilter ? Localizer["Events_RemoveFilter", kidsText].Value : null)">
+                        @kidsText
+                        @if (Model.IsKidsFilter)
+                        {
+                            <gs-icon name="x" />
+                        }
+                    </a>
+                </li>
+
+                @* Tags come from a homepage quick filter (e.g. "Jazz"); they can only be removed here *@
+                @if (Model.SelectedTags.Count > 0)
+                {
+                    <li class="gs-filter is-active">
+                        <span class="gs-filter-btn">@Localizer["Events_FilterTagsLabel", tagsText]</span>
+                        <a class="gs-filter-clear" asp-controller="Events" asp-action="Index" asp-all-route-data="@Model.RouteWith("tags", null)"
+                           aria-label="@Localizer["Events_RemoveFilter", tagsText]"><gs-icon name="x" /></a>
+                    </li>
+                }
+            </ul>
+            <p class="gs-period-sort">@Localizer["Events_SortLabel"] <strong>@Localizer["Events_SortDateTime"]</strong></p>
+        </div>
     </div>
 
     @if (!string.IsNullOrEmpty(Model.PeriodFallbackMessage))
@@ -72,4 +247,8 @@
 
 @section Styles {
     <link rel="stylesheet" href="~/css/gs-events.css" asp-append-version="true" />
+}
+
+@section Scripts {
+    <script src="~/js/gs-date-chip.js" asp-append-version="true" defer></script>
 }

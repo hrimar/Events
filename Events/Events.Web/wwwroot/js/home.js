@@ -1,5 +1,5 @@
-// Desktop homepage: hero featured carousel (GS-REQ-007, 7.4), "Date" chip (GS-REQ-007, 7.2)
-// card rows with arrows (GS-REQ-007, 7.5) and the "This weekend" tabs and filters (GS-REQ-007, 7.6).
+// Desktop homepage: hero featured carousel (GS-REQ-007, 7.4), card rows with arrows (GS-REQ-007, 7.5)
+// and the "This weekend" tabs and filters (GS-REQ-007, 7.6). The hero "Date" chip is in gs-date-chip.js.
 (function () {
     'use strict';
 
@@ -299,74 +299,7 @@
         }
     }
 
-    function loadScript(src) {
-        return new Promise(function (resolve, reject) {
-            var script = document.createElement('script');
-            script.src = src;
-            script.onload = resolve;
-            script.onerror = reject;
-            document.head.appendChild(script);
-        });
-    }
-
-    // flatpickr (already used on "All events") is loaded on the first click only, to keep the homepage light.
-    function loadFlatpickr(assetsBase, locale) {
-        if (window.flatpickr) {
-            return Promise.resolve();
-        }
-
-        var link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.href = assetsBase + '/flatpickr.min.css';
-        document.head.appendChild(link);
-
-        return loadScript(assetsBase + '/flatpickr.min.js').then(function () {
-            return locale === 'bg' ? loadScript(assetsBase + '/l10n/bg.js') : null;
-        });
-    }
-
-    // "Date" chip: a calendar from Monday; the picked day opens "All events" for that day.
-    function initDateChip(button) {
-        var picker = null;
-
-        button.addEventListener('click', function () {
-            if (picker) {
-                picker.open();
-                return;
-            }
-
-            var locale = button.getAttribute('data-locale');
-            loadFlatpickr(button.getAttribute('data-assets'), locale).then(function () {
-                var input = document.createElement('input');
-                input.type = 'text';
-                input.className = 'gs-date-chip-input';
-                input.tabIndex = -1;
-                input.setAttribute('aria-hidden', 'true');
-                button.insertAdjacentElement('afterend', input);
-
-                var baseLocale = locale === 'bg' ? window.flatpickr.l10ns.bg : window.flatpickr.l10ns.default;
-                picker = window.flatpickr(input, {
-                    locale: Object.assign({}, baseLocale, { firstDayOfWeek: 1 }),
-                    dateFormat: 'Y-m-d',
-                    minDate: button.getAttribute('data-min-date'),
-                    positionElement: button,
-                    disableMobile: true,
-                    onChange: function (selectedDates, dateText) {
-                        if (dateText) {
-                            window.location.href = button.getAttribute('data-url') +
-                                '?fromDate=' + encodeURIComponent(dateText) + '&toDate=' + encodeURIComponent(dateText);
-                        }
-                    }
-                });
-                picker.open();
-            }).catch(function (error) {
-                console.error('Could not load the calendar', error);
-            });
-        });
-    }
-
     document.querySelectorAll('[data-gs-carousel]').forEach(initCarousel);
     document.querySelectorAll('[data-gs-card-row]').forEach(initCardRow);
     document.querySelectorAll('[data-gs-weekend]').forEach(initWeekend);
-    document.querySelectorAll('[data-gs-date-chip]').forEach(initDateChip);
 })();

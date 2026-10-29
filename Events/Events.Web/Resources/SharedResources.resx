@@ -2337,4 +2337,34 @@
   <data name="Events_EventCount" xml:space="preserve">
     <value>{0} събития</value>
   </data>
+  <data name="Events_FiltersLabel" xml:space="preserve">
+    <value>Филтри</value>
+  </data>
+  <data name="Events_FilterCategoryLabel" xml:space="preserve">
+    <value>Категория: {0}</value>
+  </data>
+  <data name="Events_FilterCategoryAll" xml:space="preserve">
+    <value>всички</value>
+  </data>
+  <data name="Events_FilterSubCategoryLabel" xml:space="preserve">
+    <value>Подкатегория: {0}</value>
+  </data>
+  <data name="Events_FilterTagsLabel" xml:space="preserve">
+    <value>Тагове: {0}</value>
+  </data>
+  <data name="Events_FilterFreeOnly" xml:space="preserve">
+    <value>Само безплатни</value>
+  </data>
+  <data name="Events_FilterKids" xml:space="preserve">
+    <value>С деца</value>
+  </data>
+  <data name="Events_RemoveFilter" xml:space="preserve">
+    <value>Премахни филтъра „{0}“</value>
+  </data>
+  <data name="Events_SortLabel" xml:space="preserve">
+    <value>Подредба:</value>
+  </data>
+  <data name="Events_SortDateTime" xml:space="preserve">
+    <value>по дата и час</value>
+  </data>
 </root>

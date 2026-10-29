@@ -26,6 +26,9 @@ public sealed record PublicEventQuery
     // Matches events having any of these tags.
     public IReadOnlyList<string> TagNames { get; init; } = Array.Empty<string>();
 
+    // In addition to TagNames, events must have any of these tags (e.g. the "With kids" filter, GS-REQ-008, 8.2.5).
+    public IReadOnlyList<string> RequiredTagNames { get; init; } = Array.Empty<string>();
+
     // Case-insensitive match on name, description and location (database collation).
     public string? Search { get; init; }
 

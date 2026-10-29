@@ -47,6 +47,132 @@
   margin: 0;
 }
 
+/* "When" and "Filters" rows (8.2.4, 8.2.5) */
+.gs-period-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid var(--gs-line);
+}
+
+.gs-period-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.gs-period-row-label {
+  flex: 0 0 70px;
+}
+
+.gs-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Filter button: line-strong outline, radius 10px, 40px high; active: tag background with a remove button */
+.gs-filter {
+  display: inline-flex;
+  align-items: stretch;
+  min-height: 40px;
+  max-width: 100%;
+  border: 1px solid var(--gs-line-strong);
+  border-radius: 10px;
+  background: var(--gs-surface);
+  color: var(--gs-ink);
+}
+
+.gs-filter.is-active {
+  border-color: var(--gs-tag-bg);
+  background: var(--gs-tag-bg);
+  color: var(--gs-tag-text);
+}
+
+.gs-filter-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: inherit;
+  font-family: var(--gs-font);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.gs-filter-btn:hover {
+  color: inherit;
+}
+
+span.gs-filter-btn {
+  cursor: default;
+}
+
+.gs-filter-btn:disabled {
+  color: var(--gs-muted);
+  cursor: not-allowed;
+}
+
+.gs-filter-clear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  border-left: 1px solid var(--gs-line-strong);
+  border-radius: 0 9px 9px 0;
+  color: inherit;
+}
+
+.gs-filter-clear:hover {
+  color: inherit;
+  background: var(--gs-line);
+}
+
+.gs-filter-btn:focus-visible,
+.gs-filter-clear:focus-visible {
+  outline: 3px solid var(--gs-accent);
+  outline-offset: 2px;
+}
+
+.gs-filter .dropdown-menu {
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.gs-period-sort {
+  margin: 0 0 0 auto;
+  font-size: 15px;
+  color: var(--gs-muted);
+}
+
+.gs-period-sort strong {
+  color: var(--gs-ink);
+}
+
+/* Phones: the row label above its chips and the sort note on its own line */
+@media (max-width: 575.98px) {
+  .gs-period-row-label {
+    flex-basis: 100%;
+  }
+
+  .gs-period-sort {
+    flex-basis: 100%;
+    margin-left: 0;
+  }
+}
+
 /* Days, one below the other (8.2.6, 8.2.12) */
 .gs-period-days {
   padding-bottom: 40px;

@@ -450,9 +450,10 @@ public class EventService : IEventService
         // Sorted so the same set of tags (or categories) in a different order still hits the same cache entry.
         var sortedTags = string.Join(",", eventQuery.TagNames.OrderBy(t => t, StringComparer.OrdinalIgnoreCase));
         var sortedCategories = string.Join(",", eventQuery.CategoryNames.OrderBy(c => c, StringComparer.OrdinalIgnoreCase));
+        var sortedRequiredTags = string.Join(",", eventQuery.RequiredTagNames.OrderBy(t => t, StringComparer.OrdinalIgnoreCase));
 
         return string.Join("|", "PagedEvents", eventQuery.Page, eventQuery.PageSize, eventQuery.Status,
             sortedCategories, eventQuery.SubCategoryName, eventQuery.IsFree, eventQuery.FromDate?.ToString("O"),
-            eventQuery.SortBy, eventQuery.SortOrder, eventQuery.ToDate?.ToString("O"), sortedTags);
+            eventQuery.SortBy, eventQuery.SortOrder, eventQuery.ToDate?.ToString("O"), sortedTags, sortedRequiredTags);
     }
 }

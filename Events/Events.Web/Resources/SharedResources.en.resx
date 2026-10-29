@@ -881,4 +881,14 @@
   <data name="Events_PeriodPhraseNext7" xml:space="preserve"><value>the next 7 days</value></data>
   <data name="Events_EventCountOne" xml:space="preserve"><value>1 event</value></data>
   <data name="Events_EventCount" xml:space="preserve"><value>{0} events</value></data>
+  <data name="Events_FiltersLabel" xml:space="preserve"><value>Filters</value></data>
+  <data name="Events_FilterCategoryLabel" xml:space="preserve"><value>Category: {0}</value></data>
+  <data name="Events_FilterCategoryAll" xml:space="preserve"><value>all</value></data>
+  <data name="Events_FilterSubCategoryLabel" xml:space="preserve"><value>Subcategory: {0}</value></data>
+  <data name="Events_FilterTagsLabel" xml:space="preserve"><value>Tags: {0}</value></data>
+  <data name="Events_FilterFreeOnly" xml:space="preserve"><value>Free only</value></data>
+  <data name="Events_FilterKids" xml:space="preserve"><value>With kids</value></data>
+  <data name="Events_RemoveFilter" xml:space="preserve"><value>Remove the filter “{0}”</value></data>
+  <data name="Events_SortLabel" xml:space="preserve"><value>Sort:</value></data>
+  <data name="Events_SortDateTime" xml:space="preserve"><value>by date and time</value></data>
 </root>

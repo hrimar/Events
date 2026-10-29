@@ -177,6 +177,12 @@ public class EventRepository : IEventRepository
             query = query.Where(e => e.EventTags.Any(et => et.Tag != null && tagList.Contains(et.Tag.Name)));
         }
 
+        var requiredTagList = eventQuery.RequiredTagNames.Where(t => !string.IsNullOrWhiteSpace(t)).ToList();
+        if (requiredTagList.Count > 0)
+        {
+            query = query.Where(e => e.EventTags.Any(et => et.Tag != null && requiredTagList.Contains(et.Tag.Name)));
+        }
+
         if (!string.IsNullOrWhiteSpace(eventQuery.Search))
         {
             query = ApplySearch(query, eventQuery.Search);

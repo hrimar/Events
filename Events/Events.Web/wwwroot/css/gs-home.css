@@ -35,33 +35,6 @@
   gap: 10px;
 }
 
-.gs-chip-group-label {
-  margin: 0;
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  color: var(--gs-muted);
-}
-
-.gs-chip-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-/* Hidden input that only anchors the "Date" chip calendar */
-.gs-date-chip-input {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  opacity: 0;
-  pointer-events: none;
-}
-
 /* Featured carousel (GS-REQ-007, 7.4) */
 .gs-hero-carousel {
   --gs-hero-media-height: 452px;
