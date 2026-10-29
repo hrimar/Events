@@ -170,6 +170,7 @@ namespace Events.Web.Controllers
         // loaded in place by home.js. day must be a day of this weekend; filter: all, morning, evening, kids.
         [HttpGet]
         [EnableRateLimiting("events")]
+        [NoIndex]
         public async Task<IActionResult> WeekendEvents(DateTime day, string? filter = null, int skip = 0)
         {
             try
@@ -188,6 +189,7 @@ namespace Events.Web.Controllers
         }
 
         [HttpGet]
+        [NoIndex]
         public async Task<IActionResult> WeeklyEventsPartial(DateTime? fromDate = null)
         {
             try

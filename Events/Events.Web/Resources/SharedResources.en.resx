@@ -893,4 +893,8 @@
   <data name="Events_SortDateTime" xml:space="preserve"><value>by date and time</value></data>
   <data name="Events_MoreOnDay" xml:space="preserve"><value>{0} more events {1}</value></data>
   <data name="Events_MoreOnDayOne" xml:space="preserve"><value>1 more event {0}</value></data>
+  <data name="Events_PeriodSeoName" xml:space="preserve"><value>Events in Sofia {0}</value></data>
+  <data name="Events_PeriodSeoNameCategory" xml:space="preserve"><value>{0} in Sofia {1}</value></data>
+  <data name="Events_PeriodSeoPhraseNext7" xml:space="preserve"><value>in the next 7 days</value></data>
+  <data name="Events_PeriodMetaDescription" xml:space="preserve"><value>{0} – {1} by day and time, with venue and tickets. Updated daily.</value></data>
 </root>

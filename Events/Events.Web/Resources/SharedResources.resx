@@ -2373,4 +2373,16 @@
   <data name="Events_MoreOnDayOne" xml:space="preserve">
     <value>Още 1 събитие {0}</value>
   </data>
+  <data name="Events_PeriodSeoName" xml:space="preserve">
+    <value>Събития в София {0}</value>
+  </data>
+  <data name="Events_PeriodSeoNameCategory" xml:space="preserve">
+    <value>{0} в София {1}</value>
+  </data>
+  <data name="Events_PeriodSeoPhraseNext7" xml:space="preserve">
+    <value>през следващите 7 дни</value>
+  </data>
+  <data name="Events_PeriodMetaDescription" xml:space="preserve">
+    <value>{0} – {1}, подредени по ден и час, с място и билети. Обновява се всеки ден.</value>
+  </data>
 </root>

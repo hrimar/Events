@@ -278,13 +278,8 @@ public class EventsController : Controller
 
         model.LocalizedCategories = EventsPageViewModel.GetAvailableCategories(_localizer);
         model.AvailableSubCategories = await BuildSubCategoryOptionsAsync(TryGetSingleCategory(categoryList), subCategory);
-        model.PageMetaDescription = _localizer["PageMetaDescription_AllEvents"].Value;
 
-        // Same canonical as the paged list until the period SEO (GS-REQ-008, 8.3).
-        var singleCategory = TryGetSingleCategory(categoryList);
-        var canonicalUrl = singleCategory.HasValue
-            ? _siteUrlProvider.BuildAbsoluteUrl($"/Events?category={singleCategory.Value}")
-            : _siteUrlProvider.BuildAbsoluteUrl("/Events");
+        var canonicalUrl = _siteUrlProvider.BuildAbsoluteUrl(BuildPeriodCanonicalPath(period, categoryList));
 
         ViewData["CanonicalUrl"] = canonicalUrl;
         ViewData["OgUrl"] = canonicalUrl;
@@ -296,6 +291,7 @@ public class EventsController : Controller
     // The other events of one day of the period view, loaded in place by "More N events on Friday" (GS-REQ-008,
     // 8.2.8, gs-period.js). Takes the same filters as the period view; returns the card list items.
     [HttpGet]
+    [NoIndex]
     public async Task<IActionResult> PeriodDay(
         DateTime day,
         string? category = null,
@@ -327,6 +323,7 @@ public class EventsController : Controller
     // One day of the period view with its first cards, for a day that loads on scroll when the period has more than
     // 200 events (GS-REQ-008, 8.2.11, gs-period.js). Takes the same filters as the period view; returns the day section.
     [HttpGet]
+    [NoIndex]
     public async Task<IActionResult> PeriodDaySection(
         DateTime day,
         string? category = null,
@@ -420,6 +417,7 @@ public class EventsController : Controller
     }
 
     [HttpGet("/Events/Search")]
+    [NoIndex]
     public async Task<IActionResult> Search(string query, CancellationToken cancellationToken)
     {
         try
@@ -687,6 +685,28 @@ public class EventsController : Controller
             .ToList() ?? new List<string>();
 
     // Enum.TryParse alone is not enough: it accepts numbers and combines comma-separated names into one value.
+    // Canonical of the period view (GS-REQ-008, 8.3): the period and the known categories, without the other filters,
+    // pages or sort. Explicit dates are not indexed (robots.txt) and keep the canonical of the paged list.
+    private static string BuildPeriodCanonicalPath(EventPeriod? period, IReadOnlyList<string> categories)
+    {
+        var knownCategories = categories
+            .Select(TryParseCategory)
+            .Where(category => category.HasValue)
+            .Select(category => category!.Value.ToString())
+            .Distinct()
+            .ToList();
+
+        var query = new List<string>();
+
+        if (period.HasValue)
+            query.Add($"period={EventPeriodCalculator.ToQueryValue(period.Value)}");
+
+        if (knownCategories.Count == 1 || (period.HasValue && knownCategories.Count > 1))
+            query.Add($"category={string.Join(",", knownCategories)}");
+
+        return query.Count == 0 ? "/Events" : $"/Events?{string.Join("&", query)}";
+    }
+
     private static EventCategory? TryParseCategory(string category) =>
         Enum.TryParse<EventCategory>(category, ignoreCase: true, out var parsed)
         && Enum.IsDefined(parsed)

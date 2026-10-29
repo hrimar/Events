@@ -36,6 +36,11 @@ public class SeoController : Controller
             new($"{baseUrl}/Venues")
         };
 
+        // The period pages are indexed and canonical (GS-REQ-008, 8.3); one entry per period, without categories,
+        // whose combinations are reached through the links on these pages.
+        foreach (var period in new[] { EventPeriod.Today, EventPeriod.Tomorrow, EventPeriod.Weekend, EventPeriod.Next7 })
+            entries.Add(new SitemapEntry($"{baseUrl}/Events?period={EventPeriodCalculator.ToQueryValue(period)}"));
+
         foreach (EventCategory category in Enum.GetValues<EventCategory>())
         {
             if (category == EventCategory.Undefined)
@@ -77,22 +82,19 @@ public class SeoController : Controller
             "Disallow: /Identity/\n" + // login/register/manage account pages
             "Disallow: /api/\n" +     // JSON endpoints, not crawlable pages
 
-            // The Events listing's sort/pagination links propagate every active filter into
-            // the query string (see Events/Index.cshtml), so combined with category/tags/date
-            // range/search they form a huge combinatorial space of near-duplicate URLs, all of
-            // which already canonicalize to a clean "/Events" or "/Events?category=X" (see
-            // EventsController.Index). Blocking crawl of these "noise" parameters directly stops
-            // Google from wasting crawl budget discovering/re-evaluating them as duplicates,
-            // rather than relying solely on the canonical tag to consolidate them after the fact.
-            "Disallow: /Events?*sortBy=\n" +
-            "Disallow: /Events?*sortOrder=\n" +
+            // Only the parameters whose pages must not be indexed are blocked (GS-REQ-008, 8.3). Sort, pages, tags,
+            // subcategory, "free only" and "period" stay crawlable: their pages canonicalize to "/Events",
+            // "/Events?category=X" or the period page (see EventsController), and Google can only read a canonical on
+            // a page it is allowed to crawl. Explicit dates and search results (events and venues) are endless,
+            // short-lived combinations;
+            // "Paid only" (free=false) has no page of its own in the new design. The HTML fragments and JSON loaded by
+            // the pages' scripts are not blocked here, because Google must fetch them to render the pages; they
+            // send "X-Robots-Tag: noindex" instead (NoIndexAttribute).
             "Disallow: /Events?*fromDate=\n" +
             "Disallow: /Events?*toDate=\n" +
-            "Disallow: /Events?*tags=\n" +
             "Disallow: /Events?*search=\n" +
-            "Disallow: /Events?*subCategory=\n" +
-            "Disallow: /Events?*free=\n" +
-            "Disallow: /Events?*page=\n" +
+            "Disallow: /Events?*free=false\n" +
+            "Disallow: /Venues?*search=\n" +
 
             $"\nSitemap: {baseUrl}/sitemap.xml\n";
 

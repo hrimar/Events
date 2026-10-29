@@ -43,6 +43,8 @@ public class EventsPeriodPageViewModel
     public List<CategoryDisplayItem> LocalizedCategories { get; set; } = new();
     public List<SelectListItem> AvailableSubCategories { get; set; } = new();
 
+    // <title> and meta description by period and category (8.3).
+    public string SeoTitle { get; set; } = string.Empty;
     public string? PageMetaDescription { get; set; }
 
     // Query value of the selected period ("next7"), or null.

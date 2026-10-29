@@ -12,6 +12,7 @@
 @* "All events" for a period, grouped by day (GS-REQ-008, 8.2). The paged list without a period is Index.cshtml. *@
 @{
     ViewData["Title"] = Model.Heading;
+    ViewData["PageTitle"] = Model.SeoTitle;
     if (!string.IsNullOrWhiteSpace(Model.PageMetaDescription))
     {
         ViewData["MetaDescription"] = Model.PageMetaDescription;

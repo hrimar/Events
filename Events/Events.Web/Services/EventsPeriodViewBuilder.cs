@@ -90,9 +90,14 @@ public sealed class EventsPeriodViewBuilder : IEventsPeriodViewBuilder
         days.AddRange(selectedDays.Skip(eagerDayCount).Select(day => BuildDeferredDay(day, today)));
         var culture = CultureInfo.CurrentCulture;
 
+        var heading = BuildHeading(request, culture);
+        var seoName = BuildSeoName(request, heading);
+
         var model = new EventsPeriodPageViewModel
         {
-            Heading = BuildHeading(request, culture),
+            Heading = heading,
+            SeoTitle = $"{seoName} | Go Sofia",
+            PageMetaDescription = _localizer["Events_PeriodMetaDescription", seoName, FormatEventCount(keys.Count)].Value,
             DateRangeText = EventCardFormatter.FormatWeekdayAndDateRange(fromDate, toDate, culture),
             TotalCount = keys.Count,
             TotalCountText = FormatEventCount(keys.Count),
@@ -213,6 +218,28 @@ public sealed class EventsPeriodViewBuilder : IEventsPeriodViewBuilder
             ? _localizer["Events_PeriodHeadingDate", dayRange].Value
             : _localizer["Events_PeriodHeadingRange", dayRange].Value;
     }
+
+    // Name of the page for <title> and meta description (GS-REQ-008, 8.3): "Събития в София през следващите 7 дни",
+    // "Музика в София този уикенд". Explicit dates are not indexed (robots.txt), so they keep the H1.
+    private string BuildSeoName(EventsPeriodRequest request, string heading)
+    {
+        if (!request.Period.HasValue)
+            return heading;
+
+        var phrase = PeriodSeoPhrase(request.Period.Value);
+
+        return request.CategoryLabel is not null
+            ? _localizer["Events_PeriodSeoNameCategory", request.CategoryLabel, phrase].Value
+            : _localizer["Events_PeriodSeoName", phrase].Value;
+    }
+
+    private string PeriodSeoPhrase(EventPeriod period) => period switch
+    {
+        EventPeriod.Today => _localizer["Events_PeriodPhraseToday"].Value,
+        EventPeriod.Tomorrow => _localizer["Events_PeriodPhraseTomorrow"].Value,
+        EventPeriod.Weekend => _localizer["Events_PeriodPhraseWeekend"].Value,
+        _ => _localizer["Events_PeriodSeoPhraseNext7"].Value
+    };
 
     private string PeriodHeading(EventPeriod period) => period switch
     {
