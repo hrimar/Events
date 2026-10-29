@@ -86,67 +86,63 @@
         </div>
     </div>
 
-    <div class="row g-4">
-        <!-- Upcoming Events -->
-        <div class="col-lg-@(Model.HasMap ? "8" : "12")">
-            <h2 class="h4 mb-3">
-                <gs-icon name="calendar-days" class="me-2 gs-text-link" />@Localizer["Venue_EventsAtVenue"]
-                @if (Model.UpcomingEvents.Any())
-                {
-                    <span class="gs-tag ms-1">@Model.UpcomingEvents.Count</span>
-                }
-            </h2>
-
-            @if (!Model.UpcomingEvents.Any())
+    <!-- Upcoming Events: 4 / 3 / 2 / 1 columns (GS-REQ-008, 8.1) -->
+    <section class="mb-5">
+        <h2 class="h4 mb-3">
+            <gs-icon name="calendar-days" class="me-2 gs-text-link" />@Localizer["Venue_EventsAtVenue"]
+            @if (Model.UpcomingEvents.Any())
             {
-                <div class="text-center py-5 text-muted border rounded">
-                    <gs-icon name="calendar-x" size="32" class="mb-3" />
-                    <p class="mb-0">@Localizer["Venue_NoEvents"]</p>
-                </div>
+                <span class="gs-tag ms-1">@Model.UpcomingEvents.Count</span>
             }
-            else
-            {
-                <div class="row">
-                    @foreach (var ev in Model.UpcomingEvents)
-                    {
-                        <div class="col-md-6 mb-4">
-                            <partial name="_EventCard" model="EventCardViewModel.FromEvent(ev)" />
-                        </div>
-                    }
-                </div>
-            }
-        </div>
+        </h2>
 
-        <!-- Map -->
-        @if (Model.HasMap)
+        @if (!Model.UpcomingEvents.Any())
         {
-            <div class="col-lg-4">
-                <h2 class="h4 mb-3">
-                    <gs-icon name="map" class="me-2 gs-text-link" />@Localizer["Venue_Location"]
-                </h2>
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body p-0 overflow-hidden rounded">
-                        <iframe
-                            src="https://www.openstreetmap.org/export/embed.html?bbox=@Model.BboxMinLon%2C@Model.BboxMinLat%2C@Model.BboxMaxLon%2C@Model.BboxMaxLat&layer=mapnik&marker=@Model.LatStr%2C@Model.LonStr"
-                            width="100%"
-                            height="320"
-                            style="border: 0;"
-                            loading="lazy"
-                            title="@Model.Name map location">
-                        </iframe>
-                    </div>
-                    @if (!string.IsNullOrEmpty(Model.Address))
-                    {
-                        <div class="card-body py-2">
-                            <small class="text-muted">
-                                <gs-icon name="map-pin" class="me-1" />@Model.Address
-                            </small>
-                        </div>
-                    }
-                </div>
+            <div class="text-center py-5 text-muted border rounded">
+                <gs-icon name="calendar-x" size="32" class="mb-3" />
+                <p class="mb-0">@Localizer["Venue_NoEvents"]</p>
             </div>
         }
-    </div>
+        else
+        {
+            <ul class="gs-event-grid">
+                @foreach (var ev in Model.UpcomingEvents)
+                {
+                    <li><partial name="_EventCard" model="EventCardViewModel.FromEvent(ev)" /></li>
+                }
+            </ul>
+        }
+    </section>
+
+    <!-- Map: below the events, which use the full width; the address is already in the header -->
+    @if (Model.HasMap)
+    {
+        <div class="mb-5">
+            <h2 class="h4 mb-3">
+                <gs-icon name="map" class="me-2 gs-text-link" />@Localizer["Venue_Location"]
+            </h2>
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-0 overflow-hidden rounded">
+                    <iframe
+                        src="https://www.openstreetmap.org/export/embed.html?bbox=@Model.BboxMinLon%2C@Model.BboxMinLat%2C@Model.BboxMaxLon%2C@Model.BboxMaxLat&layer=mapnik&marker=@Model.LatStr%2C@Model.LonStr"
+                        width="100%"
+                        height="320"
+                        style="border: 0;"
+                        loading="lazy"
+                        title="@Model.Name map location">
+                    </iframe>
+                </div>
+                @if (!string.IsNullOrEmpty(Model.Address))
+                {
+                    <div class="card-body py-2">
+                        <small class="text-muted">
+                            <gs-icon name="map-pin" class="me-1" />@Model.Address
+                        </small>
+                    </div>
+                }
+            </div>
+        </div>
+    }
 </div>
 
 @section Scripts {

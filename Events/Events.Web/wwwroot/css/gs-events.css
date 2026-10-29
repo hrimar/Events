@@ -1,4 +1,4 @@
-/* "All events" for a period, grouped by day (GS-REQ-008, 8.2) */
+/* "All events" for a period, grouped by day (GS-REQ-008, 8.2), and the sort row of the paged list (8.1) */
 
 /* Page head: breadcrumbs, H1 and the line with the dates and the number of events (8.2.1-8.2.3) */
 .gs-period-head {
@@ -266,4 +266,18 @@ span.gs-filter-btn {
 .gs-period-empty {
   padding: 48px 0;
   text-align: center;
+}
+
+/* Paged list: "Sort by" label and the sort chips, which wrap instead of running off narrow screens (8.1) */
+.gs-sort-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+@media (max-width: 575.98px) {
+  .gs-sort-row .gs-chip-group-label {
+    flex-basis: 100%;
+  }
 }
