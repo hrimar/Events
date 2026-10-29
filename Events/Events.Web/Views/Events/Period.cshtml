@@ -221,36 +221,7 @@
     @* One section per day with events, in chronological order (8.2.6, 8.2.9, 8.2.12) *@
     @foreach (var day in Model.Days)
     {
-        var headingId = $"gs-day-{day.Day:yyyy-MM-dd}";
-        <section class="gs-period-day" aria-labelledby="@headingId">
-            <div class="gs-day-head">
-                <div class="gs-day-titles">
-                    <h2 id="@headingId" class="gs-h-day">@day.Heading</h2>
-                    @if (day.DayLabel is not null)
-                    {
-                        <span class="gs-day-label @(day.IsToday ? "is-today" : "")">@day.DayLabel</span>
-                    }
-                </div>
-                <span class="gs-day-count">@day.CountText</span>
-            </div>
-
-            @* Up to 8 cards by time, events without a time last (8.2.8); the badge shows only the time *@
-            <ul class="gs-event-grid" id="@($"{headingId}-cards")">
-                <partial name="_PeriodDayCards" model="day.Cards" />
-            </ul>
-
-            @* The other events of the day are added to the list in place, all at once (8.2.8, gs-period.js) *@
-            @if (day.MoreText is not null)
-            {
-                <div class="gs-period-more" data-gs-period-more>
-                    <button type="button" class="gs-btn gs-btn-secondary" aria-controls="@($"{headingId}-cards")"
-                            data-url="@Url.Action("PeriodDay", "Events", new RouteValueDictionary(Model.RouteForDay(day.Day)))">
-                        @day.MoreText
-                    </button>
-                    <p class="gs-period-more-error" role="alert" hidden>@Localizer["Home_LoadError"]</p>
-                </div>
-            }
-        </section>
+        <partial name="_PeriodDay" model="day" />
     }
 </div>
 

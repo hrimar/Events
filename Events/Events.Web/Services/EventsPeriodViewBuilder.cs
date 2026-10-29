@@ -30,6 +30,9 @@ public interface IEventsPeriodViewBuilder
     // section ("More N events on Friday", 8.2.8). Empty when the day has no more events.
     Task<IReadOnlyList<EventCardViewModel>> BuildRemainingCardsAsync(PublicEventQuery filters, DateTime day,
         CancellationToken cancellationToken);
+
+    // One day with its first cards, for a day whose cards load on scroll (8.2.11); null when the day has no events.
+    Task<EventsPeriodDayViewModel?> BuildDayAsync(PublicEventQuery filters, DateTime day, CancellationToken cancellationToken);
 }
 
 public sealed class EventsPeriodViewBuilder : IEventsPeriodViewBuilder
@@ -39,6 +42,11 @@ public sealed class EventsPeriodViewBuilder : IEventsPeriodViewBuilder
 
     // Safety limit on the rows read for one period (about 6 times a busy month in Sofia).
     private const int MaxEventsPerPeriod = 5000;
+
+    // With more events than this in the period, only the first days come with their cards; the cards of the
+    // other days load on scroll (GS-REQ-008, 8.2.11).
+    public const int LazyLoadThreshold = 200;
+    public const int EagerDays = 3;
 
     private readonly IEventService _eventService;
     private readonly IStringLocalizer<SharedResources> _localizer;
@@ -77,7 +85,9 @@ public sealed class EventsPeriodViewBuilder : IEventsPeriodViewBuilder
         }
 
         var selectedDays = PeriodDaySelector.SelectDays(keys);
-        var days = await BuildDaysAsync(selectedDays, today, cancellationToken);
+        var eagerDayCount = keys.Count > LazyLoadThreshold ? EagerDays : selectedDays.Count;
+        var days = await BuildDaysAsync(selectedDays.Take(eagerDayCount).ToList(), today, cancellationToken);
+        days.AddRange(selectedDays.Skip(eagerDayCount).Select(day => BuildDeferredDay(day, today)));
         var culture = CultureInfo.CurrentCulture;
 
         var model = new EventsPeriodPageViewModel
@@ -111,6 +121,16 @@ public sealed class EventsPeriodViewBuilder : IEventsPeriodViewBuilder
         return ToCards(ids, eventsById);
     }
 
+    public async Task<EventsPeriodDayViewModel?> BuildDayAsync(PublicEventQuery filters, DateTime day,
+        CancellationToken cancellationToken)
+    {
+        var keys = await _eventService.GetListingKeysAsync(
+            filters with { FromDate = day.Date, ToDate = day.Date }, MaxEventsPerPeriod, cancellationToken);
+
+        var days = await BuildDaysAsync(PeriodDaySelector.SelectDays(keys), _clock.Today, cancellationToken);
+        return days.FirstOrDefault();
+    }
+
     private async Task<List<EventsPeriodDayViewModel>> BuildDaysAsync(IReadOnlyList<PeriodDaySelection> selectedDays,
         DateTime today, CancellationToken cancellationToken)
     {
@@ -119,21 +139,36 @@ public sealed class EventsPeriodViewBuilder : IEventsPeriodViewBuilder
         var culture = CultureInfo.CurrentCulture;
 
         return selectedDays
-            .Select(day => new EventsPeriodDayViewModel
+            .Select(day =>
             {
-                Day = day.Day,
-                Heading = EventCardFormatter.FormatWeekdayAndDate(day.Day, culture),
-                DayLabel = day.Day == today
-                    ? _localizer["Period_Today"].Value
-                    : day.Day == today.AddDays(1) ? _localizer["Period_Tomorrow"].Value : null,
-                IsToday = day.Day == today,
-                TotalCount = day.TotalCount,
-                CountText = FormatEventCount(day.TotalCount),
-                Cards = ToCards(day.EventIds, eventsById),
-                MoreText = day.RemainingCount > 0 ? FormatMoreOnDay(day.RemainingCount, day.Day, culture) : null
+                var model = BuildDayHead(day, today, culture);
+                model.Cards = ToCards(day.EventIds, eventsById);
+                model.MoreText = day.RemainingCount > 0 ? FormatMoreOnDay(day.RemainingCount, day.Day, culture) : null;
+                return model;
             })
             .ToList();
     }
+
+    // A day whose cards load on scroll: the heading and the count only (8.2.11).
+    private EventsPeriodDayViewModel BuildDeferredDay(PeriodDaySelection day, DateTime today)
+    {
+        var model = BuildDayHead(day, today, CultureInfo.CurrentCulture);
+        model.IsDeferred = true;
+        return model;
+    }
+
+    // Heading, "Today"/"Tomorrow" label and event count of a day (8.2.6).
+    private EventsPeriodDayViewModel BuildDayHead(PeriodDaySelection day, DateTime today, CultureInfo culture) => new()
+    {
+        Day = day.Day,
+        Heading = EventCardFormatter.FormatWeekdayAndDate(day.Day, culture),
+        DayLabel = day.Day == today
+            ? _localizer["Period_Today"].Value
+            : day.Day == today.AddDays(1) ? _localizer["Period_Tomorrow"].Value : null,
+        IsToday = day.Day == today,
+        TotalCount = day.TotalCount,
+        CountText = FormatEventCount(day.TotalCount)
+    };
 
     private async Task<Dictionary<int, EventViewModel>> LoadEventsByIdAsync(IReadOnlyCollection<int> ids,
         CancellationToken cancellationToken)

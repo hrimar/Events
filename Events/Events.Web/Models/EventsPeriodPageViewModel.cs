@@ -152,4 +152,20 @@ public class EventsPeriodDayViewModel
 
     // Text of the "More" button ("Още 25 събития в петък"); null when all the day's events are shown.
     public string? MoreText { get; set; }
+
+    // The cards of this day load on scroll (more than 200 events in the period, 8.2.11).
+    public bool IsDeferred { get; set; }
+
+    // Route values of this day's requests: the page filters and the day (Events/PeriodDay, Events/PeriodDaySection).
+    public Dictionary<string, string> Route { get; set; } = new();
+
+    // "All events" for this day alone with the same filters: the link of a deferred day without JavaScript.
+    public Dictionary<string, string> DayPageRoute()
+    {
+        var route = new Dictionary<string, string>(Route);
+        route.Remove("day");
+        route["fromDate"] = Day.ToString("yyyy-MM-dd");
+        route["toDate"] = Day.ToString("yyyy-MM-dd");
+        return route;
+    }
 }

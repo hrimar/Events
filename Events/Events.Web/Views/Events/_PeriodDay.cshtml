@@ -1,0 +1,55 @@
+@model Events.Web.Models.EventsPeriodDayViewModel
+@using Events.Web.Resources
+@using Microsoft.AspNetCore.Routing
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<SharedResources> Localizer
+
+@* One day of the period view (GS-REQ-008, 8.2.6-8.2.8, 8.2.11). Rendered by Period.cshtml and returned by
+   Events/PeriodDaySection; gs-period.js replaces a deferred day with it when the day comes near on scroll. *@
+@{
+    var headingId = $"gs-day-{Model.Day:yyyy-MM-dd}";
+    var cardsId = $"{headingId}-cards";
+    var lazyUrl = Model.IsDeferred ? Url.Action("PeriodDaySection", "Events", new RouteValueDictionary(Model.Route)) : null;
+}
+<section class="gs-period-day" aria-labelledby="@headingId">
+    @* Sticky at the top while the day's cards scroll (8.2.7) *@
+    <div class="gs-day-head">
+        <div class="gs-day-titles">
+            <h2 id="@headingId" class="gs-h-day">@Model.Heading</h2>
+            @if (Model.DayLabel is not null)
+            {
+                <span class="gs-day-label @(Model.IsToday ? "is-today" : "")">@Model.DayLabel</span>
+            }
+        </div>
+        <span class="gs-day-count">@Model.CountText</span>
+    </div>
+
+    @if (Model.IsDeferred)
+    {
+        @* Until the cards load; without JavaScript the link opens this day alone with the same filters (8.2.11) *@
+        <div class="gs-period-deferred" data-gs-period-lazy="@lazyUrl">
+            <a class="gs-section-link" asp-controller="Events" asp-action="Index"
+               asp-all-route-data="@Model.DayPageRoute()">@Localizer["Home_WeekendSeeDay"]</a>
+            <p class="gs-period-more-error" role="alert" hidden>@Localizer["Home_LoadError"]</p>
+        </div>
+    }
+    else
+    {
+        @* Up to 8 cards by time, events without a time last (8.2.8); the badge shows only the time *@
+        <ul class="gs-event-grid" id="@cardsId">
+            <partial name="_PeriodDayCards" model="Model.Cards" />
+        </ul>
+
+        @* The other events of the day are added to the list in place, all at once (8.2.8, gs-period.js) *@
+        @if (Model.MoreText is not null)
+        {
+            <div class="gs-period-more" data-gs-period-more>
+                <button type="button" class="gs-btn gs-btn-secondary" aria-controls="@cardsId"
+                        data-url="@Url.Action("PeriodDay", "Events", new RouteValueDictionary(Model.Route))">
+                    @Model.MoreText
+                </button>
+                <p class="gs-period-more-error" role="alert" hidden>@Localizer["Home_LoadError"]</p>
+            </div>
+        }
+    }
+</section>

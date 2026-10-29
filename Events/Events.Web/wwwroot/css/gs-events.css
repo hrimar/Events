@@ -185,8 +185,12 @@ span.gs-filter-btn {
   padding-bottom: 40px;
 }
 
-/* Day heading with a 2px line in the ink colour below it (8.2.6) */
+/* Day heading with a 2px line in the ink colour below it (8.2.6). Sticky at the top while the day's cards
+   scroll, over them (8.2.7); the site header is not sticky, so the top is 0. */
 .gs-day-head {
+  position: sticky;
+  top: 0;
+  z-index: 3;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -230,6 +234,15 @@ span.gs-filter-btn {
   font-size: 16px;
   font-weight: 700;
   color: var(--gs-text-2);
+}
+
+/* A day whose cards load on scroll (8.2.11): about one row of cards high, so the page grows less when they come */
+.gs-period-deferred {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  min-height: 420px;
 }
 
 /* "More N events on Friday" under the day's cards, secondary style (8.2.8) */

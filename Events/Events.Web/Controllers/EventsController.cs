@@ -270,12 +270,12 @@ public class EventsController : Controller
             new EventsPeriodRequest(filters, fromDate, toDate, period, categoryLabel), cancellationToken);
 
         model.PeriodFallbackMessage = isFallback ? BuildPeriodFallbackMessage(categoryList, tagList, free, kids) : null;
-        model.CurrentCategory = categoryList.Count > 0 ? string.Join(",", categoryList) : null;
-        model.SelectedCategories = categoryList;
-        model.SelectedSubCategory = subCategory;
-        model.IsFreeFilter = free;
-        model.SelectedTags = tagList;
-        model.IsKidsFilter = kids;
+        ApplyPeriodFilterState(model, categoryList, subCategory, free, tagList, kids);
+
+        // "More N events" and the days that load on scroll ask for their cards with the same filters (8.2.8, 8.2.11).
+        foreach (var day in model.Days)
+            day.Route = model.RouteForDay(day.Day);
+
         model.LocalizedCategories = EventsPageViewModel.GetAvailableCategories(_localizer);
         model.AvailableSubCategories = await BuildSubCategoryOptionsAsync(TryGetSingleCategory(categoryList), subCategory);
         model.PageMetaDescription = _localizer["PageMetaDescription_AllEvents"].Value;
@@ -322,6 +322,58 @@ public class EventsController : Controller
             _logger.LogError(ex, "Error loading the other events of {Day} for the period view", day);
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
+    }
+
+    // One day of the period view with its first cards, for a day that loads on scroll when the period has more than
+    // 200 events (GS-REQ-008, 8.2.11, gs-period.js). Takes the same filters as the period view; returns the day section.
+    [HttpGet]
+    public async Task<IActionResult> PeriodDaySection(
+        DateTime day,
+        string? category = null,
+        string? subCategory = null,
+        bool? free = null,
+        string? tags = null,
+        bool? kids = null,
+        CancellationToken cancellationToken = default)
+    {
+        // A day that is not a date ("day=abc")
+        if (!ModelState.IsValid)
+            return BadRequest();
+
+        try
+        {
+            var categoryList = SplitListParameter(category);
+            var tagList = SplitListParameter(tags);
+            bool? freeOnly = free == true ? true : null;
+            var filters = BuildPeriodFilters(categoryList, subCategory, freeOnly, tagList, kids == true);
+
+            var model = await _periodViewBuilder.BuildDayAsync(filters, day, cancellationToken);
+            if (model is null)
+                return NotFound();
+
+            var filterState = new EventsPeriodPageViewModel();
+            ApplyPeriodFilterState(filterState, categoryList, subCategory, freeOnly, tagList, kids == true);
+            model.Route = filterState.RouteForDay(day);
+
+            return PartialView("_PeriodDay", model);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error loading the day {Day} of the period view", day);
+            return StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+
+    // The filters kept by the period view's chips, filter buttons and day requests (GS-REQ-008, 8.2.4, 8.2.5).
+    private static void ApplyPeriodFilterState(EventsPeriodPageViewModel model, List<string> categoryList,
+        string? subCategory, bool? free, List<string> tagList, bool kids)
+    {
+        model.CurrentCategory = categoryList.Count > 0 ? string.Join(",", categoryList) : null;
+        model.SelectedCategories = categoryList;
+        model.SelectedSubCategory = subCategory;
+        model.IsFreeFilter = free;
+        model.SelectedTags = tagList;
+        model.IsKidsFilter = kids;
     }
 
     // Filters of the period view and its "More N events" requests (GS-REQ-008, 8.2.5).
