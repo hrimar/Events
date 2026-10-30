@@ -205,7 +205,7 @@
     <value>Препоръчани събития</value>
   </data>
   <data name="Home_ViewAllEvents" xml:space="preserve">
-    <value>Виж всички събития</value>
+    <value>Виж всички</value>
   </data>
   <data name="Home_SavedEvents" xml:space="preserve">
     <value>Запазени събития</value>
@@ -2390,5 +2390,11 @@
   </data>
   <data name="Venue_NoUpcomingEventsShort" xml:space="preserve">
     <value>Няма предстоящи събития</value>
+  </data>
+  <data name="Details_MoreInfo" xml:space="preserve">
+    <value>Повече инфо</value>
+  </data>
+  <data name="Details_InfoRedirect" xml:space="preserve">
+    <value>Ще бъдете пренасочени към официалния сайт на събитието</value>
   </data>
 </root>

@@ -899,4 +899,6 @@
   <data name="Events_PeriodMetaDescription" xml:space="preserve"><value>{0} – {1} by day and time, with venue and tickets. Updated daily.</value></data>
   <data name="Events_FilterSearchLabel" xml:space="preserve"><value>Search: “{0}”</value></data>
   <data name="Venue_NoUpcomingEventsShort" xml:space="preserve"><value>No upcoming events</value></data>
+  <data name="Details_MoreInfo" xml:space="preserve"><value>More info</value></data>
+  <data name="Details_InfoRedirect" xml:space="preserve"><value>You'll be redirected to the official event site</value></data>
 </root>

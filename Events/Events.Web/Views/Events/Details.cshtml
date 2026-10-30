@@ -207,7 +207,15 @@
                  description; on phones it stays below the description (requester's decision, GS-REQ-008). -->
             <div class="card border-0 shadow-sm mt-4 mt-lg-0 mb-4 gs-details-actions">
                 <div class="card-body text-center">
-                    @if(Model.HasTicketUrl)
+                    @* A free event has no tickets to buy: the same link reads "More info" (requester's decision) *@
+                    @if(Model.HasTicketUrl && Model.IsFree)
+                    {
+                        <a href="@Model.TicketUrl" target="_blank" class="gs-btn gs-btn-primary w-100 mb-3">
+                            <gs-icon name="info" class="me-2" />@Localizer["Details_MoreInfo"]
+                        </a>
+                        <small class="text-muted">@Localizer["Details_InfoRedirect"]</small>
+                    }
+                    else if(Model.HasTicketUrl)
                     {
                         <a href="@Model.TicketUrl" target="_blank" class="gs-btn gs-btn-primary w-100 mb-3">
                             <gs-icon name="ticket" class="me-2" />@Localizer["Details_BuyTickets"]
