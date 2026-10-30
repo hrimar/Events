@@ -122,45 +122,6 @@
                                 </div>
                             }
                         </div>
-                        <div class="text-end">
-                            @if (User.Identity?.IsAuthenticated ?? false)
-                            {
-                                <button class="btn btn-outline-danger mb-2" onclick="toggleFavorite(@Model.Id)"
-                                        data-title-add="@Localizer["Favorites_AddTitle"]"
-                                        data-title-remove="@Localizer["Favorites_RemoveTitle"]"
-                                        data-error-message="@Localizer["Favorites_Error"]">
-                                    <gs-icon name="heart" class="gs-icon-filled" /> @Localizer["Details_Save"]
-                                </button>
-                            }
-                            else
-                            {
-                                <a href="/Identity/Account/Login?returnUrl=@Url.Action("Details", "Events", 
-                                    new { id = Model.Id })" class="btn btn-outline-secondary mb-2">
-                                    <gs-icon name="heart" class="gs-icon-filled" /> @Localizer["Details_LoginToSave"]
-                                </a>
-                            }
-                            <br>
-                            <div class="dropdown">
-                                <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                    <gs-icon name="share-2" /> @Localizer["Details_Share"]
-                                </button>
-                                <ul class="dropdown-menu">
-                                    <li><a class="dropdown-item" href="#" onclick="shareEvent('facebook')">
-                                        <gs-icon name="facebook" class="gs-text-link me-2" />Facebook
-                                    </a></li>
-                                    <li><a class="dropdown-item" href="#" onclick="shareEvent('twitter')">
-                                        <gs-icon name="twitter" class="gs-text-link me-2" />Twitter
-                                    </a></li>
-                                    <li><a class="dropdown-item" href="#" onclick="shareEvent('whatsapp')">
-                                        <gs-icon name="message-circle" class="text-success me-2" />WhatsApp
-                                    </a></li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item" href="#" onclick="copyLink()">
-                                        <gs-icon name="link" class="me-2" />@Localizer["Details_CopyLink"]
-                                    </a></li>
-                                </ul>
-                            </div>
-                        </div>
                     </div>
 
                     <!-- Event Details Grid -->
@@ -242,8 +203,9 @@
 
         <!-- Sidebar -->
         <div class="col-lg-4">
-            <!-- Action Card -->
-            <div class="card border-0 shadow-sm mb-4">
+            <!-- Action Card: "Buy tickets", "Save" and "Share" in one place. From 992px it follows the screen beside the
+                 description; on phones it stays below the description (requester's decision, GS-REQ-008). -->
+            <div class="card border-0 shadow-sm mt-4 mt-lg-0 mb-4 gs-details-actions">
                 <div class="card-body text-center">
                     @if(Model.HasTicketUrl)
                     {
@@ -259,6 +221,46 @@
                             @Localizer["Details_TicketNotAvailable"]
                         </div>
                     }
+
+                    <div class="gs-details-share mt-3">
+                        @if (User.Identity?.IsAuthenticated ?? false)
+                        {
+                            <button class="gs-btn gs-btn-secondary" onclick="toggleFavorite(@Model.Id)"
+                                    data-label="@Localizer["Details_Save"]"
+                                    data-title-add="@Localizer["Favorites_AddTitle"]"
+                                    data-title-remove="@Localizer["Favorites_RemoveTitle"]"
+                                    data-error-message="@Localizer["Favorites_Error"]">
+                                <gs-icon name="heart" class="gs-icon-filled" /> @Localizer["Details_Save"]
+                            </button>
+                        }
+                        else
+                        {
+                            <a href="/Identity/Account/Login?returnUrl=@Url.Action("Details", "Events", 
+                                new { id = Model.Id })" class="gs-btn gs-btn-secondary">
+                                <gs-icon name="heart" class="gs-icon-filled" /> @Localizer["Details_LoginToSave"]
+                            </a>
+                        }
+                        <div class="dropdown">
+                            <button class="gs-btn gs-btn-secondary w-100" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <gs-icon name="share-2" /> @Localizer["Details_Share"]
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="#" onclick="shareEvent('facebook')">
+                                    <gs-icon name="facebook" class="gs-text-link me-2" />Facebook
+                                </a></li>
+                                <li><a class="dropdown-item" href="#" onclick="shareEvent('twitter')">
+                                    <gs-icon name="twitter" class="gs-text-link me-2" />Twitter
+                                </a></li>
+                                <li><a class="dropdown-item" href="#" onclick="shareEvent('whatsapp')">
+                                    <gs-icon name="message-circle" class="text-success me-2" />WhatsApp
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="#" onclick="copyLink()">
+                                    <gs-icon name="link" class="me-2" />@Localizer["Details_CopyLink"]
+                                </a></li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -371,6 +373,26 @@
         
         .toast {
             z-index: 9999;
+        }
+
+        /* "Save" and "Share" side by side under "Buy tickets" */
+        .gs-details-share {
+            display: flex;
+            gap: 8px;
+        }
+
+        .gs-details-share > * {
+            flex: 1 1 0;
+            min-width: 0;
+        }
+
+        /* The ticket block follows the screen beside the description; the site header is not sticky, so 24px from
+           the top. On phones the column is below the description and the block stays in place. */
+        @@media (min-width: 992px) {
+            .gs-details-actions {
+                position: sticky;
+                top: 24px;
+            }
         }
     </style>
 }

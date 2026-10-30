@@ -47,6 +47,11 @@ const Favorites = {
                 button.innerHTML = gsIcon('heart');
             }
 
+            // A button with a text label (event page) keeps it next to the icon.
+            if (button.dataset.label) {
+                button.append(' ' + button.dataset.label);
+            }
+
             // Show success message
             this.showMessage(data.message, 'success');
 
