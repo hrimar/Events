@@ -1,0 +1,24 @@
+@model Events.Web.Models.VenueCardViewModel
+@using Events.Web.Resources
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<SharedResources> Localizer
+
+@* Venue card (GS-REQ-006, 6.5). A venue without a photo, or with a photo link that no longer works, shows the
+   common placeholder image (requester's decision for the "Venues" page). *@
+@{
+    const string placeholder = "/images/default_event_image.jpeg";
+    var photoUrl = string.IsNullOrWhiteSpace(Model.PhotoUrl) ? placeholder : Model.PhotoUrl;
+}
+<a class="gs-venue-card" asp-controller="Venues" asp-action="Details" asp-route-slug="@Model.Slug">
+    <div class="gs-venue-card-media">
+        @* Decorative: the venue name is the link text *@
+        <img src="@photoUrl" alt="" width="480" height="320" loading="@(Model.IsEager ? "eager" : "lazy")" decoding="async"
+             onerror="this.onerror=null;this.src='@placeholder'">
+    </div>
+    <h3 class="gs-venue-card-name gs-clamp-2">@Model.Name</h3>
+    <p class="gs-venue-card-count">
+        @(Model.UpcomingEventsCount > 0
+            ? $"{Model.UpcomingEventsCount} {Localizer["Venue_UpcomingEventsCount"]}"
+            : Localizer["Venue_NoUpcomingEventsShort"].Value)
+    </p>
+</a>

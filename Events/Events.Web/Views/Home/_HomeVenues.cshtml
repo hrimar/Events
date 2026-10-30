@@ -27,15 +27,7 @@
             {
                 var name = venue.LocalizedName(isEnglish);
                 <li>
-                    <a class="gs-venue-card" asp-controller="Venues" asp-action="Details" asp-route-slug="@venue.Slug">
-                        <div class="gs-venue-card-media">
-                            @* Decorative: the venue name is the link text *@
-                            <img src="@venue.PhotoUrl" alt="" width="480" height="320" loading="lazy" decoding="async"
-                                 onerror="this.onerror=null;this.src='/images/default_event_image.jpeg'">
-                        </div>
-                        <h3 class="gs-venue-card-name gs-clamp-2">@name</h3>
-                        <p class="gs-venue-card-count">@venue.UpcomingEventsCount @Localizer["Venue_UpcomingEventsCount"]</p>
-                    </a>
+                    <partial name="_VenueCard" model="new VenueCardViewModel(venue.Slug, name, venue.PhotoUrl, venue.UpcomingEventsCount)" />
                 </li>
             }
         </ul>

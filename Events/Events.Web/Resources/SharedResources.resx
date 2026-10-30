@@ -2388,4 +2388,7 @@
   <data name="Events_FilterSearchLabel" xml:space="preserve">
     <value>Търсене: „{0}“</value>
   </data>
+  <data name="Venue_NoUpcomingEventsShort" xml:space="preserve">
+    <value>Няма предстоящи събития</value>
+  </data>
 </root>

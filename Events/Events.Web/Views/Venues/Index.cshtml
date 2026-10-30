@@ -6,6 +6,9 @@
     // Title/MetaDescription are set in VenuesController.Index (default + admin PageSeoMeta
     // override) - not clobbered here.
     var search = ViewBag.Search as string;
+
+    // Photos in the first row of the grid at 1440px
+    const int EagerVenuePhotos = 4;
 }
 
 <section class="gs-page-header">
@@ -42,65 +45,17 @@
         }
         else
         {
-            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-                @foreach (var venue in Model)
+            @* Venue cards in the standard 4 / 3 / 2 / 1 grid, ordered by the number of upcoming events. Only the first
+               row of photos loads at once; the others load on scroll (GS-REQ-008, requester's decision). *@
+            <ul class="gs-event-grid">
+                @foreach (var (venue, index) in Model.Select((v, i) => (v, i)))
                 {
-                    <div class="col">
-                        <a asp-action="Details" asp-route-slug="@venue.Slug"
-                           class="text-decoration-none">
-                            <div class="card h-100 shadow-sm border-0 venue-card">
-                                @if (!string.IsNullOrEmpty(venue.PhotoUrl))
-                                {
-                                    <img src="@venue.PhotoUrl" alt="@venue.DisplayName"
-                                         class="card-img-top"
-                                         style="height:160px; object-fit:cover;"
-                                         onerror="this.style.display='none'">
-                                }
-                                else
-                                {
-                                    <div class="bg-surface-alt d-flex align-items-center justify-content-center"
-                                         style="height:160px;">
-                                        <gs-icon name="map-pin" size="48" class="text-muted opacity-50" />
-                                    </div>
-                                }
-                                <div class="card-body">
-                                    <h5 class="card-title text-body mb-1">@venue.DisplayName</h5>
-                                    @if (!string.IsNullOrEmpty(venue.ShortName))
-                                    {
-                                        <span class="gs-tag mb-2">@venue.ShortName</span>
-                                    }
-                                    @if (!string.IsNullOrEmpty(venue.City))
-                                    {
-                                        <div class="text-muted small">
-                                            <gs-icon name="building-2" class="me-1" />@venue.City
-                                        </div>
-                                    }
-                                </div>
-                                @if (venue.UpcomingEventsCount > 0)
-                                {
-                                    <div class="card-footer bg-transparent border-0 pt-0">
-                                        <span class="gs-tag">
-                                            @venue.UpcomingEventsCount @Localizer["Venue_UpcomingEventsCount"]
-                                        </span>
-                                    </div>
-                                }
-                            </div>
-                        </a>
-                    </div>
+                    <li>
+                        <partial name="_VenueCard"
+                                 model="new VenueCardViewModel(venue.Slug, venue.DisplayName, venue.PhotoUrl, venue.UpcomingEventsCount, IsEager: index < EagerVenuePhotos)" />
+                    </li>
                 }
-            </div>
+            </ul>
         }
     </div>
 </section>
-
-@section Styles {
-    <style>
-        .venue-card {
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        .venue-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.12) !important;
-        }
-    </style>
-}
