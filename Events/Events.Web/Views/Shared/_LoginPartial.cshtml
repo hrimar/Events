@@ -27,7 +27,7 @@
             }
             <li><hr class="dropdown-divider"></li>
             <li>
-                <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Page("/Index", new { area = "" })">
+                <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
                     <button type="submit" class="dropdown-item">@Localizer["Nav_Logout"]</button>
                 </form>
             </li>
