@@ -99,6 +99,9 @@ public class EventsController : Controller
 
             var tagList = SplitListParameter(tags);
 
+            // "All events" offers only "Free only" (GS-REQ-008, 8.2.5); "Paid only" from older links is not applied.
+            free = free == true ? true : null;
+
             // "category" accepts a comma-separated list (any of them matches); a single value works as before.
             var categoryList = SplitListParameter(category);
             var singleCategory = TryGetSingleCategory(categoryList);
@@ -135,6 +138,9 @@ public class EventsController : Controller
                 FromDate = queryFromDate,
                 ToDate = queryToDate,
                 TagNames = tagList,
+
+                // "With kids" uses the tags of the "For kids" quick filter, in addition to any selected tags (8.2.5).
+                RequiredTagNames = kids == true ? HomeWeekendSelector.KidsTags : Array.Empty<string>(),
                 Search = search,
                 SortBy = sortBy,
                 SortOrder = sortOrder ?? "asc"
@@ -228,6 +234,13 @@ public class EventsController : Controller
 
             viewModel.AvailableSubCategories = await BuildSubCategoryOptionsAsync(singleCategory, subCategory);
             viewModel.LocalizedCategories = EventsPageViewModel.GetAvailableCategories(_localizer);
+
+            // The "When" and "Filters" rows, as in the period view (GS-REQ-008, 8.2.4, 8.2.5); the default start date
+            // (today) is not a filter.
+            viewModel.Filters = BuildFilterState(selectedPeriod, requestedFromDate, toDate, categoryList, subCategory,
+                free == true, tagList, kids == true, search);
+            viewModel.Filters.LocalizedCategories = viewModel.LocalizedCategories;
+            viewModel.Filters.AvailableSubCategories = viewModel.AvailableSubCategories;
             viewModel.LocalizedSortOptions = EventsPageViewModel.GetAvailableSortOptions(_localizer);
 
             return View(viewModel);
@@ -269,14 +282,14 @@ public class EventsController : Controller
             new EventsPeriodRequest(filters, fromDate, toDate, period, categoryLabel), cancellationToken);
 
         model.PeriodFallbackMessage = isFallback ? BuildPeriodFallbackMessage(categoryList, tagList, free, kids) : null;
-        ApplyPeriodFilterState(model, categoryList, subCategory, free, tagList, kids);
+        model.Filters = BuildFilterState(period, model.FromDate, model.ToDate, categoryList, subCategory, free == true,
+            tagList, kids, search: null);
+        model.Filters.HasFixedSort = true;
+        await AddFilterMenusAsync(model.Filters, categoryList, subCategory);
 
         // "More N events" and the days that load on scroll ask for their cards with the same filters (8.2.8, 8.2.11).
         foreach (var day in model.Days)
-            day.Route = model.RouteForDay(day.Day);
-
-        model.LocalizedCategories = EventsPageViewModel.GetAvailableCategories(_localizer);
-        model.AvailableSubCategories = await BuildSubCategoryOptionsAsync(TryGetSingleCategory(categoryList), subCategory);
+            day.Route = model.Filters.RouteForDay(day.Day);
 
         var canonicalUrl = _siteUrlProvider.BuildAbsoluteUrl(BuildPeriodCanonicalPath(period, categoryList));
 
@@ -347,8 +360,8 @@ public class EventsController : Controller
             if (model is null)
                 return NotFound();
 
-            var filterState = new EventsPeriodPageViewModel();
-            ApplyPeriodFilterState(filterState, categoryList, subCategory, freeOnly, tagList, kids == true);
+            var filterState = BuildFilterState(null, null, null, categoryList, subCategory, freeOnly == true, tagList,
+                kids == true, search: null);
             model.Route = filterState.RouteForDay(day);
 
             return PartialView("_PeriodDay", model);
@@ -360,16 +373,27 @@ public class EventsController : Controller
         }
     }
 
-    // The filters kept by the period view's chips, filter buttons and day requests (GS-REQ-008, 8.2.4, 8.2.5).
-    private static void ApplyPeriodFilterState(EventsPeriodPageViewModel model, List<string> categoryList,
-        string? subCategory, bool? free, List<string> tagList, bool kids)
+    // The filters kept by the chips, filter buttons and day requests of "All events" (GS-REQ-008, 8.2.4, 8.2.5).
+    private static EventListFilters BuildFilterState(EventPeriod? period, DateTime? fromDate, DateTime? toDate,
+        List<string> categoryList, string? subCategory, bool freeOnly, List<string> tagList, bool kids, string? search) => new()
     {
-        model.CurrentCategory = categoryList.Count > 0 ? string.Join(",", categoryList) : null;
-        model.SelectedCategories = categoryList;
-        model.SelectedSubCategory = subCategory;
-        model.IsFreeFilter = free;
-        model.SelectedTags = tagList;
-        model.IsKidsFilter = kids;
+        Period = period,
+        FromDate = fromDate,
+        ToDate = toDate,
+        CurrentCategory = categoryList.Count > 0 ? string.Join(",", categoryList) : null,
+        SelectedCategories = categoryList,
+        SelectedSubCategory = subCategory,
+        IsFreeOnly = freeOnly,
+        SelectedTags = tagList,
+        IsKidsFilter = kids,
+        SearchTerm = search
+    };
+
+    // Options of the category and subcategory menus of the "Filters" row (8.2.5).
+    private async Task AddFilterMenusAsync(EventListFilters filters, List<string> categoryList, string? subCategory)
+    {
+        filters.LocalizedCategories = EventsPageViewModel.GetAvailableCategories(_localizer);
+        filters.AvailableSubCategories = await BuildSubCategoryOptionsAsync(TryGetSingleCategory(categoryList), subCategory);
     }
 
     // Filters of the period view and its "More N events" requests (GS-REQ-008, 8.2.5).

@@ -3,16 +3,16 @@ using Events.Web.Models;
 
 namespace Events.Web.Tests.Models;
 
-public class EventsPeriodPageViewModelTests
+public class EventListFiltersTests
 {
-    private static EventsPeriodPageViewModel Model(EventPeriod? period) => new()
+    private static EventListFilters Filters(EventPeriod? period) => new()
     {
         Period = period,
         FromDate = new DateTime(2026, 10, 30),
         ToDate = new DateTime(2026, 10, 30),
         CurrentCategory = "Music",
         SelectedSubCategory = "Jazz",
-        IsFreeFilter = true,
+        IsFreeOnly = true,
         SelectedTags = new List<string> { "Blues" },
         IsKidsFilter = true
     };
@@ -20,7 +20,7 @@ public class EventsPeriodPageViewModelTests
     [Fact]
     public void RouteWithPeriod_KeepsTheFilters_AndDropsExplicitDates()
     {
-        var route = Model(period: null).RouteWithPeriod(EventPeriod.Weekend);
+        var route = Filters(period: null).RouteWithPeriod(EventPeriod.Weekend);
 
         Assert.Equal("weekend", route["period"]);
         Assert.False(route.ContainsKey("fromDate"));
@@ -35,7 +35,7 @@ public class EventsPeriodPageViewModelTests
     [Fact]
     public void FilterRoute_WithoutPeriod_UsesTheExplicitDates()
     {
-        var route = Model(period: null).FilterRoute();
+        var route = Filters(period: null).FilterRoute();
 
         Assert.Equal("2026-10-30", route["fromDate"]);
         Assert.Equal("2026-10-30", route["toDate"]);
@@ -43,9 +43,19 @@ public class EventsPeriodPageViewModelTests
     }
 
     [Fact]
+    public void FilterRoute_KeepsTheSearchTerm()
+    {
+        var filters = Filters(EventPeriod.Next7);
+        filters.SearchTerm = "jazz";
+
+        Assert.Equal("jazz", filters.FilterRoute()["search"]);
+        Assert.False(filters.RouteWith("search", null).ContainsKey("search"));
+    }
+
+    [Fact]
     public void RouteWith_NewCategory_ClearsTheSubcategory_AndKeepsThePeriod()
     {
-        var route = Model(EventPeriod.Next7).RouteWith("category", "Theatre");
+        var route = Filters(EventPeriod.Next7).RouteWith("category", "Theatre");
 
         Assert.Equal("Theatre", route["category"]);
         Assert.False(route.ContainsKey("subCategory"));
@@ -55,7 +65,7 @@ public class EventsPeriodPageViewModelTests
     [Fact]
     public void RouteWith_NullValue_RemovesOnlyThatFilter()
     {
-        var route = Model(EventPeriod.Next7).RouteWith("free", null);
+        var route = Filters(EventPeriod.Next7).RouteWith("free", null);
 
         Assert.False(route.ContainsKey("free"));
         Assert.Equal("Jazz", route["subCategory"]);
@@ -65,7 +75,7 @@ public class EventsPeriodPageViewModelTests
     [Fact]
     public void RouteWithoutDates_KeepsOnlyTheFilters()
     {
-        var route = Model(EventPeriod.Today).RouteWithoutDates();
+        var route = Filters(EventPeriod.Today).RouteWithoutDates();
 
         Assert.False(route.ContainsKey("period"));
         Assert.False(route.ContainsKey("fromDate"));
@@ -73,13 +83,30 @@ public class EventsPeriodPageViewModelTests
     }
 
     [Fact]
+    public void RouteWithTagToggled_AddsAMissingTag_AndRemovesASelectedOne()
+    {
+        var filters = Filters(EventPeriod.Next7);
+
+        Assert.Equal("Blues,Rock", filters.RouteWithTagToggled("Rock")["tags"]);
+        Assert.False(filters.RouteWithTagToggled("blues").ContainsKey("tags"));
+    }
+
+    [Fact]
     public void RouteForDay_KeepsTheFilters_AndSetsOnlyTheDay()
     {
-        var route = Model(EventPeriod.Next7).RouteForDay(new DateTime(2026, 10, 31));
+        var route = Filters(EventPeriod.Next7).RouteForDay(new DateTime(2026, 10, 31));
 
         Assert.Equal("2026-10-31", route["day"]);
         Assert.False(route.ContainsKey("period"));
         Assert.Equal("Jazz", route["subCategory"]);
         Assert.Equal("true", route["kids"]);
+    }
+
+    [Fact]
+    public void HasExplicitDates_NeedsBothDates_AndNoPeriod()
+    {
+        Assert.True(Filters(period: null).HasExplicitDates);
+        Assert.False(Filters(EventPeriod.Today).HasExplicitDates);
+        Assert.False(new EventListFilters { FromDate = new DateTime(2026, 10, 30) }.HasExplicitDates);
     }
 }

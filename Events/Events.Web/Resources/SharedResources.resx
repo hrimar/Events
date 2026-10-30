@@ -2385,4 +2385,7 @@
   <data name="Events_PeriodMetaDescription" xml:space="preserve">
     <value>{0} – {1}, подредени по ден и час, с място и билети. Обновява се всеки ден.</value>
   </data>
+  <data name="Events_FilterSearchLabel" xml:space="preserve">
+    <value>Търсене: „{0}“</value>
+  </data>
 </root>

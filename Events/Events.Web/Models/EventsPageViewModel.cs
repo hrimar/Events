@@ -48,6 +48,9 @@ public class EventsPageViewModel
     public List<CategoryDisplayItem> LocalizedCategories { get; set; } = new();
     public List<SortOption> LocalizedSortOptions { get; set; } = new();
 
+    // The "When" and "Filters" rows, shared with the period view (GS-REQ-008, 8.2.4, 8.2.5).
+    public EventListFilters Filters { get; set; } = new();
+
     // Sorting functionality
     public string? SortBy { get; set; }
     public string? SortOrder { get; set; } = "asc";
@@ -130,6 +133,9 @@ public class EventsPageViewModel
             // Add tags to query string
             if (SelectedTags.Any())
                 filters.Add($"tags={Uri.EscapeDataString(string.Join(",", SelectedTags))}");
+
+            if (Filters.IsKidsFilter)
+                filters.Add("kids=true");
 
             if (FromDate.HasValue)
                 filters.Add($"fromDate={FromDate.Value:yyyy-MM-dd}");
