@@ -79,12 +79,12 @@ public class EventsPageViewModel
             })
             .ToList();
 
-    // Sort options - localized
+    // Sort options - localized. No "price": prices are not shown on the site (requester's decision); the server
+    // still accepts sortBy=price from older links.
     public static List<SortOption> GetAvailableSortOptions(IStringLocalizer<SharedResources> localizer) => new()
     {
         new() { Value = "date",        DisplayName = localizer["Sort_Date"],        IconName = "calendar" },
         new() { Value = "name",        DisplayName = localizer["Sort_Name"],        IconName = "arrow-down-a-z" },
-        new() { Value = "price",       DisplayName = localizer["Sort_Price"],       IconName = "banknote" },
         new() { Value = "category",    DisplayName = localizer["Sort_Category"],    IconName = "tags" },
         new() { Value = "subcategory", DisplayName = localizer["Sort_Subcategory"], IconName = "layers" }
     };
@@ -94,7 +94,6 @@ public class EventsPageViewModel
     {
         new() { Value = "date",        DisplayName = "Date",        IconName = "calendar" },
         new() { Value = "name",        DisplayName = "Name",        IconName = "arrow-down-a-z" },
-        new() { Value = "price",       DisplayName = "Price",       IconName = "banknote" },
         new() { Value = "category",    DisplayName = "Category",    IconName = "tags" },
         new() { Value = "subcategory", DisplayName = "Subcategory", IconName = "layers" }
     };
