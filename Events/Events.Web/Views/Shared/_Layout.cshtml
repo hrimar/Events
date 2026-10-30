@@ -5,6 +5,7 @@
 @using Microsoft.Extensions.Localization
 @inject IStringLocalizer<SharedResources> Localizer
 @inject ISiteUrlProvider SiteUrlProvider
+@inject Microsoft.AspNetCore.Mvc.ViewFeatures.IFileVersionProvider FileVersionProvider
 
 <!-- hreflang alternates are intentionally omitted: bg/en is switched via a cookie
      (LanguageController + CookieRequestCultureProvider), not via distinct per-language
@@ -12,7 +13,8 @@
      hreflang tags that both resolve to the same URL would assert content Google can't
      actually verify. Revisit only if URL-based localization is introduced. -->
 <!DOCTYPE html>
-<html lang="@System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName">
+<html lang="@System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName"
+      data-icon-sprite="@FileVersionProvider.AddFileVersionToPath(Context.Request.PathBase, "/icons/gs-icons.svg")">
 <head>
     <!-- Google Analytics tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-NL0QFW80H6"></script>
@@ -32,19 +34,29 @@
                 t = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
             }
             document.documentElement.setAttribute('data-theme', t);
+            // Bootstrap 5.3 color modes: keeps Bootstrap components (forms, dropdowns, modals) in the same theme
+            document.documentElement.setAttribute('data-bs-theme', t);
         })();
     </script>
     <title>@(ViewData["PageTitle"] ?? ViewData["Title"])</title>
     <link rel="canonical" href="@(ViewData["CanonicalUrl"] ?? SiteUrlProvider.BuildAbsoluteUrl(Context.Request.Path))" />
     <link rel="icon" type="image/png" href="~/images/favicon.png" asp-append-version="true" />
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sofia+Sans:wght@400;500;600;700;800&family=Sofia+Sans+Condensed:wght@700;800&display=swap">
+
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
     <!-- Theme CSS Files -->
     <link rel="stylesheet" href="~/css/themes/light-theme.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/themes/dark-theme.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/events-portal.css" asp-append-version="true" />
+
+    <!-- Go Sofia visual system (GS-REQ-006): loaded last so the tokens and base styles take precedence -->
+    <link rel="stylesheet" href="~/css/gs-tokens.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/gs-base.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/gs-components.css" asp-append-version="true" />
     
     <!-- Open Graph / Twitter Card meta tags for social sharing - single source of truth,
          driven by ViewData so no view needs its own duplicate MetaTags OG block. -->
@@ -77,109 +89,77 @@
 </head>
 
 <body>
-<nav class="navbar navbar-expand-lg shadow-sm">
+@* Header (GS-REQ-006, 6.6): full row from 1200px (desktop), hamburger menu below *@
+<nav class="navbar navbar-expand-xl gs-header" aria-label="@Localizer["Nav_MainNavigation"]">
     <div class="container-grid">
-        <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">
-            <img src="~/images/logo.jpeg" alt="Go Sofia" class="navbar-logo" width="200" height="70" loading="eager" decoding="async" fetchpriority="high" />
-            <span class="visually-hidden">Go Sofia</span>
+        <a class="navbar-brand gs-logo" asp-area="" asp-controller="Home" asp-action="Index">
+            <img src="~/images/logo.jpeg" alt="Go Sofia" width="95" height="40" loading="eager" decoding="async" fetchpriority="high" />
         </a>
-        
+
         <!-- Mobile/Tablet controls: search toggle + hamburger, kept on a single row with the logo -->
-        <div class="d-flex align-items-center gap-1 d-lg-none">
-            <button class="btn nav-link p-2 navbar-icon-btn" type="button" data-bs-toggle="collapse" data-bs-target="#mobile-search-bar"
+        <div class="d-flex align-items-center gap-1 d-xl-none">
+            <button class="gs-icon-btn" type="button" data-bs-toggle="collapse" data-bs-target="#mobile-search-bar"
                     aria-expanded="false" aria-controls="mobile-search-bar" aria-label="@Localizer["Nav_SearchPlaceholderMobile"]">
-                <i class="fas fa-search"></i>
+                <gs-icon name="search" size="20" />
             </button>
-            <button class="btn nav-link p-2 navbar-icon-btn" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <i class="fas fa-bars"></i>
+            <button class="gs-icon-btn" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="@Localizer["Nav_Menu"]">
+                <gs-icon name="menu" size="22" />
             </button>
         </div>
 
         <div class="navbar-collapse collapse" id="navbarNav">
-            <ul class="navbar-nav me-auto">
+            <ul class="navbar-nav gs-nav">
                 <li class="nav-item">
-                    <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">
-                        <i class="fas fa-home me-1"></i>@Localizer["Nav_Home"]
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" asp-area="" asp-controller="Events" asp-action="Index">
-                        <i class="fas fa-calendar me-1"></i>@Localizer["Nav_AllEvents"]
-                    </a>
+                    <a class="nav-link" asp-area="" asp-controller="Events" asp-action="Index">@Localizer["Nav_AllEvents"]</a>
                 </li>
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                        <i class="fas fa-filter me-1"></i>@Localizer["Nav_Categories"]
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        @Localizer["Nav_Categories"]
                     </a>
                     <ul class="dropdown-menu">
-                        @foreach(var category in EventsPageViewModel.GetAvailableCategories(Localizer))
-                        {
-                            <li>
-                                <a class="dropdown-item" asp-area="" asp-controller="Events"
-                                   asp-action="Index" asp-route-category="@category.Value">
-                                    <i class="@category.IconClass me-2"></i>@category.DisplayName
-                                </a>
-                            </li>
-                        }
+                        <partial name="_CategoryLinks" />
                     </ul>
                 </li>
-                <!-- Venues and Free Events: only in the mobile/tablet hamburger menu, desktop users reach them via the Home page hero buttons -->
-                <li class="nav-item d-lg-none">
-                    <a class="nav-link" asp-area="" asp-controller="Venues" asp-action="Index">
-                        <i class="fas fa-map-marker-alt me-1"></i>@Localizer["Venue_BrowseVenues"]
-                    </a>
+                <li class="nav-item">
+                    <a class="nav-link" asp-area="" asp-controller="Venues" asp-action="Index">@Localizer["Venue_BrowseVenues"]</a>
                 </li>
-                <li class="nav-item d-lg-none">
+                <li class="nav-item">
                     <a class="nav-link" asp-area="" asp-controller="Events" asp-action="Index" asp-route-free="true">
-                        <i class="fas fa-gift me-1"></i>@Localizer["Home_FreeEvents"]
+                        @Localizer["Nav_Free"]
                     </a>
                 </li>
-                @if (User.IsInRole("Administrator") || User.IsInRole("EventManager"))
-                {
-                    <li class="nav-item">
-                        <a class="nav-link text-warning" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">
-                            <i class="fas fa-cog me-1"></i>@Localizer["Nav_AdminPanel"]
-                        </a>
-                    </li>
-                }
             </ul>
-            
-            <!-- Desktop Navigation Search with Tag Support -->
-            <div class="d-none d-lg-flex flex-grow-1 mx-4 position-relative">
-                <form asp-area="" asp-controller="Events" asp-action="Index" method="get" class="d-flex w-100">
-                    <input class="form-control me-2" type="search" name="search" id="navbar-search" 
-                           placeholder="@Localizer["Nav_SearchPlaceholder"]" autocomplete="off">
-                    <button class="btn btn-primary" type="submit">
-                        <i class="fas fa-search"></i>
-                    </button>
+
+            <!-- Desktop search with autocomplete -->
+            <div class="gs-header-search d-none d-xl-block position-relative">
+                <form asp-area="" asp-controller="Events" asp-action="Index" method="get" role="search">
+                    <label class="gs-search">
+                        <gs-icon name="search" size="18" />
+                        <input type="search" name="search" id="navbar-search" autocomplete="off"
+                               placeholder="@Localizer["Nav_SearchPlaceholder"]" aria-label="@Localizer["Nav_SearchPlaceholder"]">
+                    </label>
                 </form>
                 <!-- Hidden autocomplete container -->
                 <div id="navbar-search-results" class="position-absolute top-100 start-0 w-100 theme-dropdown border rounded-bottom shadow-lg" style="display: none; z-index: 1000; max-height: 420px; overflow-y: auto;"
                      data-label-events="@Localizer["Search_GroupEvents"]" data-label-venues="@Localizer["Search_GroupVenues"]"></div>
             </div>
-            
-            <!-- Theme Switcher -->
-            <div class="me-3">
-                <partial name="_ThemeSwitcher" />
-            </div>
 
-            <!-- Language Switcher -->
-            <div class="me-3">
-                <partial name="_LanguageSwitcher" />
+            <div class="gs-header-actions">
+                <partial name="_ThemeSwitcher" />
+                <partial name="_LanguageSwitcher" view-data='new ViewDataDictionary(ViewData) { { "OtherLanguageOnly", true } }' />
+                <partial name="_LoginPartial" />
             </div>
-            
-            <partial name="_LoginPartial" />
         </div>
-        
+
         <!-- Mobile Search Bar: collapsed by default, expanded via the search icon next to the hamburger -->
-        <div class="collapse d-lg-none w-100 mt-2 border-top pt-2" id="mobile-search-bar">
-            <form asp-area="" asp-controller="Events" asp-action="Index" method="get" class="d-flex gap-2">
-                <input class="form-control" type="search" name="search" id="mobile-navbar-search" 
-                       placeholder="@Localizer["Nav_SearchPlaceholder"]" autocomplete="off">
-                <button class="btn btn-primary" type="submit">
-                    <i class="fas fa-search"></i>
-                </button>
+        <div class="collapse d-xl-none w-100 mt-2 border-top pt-2" id="mobile-search-bar">
+            <form asp-area="" asp-controller="Events" asp-action="Index" method="get" role="search">
+                <label class="gs-search">
+                    <gs-icon name="search" size="18" />
+                    <input type="search" name="search" id="mobile-navbar-search" autocomplete="off"
+                           placeholder="@Localizer["Nav_SearchPlaceholder"]" aria-label="@Localizer["Nav_SearchPlaceholder"]">
+                </label>
             </form>
             <div id="mobile-navbar-search-results" class="position-absolute w-100 theme-dropdown border rounded shadow-lg mt-1" style="display: none; z-index: 1000; max-height: 420px; overflow-y: auto; margin-left: -12px; margin-right: -12px; max-width: calc(100% + 24px);"
                  data-label-events="@Localizer["Search_GroupEvents"]" data-label-venues="@Localizer["Search_GroupVenues"]"></div>
@@ -193,7 +173,8 @@
 </main>
 
 <!-- Footer -->
-<footer class="text-white py-4 mt-5">
+@* Footer: the 3-column structure is kept, with the new colors (GS-REQ-006) *@
+<footer class="gs-footer py-4 mt-5">
     <div class="container-grid">
         <div class="row gy-4">
             <!-- Brand -->
@@ -201,24 +182,28 @@
                 <a asp-area="" asp-controller="Home" asp-action="Index" class="d-inline-block mb-2">
                     <img src="~/images/logo.jpeg" alt="Go Sofia" class="footer-logo" width="160" height="56" loading="lazy" decoding="async" />
                 </a>
-                <p class="text-white-50 mb-3">@Localizer["Footer_Description"]</p>
+                <p class="mb-3">@Localizer["Footer_Description"]</p>
                 <a href="https://www.facebook.com/GoSofia" target="_blank" rel="noopener noreferrer"
-                   class="text-white-50 text-decoration-none footer-social-link" title="Facebook">
-                    <i class="fab fa-facebook-f" style="font-size: 1.2rem;"></i>
+                   class="gs-footer-link" aria-label="Facebook" title="Facebook">
+                    <gs-icon name="facebook" size="20" />
+                </a>
+                <a href="https://www.instagram.com/go_sofia_com?srtk=NzAwMHV0bHlkaXdo" target="_blank" rel="noopener noreferrer"
+                   class="gs-footer-link ms-2" aria-label="Instagram" title="Instagram">
+                    <gs-icon name="instagram" size="20" />
                 </a>
             </div>
 
             <!-- Explore -->
             <div class="col-6 col-md-4">
-                <h6 class="mb-3">@Localizer["Footer_ExploreHeading"]</h6>
+                <h2 class="gs-footer-heading">@Localizer["Footer_ExploreHeading"]</h2>
                 <div class="d-flex flex-column gap-2">
-                    <a asp-area="" asp-controller="Events" asp-action="Index" class="text-white-50 text-decoration-none footer-link">
+                    <a asp-area="" asp-controller="Events" asp-action="Index" class="gs-footer-link">
                         @Localizer["Nav_AllEvents"]
                     </a>
-                    <a asp-area="" asp-controller="Venues" asp-action="Index" class="text-white-50 text-decoration-none footer-link">
+                    <a asp-area="" asp-controller="Venues" asp-action="Index" class="gs-footer-link">
                         @Localizer["Venue_BrowseVenues"]
                     </a>
-                    <a asp-area="" asp-controller="Events" asp-action="Index" asp-route-free="true" class="text-white-50 text-decoration-none footer-link">
+                    <a asp-area="" asp-controller="Events" asp-action="Index" asp-route-free="true" class="gs-footer-link">
                         @Localizer["Home_FreeEvents"]
                     </a>
                 </div>
@@ -226,29 +211,29 @@
 
             <!-- Information -->
             <div class="col-6 col-md-4">
-                <h6 class="mb-3">@Localizer["Footer_InfoHeading"]</h6>
+                <h2 class="gs-footer-heading">@Localizer["Footer_InfoHeading"]</h2>
                 <div class="d-flex flex-column gap-2">
-                    <a asp-controller="Home" asp-action="AboutUs" class="text-white-50 text-decoration-none footer-link">
+                    <a asp-controller="Home" asp-action="AboutUs" class="gs-footer-link">
                         @Localizer["Footer_AboutUs"]
                     </a>
-                    <a asp-controller="Home" asp-action="Privacy" class="text-white-50 text-decoration-none footer-link">
+                    <a asp-controller="Home" asp-action="Privacy" class="gs-footer-link">
                         @Localizer["Footer_PrivacyPolicy"]
                     </a>
-                    <a asp-controller="Contact" asp-action="Index" class="text-white-50 text-decoration-none footer-link">
+                    <a asp-controller="Contact" asp-action="Index" class="gs-footer-link">
                         @Localizer["Footer_ContactUs"]
                     </a>
-                    <a href="mailto:office@go-sofia.com" class="text-white-50 text-decoration-none footer-link">
-                        <i class="fas fa-envelope me-1"></i>office@go-sofia.com
+                    <a href="mailto:office@go-sofia.com" class="gs-footer-link">
+                        <gs-icon name="mail" class="me-1" />office@go-sofia.com
                     </a>
                 </div>
             </div>
         </div>
 
-        <hr class="border-secondary my-3" />
+        <hr class="gs-footer-divider my-3" />
 
         <div class="row align-items-center">
             <div class="col-md-6">
-                <small class="text-white-50">&copy; @DateTime.Now.Year Go Sofia. @Localizer["Footer_Copyright"]</small>
+                <small>&copy; @DateTime.Now.Year Go Sofia. @Localizer["Footer_Copyright"]</small>
             </div>
             <div class="col-md-6 d-flex justify-content-md-end mt-2 mt-md-0">
                 <partial name="_LanguageSwitcher" />
@@ -324,13 +309,13 @@ $(document).ready(function() {
         }
 
         // Group labels are localized on the server (data-label-* attributes on the results container).
-        function renderGroup(label, items, iconClass) {
+        function renderGroup(label, items, iconName) {
             let html = `<div class="mb-1"><small class="text-muted fw-bold">${escapeHtml(label)}</small></div>`;
             items.forEach(item => {
                 html += `
                     <a class="navbar-search-item d-block p-2 rounded hover-bg-surface text-decoration-none text-body"
                        href="${escapeHtml(item.url)}">
-                        <i class="${iconClass} me-2"></i>
+                        ${gsIcon(iconName, 'me-2 gs-text-link')}
                         <strong>${escapeHtml(item.title)}</strong><br>
                         <small class="text-muted">${item.category ? escapeHtml(item.category) + ' • ' : ''}${escapeHtml(item.details)}</small>
                     </a>`;
@@ -350,14 +335,14 @@ $(document).ready(function() {
             let html = '<div class="p-2">';
 
             if (events.length > 0) {
-                html += renderGroup(resultsContainer.data('label-events'), events, 'fas fa-calendar text-primary');
+                html += renderGroup(resultsContainer.data('label-events'), events, 'calendar');
             }
 
             if (venues.length > 0) {
                 if (events.length > 0) {
                     html += '<hr class="my-2">';
                 }
-                html += renderGroup(resultsContainer.data('label-venues'), venues, 'fas fa-map-marker-alt text-primary');
+                html += renderGroup(resultsContainer.data('label-venues'), venues, 'map-pin');
             }
 
             html += '</div>';
@@ -378,81 +363,6 @@ $(document).ready(function() {
     
     .navbar-search-item {
         transition: background-color 0.2s ease;
-    }
-
-    /* Mobile search/hamburger toggle buttons: no lingering focus ring after a mouse/touch click,
-       keep it for keyboard navigation (accessibility) */
-    .navbar-icon-btn:focus {
-        box-shadow: none;
-    }
-
-    .navbar-icon-btn:focus-visible {
-        box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.25);
-    }
-
-    /* Desktop: Login buttons on one line */
-    @@media (min-width: 992px) {
-        .navbar-nav:last-child {
-            flex-direction: row;
-        }
-    }
-
-    /* Mobile/Tablet hamburger menu: group the nav links, theme/language switchers
-       and login section into visually separated blocks */
-    @@media (max-width: 991.98px) {
-        #navbarNav .navbar-nav.me-auto {
-            border-bottom: 1px solid var(--border-color, rgba(0, 0, 0, 0.08));
-            margin-bottom: 0.5rem;
-            padding-bottom: 0.5rem;
-        }
-
-        #navbarNav > .me-3 {
-            margin: 0.5rem 0 !important;
-        }
-
-        #navbarNav > .navbar-nav:last-child {
-            flex-direction: row;
-            gap: 0.5rem;
-            border-top: 1px solid var(--border-color, rgba(0, 0, 0, 0.08));
-            margin-top: 0.5rem;
-            padding-top: 0.5rem;
-        }
-    }
-
-    .footer-link {
-        transition: color 0.2s ease;
-        font-size: 0.9rem;
-    }
-
-    .footer-link:hover {
-        color: #fff !important;
-    }
-
-    .footer-social-link {
-        transition: color 0.2s ease;
-    }
-
-    .footer-social-link:hover {
-        color: #fff !important;
-    }
-
-    .footer-logo {
-        max-height: 40px;
-        height: auto;
-        width: auto;
-        object-fit: contain;
-    }
-
-    /* The footer background is always dark regardless of theme, so the language
-       switcher needs its own contrast instead of the theme-driven btn-outline-secondary */
-    footer .language-switcher .btn-outline-secondary {
-        color: rgba(255, 255, 255, 0.75);
-        border-color: rgba(255, 255, 255, 0.35);
-    }
-
-    footer .language-switcher .btn-outline-secondary:hover {
-        background-color: rgba(255, 255, 255, 0.15);
-        color: #fff;
     }
 
 </style>

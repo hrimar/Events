@@ -18,7 +18,7 @@
                     <partial name="_StatusMessage" for="StatusMessage" />
 
                     <div class="text-center mb-4">
-                        <i class="fas fa-shield-alt fa-3x text-primary mb-3"></i>
+                        <gs-icon name="shield" size="48" class="gs-text-link mb-3" />
                         <h2 class="fw-bold">@ViewData["Title"]</h2>
                         <p class="text-muted">@Localizer["Manage_2FA_Subtitle"]</p>
                     </div>
@@ -32,7 +32,7 @@
                                 if (Model.RecoveryCodesLeft == 0)
                                 {
                                     <div class="alert alert-danger" role="alert">
-                                        <i class="fas fa-exclamation-circle me-2"></i>
+                                        <gs-icon name="circle-alert" class="me-2" />
                                         <strong>@Localizer["Manage_2FA_NoCodes"]</strong>
                                         <p class="mb-0 mt-2">@Localizer["Manage_2FA_NoCodesBeforeLink"] <a asp-page="./GenerateRecoveryCodes">@Localizer["Manage_2FA_GenerateLink"]</a>@Localizer["Manage_2FA_NoCodesAfterLink"]</p>
                                     </div>
@@ -40,7 +40,7 @@
                                 else if (Model.RecoveryCodesLeft == 1)
                                 {
                                     <div class="alert alert-danger" role="alert">
-                                        <i class="fas fa-exclamation-circle me-2"></i>
+                                        <gs-icon name="circle-alert" class="me-2" />
                                         <strong>@Localizer["Manage_2FA_OneCode"]</strong>
                                         <p class="mb-0 mt-2">@Localizer["Manage_2FA_OneCodeBeforeLink"] <a asp-page="./GenerateRecoveryCodes">@Localizer["Manage_2FA_GenerateLink"]</a>@Localizer["Manage_2FA_OneCodeAfterLink"]</p>
                                     </div>
@@ -48,7 +48,7 @@
                                 else if (Model.RecoveryCodesLeft <= 3)
                                 {
                                     <div class="alert alert-warning" role="alert">
-                                        <i class="fas fa-exclamation-triangle me-2"></i>
+                                        <gs-icon name="triangle-alert" class="me-2" />
                                         <strong>@string.Format(Localizer["Manage_2FA_CodesLeft"], Model.RecoveryCodesLeft)</strong>
                                         <p class="mb-0 mt-2">@Localizer["Manage_2FA_CodesLeftBeforeLink"] <a asp-page="./GenerateRecoveryCodes">@Localizer["Manage_2FA_GenerateLink"]</a>@Localizer["Manage_2FA_CodesLeftAfterLink"]</p>
                                     </div>
@@ -57,24 +57,24 @@
                                 <div class="mb-4">
                                     <h5 class="mb-3">@Localizer["Manage_2FA_Status"]</h5>
                                     <div class="alert alert-success" role="alert">
-                                        <i class="fas fa-check-circle me-2"></i>
+                                        <gs-icon name="circle-check" class="me-2" />
                                         <strong>@Localizer["Manage_2FA_Enabled"]</strong>
                                     </div>
                                 </div>
 
                                 <div class="d-grid gap-2 mb-4">
-                                    <a asp-page="./GenerateRecoveryCodes" class="btn btn-warning btn-sm">
-                                        <i class="fas fa-sync me-1"></i>@Localizer["Manage_2FA_ResetCodes"]
+                                    <a asp-page="./GenerateRecoveryCodes" class="gs-btn gs-btn-primary">
+                                        <gs-icon name="refresh-cw" class="me-1" />@Localizer["Manage_2FA_ResetCodes"]
                                     </a>
                                     <a asp-page="./Disable2fa" class="btn btn-danger btn-sm">
-                                        <i class="fas fa-times me-1"></i>@Localizer["Manage_2FA_Disable"]
+                                        <gs-icon name="x" class="me-1" />@Localizer["Manage_2FA_Disable"]
                                     </a>
 
                                     @if (Model.IsMachineRemembered)
                                     {
                                         <form method="post" class="d-grid">
                                             <button type="submit" class="btn btn-outline-secondary btn-sm">
-                                                <i class="fas fa-trash me-1"></i>@Localizer["Manage_2FA_ForgetBrowser"]
+                                                <gs-icon name="trash-2" class="me-1" />@Localizer["Manage_2FA_ForgetBrowser"]
                                             </button>
                                         </form>
                                     }
@@ -83,7 +83,7 @@
                             else
                             {
                                 <div class="alert alert-warning" role="alert">
-                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    <gs-icon name="triangle-alert" class="me-2" />
                                     <strong>@Localizer["Manage_2FA_NotEnabled"]</strong>
                                     <p class="mb-0 mt-2">@Localizer["Manage_2FA_EnableHint"]</p>
                                 </div>
@@ -92,23 +92,23 @@
                             <hr class="my-4">
 
                             <h5 class="mb-3">
-                                <i class="fas fa-key me-2 text-info"></i>@Localizer["Manage_2FA_AuthenticatorApp"]
+                                <gs-icon name="key-round" class="me-2 gs-text-link" />@Localizer["Manage_2FA_AuthenticatorApp"]
                             </h5>
 
                             <div class="d-grid gap-2">
                                 @if (!Model.HasAuthenticator)
                                 {
-                                    <a id="enable-authenticator" asp-page="./EnableAuthenticator" class="btn btn-primary">
-                                        <i class="fas fa-plus me-1"></i>@Localizer["Manage_2FA_AddApp"]
+                                    <a id="enable-authenticator" asp-page="./EnableAuthenticator" class="gs-btn gs-btn-primary">
+                                        <gs-icon name="plus" class="me-1" />@Localizer["Manage_2FA_AddApp"]
                                     </a>
                                 }
                                 else
                                 {
-                                    <a id="enable-authenticator" asp-page="./EnableAuthenticator" class="btn btn-primary">
-                                        <i class="fas fa-cog me-1"></i>@Localizer["Manage_2FA_ConfigureApp"]
+                                    <a id="enable-authenticator" asp-page="./EnableAuthenticator" class="gs-btn gs-btn-primary">
+                                        <gs-icon name="settings" class="me-1" />@Localizer["Manage_2FA_ConfigureApp"]
                                     </a>
                                     <a id="reset-authenticator" asp-page="./ResetAuthenticator" class="btn btn-outline-warning">
-                                        <i class="fas fa-sync me-1"></i>@Localizer["Manage_2FA_ResetAuthenticator"]
+                                        <gs-icon name="refresh-cw" class="me-1" />@Localizer["Manage_2FA_ResetAuthenticator"]
                                     </a>
                                 }
                             </div>
@@ -116,7 +116,7 @@
                         else
                         {
                             <div class="alert alert-danger" role="alert">
-                                <i class="fas fa-info-circle me-2"></i>
+                                <gs-icon name="info" class="me-2" />
                                 <strong>@Localizer["Manage_2FA_PrivacyRequired"]</strong>
                                 <p class="mb-0 mt-2">@Localizer["Manage_2FA_PrivacyHint"]</p>
                             </div>

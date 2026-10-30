@@ -1,4 +1,5 @@
 ﻿using Events.Models.Enums;
+using Events.Services.Time;
 using Events.Web.Localization;
 using Events.Web.Resources;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -12,7 +13,12 @@ public class EventsPageViewModel
 
     // Past events matching the search term, newest first - shown below the upcoming results.
     public List<EventViewModel> PastSearchResults { get; set; } = new();
+
+    // Raw "category" query value (one name or a comma-separated list), used to rebuild links.
     public string? CurrentCategory { get; set; }
+
+    // The individual category names from CurrentCategory, for display.
+    public List<string> SelectedCategories { get; set; } = new();
     public string? SelectedSubCategory { get; set; }
     public bool? IsFreeFilter { get; set; }
     public string? SearchTerm { get; set; }
@@ -20,6 +26,13 @@ public class EventsPageViewModel
     public List<TagViewModel> PopularTags { get; set; } = new(); // Popular tags for tag cloud
     public DateTime? FromDate { get; set; }
     public DateTime? ToDate { get; set; }
+
+    // Named period from the "period" query value (homepage "When" chips); null when explicit dates win.
+    public EventPeriod? Period { get; set; }
+
+    // Set when an empty "next 7 days" list was widened to 30 days (GS-REQ-007, 7.3.4).
+    public string? PeriodFallbackMessage { get; set; }
+
     public string PageTitle { get; set; } = string.Empty;
 
     // Visible H1 ("All events in Sofia", "Music in Sofia"), independent of the SEO <title> (PageTitle).
@@ -35,6 +48,9 @@ public class EventsPageViewModel
     public List<CategoryDisplayItem> LocalizedCategories { get; set; } = new();
     public List<SortOption> LocalizedSortOptions { get; set; } = new();
 
+    // The "When" and "Filters" rows, shared with the period view (GS-REQ-008, 8.2.4, 8.2.5).
+    public EventListFilters Filters { get; set; } = new();
+
     // Sorting functionality
     public string? SortBy { get; set; }
     public string? SortOrder { get; set; } = "asc";
@@ -47,7 +63,7 @@ public class EventsPageViewModel
             {
                 Value = category.ToString(),
                 DisplayName = category.Localize(localizer),
-                IconClass = category.LocalizeIcon()
+                IconName = category.LocalizeIcon()
             })
             .ToList();
 
@@ -59,28 +75,27 @@ public class EventsPageViewModel
             {
                 Value = category.ToString(),
                 DisplayName = GetCategoryDisplayName(category),
-                IconClass = category.LocalizeIcon()
+                IconName = category.LocalizeIcon()
             })
             .ToList();
 
-    // Sort options - localized
+    // Sort options - localized. No "price": prices are not shown on the site (requester's decision); the server
+    // still accepts sortBy=price from older links.
     public static List<SortOption> GetAvailableSortOptions(IStringLocalizer<SharedResources> localizer) => new()
     {
-        new() { Value = "date",        DisplayName = localizer["Sort_Date"],        IconClass = "fas fa-calendar" },
-        new() { Value = "name",        DisplayName = localizer["Sort_Name"],        IconClass = "fas fa-sort-alpha-up" },
-        new() { Value = "price",       DisplayName = localizer["Sort_Price"],       IconClass = "fas fa-dollar-sign" },
-        new() { Value = "category",    DisplayName = localizer["Sort_Category"],    IconClass = "fas fa-tags" },
-        new() { Value = "subcategory", DisplayName = localizer["Sort_Subcategory"], IconClass = "fas fa-layer-group" }
+        new() { Value = "date",        DisplayName = localizer["Sort_Date"],        IconName = "calendar" },
+        new() { Value = "name",        DisplayName = localizer["Sort_Name"],        IconName = "arrow-down-a-z" },
+        new() { Value = "category",    DisplayName = localizer["Sort_Category"],    IconName = "tags" },
+        new() { Value = "subcategory", DisplayName = localizer["Sort_Subcategory"], IconName = "layers" }
     };
 
     // Sort options - static fallback (Bulgarian)
     public static List<SortOption> AvailableSortOptions => new()
     {
-        new() { Value = "date",        DisplayName = "Date",        IconClass = "fas fa-calendar" },
-        new() { Value = "name",        DisplayName = "Name",        IconClass = "fas fa-sort-alpha-up" },
-        new() { Value = "price",       DisplayName = "Price",       IconClass = "fas fa-dollar-sign" },
-        new() { Value = "category",    DisplayName = "Category",    IconClass = "fas fa-tags" },
-        new() { Value = "subcategory", DisplayName = "Subcategory", IconClass = "fas fa-layer-group" }
+        new() { Value = "date",        DisplayName = "Date",        IconName = "calendar" },
+        new() { Value = "name",        DisplayName = "Name",        IconName = "arrow-down-a-z" },
+        new() { Value = "category",    DisplayName = "Category",    IconName = "tags" },
+        new() { Value = "subcategory", DisplayName = "Subcategory", IconName = "layers" }
     };
 
     // Helper properties for UI. Sorting is not a filter, and neither is the default start date (today).
@@ -90,7 +105,11 @@ public class EventsPageViewModel
                                    !string.IsNullOrEmpty(SearchTerm) ||
                                    SelectedTags.Any() || // Include tag filtering
                                    HasCustomFromDate ||
-                                   ToDate.HasValue;
+                                   ToDate.HasValue ||
+                                   Period.HasValue;
+
+    // Query value of the selected period ("next7"), or null.
+    public string? PeriodQueryValue => Period.HasValue ? EventPeriodCalculator.ToQueryValue(Period.Value) : null;
 
     public string FiltersQueryString
     {
@@ -114,11 +133,17 @@ public class EventsPageViewModel
             if (SelectedTags.Any())
                 filters.Add($"tags={Uri.EscapeDataString(string.Join(",", SelectedTags))}");
 
+            if (Filters.IsKidsFilter)
+                filters.Add("kids=true");
+
             if (FromDate.HasValue)
                 filters.Add($"fromDate={FromDate.Value:yyyy-MM-dd}");
 
             if (ToDate.HasValue)
                 filters.Add($"toDate={ToDate.Value:yyyy-MM-dd}");
+
+            if (Period.HasValue)
+                filters.Add($"period={PeriodQueryValue}");
 
             if (!string.IsNullOrEmpty(SortBy))
                 filters.Add($"sortBy={SortBy}");
@@ -167,5 +192,5 @@ public class SortOption
 {
     public string Value { get; set; } = string.Empty;
     public string DisplayName { get; set; } = string.Empty;
-    public string IconClass { get; set; } = string.Empty;
+    public string IconName { get; set; } = string.Empty;
 }

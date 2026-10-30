@@ -41,7 +41,7 @@ public class TagViewModelTests
     {
         var tag = new TagViewModel { Category = EventCategory.Music };
 
-        Assert.Equal("fas fa-music", tag.CategoryIcon);
+        Assert.Equal("music", tag.CategoryIcon);
     }
 
     [Fact]
@@ -49,7 +49,7 @@ public class TagViewModelTests
     {
         var tag = new TagViewModel { Category = null };
 
-        Assert.Equal("fas fa-tag", tag.CategoryIcon);
+        Assert.Equal("tag", tag.CategoryIcon);
     }
 
     [Fact]

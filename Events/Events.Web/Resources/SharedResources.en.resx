@@ -131,6 +131,13 @@
   <data name="Events_HeadingSearch" xml:space="preserve"><value>Search results: “{0}”</value></data>
   <data name="Events_FilterFromDate" xml:space="preserve"><value>From:</value></data>
   <data name="Events_FilterToDate" xml:space="preserve"><value>To:</value></data>
+  <data name="Events_FilterPeriod" xml:space="preserve"><value>Period:</value></data>
+  <data name="Events_PeriodFallbackFiltered" xml:space="preserve"><value>There are no events in “{0}” in the next 7 days. Showing the next 30 days.</value></data>
+  <data name="Events_PeriodFallback" xml:space="preserve"><value>There are no events in the next 7 days. Showing the next 30 days.</value></data>
+  <data name="Period_Today" xml:space="preserve"><value>Today</value></data>
+  <data name="Period_Tomorrow" xml:space="preserve"><value>Tomorrow</value></data>
+  <data name="Period_Weekend" xml:space="preserve"><value>This weekend</value></data>
+  <data name="Period_Next7" xml:space="preserve"><value>7 days</value></data>
   <data name="Events_NoEventsFound" xml:space="preserve"><value>No events found</value></data>
   <data name="Events_NoEventsHint" xml:space="preserve"><value>Try adjusting your search criteria or browse all events.</value></data>
   <data name="Events_ViewAllEvents" xml:space="preserve"><value>View All Events</value></data>
@@ -814,5 +821,84 @@
   <data name="Venue_UpcomingEventsCount" xml:space="preserve"><value>upcoming events</value></data>
   <data name="Venue_NoVenuesFound" xml:space="preserve"><value>No venues found.</value></data>
   <data name="Venue_BrowseVenues" xml:space="preserve"><value>Venues</value></data>
+  <data name="Nav_Free" xml:space="preserve"><value>Free</value></data>
+  <data name="Nav_Menu" xml:space="preserve"><value>Menu</value></data>
+  <data name="Nav_MainNavigation" xml:space="preserve"><value>Main navigation</value></data>
 
+  <data name="Home_HeroWhen" xml:space="preserve"><value>When</value></data>
+  <data name="Home_HeroWhat" xml:space="preserve"><value>What</value></data>
+  <data name="Home_ChipToday" xml:space="preserve"><value>Today · {0}</value></data>
+  <data name="Home_ChipDate" xml:space="preserve"><value>Date</value></data>
+  <data name="Home_ChipDateAria" xml:space="preserve"><value>Pick a day from the calendar</value></data>
+  <data name="Home_FeaturedBadge" xml:space="preserve"><value>Featured</value></data>
+  <data name="Home_FeaturedCarousel" xml:space="preserve"><value>Featured events</value></data>
+  <data name="Home_CarouselPrevious" xml:space="preserve"><value>Previous event</value></data>
+  <data name="Home_CarouselNext" xml:space="preserve"><value>Next event</value></data>
+  <data name="Home_CarouselSlide" xml:space="preserve"><value>Slide {0} of {1}</value></data>
+  <data name="Home_HeroFilters" xml:space="preserve"><value>Quick filters</value></data>
+  <data name="Home_TonightEyebrow" xml:space="preserve"><value>{0} evening</value></data>
+  <data name="Home_TonightHeading" xml:space="preserve"><value>Tonight</value></data>
+  <data name="Home_SectionToday" xml:space="preserve"><value>Today</value></data>
+  <data name="Home_SectionTomorrow" xml:space="preserve"><value>Tomorrow</value></data>
+  <data name="Home_AllForToday" xml:space="preserve"><value>All {0} for today</value></data>
+  <data name="Home_AllForTomorrow" xml:space="preserve"><value>All {0} for tomorrow</value></data>
+  <data name="Home_RowPrevious" xml:space="preserve"><value>Previous events</value></data>
+  <data name="Home_RowNext" xml:space="preserve"><value>Next events</value></data>
+  <data name="Home_WeekendHeading" xml:space="preserve"><value>This weekend</value></data>
+  <data name="Home_WeekendAll" xml:space="preserve"><value>The whole weekend</value></data>
+  <data name="Home_WeekendDays" xml:space="preserve"><value>Weekend days</value></data>
+  <data name="Home_WeekendFilters" xml:space="preserve"><value>Filter</value></data>
+  <data name="Home_WeekendFilterAll" xml:space="preserve"><value>All</value></data>
+  <data name="Home_WeekendFilterMorning" xml:space="preserve"><value>Morning</value></data>
+  <data name="Home_WeekendFilterEvening" xml:space="preserve"><value>Evening</value></data>
+  <data name="Home_WeekendFilterKids" xml:space="preserve"><value>With kids</value></data>
+  <data name="Home_ShowMore" xml:space="preserve"><value>Show more</value></data>
+  <data name="Home_WeekendEmpty" xml:space="preserve"><value>No events match this filter.</value></data>
+  <data name="Home_WeekendSeeDay" xml:space="preserve"><value>See all for the day</value></data>
+  <data name="Home_LoadError" xml:space="preserve"><value>Could not load. Please try again.</value></data>
+  <data name="Home_DontMissEyebrow" xml:space="preserve"><value>Featured events</value></data>
+  <data name="Home_DontMissHeading" xml:space="preserve"><value>Don't miss</value></data>
+  <data name="Home_InterestsHeading" xml:space="preserve"><value>Browse by interest</value></data>
+  <data name="Home_AllCategories" xml:space="preserve"><value>All {0} categories</value></data>
+  <data name="Home_FreeHeading" xml:space="preserve"><value>Free this week</value></data>
+  <data name="Home_FreeAll" xml:space="preserve"><value>All free events</value></data>
+  <data name="Home_VenuesEyebrow" xml:space="preserve"><value>{0} venues in the city</value></data>
+  <data name="Home_VenuesHeading" xml:space="preserve"><value>Venues</value></data>
+  <data name="Home_VenuesAll" xml:space="preserve"><value>All {0} venues</value></data>
+  <data name="Home_PreviousDays" xml:space="preserve"><value>Previous days</value></data>
+  <data name="Home_NextDays" xml:space="preserve"><value>Next days</value></data>
+  <data name="Home_WeeklyViews" xml:space="preserve"><value>Week view</value></data>
+  <data name="Events_PeriodHeadingToday" xml:space="preserve"><value>Today in Sofia</value></data>
+  <data name="Events_PeriodHeadingTomorrow" xml:space="preserve"><value>Tomorrow in Sofia</value></data>
+  <data name="Events_PeriodHeadingWeekend" xml:space="preserve"><value>This weekend in Sofia</value></data>
+  <data name="Events_PeriodHeadingNext7" xml:space="preserve"><value>The next 7 days in Sofia</value></data>
+  <data name="Events_PeriodHeadingDate" xml:space="preserve"><value>Events on {0}</value></data>
+  <data name="Events_PeriodHeadingRange" xml:space="preserve"><value>Events: {0}</value></data>
+  <data name="Events_PeriodHeadingCategory" xml:space="preserve"><value>{0} in Sofia: {1}</value></data>
+  <data name="Events_PeriodPhraseToday" xml:space="preserve"><value>today</value></data>
+  <data name="Events_PeriodPhraseTomorrow" xml:space="preserve"><value>tomorrow</value></data>
+  <data name="Events_PeriodPhraseWeekend" xml:space="preserve"><value>this weekend</value></data>
+  <data name="Events_PeriodPhraseNext7" xml:space="preserve"><value>the next 7 days</value></data>
+  <data name="Events_EventCountOne" xml:space="preserve"><value>1 event</value></data>
+  <data name="Events_EventCount" xml:space="preserve"><value>{0} events</value></data>
+  <data name="Events_FiltersLabel" xml:space="preserve"><value>Filters</value></data>
+  <data name="Events_FilterCategoryLabel" xml:space="preserve"><value>Category: {0}</value></data>
+  <data name="Events_FilterCategoryAll" xml:space="preserve"><value>all</value></data>
+  <data name="Events_FilterSubCategoryLabel" xml:space="preserve"><value>Subcategory: {0}</value></data>
+  <data name="Events_FilterTagsLabel" xml:space="preserve"><value>Tags: {0}</value></data>
+  <data name="Events_FilterFreeOnly" xml:space="preserve"><value>Free only</value></data>
+  <data name="Events_FilterKids" xml:space="preserve"><value>With kids</value></data>
+  <data name="Events_RemoveFilter" xml:space="preserve"><value>Remove the filter “{0}”</value></data>
+  <data name="Events_SortLabel" xml:space="preserve"><value>Sort:</value></data>
+  <data name="Events_SortDateTime" xml:space="preserve"><value>by date and time</value></data>
+  <data name="Events_MoreOnDay" xml:space="preserve"><value>{0} more events {1}</value></data>
+  <data name="Events_MoreOnDayOne" xml:space="preserve"><value>1 more event {0}</value></data>
+  <data name="Events_PeriodSeoName" xml:space="preserve"><value>Events in Sofia {0}</value></data>
+  <data name="Events_PeriodSeoNameCategory" xml:space="preserve"><value>{0} in Sofia {1}</value></data>
+  <data name="Events_PeriodSeoPhraseNext7" xml:space="preserve"><value>in the next 7 days</value></data>
+  <data name="Events_PeriodMetaDescription" xml:space="preserve"><value>{0} – {1} by day and time, with venue and tickets. Updated daily.</value></data>
+  <data name="Events_FilterSearchLabel" xml:space="preserve"><value>Search: “{0}”</value></data>
+  <data name="Venue_NoUpcomingEventsShort" xml:space="preserve"><value>No upcoming events</value></data>
+  <data name="Details_MoreInfo" xml:space="preserve"><value>More info</value></data>
+  <data name="Details_InfoRedirect" xml:space="preserve"><value>You'll be redirected to the official event site</value></data>
 </root>

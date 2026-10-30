@@ -19,6 +19,9 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.WebEncoders;
+using System.Text.Encodings.Web;
+using System.Text.Unicode;
 using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -44,6 +47,13 @@ RegisterServices(builder);
 ConfigureLocalization(builder);
 ConfigureRateLimiting(builder);
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+
+// Razor output keeps Cyrillic (and all other) letters as they are instead of "&#x422;" entities, which made
+// every Bulgarian text 3-4 times larger (GS-REQ-007, 7.11.4: homepage HTML under 200 KB). HTML-sensitive
+// characters (<, >, &, quotes) are still encoded, so this does not weaken XSS protection.
+builder.Services.Configure<WebEncoderOptions>(options =>
+    options.TextEncoderSettings = new TextEncoderSettings(UnicodeRanges.All));
+
 builder.Services.AddRazorPages()
     .AddViewLocalization()
     .AddDataAnnotationsLocalization(options =>
@@ -249,6 +259,7 @@ static void RegisterServices(WebApplicationBuilder builder)
     builder.Services.AddHttpContextAccessor();
     builder.Services.AddScoped<ISiteUrlProvider, SiteUrlProvider>();
     builder.Services.AddSingleton<ContactFormTimingProtector>();
+    builder.Services.AddSingleton<IDeviceClassResolver, DeviceClassResolver>();
     // /health, checked by the App Service platform (health_check_path in Terraform) and available
     // for manual/external monitoring - verifies the app can actually reach the database.
     builder.Services.AddHealthChecks().AddDbContextCheck<EventsDbContext>();
@@ -263,6 +274,7 @@ static void RegisterServices(WebApplicationBuilder builder)
     builder.Services.AddScoped<IVenueRepository, VenueRepository>();
     builder.Services.AddScoped<ISiteContentRepository, SiteContentRepository>();
     builder.Services.AddScoped<IPageSeoMetaRepository, PageSeoMetaRepository>();
+    builder.Services.AddScoped<IHomeQuickFilterRepository, HomeQuickFilterRepository>();
 
     // Services
     // This IMemoryCache is shared - also used below by EventImportBatchCache for the bulk create from .xlsx/.csv admin feature.
@@ -275,9 +287,13 @@ static void RegisterServices(WebApplicationBuilder builder)
     builder.Services.AddScoped<IUserFavoriteEventService, UserFavoriteEventService>();
     builder.Services.AddScoped<IAdminUserService, AdminUserService>();
     builder.Services.AddScoped<IEventFilterOptionsBuilder, EventFilterOptionsBuilder>();
+    builder.Services.AddSingleton<IHomePageCache, HomePageCache>();
+    builder.Services.AddScoped<IHomePageSectionsBuilder, HomePageSectionsBuilder>();
+    builder.Services.AddScoped<IEventsPeriodViewBuilder, EventsPeriodViewBuilder>();
     builder.Services.AddScoped<IVenueService, VenueService>();
     builder.Services.AddScoped<ISiteContentService, SiteContentService>();
     builder.Services.AddScoped<ISeoMetaService, SeoMetaService>();
+    builder.Services.AddScoped<IHomeQuickFilterService, HomeQuickFilterService>();
 
     // Event import (bulk create from .xlsx/.csv)
     builder.Services.AddScoped<IEventImportFileParser, XlsxEventImportParser>();
@@ -371,7 +387,20 @@ static void ConfigureHttpPipeline(WebApplication app)
     });
 
     app.UseHttpsRedirection();
-    app.UseStaticFiles();
+
+    // Browser caching of static files (GS-REQ-007, 7.11; Lighthouse "efficient cache lifetimes"): files linked with
+    // asp-append-version ("?v=hash") get a new URL on every change, so they can be cached for a year; the others
+    // (libraries, icons, images) for a week, so an update reaches visitors within days.
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        OnPrepareResponse = context =>
+        {
+            var isVersioned = context.Context.Request.Query.ContainsKey("v");
+            context.Context.Response.Headers.CacheControl = isVersioned
+                ? "public, max-age=31536000, immutable"
+                : "public, max-age=604800";
+        }
+    });
     app.UseRequestLocalization();
     app.UseRouting();
     app.UseRateLimiter();

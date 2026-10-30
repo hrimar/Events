@@ -1,0 +1,35 @@
+@model Events.Web.Models.HomePageViewModel
+@using Events.Models.Enums
+@using Events.Services.Time
+@using Events.Web.Resources
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<SharedResources> Localizer
+
+@* Stats row of the mobile homepage (the desktop layout replaced it, GS-REQ-007), in the new visual system:
+   three tiles in one row; "today" and "next 7 days" open the period view (GS-REQ-007, 7.2). *@
+<section class="gs-stats" aria-label="@Localizer["Home_TotalEvents"]">
+    <div class="container-grid">
+        <ul class="gs-stats-list">
+            <li>
+                <a asp-action="Index" asp-controller="Events" class="gs-stat">
+                    <span class="gs-stat-number">@Model.TotalEvents</span>
+                    <span class="gs-stat-label">@Localizer["Home_TotalEvents"]</span>
+                </a>
+            </li>
+            <li>
+                <a asp-action="Index" asp-controller="Events" asp-route-period="@EventPeriodCalculator.ToQueryValue(EventPeriod.Today)"
+                   class="gs-stat">
+                    <span class="gs-stat-number">@Model.TodayEvents</span>
+                    <span class="gs-stat-label">@Localizer["Home_TodayEvents"]</span>
+                </a>
+            </li>
+            <li>
+                <a asp-action="Index" asp-controller="Events" asp-route-period="@EventPeriodCalculator.ToQueryValue(EventPeriod.Next7)"
+                   class="gs-stat">
+                    <span class="gs-stat-number">@Model.Next7DaysEvents</span>
+                    <span class="gs-stat-label">@Localizer["Home_Next7Days"]</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+</section>

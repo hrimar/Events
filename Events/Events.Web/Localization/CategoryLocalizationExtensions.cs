@@ -21,20 +21,20 @@ public static class CategoryLocalizationExtensions
 
     public static string LocalizeIcon(this EventCategory category) => category switch
     {
-        EventCategory.Music       => "fas fa-music",
-        EventCategory.Art         => "fas fa-palette",
-        EventCategory.Business    => "fas fa-briefcase",
-        EventCategory.Sports      => "fas fa-running",
-        EventCategory.Theatre     => "fas fa-theater-masks",
-        EventCategory.Cinema      => "fas fa-film",
-        EventCategory.Festivals   => "fas fa-glass-cheers",
-        EventCategory.Exhibitions => "fas fa-images",
-        EventCategory.Conferences => "fas fa-users",
-        EventCategory.Workshops   => "fas fa-tools",
-        EventCategory.Entertainment => "fas fa-cocktail",
-        EventCategory.FoodDrink   => "fas fa-utensils",
-        EventCategory.Markets     => "fas fa-store",
-        _                         => "fas fa-calendar"
+        EventCategory.Music       => "music",
+        EventCategory.Art         => "palette",
+        EventCategory.Business    => "briefcase",
+        EventCategory.Sports      => "trophy",
+        EventCategory.Theatre     => "drama",
+        EventCategory.Cinema      => "film",
+        EventCategory.Festivals   => "party-popper",
+        EventCategory.Exhibitions => "images",
+        EventCategory.Conferences => "users",
+        EventCategory.Workshops   => "wrench",
+        EventCategory.Entertainment => "martini",
+        EventCategory.FoodDrink   => "utensils",
+        EventCategory.Markets     => "store",
+        _                         => "calendar"
     };
 
     // Translates a tag by its English name from the approved master list.

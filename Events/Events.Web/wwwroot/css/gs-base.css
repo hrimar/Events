@@ -1,0 +1,251 @@
+/*
+ * Go Sofia base styles (GS-REQ-006): fonts, typography scale (6.3) and the Bootstrap components
+ * whose colors are compiled into bootstrap.css and cannot be changed through variables alone (6.2).
+ * Requires gs-tokens.css.
+ *
+ * Fluid sizes go from the mobile value at 390px to the desktop value at 1200px:
+ * clamp(MIN, calc(MIN + (MAX - MIN) * (100vw - 390px) / 810), MAX)
+ */
+
+/* Fonts */
+body {
+  font-family: var(--gs-font);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, .h1, .h2 {
+  font-family: var(--gs-font-display);
+  font-weight: 800;
+}
+
+/* Instant theme switch: theme-switcher.js sets this class for one frame while the theme changes */
+.gs-theme-switching,
+.gs-theme-switching *,
+.gs-theme-switching *::before,
+.gs-theme-switching *::after {
+  transition: none !important;
+}
+
+/* Icons (6.4): Lucide line icons from wwwroot/icons/gs-icons.svg, rendered by <gs-icon> */
+.gs-icon {
+  display: inline-block;
+  flex-shrink: 0;
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.125em;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Filled variant (e.g. a saved favorite) */
+.gs-icon.gs-icon-filled {
+  fill: currentColor;
+}
+
+/* Typography scale (6.3) */
+.gs-h1-hero {
+  margin: 0;
+  font-family: var(--gs-font-display);
+  font-weight: 800;
+  font-size: clamp(40px, calc(40px + 36 * (100vw - 390px) / 810), 76px);
+  line-height: 1;
+  letter-spacing: -0.5px;
+  color: var(--gs-ink);
+}
+
+.gs-h1 {
+  font-family: var(--gs-font-display);
+  font-weight: 800;
+  font-size: clamp(34px, calc(34px + 22 * (100vw - 390px) / 810), 56px);
+  line-height: 1.05;
+  color: var(--gs-ink);
+}
+
+.gs-h2 {
+  font-family: var(--gs-font-display);
+  font-weight: 800;
+  font-size: clamp(28px, calc(28px + 16 * (100vw - 390px) / 810), 44px);
+  line-height: 1.05;
+  color: var(--gs-ink);
+}
+
+/* Day heading in the events list */
+.gs-h-day {
+  font-family: var(--gs-font-display);
+  font-weight: 800;
+  font-size: clamp(24px, calc(24px + 10 * (100vw - 390px) / 810), 34px);
+  line-height: 1.1;
+  color: var(--gs-ink);
+}
+
+/* Event title in the hero card */
+.gs-h-hero-card {
+  font-family: var(--gs-font-display);
+  font-weight: 800;
+  font-size: clamp(24px, calc(24px + 8 * (100vw - 390px) / 810), 32px);
+  line-height: 1.1;
+  color: var(--gs-ink);
+}
+
+/* Event title in the "Don't miss" card */
+.gs-h-feature {
+  font-family: var(--gs-font-display);
+  font-weight: 800;
+  font-size: clamp(22px, calc(22px + 6 * (100vw - 390px) / 810), 28px);
+  line-height: 1.1;
+  color: var(--gs-ink);
+}
+
+/* Body text and the hero subtitle */
+.gs-lead {
+  font-size: clamp(16px, calc(16px + 3 * (100vw - 390px) / 810), 19px);
+  font-weight: 400;
+  line-height: 1.45;
+  color: var(--gs-text-2);
+}
+
+/* Venue and other meta information */
+.gs-meta {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--gs-muted);
+}
+
+/* Eyebrow above a section heading, with an accent dot in front */
+.gs-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--gs-muted);
+}
+
+.gs-eyebrow::before {
+  content: "";
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--gs-accent);
+}
+
+/* Line clamping for titles and descriptions */
+.gs-clamp-2,
+.gs-clamp-3 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.gs-clamp-2 {
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.gs-clamp-3 {
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+}
+
+@media (min-width: 1200px) {
+  .gs-h1-hero {
+    line-height: 0.95;
+  }
+
+  .gs-eyebrow {
+    font-size: 14px;
+  }
+}
+
+/*
+ * Bootstrap components with the default Bootstrap blue compiled in (6.2).
+ * They follow the button styles from 6.5: primary = --gs-ink, secondary = --gs-ink outline.
+ */
+.btn-primary {
+  --bs-btn-color: var(--gs-on-ink);
+  --bs-btn-bg: var(--gs-ink);
+  --bs-btn-border-color: var(--gs-ink);
+  --bs-btn-hover-color: var(--gs-on-ink);
+  --bs-btn-hover-bg: var(--gs-text-2);
+  --bs-btn-hover-border-color: var(--gs-text-2);
+  --bs-btn-active-color: var(--gs-on-ink);
+  --bs-btn-active-bg: var(--gs-text-2);
+  --bs-btn-active-border-color: var(--gs-text-2);
+  --bs-btn-disabled-color: var(--gs-on-ink);
+  --bs-btn-disabled-bg: var(--gs-ink);
+  --bs-btn-disabled-border-color: var(--gs-ink);
+  --bs-btn-focus-shadow-rgb: var(--gs-link-rgb);
+}
+
+.btn-outline-primary {
+  --bs-btn-color: var(--gs-ink);
+  --bs-btn-border-color: var(--gs-ink);
+  --bs-btn-hover-color: var(--gs-on-ink);
+  --bs-btn-hover-bg: var(--gs-ink);
+  --bs-btn-hover-border-color: var(--gs-ink);
+  --bs-btn-active-color: var(--gs-on-ink);
+  --bs-btn-active-bg: var(--gs-ink);
+  --bs-btn-active-border-color: var(--gs-ink);
+  --bs-btn-disabled-color: var(--gs-ink);
+  --bs-btn-disabled-border-color: var(--gs-ink);
+  --bs-btn-focus-shadow-rgb: var(--gs-link-rgb);
+  color: var(--gs-ink);
+  border-color: var(--gs-ink);
+}
+
+.btn-outline-primary:hover,
+.btn-outline-primary:active {
+  color: var(--gs-on-ink);
+  background-color: var(--gs-ink);
+  border-color: var(--gs-ink);
+}
+
+.pagination {
+  --bs-pagination-focus-box-shadow: 0 0 0 0.25rem rgba(var(--gs-link-rgb), 0.25);
+  --bs-pagination-active-color: var(--gs-on-ink);
+  --bs-pagination-active-bg: var(--gs-ink);
+  --bs-pagination-active-border-color: var(--gs-ink);
+}
+
+.pagination .page-item.active .page-link {
+  color: var(--gs-on-ink);
+  background-color: var(--gs-ink);
+  border-color: var(--gs-ink);
+}
+
+.dropdown-menu {
+  --bs-dropdown-link-active-color: var(--gs-ink);
+  --bs-dropdown-link-active-bg: var(--gs-tag-bg);
+}
+
+.list-group {
+  --bs-list-group-active-color: var(--gs-on-ink);
+  --bs-list-group-active-bg: var(--gs-ink);
+  --bs-list-group-active-border-color: var(--gs-ink);
+}
+
+.nav-pills {
+  --bs-nav-pills-link-active-color: var(--gs-on-ink);
+  --bs-nav-pills-link-active-bg: var(--gs-ink);
+}
+
+/* A solid brand blue keeps the white check mark readable in both themes */
+.form-check-input:checked {
+  background-color: var(--gs-badge-free);
+  border-color: var(--gs-badge-free);
+}
+
+.form-check-input:focus,
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--gs-link);
+  box-shadow: 0 0 0 0.25rem rgba(var(--gs-link-rgb), 0.25);
+}

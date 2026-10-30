@@ -8,56 +8,73 @@ using Events.Web.Infrastructure;
 using Events.Web.Localization;
 using Events.Web.Models;
 using Events.Web.Resources;
+using Events.Web.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Localization;
+using Microsoft.Net.Http.Headers;
 
 namespace Events.Web.Controllers
 {
     public class HomeController : Controller
     {
+        // Homepage cache section of the mobile "This week" block (see IHomePageCache).
+        private const string WeeklyEventsCacheSection = "WeeklyEvents";
+
+        // Upper bound for "Show more" in "This weekend": a public endpoint must not page without limit.
+        private const int MaxWeekendSkip = 1000;
+
         private readonly ILogger<HomeController> _logger;
         private readonly IEventService _eventService;
-        private readonly ITagService _tagService;
         private readonly IUserFavoriteEventService _favoriteEventService;
         private readonly ISiteContentService _siteContentService;
         private readonly ISeoMetaService _seoMetaService;
         private readonly IStringLocalizer<SharedResources> _localizer;
         private readonly ISofiaClock _clock;
+        private readonly IDeviceClassResolver _deviceClassResolver;
+        private readonly IHomePageCache _homePageCache;
+        private readonly IHomePageSectionsBuilder _sectionsBuilder;
 
         public HomeController(
             ILogger<HomeController> logger,
             IEventService eventService,
-            ITagService tagService,
             IUserFavoriteEventService favoriteEventService,
             ISiteContentService siteContentService,
             ISeoMetaService seoMetaService,
             IStringLocalizer<SharedResources> localizer,
-            ISofiaClock clock)
+            ISofiaClock clock,
+            IDeviceClassResolver deviceClassResolver,
+            IHomePageCache homePageCache,
+            IHomePageSectionsBuilder sectionsBuilder)
         {
             _logger = logger;
             _eventService = eventService;
-            _tagService = tagService;
             _favoriteEventService = favoriteEventService;
             _siteContentService = siteContentService;
             _seoMetaService = seoMetaService;
             _localizer = localizer;
             _clock = clock;
+            _deviceClassResolver = deviceClassResolver;
+            _homePageCache = homePageCache;
+            _sectionsBuilder = sectionsBuilder;
         }
 
         public async Task<IActionResult> Index()
         {
+            // Phones get the mobile layout, everything else the desktop one; desktop-only sections
+            // are not rendered for phones at all. The HTML differs per device class, hence Vary.
+            var deviceClass = _deviceClassResolver.Resolve(Request);
+            Response.Headers.Append(HeaderNames.Vary, DeviceClassResolver.VaryHeaderValue);
+
             try
             {
                 var today = _clock.Today;
                 var dayWindowEnd = today.AddDays(5);
 
                 var localizedCategories = EventsPageViewModel.GetAvailableCategories(_localizer);
-                var weeklyEvents = await BuildWeeklyEventsViewModelAsync(today, dayWindowEnd, localizedCategories);
 
                 // Stats
-                var totalEvents = await _eventService.GetEventsCountInRangeAsync(today, DateTime.MaxValue, EventStatus.Published);
-                var todayEvents = await _eventService.GetEventsCountInRangeAsync(today, today, EventStatus.Published);
-                var next7DaysEvents = await _eventService.GetEventsCountInRangeAsync(today, today.AddDays(6), EventStatus.Published);
+                var eventCounts = await _sectionsBuilder.GetEventCountsAsync();
 
                 // Saved + Recommended (authenticated users only)
                 var savedEvents = new List<EventViewModel>();
@@ -71,6 +88,16 @@ namespace Events.Web.Controllers
                         .OrderByDescending(e => e.Date)
                         .ToList();
                 }
+
+                // "This week" belongs to the mobile layout; the desktop layout replaced it (GS-REQ-007) and only
+                // needs its events for the recommendations of users with saved events.
+                // Contains localized category names (By category tab), so it is cached per UI culture.
+                var weeklyEvents = deviceClass == DeviceClass.Mobile || savedEvents.Any()
+                    ? await _homePageCache.GetOrCreateAsync(
+                        HomePageCache.ForCulture(WeeklyEventsCacheSection),
+                        HomePageCache.EventsDuration,
+                        () => BuildWeeklyEventsViewModelAsync(today, dayWindowEnd, localizedCategories))
+                    : WeeklyEventsViewModel.Empty(today);
 
                 var recommendedEvents = new List<EventViewModel>();
                 if (savedEvents.Any())
@@ -95,9 +122,6 @@ namespace Events.Web.Controllers
                         .ToList();
                 }
 
-                var popularTags = await GetPopularTagsAsync();
-
-                var isEnglish = CultureHelper.IsEnglish();
                 var siteContent = await _siteContentService.GetAsync();
 
                 // Default title until an admin configures PageSeoMeta for "home" - must be
@@ -109,8 +133,16 @@ namespace Events.Web.Controllers
 
                 var viewModel = new HomePageViewModel
                 {
-                    HeroTitle = siteContent.LocalizedHeroTitle(isEnglish),
-                    HeroSubtitle = siteContent.LocalizedHeroSubtitle(isEnglish),
+                    DeviceClass = deviceClass,
+
+                    // Desktop-only sections are not built for phones at all.
+                    Hero = deviceClass == DeviceClass.Desktop ? await _sectionsBuilder.BuildHeroAsync(siteContent) : null,
+                    Tonight = deviceClass == DeviceClass.Desktop ? await _sectionsBuilder.BuildTonightAsync() : null,
+                    Weekend = deviceClass == DeviceClass.Desktop ? await _sectionsBuilder.BuildWeekendAsync() : null,
+                    DontMiss = deviceClass == DeviceClass.Desktop ? await _sectionsBuilder.BuildDontMissAsync() : new(),
+                    Interests = deviceClass == DeviceClass.Desktop ? await _sectionsBuilder.BuildInterestTilesAsync() : new(),
+                    FreeThisWeek = deviceClass == DeviceClass.Desktop ? await _sectionsBuilder.BuildFreeThisWeekAsync() : null,
+                    Venues = deviceClass == DeviceClass.Desktop ? await _sectionsBuilder.BuildVenuesAsync() : null,
                     WeeklyEvents = weeklyEvents,
                     SavedSection = EventsSectionViewModel.CreateSavedSection(
                         events: savedEvents,
@@ -120,11 +152,9 @@ namespace Events.Web.Controllers
                         events: recommendedEvents,
                         categories: localizedCategories,
                         title: _localizer["Home_RecommendedEvents"]),
-                    TotalEvents = totalEvents,
-                    TodayEvents = todayEvents,
-                    Next7DaysEvents = next7DaysEvents,
-                    PopularTags = popularTags.Take(15).ToList(),
-                    LocalizedCategories = localizedCategories
+                    TotalEvents = eventCounts.Total,
+                    TodayEvents = eventCounts.Today,
+                    Next7DaysEvents = eventCounts.Next7Days
                 };
 
                 return View(viewModel);
@@ -132,11 +162,34 @@ namespace Events.Web.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error loading home page");
-                return View(new HomePageViewModel { WeeklyEvents = WeeklyEventsViewModel.Empty(_clock.Today) });
+                return View(new HomePageViewModel { DeviceClass = deviceClass, WeeklyEvents = WeeklyEventsViewModel.Empty(_clock.Today) });
+            }
+        }
+
+        // Cards of "This weekend" for a day tab, a filter chip or "Show more" (GS-REQ-007, 7.6.4 and 7.6.5),
+        // loaded in place by home.js. day must be a day of this weekend; filter: all, morning, evening, kids.
+        [HttpGet]
+        [EnableRateLimiting("events")]
+        [NoIndex]
+        public async Task<IActionResult> WeekendEvents(DateTime day, string? filter = null, int skip = 0)
+        {
+            try
+            {
+                if (skip < 0 || skip > MaxWeekendSkip)
+                    return BadRequest();
+
+                var page = await _sectionsBuilder.GetWeekendPageAsync(day, HomeWeekendSelector.ParseFilter(filter), skip);
+                return page == null ? NotFound() : PartialView("_HomeWeekendCards", page);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading weekend events for {Day}, filter {Filter}, skip {Skip}", day, filter, skip);
+                return StatusCode(StatusCodes.Status500InternalServerError);
             }
         }
 
         [HttpGet]
+        [NoIndex]
         public async Task<IActionResult> WeeklyEventsPartial(DateTime? fromDate = null)
         {
             try
@@ -204,7 +257,7 @@ namespace Events.Web.Controllers
                 {
                     CategoryKey = cat.Value,
                     DisplayName = cat.DisplayName,
-                    IconClass = cat.IconClass,
+                    IconName = cat.IconName,
                     Events = windowEvents
                         .Where(e => string.Equals(e.CategoryName, cat.Value, StringComparison.OrdinalIgnoreCase))
                         .ToList()
@@ -234,31 +287,6 @@ namespace Events.Web.Controllers
                 FromDate = from,
                 ToDate = to
             };
-        }
-
-        // Get popular tags for homepage display
-        private async Task<List<TagViewModel>> GetPopularTagsAsync()
-        {
-            try
-            {
-                var tags = await _tagService.GetAllTagsAsync();
-
-                return tags
-                    .Where(t => t.EventTags.Any()) // Only tags with events
-                    .Select(t => new TagViewModel
-                    {
-                        Name = t.Name,
-                        EventCount = t.EventTags.Count,
-                        Category = t.Category
-                    })
-                    .OrderByDescending(t => t.EventCount)
-                    .ToList();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting popular tags for homepage");
-                return new List<TagViewModel>();
-            }
         }
 
         public async Task<IActionResult> AboutUs()

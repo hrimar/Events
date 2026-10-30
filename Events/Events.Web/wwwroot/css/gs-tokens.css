@@ -1,0 +1,143 @@
+/*
+ * Go Sofia design tokens (GS-REQ-006, 6.1 and 6.2).
+ * Components use only these variables, never raw color values.
+ * The theme is switched with the data-theme attribute on <html> (see _Layout.cshtml and theme-switcher.js).
+ */
+
+/* Light theme (default) */
+:root {
+  --gs-bg: #FFFFFF;
+  --gs-bg-alt: #F4F6F9;
+  --gs-surface: #FFFFFF;
+  --gs-ink: #15213A;
+  --gs-text-2: #3E495E;
+  --gs-muted: #5A6478;
+  --gs-line: #E3E7ED;
+  --gs-line-strong: #D5DBE3;
+  --gs-accent: #F28A1E;
+  --gs-on-accent: #15213A;
+  --gs-link: #173C68;
+  --gs-badge-free: #173C68;
+  --gs-tag-bg: #E6EEF7;
+  --gs-tag-text: #173C68;
+  --gs-footer-bg: #15213A;
+  --gs-media-bg: #1B2436;
+
+  /* Text on a --gs-ink background (primary button, category tile band). White in light theme. */
+  --gs-on-ink: #FFFFFF;
+
+  /* Badges on the card image (Appendix B): the same in both themes, because they sit on a photo */
+  --gs-badge-time-bg: #FFFFFF;
+  --gs-badge-time-text: #15213A;
+  --gs-on-badge-free: #FFFFFF;
+  --gs-badge-past-bg: #5A6478;
+  --gs-shadow-card: 0 12px 28px rgba(21, 33, 58, 0.20);
+
+  /* Footer text: the footer background is dark in both themes */
+  --gs-footer-text: #C9D3E3;
+  --gs-footer-heading: #FFFFFF;
+  --gs-footer-line: rgba(255, 255, 255, 0.14);
+
+  --gs-radius-card: 14px;
+  --gs-font: "Sofia Sans", system-ui, sans-serif;
+  --gs-font-display: "Sofia Sans Condensed", "Sofia Sans", sans-serif;
+
+  /* RGB triplets for the Bootstrap variables that need them */
+  --gs-bg-rgb: 255, 255, 255;
+  --gs-ink-rgb: 21, 33, 58;
+  --gs-link-rgb: 23, 60, 104;
+}
+
+/* Dark theme */
+:root[data-theme="dark"] {
+  --gs-bg: #0F1626;
+  --gs-bg-alt: #151E31;
+  --gs-surface: #182238;
+  --gs-ink: #EEF2F8;
+  --gs-text-2: #C9D3E3;
+  --gs-muted: #A9B5C9;
+  --gs-line: #2A3650;
+  --gs-line-strong: #34425F;
+  --gs-link: #6FB0E6;
+  --gs-badge-free: #2F6FB0;
+  --gs-tag-bg: #22304A;
+  --gs-tag-text: #C9D3E3;
+  --gs-footer-bg: #0B111E;
+
+  /* White text on the light --gs-ink of the dark theme is unreadable, so the page background is used */
+  --gs-on-ink: #0F1626;
+
+  --gs-bg-rgb: 15, 22, 38;
+  --gs-ink-rgb: 238, 242, 248;
+  --gs-link-rgb: 111, 176, 230;
+}
+
+/*
+ * Bootstrap 5.3 redirection (6.2).
+ * The extra :root[data-bs-theme] selector outranks Bootstrap's own [data-bs-theme=dark] block,
+ * so the values below win regardless of the stylesheet order.
+ */
+:root,
+:root[data-bs-theme] {
+  --bs-body-bg: var(--gs-bg);
+  --bs-body-bg-rgb: var(--gs-bg-rgb);
+  --bs-body-color: var(--gs-ink);
+  --bs-body-color-rgb: var(--gs-ink-rgb);
+  --bs-body-font-family: var(--gs-font);
+  --bs-body-line-height: 1.45;
+  --bs-emphasis-color: var(--gs-ink);
+  --bs-emphasis-color-rgb: var(--gs-ink-rgb);
+  --bs-secondary-color: var(--gs-muted);
+  --bs-secondary-bg: var(--gs-bg-alt);
+  --bs-tertiary-bg: var(--gs-bg-alt);
+  --bs-border-color: var(--gs-line);
+
+  --bs-link-color: var(--gs-link);
+  --bs-link-color-rgb: var(--gs-link-rgb);
+  --bs-link-hover-color: var(--gs-ink);
+  --bs-link-hover-color-rgb: var(--gs-ink-rgb);
+
+  --bs-primary: var(--gs-link);
+  --bs-primary-rgb: var(--gs-link-rgb);
+  --bs-primary-text-emphasis: var(--gs-link);
+  --bs-primary-bg-subtle: var(--gs-tag-bg);
+  --bs-primary-border-subtle: var(--gs-line-strong);
+  --bs-focus-ring-color: rgba(var(--gs-link-rgb), 0.25);
+}
+
+/*
+ * Legacy theme variables (themes/light-theme.css, themes/dark-theme.css) redirected to the tokens,
+ * so the existing styles in events-portal.css follow the new palette until they are replaced.
+ * The status colors (success, danger, warning, info), shadows and --hover-bg are intentionally kept.
+ */
+:root[data-theme] {
+  --primary-color: var(--gs-link);
+  --secondary-color: var(--gs-muted);
+
+  --body-bg: var(--gs-bg);
+  --content-bg: var(--gs-bg);
+  --sidebar-bg: var(--gs-bg-alt);
+  --card-bg: var(--gs-surface);
+  --navbar-bg: var(--gs-surface);
+  --footer-bg: var(--gs-footer-bg);
+  --dropdown-bg: var(--gs-surface);
+
+  --text-primary: var(--gs-ink);
+  --text-secondary: var(--gs-text-2);
+  --text-muted: var(--gs-muted);
+
+  --border-color: var(--gs-line);
+  --border-light: var(--gs-line);
+  --border-dark: var(--gs-line-strong);
+
+  --event-card-bg: var(--gs-surface);
+  --event-price-free-bg: var(--gs-badge-free);
+
+  --input-bg: var(--gs-surface);
+  --input-border: var(--gs-line-strong);
+  --input-focus-border: var(--gs-link);
+  --input-focus-shadow: 0 0 0 0.25rem rgba(var(--gs-link-rgb), 0.25);
+
+  --btn-primary-bg: var(--gs-ink);
+  --btn-outline-border: var(--gs-ink);
+}

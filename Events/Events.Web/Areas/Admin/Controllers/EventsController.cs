@@ -2,6 +2,7 @@ using System;
 using Events.Models.Entities;
 using Events.Models.Enums;
 using Events.Services.Interfaces;
+using Events.Services.Time;
 using Events.Data.Repositories.Interfaces;
 using Events.Models.Queries;
 using Events.Web.Models;
@@ -25,6 +26,7 @@ public class EventsController : Controller
     private readonly ITagService _tagService;
     private readonly IImageUploadService _imageUploadService;
     private readonly IEventFilterOptionsBuilder _eventFilterOptionsBuilder;
+    private readonly ISofiaClock _clock;
 
     public EventsController(
         ILogger<EventsController> logger,
@@ -33,7 +35,8 @@ public class EventsController : Controller
         ISubCategoryRepository subCategoryRepository,
         ITagService tagService,
         IImageUploadService imageUploadService,
-        IEventFilterOptionsBuilder eventFilterOptionsBuilder)
+        IEventFilterOptionsBuilder eventFilterOptionsBuilder,
+        ISofiaClock clock)
     {
         _logger = logger;
         _eventService = eventService;
@@ -42,6 +45,7 @@ public class EventsController : Controller
         _tagService = tagService;
         _imageUploadService = imageUploadService;
         _eventFilterOptionsBuilder = eventFilterOptionsBuilder;
+        _clock = clock;
     }
 
     // GET: Admin/Events
@@ -89,8 +93,19 @@ public class EventsController : Controller
         {
             var allEvents = await _eventService.GetAllEventsAsync();
 
-            // Get featured events
-            var featuredEvents = allEvents.Where(e => e.IsFeatured).OrderByDescending(e => e.UpdatedAt).ToList();
+            // Featured events by date, as on the homepage (GS-REQ-007, owner's decision of 26.10.2026): upcoming first,
+            // nearest first (the first 5 are in the carousel, the others in "Don't miss"), then past ones, most recent first.
+            var today = _clock.Today;
+            var allFeatured = allEvents.Where(e => e.IsFeatured).ToList();
+            var upcomingFeatured = allFeatured
+                .Where(e => e.Date.Date >= today)
+                .OrderBy(e => e.Date)
+                .ThenBy(e => e.StartTime);
+            var pastFeatured = allFeatured
+                .Where(e => e.Date.Date < today)
+                .OrderByDescending(e => e.Date)
+                .ThenByDescending(e => e.StartTime);
+            var featuredEvents = upcomingFeatured.Concat(pastFeatured).ToList();
 
             // Get available events for featuring
             IEnumerable<Event> availableEvents;

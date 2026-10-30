@@ -19,6 +19,43 @@ public class VenueRepositoryTests : IDisposable
     public void Dispose() => _context.Dispose();
 
     [Fact]
+    public async Task GetTopVenuesWithPhotoAsync_CountsPeriodOnly_AndSkipsVenuesWithoutPhoto()
+    {
+        var ndk = CreateVenue(1, "NDK", "ndk");
+        ndk.PhotoUrl = "https://img/ndk.jpg";
+        var theatre = CreateVenue(2, "Theatre", "theatre");
+        theatre.PhotoUrl = "https://img/theatre.jpg";
+        var noPhoto = CreateVenue(3, "No photo", "no-photo");
+        _context.Categories.Add(_musicCategory);
+        _context.CanonicalVenues.AddRange(ndk, theatre, noPhoto);
+
+        Event CreateEvent(int id, int venueId, DateTime date, EventStatus status = EventStatus.Published) => new()
+        {
+            Id = id, Name = $"Event {id}", Date = date, City = "Sofia", Location = "x",
+            CategoryId = _musicCategory.Id, CanonicalVenueId = venueId, Status = status
+        };
+
+        _context.Events.AddRange(
+            CreateEvent(1, ndk.Id, new DateTime(2026, 6, 2)),
+            CreateEvent(2, theatre.Id, new DateTime(2026, 6, 2)),
+            CreateEvent(3, theatre.Id, new DateTime(2026, 6, 3)),
+            CreateEvent(4, ndk.Id, new DateTime(2026, 8, 1)),
+            CreateEvent(5, ndk.Id, new DateTime(2026, 8, 2)),
+            CreateEvent(6, theatre.Id, new DateTime(2026, 6, 4), EventStatus.Draft),
+            CreateEvent(7, noPhoto.Id, new DateTime(2026, 6, 2)),
+            CreateEvent(8, noPhoto.Id, new DateTime(2026, 6, 3)),
+            CreateEvent(9, noPhoto.Id, new DateTime(2026, 6, 4)));
+        await _context.SaveChangesAsync();
+
+        var result = await CreateVenueRepository().GetTopVenuesWithPhotoAsync(
+            new DateTime(2026, 6, 1), new DateTime(2026, 6, 30), count: 4);
+
+        Assert.Equal(new[] { "Theatre", "NDK" }, result.Select(v => v.Name));
+        Assert.Equal(new[] { 2, 1 }, result.Select(v => v.UpcomingEventsCount));
+        Assert.Equal(3, await CreateVenueRepository().CountAsync());
+    }
+
+    [Fact]
     public async Task GetByIdAsync_IncludesAliases()
     {
         var venue = CreateVenue(1, "NDK", "ndk");

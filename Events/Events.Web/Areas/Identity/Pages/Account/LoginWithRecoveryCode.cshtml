@@ -10,13 +10,13 @@
             <div class="card shadow-sm border-0">
                 <div class="card-body p-5">
                     <div class="text-center mb-4">
-                        <i class="fas fa-key fa-3x text-warning mb-3"></i>
+                        <gs-icon name="key-round" size="48" class="text-warning mb-3" />
                         <h2 class="fw-bold">@ViewData["Title"]</h2>
                         <p class="text-muted">@Localizer["LoginRecovery_Subtitle"]</p>
                     </div>
 
                     <div class="alert alert-info" role="alert">
-                        <i class="fas fa-info-circle me-2"></i>
+                        <gs-icon name="info" class="me-2" />
                         @Localizer["LoginRecovery_Alert"]
                     </div>
 
@@ -25,7 +25,7 @@
                         
                         <div class="mb-4">
                             <label asp-for="Input.RecoveryCode" class="form-label">
-                                <i class="fas fa-lock me-2"></i>@Localizer["LoginRecovery_Code"]
+                                <gs-icon name="lock" class="me-2" />@Localizer["LoginRecovery_Code"]
                             </label>
                             <input asp-for="Input.RecoveryCode" class="form-control form-control-lg" autocomplete="off" placeholder="@Localizer["LoginRecovery_Placeholder"]" />
                             <span asp-validation-for="Input.RecoveryCode" class="text-danger"></span>
@@ -35,8 +35,8 @@
                         </div>
                         
                         <div class="d-grid mb-3">
-                            <button type="submit" class="btn btn-primary btn-lg">
-                                <i class="fas fa-sign-in-alt me-2"></i>@Localizer["Login_Submit"]
+                            <button type="submit" class="gs-btn gs-btn-primary">
+                                <gs-icon name="log-in" class="me-2" />@Localizer["Login_Submit"]
                             </button>
                         </div>
 
@@ -44,7 +44,7 @@
 
                         <div class="text-center">
                             <a asp-page="./Login" class="text-decoration-none">
-                                <i class="fas fa-arrow-left me-1"></i>@Localizer["Account_BackToLogin"]
+                                <gs-icon name="arrow-left" class="me-1" />@Localizer["Account_BackToLogin"]
                             </a>
                         </div>
                     </form>

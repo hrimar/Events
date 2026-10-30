@@ -1,6 +1,7 @@
 ﻿using System;
 using Events.Data.Context;
 using Events.Data.Repositories.Interfaces;
+using Events.Models.DTOs;
 using Events.Models.Entities;
 using Events.Models.Enums;
 using Events.Models.Queries;
@@ -71,26 +72,81 @@ public class EventRepository : IEventRepository
             .AsQueryable();
         //var queryString = query.ToQueryString(); // TODO: Use this generated SQL and analize it in via MSSMS Actual Execution Plan!!!
 
+        query = ApplyPublicFilters(query, eventQuery);
+
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        var orderedQuery = ApplySorting(query, eventQuery.SortBy, eventQuery.SortOrder);
+
+        var events = await orderedQuery
+            .Skip((eventQuery.Page - 1) * eventQuery.PageSize)
+            .Take(eventQuery.PageSize)
+            .ToListAsync(cancellationToken);
+
+        return (events, totalCount);
+    }
+
+    public async Task<List<EventListingKeyDto>> GetListingKeysAsync(PublicEventQuery eventQuery, int maxCount,
+        CancellationToken cancellationToken = default)
+    {
+        return await ApplyPublicFilters(_context.Events.AsNoTracking(), eventQuery)
+            .OrderBy(e => e.Date)
+            .ThenBy(e => e.Id)
+            .Take(maxCount)
+            .Select(e => new EventListingKeyDto(e.Id, e.Date, e.StartTime, e.Name))
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<List<Event>> GetByIdsAsync(IReadOnlyCollection<int> ids, CancellationToken cancellationToken = default)
+    {
+        if (ids.Count == 0)
+        {
+            return new List<Event>();
+        }
+
+        var idList = ids.Distinct().ToList();
+        return await _context.Events
+            .AsNoTracking()
+            .Include(e => e.Category)
+            .Include(e => e.SubCategory)
+            .Include(e => e.CanonicalVenue)
+            .Include(e => e.EventTags)
+            .ThenInclude(et => et.Tag)
+            .Where(e => idList.Contains(e.Id))
+            .ToListAsync(cancellationToken);
+    }
+
+    // Status, category/subcategory, free, date range, tags and search filters shared by the public listings.
+    private static IQueryable<Event> ApplyPublicFilters(IQueryable<Event> query, PublicEventQuery eventQuery)
+    {
         if (eventQuery.Status.HasValue)
         {
             var status = eventQuery.Status.Value;
             query = query.Where(e => e.Status == status);
         }
 
-        // Priority: subCategoryName > categoryName
+        // Priority: subCategoryName > categoryNames
         var subCategoryName = eventQuery.SubCategoryName;
-        var categoryName = eventQuery.CategoryName;
+        var categoryNames = eventQuery.CategoryNames.Where(c => !string.IsNullOrWhiteSpace(c)).ToList();
         if (!string.IsNullOrEmpty(subCategoryName))
         {
             query = query.Where(e =>
                 e.SubCategory != null &&
                 e.SubCategory.Name == subCategoryName);
         }
-        else if (!string.IsNullOrEmpty(categoryName))
+        else if (categoryNames.Count == 1)
         {
+            // Single category keeps the plain equality predicate (same SQL as before).
+            var categoryName = categoryNames[0];
             query = query.Where(e =>
                 e.Category != null &&
                 e.Category.Name == categoryName);
+        }
+        else if (categoryNames.Count > 1)
+        {
+            query = query.Where(e =>
+                e.Category != null &&
+                categoryNames.Contains(e.Category.Name));
         }
 
         if (eventQuery.IsFree.HasValue)
@@ -121,21 +177,18 @@ public class EventRepository : IEventRepository
             query = query.Where(e => e.EventTags.Any(et => et.Tag != null && tagList.Contains(et.Tag.Name)));
         }
 
+        var requiredTagList = eventQuery.RequiredTagNames.Where(t => !string.IsNullOrWhiteSpace(t)).ToList();
+        if (requiredTagList.Count > 0)
+        {
+            query = query.Where(e => e.EventTags.Any(et => et.Tag != null && requiredTagList.Contains(et.Tag.Name)));
+        }
+
         if (!string.IsNullOrWhiteSpace(eventQuery.Search))
         {
             query = ApplySearch(query, eventQuery.Search);
         }
 
-        var totalCount = await query.CountAsync(cancellationToken);
-
-        var orderedQuery = ApplySorting(query, eventQuery.SortBy, eventQuery.SortOrder);
-
-        var events = await orderedQuery
-            .Skip((eventQuery.Page - 1) * eventQuery.PageSize)
-            .Take(eventQuery.PageSize)
-            .ToListAsync(cancellationToken);
-
-        return (events, totalCount);
+        return query;
     }
 
     public async Task<(IEnumerable<Event> Events, int TotalCount)> GetFilteredEventsAsync(EventListCriteria criteria)
@@ -273,8 +326,65 @@ public class EventRepository : IEventRepository
             // comparing against "now" would drop today's events hours before their actual start time.
             .Where(e => e.IsFeatured && e.Status == EventStatus.Published && e.Date >= fromDate.Date)
             .OrderBy(e => e.Date)
+            .ThenBy(e => e.StartTime)
             .Take(count)
             .ToListAsync();
+    }
+
+    public async Task<List<CategoryUpcomingSummaryDto>> GetTopUpcomingCategoriesAsync(
+        DateTime fromDate, DateTime toDate, int count, string excludedImageUrl)
+    {
+        var from = fromDate.Date;
+        var exclusiveEnd = toDate.Date.AddDays(1);
+
+        // Counted in SQL (GROUP BY), only the top categories come back.
+        var topCounts = await _context.Events
+            .AsNoTracking()
+            .Where(e => e.Status == EventStatus.Published && e.Date >= from && e.Date < exclusiveEnd)
+            .Where(e => e.Category.CategoryType != EventCategory.Undefined)
+            .GroupBy(e => e.CategoryId)
+            .Select(g => new { CategoryId = g.Key, Count = g.Count() })
+            .OrderByDescending(g => g.Count)
+            .Take(count)
+            .ToListAsync();
+
+        var categoryIds = topCounts.Select(c => c.CategoryId).ToList();
+
+        // One row per category; the nearest event image comes from a correlated subquery (no events are loaded).
+        var categories = await _context.Categories
+            .AsNoTracking()
+            .Where(c => categoryIds.Contains(c.Id))
+            .Select(c => new
+            {
+                c.Id,
+                c.Name,
+                c.CategoryType,
+                c.DefaultImageUrl,
+                NearestEventImageUrl = c.Events
+                    .Where(e => e.Status == EventStatus.Published && e.Date >= from
+                        && e.ImageUrl != null && e.ImageUrl != "" && e.ImageUrl != excludedImageUrl)
+                    .OrderBy(e => e.Date)
+                    .ThenBy(e => e.StartTime)
+                    .Select(e => e.ImageUrl)
+                    .FirstOrDefault()
+            })
+            .ToDictionaryAsync(c => c.Id);
+
+        return topCounts
+            .Where(c => categories.ContainsKey(c.CategoryId))
+            .Select(c =>
+            {
+                var category = categories[c.CategoryId];
+                return new CategoryUpcomingSummaryDto
+                {
+                    CategoryType = category.CategoryType,
+                    Name = category.Name,
+                    UpcomingEventsCount = c.Count,
+                    DefaultImageUrl = category.DefaultImageUrl,
+                    NearestEventImageUrl = category.NearestEventImageUrl
+                };
+            })
+            .ToList();
     }
 
     public async Task<IEnumerable<Event>> GetUpcomingEventsAsync(DateTime fromDate, int count = 10)

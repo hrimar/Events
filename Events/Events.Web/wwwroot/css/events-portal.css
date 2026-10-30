@@ -71,17 +71,6 @@
         transition: color 0.2s ease;
     }
 
-.event-date {
-    color: var(--text-secondary, #666);
-    font-size: 0.9rem;
-    margin-bottom: 4px;
-}
-
-.event-venue {
-    color: var(--text-muted, #888);
-    font-size: 0.85rem;
-}
-
 .event-tags .badge {
     font-size: 0.7rem;
     margin-bottom: 2px;
@@ -95,14 +84,14 @@
 
 /* Pagination styles */
 .pagination .page-link {
-    color: #007bff;
+    color: var(--primary-color);
     border-radius: 6px;
     margin: 0 2px;
 }
 
 .pagination .page-item.active .page-link {
-    background-color: #007bff;
-    border-color: #007bff;
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
 }
 
 /* Mobile optimizations */
@@ -222,94 +211,6 @@
     transition: transform 0.2s ease;
 }
 
-/* Related events list */
-.related-event-item {
-    transition: background-color 0.2s ease;
-}
-
-    .related-event-item:hover {
-        background-color: var(--sidebar-bg, #f8f9fa);
-        border-radius: 8px;
-    }
-
-/* Autocomplete Styling */
-.ui-autocomplete {
-    max-height: 300px;
-    overflow-y: auto;
-    overflow-x: hidden;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    z-index: 1000;
-}
-
-    .ui-autocomplete .ui-menu-item {
-        padding: 0;
-        margin: 0;
-    }
-
-.autocomplete-item {
-    padding: 12px 16px;
-    border-bottom: 1px solid #f0f0f0;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-}
-
-    .autocomplete-item:hover,
-    .ui-state-focus .autocomplete-item {
-        background-color: #f8f9fa;
-    }
-
-.ui-state-active .autocomplete-item {
-    background-color: #007bff;
-    color: white;
-}
-
-    .ui-state-active .autocomplete-item .text-muted {
-        color: rgba(255, 255, 255, 0.8) !important;
-    }
-
-/* Search input enhancements */
-#search {
-    border-radius: 8px;
-    border: 2px solid #e9ecef;
-    transition: border-color 0.2s ease;
-}
-
-    #search:focus {
-        border-color: #007bff;
-        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-    }
-
-/* Loading indicator for search */
-.search-loading {
-    position: relative;
-}
-
-    .search-loading::after {
-        content: '';
-        position: absolute;
-        right: 10px;
-        top: 50%;
-        transform: translateY(-50%);
-        width: 16px;
-        height: 16px;
-        border: 2px solid #f3f3f3;
-        border-top: 2px solid #007bff;
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-    }
-
-@keyframes spin {
-    0% {
-        transform: translateY(-50%) rotate(0deg);
-    }
-
-    100% {
-        transform: translateY(-50%) rotate(360deg);
-    }
-}
-
 /* Sorting and view controls */
 .sorting-controls {
     background: var(--sidebar-bg);
@@ -335,8 +236,7 @@
     }
 
 /* Active sort indicator */
-.btn-primary .fa-chevron-up,
-.btn-primary .fa-chevron-down {
+.btn-primary .gs-icon {
     animation: pulse 1s ease-in-out;
 }
 
@@ -384,15 +284,6 @@
     z-index: 1000;
 }
 
-.loading-spinner {
-    width: 40px;
-    height: 40px;
-    border: 4px solid #f3f3f3;
-    border-top: 4px solid #007bff;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
-
 /* Enhanced filter badges */
 .filter-badge {
     display: inline-flex;
@@ -417,21 +308,9 @@
         }
 
 /* Base Theme Support */
-* {
-    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
-}
-
 body {
     background-color: var(--body-bg);
     color: var(--text-primary);
-}
-
-.navbar-logo {
-    max-height: 48px;
-    height: auto;
-    width: auto;
-    display: block;
-    object-fit: contain;
 }
 
 /* Navigation */
@@ -594,31 +473,6 @@ footer {
     border: 1px solid var(--border-light);
 }
 
-/* Autocomplete Dark Theme Support */
-.ui-autocomplete {
-    background-color: var(--card-bg) !important;
-    border-color: var(--border-color) !important;
-    box-shadow: var(--shadow) !important;
-}
-
-    .ui-autocomplete .ui-menu-item {
-        color: var(--text-primary) !important;
-    }
-
-        .ui-autocomplete .ui-menu-item:hover,
-        .ui-state-focus {
-            background-color: var(--sidebar-bg) !important;
-            color: var(--primary-color) !important;
-        }
-
-.autocomplete-item {
-    color: var(--text-primary) !important;
-}
-
-    .autocomplete-item .text-muted {
-        color: var(--text-muted) !important;
-    }
-
 /* Semantic theme-aware utilities */
 .bg-page {
     background-color: var(--body-bg) !important;
@@ -738,56 +592,6 @@ footer {
     border-color: var(--border-color);
 }
 
-/* Weekly calendar — theme-aware headers without overriding day highlights */
-.weekly-calendar-table {
-    --bs-table-color: var(--text-primary);
-    --bs-table-border-color: var(--border-color);
-    color: var(--text-primary);
-}
-
-.weekly-calendar-table thead th {
-    --bs-table-bg: var(--sidebar-bg);
-    background-color: var(--sidebar-bg) !important;
-    color: var(--text-primary) !important;
-    font-weight: 600;
-    border-color: var(--border-color) !important;
-    box-shadow: none;
-}
-
-/* Selected week days (Mon–Sun period) */
-.weekly-calendar-table td.calendar-day-in-period {
-    --bs-table-bg: transparent;
-    --bs-table-accent-bg: transparent;
-    background-color: rgba(var(--bs-primary-rgb), 0.12) !important;
-    box-shadow: none !important;
-    color: var(--text-primary);
-}
-
-[data-theme="dark"] .weekly-calendar-table td.calendar-day-in-period {
-    background-color: rgba(77, 159, 255, 0.15) !important;
-}
-
-/* Today within the calendar */
-.weekly-calendar-table td.calendar-day-today {
-    --bs-table-bg: transparent;
-    --bs-table-accent-bg: transparent;
-    background-color: rgba(var(--bs-primary-rgb), 0.25) !important;
-    box-shadow: none !important;
-    color: var(--text-primary) !important;
-}
-
-[data-theme="dark"] .weekly-calendar-table td.calendar-day-today {
-    background-color: rgba(77, 159, 255, 0.28) !important;
-}
-
-.weekly-calendar-table tbody td a {
-    color: var(--text-primary);
-}
-
-.weekly-calendar-table tbody td a:hover {
-    color: var(--primary-color);
-}
-
 .table-bordered {
     border-color: var(--border-color);
 }
@@ -823,10 +627,6 @@ footer {
     background-color: rgba(77, 159, 255, 0.12) !important;
 }
 
-[data-theme="dark"] .related-event-item:hover {
-    background-color: var(--sidebar-bg);
-}
-
 [data-theme="dark"] .sorting-controls {
     background-color: var(--sidebar-bg);
     border-bottom-color: var(--border-color);
@@ -847,7 +647,7 @@ footer {
 }
 
 /* ------------------------------------------------------------------
-   Homepage desktop layout — typography scale, grid container, weekly
+   Page grid container (the previous homepage rules were removed in GS-REQ-007, 7l)
    ------------------------------------------------------------------ */
 
 .container-grid {
@@ -872,179 +672,6 @@ footer {
     overflow: hidden;
     text-overflow: ellipsis;
     word-break: break-word;
-}
-
-.home-section-title {
-    font-size: 24px;
-    font-weight: 700;
-    line-height: 1.25;
-    margin-bottom: 0;
-}
-
-.home-column-header {
-    font-size: 17px;
-    font-weight: 600;
-    line-height: 1.3;
-}
-
-.home-event-title {
-    font-size: 15px;
-    font-weight: 600;
-    line-height: 1.35;
-    color: var(--text-primary, #333);
-}
-
-.home-event-title.text-clamp-2 {
-    display: -webkit-box;
-}
-
-.home-event-meta {
-    font-size: 13px;
-    font-weight: 400;
-    line-height: 1.35;
-    color: var(--text-secondary, #666);
-}
-
-.home-event-badge {
-    font-size: 12px;
-    font-weight: 700;
-    line-height: 1.2;
-}
-
-.home-hero-title {
-    font-size: 32px;
-    font-weight: 700;
-    line-height: 1.2;
-    margin-bottom: 0.5rem;
-}
-
-.home-hero-subtitle {
-    font-size: 16px;
-    line-height: 1.4;
-    margin-bottom: 0.75rem;
-    opacity: 0.9;
-}
-
-.home-hero-icon {
-    font-size: 3rem;
-    opacity: 0.3;
-}
-
-.home-category-grid {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 0.4rem;
-}
-
-.home-category-tile {
-    flex: 0 1 90px;
-    padding: 0.4rem 0.3rem;
-    min-height: 64px;
-    font-size: 12px;
-    line-height: 1.15;
-}
-
-.home-category-tile i {
-    font-size: 1.1rem;
-    margin-bottom: 0.2rem;
-}
-
-.home-weekly-header {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-    margin-bottom: 0.75rem;
-}
-
-.home-weekly-header-left {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.75rem 1rem;
-    min-width: 0;
-}
-
-.home-period-nav {
-    display: flex;
-    align-items: center;
-    gap: 0.35rem;
-}
-
-.home-period-label {
-    font-size: 15px;
-    font-weight: 600;
-    min-width: 180px;
-    text-align: center;
-}
-
-.weekly-day-columns {
-    display: flex;
-    gap: 0.75rem;
-    align-items: start;
-}
-
-.weekly-day-column {
-    flex: 1 1 0;
-    min-width: 0;
-}
-
-.weekly-day-card-body {
-    padding: 0.5rem;
-}
-
-.weekly-day-thumb {
-    width: 48px;
-    height: 48px;
-    object-fit: cover;
-    border-radius: 4px;
-    flex-shrink: 0;
-}
-
-.home-cat-scroll {
-    display: flex;
-    gap: 0.75rem;
-    overflow-x: auto;
-    padding-bottom: 0.5rem;
-}
-
-.home-cat-card {
-    min-width: 175px;
-    max-width: 175px;
-    flex-shrink: 0;
-}
-
-.home-cat-card-img {
-    height: 100px;
-    object-fit: cover;
-    border-radius: 4px 4px 0 0;
-}
-
-.home-cat-compact-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 0.75rem;
-    margin-bottom: 1rem;
-}
-
-.home-cat-compact-block {
-    border: 1px solid var(--border-color, #dee2e6);
-    border-radius: 8px;
-    padding: 0.75rem;
-    background: var(--card-bg, #fff);
-}
-
-.home-cat-compact-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.5rem;
-}
-
-.home-more-link {
-    font-size: 13px;
 }
 
 @media (max-width: 767.98px) {

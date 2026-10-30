@@ -10,6 +10,7 @@ public class EventsDbContext : IdentityDbContext<User>
 {
     private static readonly DateTime SeedDate = new DateTime(2026, 1, 23, 0, 0, 0, DateTimeKind.Utc);
     private static readonly DateTime NewCategorySeedDate = new DateTime(2026, 8, 21, 0, 0, 0, DateTimeKind.Utc);
+    private static readonly DateTime HomeQuickFilterSeedDate = new DateTime(2026, 10, 25, 0, 0, 0, DateTimeKind.Utc);
 
     public EventsDbContext(DbContextOptions<EventsDbContext> options)
         : base(options)
@@ -26,6 +27,7 @@ public class EventsDbContext : IdentityDbContext<User>
     public DbSet<VenueAlias> VenueAliases { get; set; }
     public DbSet<SiteContent> SiteContents { get; set; }
     public DbSet<PageSeoMeta> PageSeoMetas { get; set; }
+    public DbSet<HomeQuickFilter> HomeQuickFilters { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -100,11 +102,13 @@ public class EventsDbContext : IdentityDbContext<User>
         ConfigureVenueAliasEntity(modelBuilder);
         ConfigureSiteContentEntity(modelBuilder);
         ConfigurePageSeoMetaEntity(modelBuilder);
+        ConfigureHomeQuickFilterEntity(modelBuilder);
 
         SeedCategories(modelBuilder);
         SeedSubCategories(modelBuilder);
         SeedSiteContent(modelBuilder);
         SeedPageSeoMeta(modelBuilder);
+        SeedHomeQuickFilters(modelBuilder);
     }
 
     private static void ConfigureCanonicalVenueEntity(ModelBuilder modelBuilder)
@@ -184,6 +188,22 @@ public class EventsDbContext : IdentityDbContext<User>
             entity.Property(p => p.UpdatedAt).HasDefaultValueSql("GETUTCDATE()");
 
             entity.HasIndex(p => p.PageKey).IsUnique();
+        });
+    }
+
+    private static void ConfigureHomeQuickFilterEntity(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<HomeQuickFilter>(entity =>
+        {
+            entity.HasKey(f => f.Id);
+            entity.Property(f => f.LabelBg).IsRequired().HasMaxLength(50);
+            entity.Property(f => f.LabelEn).IsRequired().HasMaxLength(50);
+
+            // Primitive collection: EF Core 8 stores it as a JSON array, e.g. ["Business","Conferences"].
+            entity.Property(f => f.Values).IsRequired().HasMaxLength(500);
+            entity.Property(f => f.UpdatedAt).HasDefaultValueSql("GETUTCDATE()");
+
+            entity.HasIndex(f => f.SortOrder);
         });
     }
 
@@ -817,6 +837,33 @@ public class EventsDbContext : IdentityDbContext<User>
 
         modelBuilder.Entity<PageSeoMeta>().HasData(rows);
     }
+
+    // Initial homepage "What" chips (GS-REQ-007, 7.3), chosen by upcoming event counts as of 28.09.2026.
+    // Inserted by the migration, editable afterwards from the admin "Site Content" screen.
+    private static void SeedHomeQuickFilters(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<HomeQuickFilter>().HasData(
+            CreateSeedQuickFilter(1, "Театър", "Theatre", HomeQuickFilterType.Categories, "Theatre"),
+            CreateSeedQuickFilter(2, "Музика", "Music", HomeQuickFilterType.Categories, "Music"),
+            CreateSeedQuickFilter(3, "Кино", "Cinema", HomeQuickFilterType.Categories, "Cinema"),
+            CreateSeedQuickFilter(4, "Бизнес", "Business", HomeQuickFilterType.Categories, "Business", "Conferences"),
+            CreateSeedQuickFilter(5, "Уъркшопи", "Workshops", HomeQuickFilterType.Categories, "Workshops"),
+            CreateSeedQuickFilter(6, "За деца", "For kids", HomeQuickFilterType.Tags, "For kids", "Family-friendly"),
+            CreateSeedQuickFilter(7, "Безплатни", "Free", HomeQuickFilterType.Free));
+    }
+
+    private static HomeQuickFilter CreateSeedQuickFilter(int id, string labelBg, string labelEn, HomeQuickFilterType type, params string[] values) =>
+        new()
+        {
+            Id = id,
+            LabelBg = labelBg,
+            LabelEn = labelEn,
+            Type = type,
+            Values = values.ToList(),
+            SortOrder = id,
+            IsActive = true,
+            UpdatedAt = HomeQuickFilterSeedDate
+        };
 
     // Categories added after the initial 10 + AllEvents/VenuesIndex/Contact PageSeoMeta rows were
     // already deployed; kept separate so their SEO rows are always appended, never interleaved.

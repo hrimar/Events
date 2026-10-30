@@ -1,4 +1,5 @@
 using System.Text.Encodings.Web;
+using System.Text.Unicode;
 using Events.Models;
 using Events.Services.Interfaces;
 using Events.Web.Infrastructure;
@@ -16,6 +17,9 @@ namespace Events.Web.Controllers;
 
 public class ContactController : Controller
 {
+    // HTML encoding for the e-mail bodies that keeps Cyrillic as text instead of "&#x41A;" codes
+    private static readonly HtmlEncoder EmailHtmlEncoder = HtmlEncoder.Create(UnicodeRanges.All);
+
     private readonly IEmailSender _emailSender;
     private readonly IStringLocalizer<SharedResources> _localizer;
     private readonly ILogger<ContactController> _logger;
@@ -82,14 +86,18 @@ public class ContactController : Controller
         }
 
         var topicDisplayName = model.Topic.Localize(_localizer);
-        var encodedName = HtmlEncoder.Default.Encode(model.Name);
-        var encodedEmail = HtmlEncoder.Default.Encode(model.Email);
-        var encodedMessage = HtmlEncoder.Default.Encode(model.Message).Replace("\n", "<br />");
+        var encodedName = EmailHtmlEncoder.Encode(model.Name);
+        var encodedEmail = EmailHtmlEncoder.Encode(model.Email);
+        var encodedMessage = EmailHtmlEncoder.Encode(model.Message).Replace("\n", "<br />");
+
+        // The subject is plain text, not HTML: the name goes in as typed (HTML encoding showed Cyrillic as "&#x41A;"),
+        // without line breaks, which are not allowed in a mail header.
+        var subjectName = model.Name.Replace("\r", " ").Replace("\n", " ").Trim();
 
         try
         {
             await _emailSender.SendEmailAsync(_smtpOptions.From,
-                $"Ново запитване от {encodedName} — {topicDisplayName}",
+                $"Ново запитване от {subjectName} — {topicDisplayName}",
                 $"<p><strong>Име:</strong> {encodedName}</p>" +
                 $"<p><strong>Имейл:</strong> {encodedEmail}</p>" +
                 $"<p><strong>Тема:</strong> {topicDisplayName}</p>" +
@@ -106,7 +114,7 @@ public class ContactController : Controller
         try
         {
             await _emailSender.SendEmailAsync(model.Email, _localizer["Contact_ConfirmationSubject"],
-                $"<p>{HtmlEncoder.Default.Encode(_localizer["Contact_ConfirmationBody"])}</p>");
+                $"<p>{EmailHtmlEncoder.Encode(_localizer["Contact_ConfirmationBody"])}</p>");
         }
         catch (Exception ex)
         {

@@ -12,8 +12,9 @@ public sealed record PublicEventQuery
     public int PageSize { get; init; } = 12;
     public EventStatus? Status { get; init; }
 
-    // SubCategoryName takes priority over CategoryName when both are set.
-    public string? CategoryName { get; init; }
+    // Matches events in any of these categories (e.g. Business and Conferences for one homepage quick filter).
+    // SubCategoryName takes priority over CategoryNames when both are set.
+    public IReadOnlyList<string> CategoryNames { get; init; } = Array.Empty<string>();
     public string? SubCategoryName { get; init; }
 
     public bool? IsFree { get; init; }
@@ -24,6 +25,9 @@ public sealed record PublicEventQuery
 
     // Matches events having any of these tags.
     public IReadOnlyList<string> TagNames { get; init; } = Array.Empty<string>();
+
+    // In addition to TagNames, events must have any of these tags (e.g. the "With kids" filter, GS-REQ-008, 8.2.5).
+    public IReadOnlyList<string> RequiredTagNames { get; init; } = Array.Empty<string>();
 
     // Case-insensitive match on name, description and location (database collation).
     public string? Search { get; init; }

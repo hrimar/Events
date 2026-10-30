@@ -205,7 +205,7 @@
     <value>Препоръчани събития</value>
   </data>
   <data name="Home_ViewAllEvents" xml:space="preserve">
-    <value>Виж всички събития</value>
+    <value>Виж всички</value>
   </data>
   <data name="Home_SavedEvents" xml:space="preserve">
     <value>Запазени събития</value>
@@ -377,6 +377,27 @@
   </data>
   <data name="Events_FilterToDate" xml:space="preserve">
     <value>До:</value>
+  </data>
+  <data name="Events_FilterPeriod" xml:space="preserve">
+    <value>Период:</value>
+  </data>
+  <data name="Events_PeriodFallbackFiltered" xml:space="preserve">
+    <value>През следващите 7 дни няма събития в „{0}“. Показваме следващите 30 дни.</value>
+  </data>
+  <data name="Events_PeriodFallback" xml:space="preserve">
+    <value>През следващите 7 дни няма събития. Показваме следващите 30 дни.</value>
+  </data>
+  <data name="Period_Today" xml:space="preserve">
+    <value>Днес</value>
+  </data>
+  <data name="Period_Tomorrow" xml:space="preserve">
+    <value>Утре</value>
+  </data>
+  <data name="Period_Weekend" xml:space="preserve">
+    <value>Този уикенд</value>
+  </data>
+  <data name="Period_Next7" xml:space="preserve">
+    <value>7 дни</value>
   </data>
   <data name="Events_NoEventsFound" xml:space="preserve">
     <value>Няма намерени събития</value>
@@ -2138,5 +2159,242 @@
   </data>
   <data name="Venue_BrowseVenues" xml:space="preserve">
     <value>Места</value>
+  </data>
+  <data name="Nav_Free" xml:space="preserve">
+    <value>Безплатни</value>
+  </data>
+  <data name="Nav_Menu" xml:space="preserve">
+    <value>Меню</value>
+  </data>
+  <data name="Nav_MainNavigation" xml:space="preserve">
+    <value>Основна навигация</value>
+  </data>
+  <data name="Home_HeroWhen" xml:space="preserve">
+    <value>Кога</value>
+  </data>
+  <data name="Home_HeroWhat" xml:space="preserve">
+    <value>Какво</value>
+  </data>
+  <data name="Home_ChipToday" xml:space="preserve">
+    <value>Днес · {0}</value>
+  </data>
+  <data name="Home_ChipDate" xml:space="preserve">
+    <value>Дата</value>
+  </data>
+  <data name="Home_ChipDateAria" xml:space="preserve">
+    <value>Избери ден от календара</value>
+  </data>
+  <data name="Home_FeaturedBadge" xml:space="preserve">
+    <value>Препоръчано</value>
+  </data>
+  <data name="Home_FeaturedCarousel" xml:space="preserve">
+    <value>Препоръчани събития</value>
+  </data>
+  <data name="Home_CarouselPrevious" xml:space="preserve">
+    <value>Предишно събитие</value>
+  </data>
+  <data name="Home_CarouselNext" xml:space="preserve">
+    <value>Следващо събитие</value>
+  </data>
+  <data name="Home_CarouselSlide" xml:space="preserve">
+    <value>Слайд {0} от {1}</value>
+  </data>
+  <data name="Home_HeroFilters" xml:space="preserve">
+    <value>Бързи филтри</value>
+  </data>
+  <data name="Home_TonightEyebrow" xml:space="preserve">
+    <value>{0} вечер</value>
+  </data>
+  <data name="Home_TonightHeading" xml:space="preserve">
+    <value>Довечера</value>
+  </data>
+  <data name="Home_SectionToday" xml:space="preserve">
+    <value>Днес</value>
+  </data>
+  <data name="Home_SectionTomorrow" xml:space="preserve">
+    <value>Утре</value>
+  </data>
+  <data name="Home_AllForToday" xml:space="preserve">
+    <value>Всички {0} за днес</value>
+  </data>
+  <data name="Home_AllForTomorrow" xml:space="preserve">
+    <value>Всички {0} за утре</value>
+  </data>
+  <data name="Home_RowPrevious" xml:space="preserve">
+    <value>Предишни събития</value>
+  </data>
+  <data name="Home_RowNext" xml:space="preserve">
+    <value>Следващи събития</value>
+  </data>
+  <data name="Home_WeekendHeading" xml:space="preserve">
+    <value>Този уикенд</value>
+  </data>
+  <data name="Home_WeekendAll" xml:space="preserve">
+    <value>Целият уикенд</value>
+  </data>
+  <data name="Home_WeekendDays" xml:space="preserve">
+    <value>Дни от уикенда</value>
+  </data>
+  <data name="Home_WeekendFilters" xml:space="preserve">
+    <value>Филтър</value>
+  </data>
+  <data name="Home_WeekendFilterAll" xml:space="preserve">
+    <value>Всички</value>
+  </data>
+  <data name="Home_WeekendFilterMorning" xml:space="preserve">
+    <value>Сутрин</value>
+  </data>
+  <data name="Home_WeekendFilterEvening" xml:space="preserve">
+    <value>Вечер</value>
+  </data>
+  <data name="Home_WeekendFilterKids" xml:space="preserve">
+    <value>С деца</value>
+  </data>
+  <data name="Home_ShowMore" xml:space="preserve">
+    <value>Покажи още</value>
+  </data>
+  <data name="Home_WeekendEmpty" xml:space="preserve">
+    <value>Няма събития по този филтър.</value>
+  </data>
+  <data name="Home_WeekendSeeDay" xml:space="preserve">
+    <value>Виж всички за деня</value>
+  </data>
+  <data name="Home_LoadError" xml:space="preserve">
+    <value>Неуспешно зареждане. Опитай отново.</value>
+  </data>
+  <data name="Home_DontMissEyebrow" xml:space="preserve">
+    <value>Препоръчани събития</value>
+  </data>
+  <data name="Home_DontMissHeading" xml:space="preserve">
+    <value>Не пропускай</value>
+  </data>
+  <data name="Home_InterestsHeading" xml:space="preserve">
+    <value>Разгледай по интерес</value>
+  </data>
+  <data name="Home_AllCategories" xml:space="preserve">
+    <value>Всички {0} категории</value>
+  </data>
+  <data name="Home_FreeHeading" xml:space="preserve">
+    <value>Безплатно тази седмица</value>
+  </data>
+  <data name="Home_FreeAll" xml:space="preserve">
+    <value>Всички безплатни</value>
+  </data>
+  <data name="Home_VenuesEyebrow" xml:space="preserve">
+    <value>{0} места в града</value>
+  </data>
+  <data name="Home_VenuesHeading" xml:space="preserve">
+    <value>Места</value>
+  </data>
+  <data name="Home_VenuesAll" xml:space="preserve">
+    <value>Всички {0} места</value>
+  </data>
+  <data name="Home_PreviousDays" xml:space="preserve">
+    <value>Предишни дни</value>
+  </data>
+  <data name="Home_NextDays" xml:space="preserve">
+    <value>Следващи дни</value>
+  </data>
+  <data name="Home_WeeklyViews" xml:space="preserve">
+    <value>Изглед на седмицата</value>
+  </data>
+  <data name="Events_PeriodHeadingToday" xml:space="preserve">
+    <value>Днес в София</value>
+  </data>
+  <data name="Events_PeriodHeadingTomorrow" xml:space="preserve">
+    <value>Утре в София</value>
+  </data>
+  <data name="Events_PeriodHeadingWeekend" xml:space="preserve">
+    <value>Този уикенд в София</value>
+  </data>
+  <data name="Events_PeriodHeadingNext7" xml:space="preserve">
+    <value>Следващите 7 дни в София</value>
+  </data>
+  <data name="Events_PeriodHeadingDate" xml:space="preserve">
+    <value>Събития на {0}</value>
+  </data>
+  <data name="Events_PeriodHeadingRange" xml:space="preserve">
+    <value>Събития: {0}</value>
+  </data>
+  <data name="Events_PeriodHeadingCategory" xml:space="preserve">
+    <value>{0} в София: {1}</value>
+  </data>
+  <data name="Events_PeriodPhraseToday" xml:space="preserve">
+    <value>днес</value>
+  </data>
+  <data name="Events_PeriodPhraseTomorrow" xml:space="preserve">
+    <value>утре</value>
+  </data>
+  <data name="Events_PeriodPhraseWeekend" xml:space="preserve">
+    <value>този уикенд</value>
+  </data>
+  <data name="Events_PeriodPhraseNext7" xml:space="preserve">
+    <value>следващите 7 дни</value>
+  </data>
+  <data name="Events_EventCountOne" xml:space="preserve">
+    <value>1 събитие</value>
+  </data>
+  <data name="Events_EventCount" xml:space="preserve">
+    <value>{0} събития</value>
+  </data>
+  <data name="Events_FiltersLabel" xml:space="preserve">
+    <value>Филтри</value>
+  </data>
+  <data name="Events_FilterCategoryLabel" xml:space="preserve">
+    <value>Категория: {0}</value>
+  </data>
+  <data name="Events_FilterCategoryAll" xml:space="preserve">
+    <value>всички</value>
+  </data>
+  <data name="Events_FilterSubCategoryLabel" xml:space="preserve">
+    <value>Подкатегория: {0}</value>
+  </data>
+  <data name="Events_FilterTagsLabel" xml:space="preserve">
+    <value>Тагове: {0}</value>
+  </data>
+  <data name="Events_FilterFreeOnly" xml:space="preserve">
+    <value>Само безплатни</value>
+  </data>
+  <data name="Events_FilterKids" xml:space="preserve">
+    <value>С деца</value>
+  </data>
+  <data name="Events_RemoveFilter" xml:space="preserve">
+    <value>Премахни филтъра „{0}“</value>
+  </data>
+  <data name="Events_SortLabel" xml:space="preserve">
+    <value>Подредба:</value>
+  </data>
+  <data name="Events_SortDateTime" xml:space="preserve">
+    <value>по дата и час</value>
+  </data>
+  <data name="Events_MoreOnDay" xml:space="preserve">
+    <value>Още {0} събития {1}</value>
+  </data>
+  <data name="Events_MoreOnDayOne" xml:space="preserve">
+    <value>Още 1 събитие {0}</value>
+  </data>
+  <data name="Events_PeriodSeoName" xml:space="preserve">
+    <value>Събития в София {0}</value>
+  </data>
+  <data name="Events_PeriodSeoNameCategory" xml:space="preserve">
+    <value>{0} в София {1}</value>
+  </data>
+  <data name="Events_PeriodSeoPhraseNext7" xml:space="preserve">
+    <value>през следващите 7 дни</value>
+  </data>
+  <data name="Events_PeriodMetaDescription" xml:space="preserve">
+    <value>{0} – {1}, подредени по ден и час, с място и билети. Обновява се всеки ден.</value>
+  </data>
+  <data name="Events_FilterSearchLabel" xml:space="preserve">
+    <value>Търсене: „{0}“</value>
+  </data>
+  <data name="Venue_NoUpcomingEventsShort" xml:space="preserve">
+    <value>Няма предстоящи събития</value>
+  </data>
+  <data name="Details_MoreInfo" xml:space="preserve">
+    <value>Повече инфо</value>
+  </data>
+  <data name="Details_InfoRedirect" xml:space="preserve">
+    <value>Ще бъдете пренасочени към официалния сайт на събитието</value>
   </data>
 </root>

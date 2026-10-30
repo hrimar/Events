@@ -5,11 +5,11 @@
 @* Icon-only theme toggle: moon in the light theme, sun in the dark theme (icons switch via CSS on
    html[data-theme], so there is no flash). aria-label/title name the theme the button switches to
    and are updated by theme-switcher.js. *@
-<button type="button" class="btn btn-link theme-toggle p-1"
+<button type="button" class="gs-icon-btn theme-toggle"
         data-label-dark="@Localizer["Theme_SwitchToDark"]"
         data-label-light="@Localizer["Theme_SwitchToLight"]"
         aria-label="@Localizer["Theme_SwitchToDark"]"
         title="@Localizer["Theme_SwitchToDark"]">
-    <i class="fas fa-moon theme-toggle-icon-dark" aria-hidden="true"></i>
-    <i class="fas fa-sun theme-toggle-icon-light" aria-hidden="true"></i>
+    <gs-icon name="moon" size="20" class="theme-toggle-icon-dark" />
+    <gs-icon name="sun" size="20" class="theme-toggle-icon-light" />
 </button>

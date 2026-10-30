@@ -1,0 +1,46 @@
+@model Events.Web.Models.EventCardViewModel
+@using System.Globalization
+@using Events.Web.Localization
+@using Events.Web.Resources
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<SharedResources> Localizer
+
+@* Compact event card (GS-REQ-006, 6.5): 96x96 thumbnail, day and time, title, venue; the whole card is one link.
+   ViewData["HideFreeLabel"] = true leaves out "Free" where every card is free ("Free this week"). *@
+@{
+    var dateParts = new List<string>();
+    var badge = EventCardFormatter.FormatBadge(Model, CultureInfo.CurrentCulture);
+    if (badge is not null)
+    {
+        dateParts.Add(badge);
+    }
+    if (Model.IsFree && ViewData["HideFreeLabel"] is not true)
+    {
+        dateParts.Add(Localizer["Events_Free"].Value);
+    }
+    if (Model.IsPast)
+    {
+        dateParts.Add(Localizer["Events_PastEvent"].Value);
+    }
+
+    // The thumbnail is enough for 96px when the event has one
+    var imageUrl = string.IsNullOrWhiteSpace(Model.ThumbnailUrl) ? Model.ImageUrl : Model.ThumbnailUrl;
+}
+<a class="gs-card-compact" asp-area="" asp-controller="Events" asp-action="Details" asp-route-id="@Model.Id">
+    <div class="gs-card-compact-media">
+        @* Decorative: the title is the link text *@
+        <img src="@imageUrl" alt="" width="96" height="96" loading="lazy" decoding="async"
+             onerror="this.onerror=null;this.src='/images/default_event_image.jpeg'">
+    </div>
+    <div class="gs-card-compact-body">
+        @if (dateParts.Count > 0)
+        {
+            <p class="gs-card-compact-date">@string.Join(" · ", dateParts)</p>
+        }
+        <h3 class="gs-card-compact-title gs-clamp-2">@Model.Name</h3>
+        @if (!string.IsNullOrWhiteSpace(Model.Venue))
+        {
+            <p class="gs-card-compact-venue">@Model.Venue</p>
+        }
+    </div>
+</a>

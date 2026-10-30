@@ -1,0 +1,50 @@
+@model Events.Web.Models.HomePageViewModel
+
+@* Desktop and tablet layout (GS-REQ-007, structure table): hero, Tonight, This weekend, Don't miss,
+   Browse by interest, Free this week, Venues. It replaces the previous "This week" block and the stats row
+   (00-kontekst, "Заменя се на десктоп"); both stay in the mobile layout. *@
+
+@* Hero (GS-REQ-007, 7.1-7.4): replaces the blue hero and the 13 category buttons (GS-REQ-005, 5.1 and 5.6) *@
+@if (Model.Hero != null)
+{
+    <partial name="_HomeHero" model="Model.Hero" />
+}
+
+@* Tonight (GS-REQ-007, 7.5); not rendered when no event of today or tomorrow is left *@
+@if (Model.Tonight != null)
+{
+    <partial name="_HomeTonight" model="Model.Tonight" />
+}
+
+@* This weekend (GS-REQ-007, 7.6); not rendered when the weekend has no events *@
+@if (Model.Weekend != null)
+{
+    <partial name="_HomeWeekend" model="Model.Weekend" />
+}
+
+@* Don't miss (GS-REQ-007, 7.7); not rendered when there are no featured events after the carousel *@
+@if (Model.DontMiss.Any())
+{
+    <partial name="_HomeDontMiss" model="Model.DontMiss" />
+}
+
+@* Browse by interest (GS-REQ-007, 7.8); not rendered when no category has events in the next 30 days *@
+@if (Model.Interests.Any())
+{
+    <partial name="_HomeInterests" model="Model.Interests" />
+}
+
+@* Free this week (GS-REQ-007, 7.9); not rendered with fewer than 3 free events in the next 7 days *@
+@if (Model.FreeThisWeek != null)
+{
+    <partial name="_HomeFreeThisWeek" model="Model.FreeThisWeek" />
+}
+
+@* Venues (GS-REQ-007, 7.10); not rendered when no venue with a photo has events in the next 30 days *@
+@if (Model.Venues != null)
+{
+    <partial name="_HomeVenues" model="Model.Venues" />
+}
+
+@* Saved and recommended events of a signed-in user *@
+<partial name="_HomeUserSections" model="Model" />

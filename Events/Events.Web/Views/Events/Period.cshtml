@@ -1,0 +1,63 @@
+@model Events.Web.Models.EventsPeriodPageViewModel
+@using Events.Web.Resources
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<SharedResources> Localizer
+
+@* "All events" for a period, grouped by day (GS-REQ-008, 8.2). The paged list without a period is Index.cshtml. *@
+@{
+    ViewData["Title"] = Model.Heading;
+    ViewData["PageTitle"] = Model.SeoTitle;
+    if (!string.IsNullOrWhiteSpace(Model.PageMetaDescription))
+    {
+        ViewData["MetaDescription"] = Model.PageMetaDescription;
+    }
+}
+
+<section class="gs-period-head container-grid">
+    @* Breadcrumbs (8.2.1) *@
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb gs-breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">@Localizer["Details_Home"]</a></li>
+            <li class="breadcrumb-item"><a asp-controller="Events" asp-action="Index">@Localizer["Nav_AllEvents"]</a></li>
+        </ol>
+    </nav>
+
+    @* H1 by period and category (8.2.2), the period's days and the number of events below it (8.2.3) *@
+    <div class="gs-period-titles">
+        <h1 class="gs-h1">@Model.Heading</h1>
+        <p class="gs-period-summary">@Model.DateRangeText · @Model.TotalCountText</p>
+    </div>
+
+    <partial name="_EventFilterRows" model="Model.Filters" />
+
+    @if (!string.IsNullOrEmpty(Model.PeriodFallbackMessage))
+    {
+        <p class="alert alert-info gs-period-notice" role="status">@Model.PeriodFallbackMessage</p>
+    }
+</section>
+
+<div class="gs-period-days container-grid">
+    @if (Model.Days.Count == 0)
+    {
+        <div class="gs-period-empty">
+            <h2 class="gs-h-day text-muted">@Localizer["Events_NoEventsFound"]</h2>
+            <p class="text-muted">@Localizer["Events_NoEventsHint"]</p>
+            <a asp-controller="Events" asp-action="Index" class="gs-btn gs-btn-primary">@Localizer["Events_ViewAllEvents"]</a>
+        </div>
+    }
+
+    @* One section per day with events, in chronological order (8.2.6, 8.2.9, 8.2.12) *@
+    @foreach (var day in Model.Days)
+    {
+        <partial name="_PeriodDay" model="day" />
+    }
+</div>
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/gs-events.css" asp-append-version="true" />
+}
+
+@section Scripts {
+    <script src="~/js/gs-date-chip.js" asp-append-version="true" defer></script>
+    <script src="~/js/gs-period.js" asp-append-version="true" defer></script>
+}

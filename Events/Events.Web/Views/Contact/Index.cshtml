@@ -13,7 +13,7 @@
             <div class="card shadow-sm border-0">
                 <div class="card-body p-4 p-md-5">
                     <div class="text-center mb-4">
-                        <i class="fas fa-envelope-open-text fa-3x text-primary mb-3"></i>
+                        <gs-icon name="mail-open" size="48" class="gs-text-link mb-3" />
                         <h2 class="fw-bold">@Localizer["Contact_Heading"]</h2>
                         <p class="text-muted">@Localizer["Contact_Subtitle"]</p>
                     </div>
@@ -21,7 +21,7 @@
                     @if (TempData["SuccessMessage"] != null)
                     {
                         <div class="alert alert-success alert-dismissible fade show" role="alert">
-                            <i class="fas fa-check-circle me-2"></i>@TempData["SuccessMessage"]
+                            <gs-icon name="circle-check" class="me-2" />@TempData["SuccessMessage"]
                             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                         </div>
                     }
@@ -29,7 +29,7 @@
                     @if (TempData["ErrorMessage"] != null)
                     {
                         <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                            <i class="fas fa-exclamation-circle me-2"></i>@TempData["ErrorMessage"]
+                            <gs-icon name="circle-alert" class="me-2" />@TempData["ErrorMessage"]
                             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                         </div>
                     }
@@ -72,8 +72,8 @@
                         </div>
 
                         <div class="d-grid">
-                            <button type="submit" class="btn btn-primary btn-lg">
-                                <i class="fas fa-paper-plane me-2"></i>@Localizer["Contact_SubmitButton"]
+                            <button type="submit" class="gs-btn gs-btn-primary">
+                                <gs-icon name="send" class="me-2" />@Localizer["Contact_SubmitButton"]
                             </button>
                         </div>
                     </form>

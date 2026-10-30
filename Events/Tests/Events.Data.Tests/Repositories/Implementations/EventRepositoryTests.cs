@@ -312,13 +312,66 @@ public class EventRepositoryTests : IDisposable
             CreateEvent(2, "OtherMusic", new DateTime(2026, 6, 2), _musicCategory.Id));
         await _context.SaveChangesAsync();
 
-        // Act - both categoryName and subCategoryName given; subCategoryName must win
+        // Act - both categoryNames and subCategoryName given; subCategoryName must win
         var (events, totalCount) = await CreateEventRepository().GetPagedEventsAsync(
-            new PublicEventQuery { PageSize = 10, CategoryName = "Music", SubCategoryName = "Rock" });
+            new PublicEventQuery { PageSize = 10, CategoryNames = new[] { "Music" }, SubCategoryName = "Rock" });
 
         // Assert
         Assert.Equal(1, totalCount);
         Assert.Equal("RockShow", Assert.Single(events).Name);
+    }
+
+    [Fact]
+    public async Task GetTopUpcomingCategoriesAsync_OrdersByCountInPeriod_WithNearestEventImage()
+    {
+        var undefinedCategory = new Category { Id = 3, Name = "Undefined", CategoryType = EventCategory.Undefined };
+        _context.Categories.AddRange(_musicCategory, _sportsCategory, undefinedCategory);
+
+        var nearMusic = CreateEvent(1, "Near concert", new DateTime(2026, 6, 2), _musicCategory.Id);
+        nearMusic.ImageUrl = "/images/default_event_image.jpeg";
+        var laterMusic = CreateEvent(2, "Later concert", new DateTime(2026, 6, 3), _musicCategory.Id);
+        laterMusic.ImageUrl = "https://img/concert.jpg";
+
+        _context.Events.AddRange(
+            nearMusic,
+            laterMusic,
+            CreateEvent(3, "Third concert", new DateTime(2026, 6, 4), _musicCategory.Id),
+            CreateEvent(4, "Match", new DateTime(2026, 6, 2), _sportsCategory.Id),
+            CreateEvent(5, "Match after period", new DateTime(2026, 7, 30), _sportsCategory.Id),
+            CreateEvent(6, "Draft match", new DateTime(2026, 6, 2), _sportsCategory.Id, EventStatus.Draft),
+            CreateEvent(7, "Uncategorized", new DateTime(2026, 6, 2), undefinedCategory.Id),
+            CreateEvent(8, "Uncategorized 2", new DateTime(2026, 6, 3), undefinedCategory.Id),
+            CreateEvent(9, "Uncategorized 3", new DateTime(2026, 6, 4), undefinedCategory.Id),
+            CreateEvent(10, "Uncategorized 4", new DateTime(2026, 6, 5), undefinedCategory.Id));
+        await _context.SaveChangesAsync();
+
+        var result = await CreateEventRepository().GetTopUpcomingCategoriesAsync(
+            new DateTime(2026, 6, 1), new DateTime(2026, 6, 30), count: 6, excludedImageUrl: "/images/default_event_image.jpeg");
+
+        Assert.Equal(new[] { "Music", "Sports" }, result.Select(c => c.Name));
+        Assert.Equal(new[] { 3, 1 }, result.Select(c => c.UpcomingEventsCount));
+
+        // The placeholder image of the nearest concert is skipped; the next event's own image is used.
+        Assert.Equal("https://img/concert.jpg", result[0].NearestEventImageUrl);
+        Assert.Null(result[1].NearestEventImageUrl);
+    }
+
+    [Fact]
+    public async Task GetPagedEventsAsync_SeveralCategoryNames_MatchesEventsInAnyOfThem()
+    {
+        var theatreCategory = new Category { Id = 3, Name = "Theatre", CategoryType = EventCategory.Theatre };
+        _context.Categories.AddRange(_musicCategory, _sportsCategory, theatreCategory);
+        _context.Events.AddRange(
+            CreateEvent(1, "Concert", new DateTime(2026, 6, 1), _musicCategory.Id),
+            CreateEvent(2, "Match", new DateTime(2026, 6, 2), _sportsCategory.Id),
+            CreateEvent(3, "Play", new DateTime(2026, 6, 3), theatreCategory.Id));
+        await _context.SaveChangesAsync();
+
+        var (events, totalCount) = await CreateEventRepository().GetPagedEventsAsync(
+            new PublicEventQuery { PageSize = 10, CategoryNames = new[] { "Music", "Sports" } });
+
+        Assert.Equal(2, totalCount);
+        Assert.Equal(new[] { "Concert", "Match" }, events.Select(e => e.Name).OrderBy(n => n));
     }
 
     [Fact]
@@ -468,7 +521,7 @@ public class EventRepositoryTests : IDisposable
         await _context.SaveChangesAsync();
 
         var (events, _) = await CreateEventRepository().GetPagedEventsAsync(
-            new PublicEventQuery { PageSize = 10, CategoryName = _musicCategory.Name, Search = "Jazz" });
+            new PublicEventQuery { PageSize = 10, CategoryNames = new[] { _musicCategory.Name }, Search = "Jazz" });
 
         Assert.Equal("Jazz Concert", Assert.Single(events).Name);
     }

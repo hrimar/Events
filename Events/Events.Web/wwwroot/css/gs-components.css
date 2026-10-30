@@ -1,0 +1,891 @@
+/*
+ * Go Sofia components (GS-REQ-006, 6.5). Requires gs-tokens.css and gs-base.css.
+ */
+
+/* Standard event card (Appendix B): Views/Shared/_EventCard.cshtml */
+.gs-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 100%;
+  color: inherit;
+  text-decoration: none;
+}
+
+.gs-card:hover,
+.gs-card:focus {
+  color: inherit;
+}
+
+.gs-card-media {
+  position: relative;
+  aspect-ratio: 3 / 2;
+  overflow: hidden;
+  border-radius: var(--gs-radius-card);
+  background: var(--gs-media-bg);
+  transition: box-shadow 0.2s ease;
+}
+
+.gs-card-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: blur(18px) brightness(0.72);
+  transform: scale(1.25);
+}
+
+.gs-card-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.gs-badge {
+  position: absolute;
+  top: 10px;
+  padding: 5px 9px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.gs-badge-time {
+  left: 10px;
+  background: var(--gs-badge-time-bg);
+  color: var(--gs-badge-time-text);
+}
+
+.gs-badge-free {
+  right: 10px;
+  background: var(--gs-badge-free);
+  color: var(--gs-on-badge-free);
+  font-weight: 700;
+}
+
+/* "Past" label (GS-BUG-002) in the bottom left corner, so it does not collide with the date and "Free" badges */
+.gs-badge-past {
+  top: auto;
+  bottom: 10px;
+  left: 10px;
+  background: var(--gs-badge-past-bg);
+  color: var(--gs-on-badge-free);
+  font-weight: 700;
+}
+
+.gs-event-title {
+  margin: 0;
+  font-family: var(--gs-font);
+  font-size: clamp(16px, calc(16px + 2 * (100vw - 390px) / 810), 18px);
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--gs-ink);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.gs-card-venue {
+  margin: 0;
+  font-size: 14px;
+  color: var(--gs-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gs-tag {
+  align-self: flex-start;
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--gs-tag-bg);
+  color: var(--gs-tag-text);
+}
+
+.gs-card:hover .gs-card-media {
+  box-shadow: var(--gs-shadow-card);
+}
+
+.gs-card:hover .gs-event-title {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.gs-card:focus-visible {
+  outline: 3px solid var(--gs-accent);
+  outline-offset: 4px;
+  border-radius: 16px;
+}
+
+@media (min-width: 1200px) {
+  .gs-badge {
+    font-size: 14px;
+  }
+
+  .gs-badge-free,
+  .gs-badge-past {
+    font-size: 13px;
+  }
+}
+
+/* Buttons (6.5): fully rounded; primary = --gs-ink fill, secondary = --gs-ink outline */
+.gs-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid var(--gs-ink);
+  border-radius: 999px;
+  font-family: var(--gs-font);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.gs-btn-primary {
+  background: var(--gs-ink);
+  color: var(--gs-on-ink);
+}
+
+.gs-btn-primary:hover {
+  background: var(--gs-text-2);
+  border-color: var(--gs-text-2);
+  color: var(--gs-on-ink);
+}
+
+.gs-btn-secondary {
+  background: transparent;
+  color: var(--gs-ink);
+}
+
+.gs-btn-secondary:hover,
+.gs-btn-secondary[aria-expanded="true"] {
+  background: var(--gs-ink);
+  color: var(--gs-on-ink);
+}
+
+.gs-btn:focus-visible,
+.gs-icon-btn:focus-visible,
+.gs-lang-btn:focus-visible {
+  outline: 3px solid var(--gs-accent);
+  outline-offset: 2px;
+}
+
+/* Round icon-only button (theme toggle, hamburger); needs an aria-label */
+.gs-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--gs-ink);
+  cursor: pointer;
+}
+
+.gs-icon-btn:hover {
+  background: var(--gs-bg-alt);
+}
+
+/* Theme toggle: moon in the light theme, sun in the dark theme */
+.theme-toggle .theme-toggle-icon-light,
+:root[data-theme="dark"] .theme-toggle .theme-toggle-icon-dark {
+  display: none;
+}
+
+:root[data-theme="dark"] .theme-toggle .theme-toggle-icon-light {
+  display: inline-block;
+}
+
+/* Search field (6.6): pill with a magnifier icon */
+.gs-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  height: 44px;
+  margin: 0;
+  padding: 0 16px;
+  border: 1px solid var(--gs-line-strong);
+  border-radius: 999px;
+  background: var(--gs-bg-alt);
+  color: var(--gs-muted);
+  cursor: text;
+}
+
+.gs-search:focus-within {
+  border-color: var(--gs-link);
+  box-shadow: 0 0 0 0.25rem rgba(var(--gs-link-rgb), 0.25);
+}
+
+.gs-search input {
+  flex-grow: 1;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  font: inherit;
+  font-size: 15px;
+  color: var(--gs-ink);
+}
+
+.gs-search input::placeholder {
+  color: var(--gs-muted);
+}
+
+/* Header (6.6) */
+.gs-header {
+  min-height: 76px;
+  padding-block: 0;
+  background: var(--gs-surface) !important;
+  border-bottom: 1px solid var(--gs-line);
+  box-shadow: none;
+}
+
+.gs-header > .container-grid {
+  min-height: 76px;
+}
+
+.gs-logo {
+  padding: 0;
+  margin-right: 36px;
+}
+
+.gs-logo img {
+  display: block;
+  height: 40px;
+  width: auto;
+}
+
+/* The logo is a JPEG with a white background: a rounded plate in the dark theme */
+:root[data-theme="dark"] .gs-logo img,
+.gs-footer .footer-logo {
+  border-radius: 6px;
+}
+
+.gs-nav .nav-link {
+  font-size: 16px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.gs-nav .nav-link:hover,
+.gs-nav .nav-link:focus-visible {
+  color: var(--gs-link) !important;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.gs-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.gs-user-name {
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Language switcher: text button in the header, current language marked in the footer */
+.gs-lang-btn {
+  min-width: 44px;
+  height: 44px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--gs-ink);
+  font-family: var(--gs-font);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.gs-lang-btn:hover {
+  background: var(--gs-bg-alt);
+}
+
+/* Hamburger menu below 1200px: links, then the search-free actions row */
+@media (max-width: 1199.98px) {
+  .gs-nav {
+    padding-block: 8px;
+    border-bottom: 1px solid var(--gs-line);
+  }
+
+  .gs-header-actions {
+    padding-block: 12px;
+  }
+
+  .gs-header-actions .dropdown {
+    margin-left: auto;
+  }
+}
+
+@media (min-width: 1200px) {
+  .gs-nav {
+    gap: 10px;
+  }
+
+  .gs-header-search {
+    flex: 0 1 380px;
+    min-width: 220px;
+    margin-left: auto;
+    margin-right: 16px;
+  }
+}
+
+/* Footer: new colors, the 3-column structure is unchanged */
+.gs-footer {
+  color: var(--gs-footer-text);
+  border-top: 0;
+}
+
+.gs-footer-heading {
+  margin-bottom: 1rem;
+  font-family: var(--gs-font);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--gs-footer-heading);
+}
+
+.gs-footer-link {
+  color: var(--gs-footer-text);
+  font-size: 15px;
+  text-decoration: none;
+}
+
+.gs-footer-link:hover,
+.gs-footer-link:focus-visible {
+  color: var(--gs-footer-heading);
+  text-decoration: underline;
+}
+
+.gs-footer-divider {
+  border-color: var(--gs-footer-line);
+  opacity: 1;
+}
+
+.gs-footer .footer-logo {
+  max-height: 40px;
+  height: auto;
+  width: auto;
+}
+
+.gs-footer .gs-lang-btn {
+  min-width: 40px;
+  height: 36px;
+  color: var(--gs-footer-text);
+}
+
+.gs-footer .gs-lang-btn:hover,
+.gs-footer .gs-lang-btn.is-current {
+  background: transparent;
+  color: var(--gs-footer-heading);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+/* Small helpers that replace Bootstrap's primary/success classes in the public views (6.2) */
+.gs-text-link {
+  color: var(--gs-link) !important;
+}
+
+.gs-bg-accent {
+  background: var(--gs-accent) !important;
+  color: var(--gs-on-accent) !important;
+  font-weight: 700;
+}
+
+/* "Free" badge inside text (not over an image) */
+.gs-badge-free-inline {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+  background: var(--gs-badge-free);
+  color: var(--gs-on-badge-free);
+}
+
+a.gs-tag {
+  text-decoration: none;
+}
+
+a.gs-tag:hover,
+a.gs-tag:focus-visible {
+  color: var(--gs-tag-text);
+  text-decoration: underline;
+}
+
+/* Page title band of inner pages, instead of the old blue band */
+.gs-page-header {
+  padding-block: 32px 24px;
+  border-bottom: 1px solid var(--gs-line);
+}
+
+/* Clear button inside the search field */
+.gs-search-clear {
+  display: inline-flex;
+  color: var(--gs-muted);
+}
+
+.gs-search-clear:hover {
+  color: var(--gs-ink);
+}
+
+/* "Past" label inside text (GS-BUG-002), same color as on the card image */
+.gs-badge-past-inline {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+  background: var(--gs-badge-past-bg);
+  color: var(--gs-on-badge-free);
+}
+
+/* Compact event card (GS-REQ-006, 6.5): Views/Shared/_EventCardCompact.cshtml */
+.gs-card-compact {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: 100%;
+  padding: 12px;
+  border: 1px solid var(--gs-line);
+  border-radius: 16px;
+  background: var(--gs-surface);
+  color: inherit;
+  text-decoration: none;
+  transition: box-shadow 0.2s ease;
+}
+
+.gs-card-compact:hover,
+.gs-card-compact:focus {
+  color: inherit;
+}
+
+.gs-card-compact:hover {
+  box-shadow: var(--gs-shadow-card);
+}
+
+.gs-card-compact:hover .gs-card-compact-title {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.gs-card-compact:focus-visible {
+  outline: 3px solid var(--gs-accent);
+  outline-offset: 3px;
+}
+
+/* 96x96 thumbnail, cover, radius 10px */
+.gs-card-compact-media {
+  flex-shrink: 0;
+  width: 96px;
+  height: 96px;
+  overflow: hidden;
+  border-radius: 10px;
+  background: var(--gs-media-bg);
+}
+
+.gs-card-compact-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.gs-card-compact-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.gs-card-compact-date {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--gs-link);
+}
+
+.gs-card-compact-title {
+  margin: 0;
+  font-family: var(--gs-font);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--gs-ink);
+}
+
+.gs-card-compact-venue {
+  margin: 0;
+  font-size: 14px;
+  color: var(--gs-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (min-width: 1200px) {
+  .gs-card-compact-title {
+    font-size: 17px;
+  }
+}
+
+/* Chip (GS-REQ-006, 6.5): a link when it opens another page (hero), a button when it filters in place */
+.gs-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid var(--gs-line-strong);
+  border-radius: 999px;
+  background: var(--gs-surface);
+  color: var(--gs-ink);
+  font-family: var(--gs-font);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.gs-chip:hover {
+  border-color: var(--gs-ink);
+  color: var(--gs-ink);
+}
+
+.gs-chip.is-active,
+.gs-chip[aria-current="true"],
+.gs-chip[aria-pressed="true"] {
+  border-color: var(--gs-accent);
+  background: var(--gs-accent);
+  color: var(--gs-on-accent);
+  font-weight: 700;
+}
+
+.gs-chip:focus-visible {
+  outline: 3px solid var(--gs-accent);
+  outline-offset: 2px;
+}
+
+/* Chip row and its label (hero, period view; moved from gs-home.css in GS-REQ-008, 8.2.4) */
+.gs-chip-group-label {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--gs-muted);
+}
+
+.gs-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Hidden input that only anchors the "Date" chip calendar */
+.gs-date-chip-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Smaller outline chip (hero "What" row) */
+.gs-chip-sm {
+  min-height: 40px;
+  padding: 0 16px;
+  background: transparent;
+}
+
+/* "Free" chip: link-colored outline, as in the mockup */
+.gs-chip-free {
+  border-color: var(--gs-link);
+  color: var(--gs-link);
+  font-weight: 700;
+}
+
+.gs-chip-free:hover {
+  color: var(--gs-link);
+}
+
+/* Compact chip that filters in place ("This weekend", GS-REQ-007, 7.6.4) */
+.gs-chip-compact {
+  min-height: 36px;
+  padding: 0 14px;
+  font-size: 14px;
+}
+
+@media (min-width: 1200px) {
+  .gs-chip {
+    font-size: 16px;
+  }
+
+  .gs-chip-sm {
+    font-size: 15px;
+  }
+}
+
+/*
+ * Section building blocks, shared by the desktop and the mobile homepage and other pages
+ * (moved from gs-home.css in GS-REQ-007, step 7k): section header, row arrows, band, tabs.
+ */
+/* Homepage section: 64-72px apart (GS-REQ-007, structure table) */
+.gs-home-section {
+  padding-block: 64px;
+}
+
+/* Directly after the hero, whose own bottom padding already separates them */
+.gs-home-section-tight-top {
+  padding-top: 24px;
+}
+
+/* Section header (GS-REQ-006, 6.5): eyebrow and H2 on the left; link and arrows on the right, on the H2 baseline */
+.gs-section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px 24px;
+  margin-bottom: 24px;
+}
+
+.gs-section-titles {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.gs-section-title {
+  margin: 0;
+}
+
+.gs-section-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.gs-section-link {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--gs-link);
+}
+
+.gs-section-link:hover {
+  color: var(--gs-ink);
+}
+
+/* Row arrows (GS-REQ-006, 6.5): 44px, "back" in the secondary style, "forward" in the primary style */
+.gs-row-arrows {
+  display: flex;
+  gap: 8px;
+}
+
+.gs-row-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--gs-line-strong);
+  border-radius: 999px;
+  background: var(--gs-surface);
+  color: var(--gs-ink);
+  cursor: pointer;
+}
+
+.gs-row-arrow-next {
+  border-color: var(--gs-ink);
+  background: var(--gs-ink);
+  color: var(--gs-on-ink);
+}
+
+.gs-row-arrow:hover:not(:disabled) {
+  border-color: var(--gs-ink);
+}
+
+.gs-row-arrow:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.gs-row-arrow:focus-visible {
+  outline: 3px solid var(--gs-accent);
+  outline-offset: 2px;
+}
+
+/* Band with the alternative background and lines above and below ("This weekend", "Free this week") */
+.gs-home-band {
+  border-block: 1px solid var(--gs-line);
+  background: var(--gs-bg-alt);
+}
+
+.gs-tabs {
+  display: flex;
+  gap: 28px;
+}
+
+/* Active tab: 18px / 800 with a 3px accent line (GS-REQ-007, 7.6.3) */
+.gs-tab {
+  height: 48px;
+  margin-bottom: -1px;
+  padding: 0 2px;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  background: transparent;
+  font-family: var(--gs-font);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--gs-muted);
+  cursor: pointer;
+}
+
+.gs-tab:hover {
+  color: var(--gs-ink);
+}
+
+.gs-tab[aria-selected="true"] {
+  border-bottom-color: var(--gs-accent);
+  font-weight: 800;
+  color: var(--gs-ink);
+}
+
+.gs-tab:focus-visible {
+  outline: 3px solid var(--gs-accent);
+  outline-offset: 2px;
+}
+
+/* Section link that opens a menu ("All 13 categories") looks like the other section links */
+.gs-link-button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.gs-link-button:focus-visible {
+  outline: 3px solid var(--gs-accent);
+  outline-offset: 2px;
+}
+
+/* Grid of standard cards in the listings (GS-REQ-008, 8.1): 4 columns from 1400px, 3 from 1200px,
+   2 on tablets, 1 on phones; 32px between rows, 24px between columns */
+.gs-event-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 32px 24px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 768px) {
+  .gs-event-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1200px) {
+  .gs-event-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1400px) {
+  .gs-event-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* Venue card (GS-REQ-006, 6.5): 3:2 photo (cover), name 19px / 800 up to 2 lines, upcoming events 14px.
+   Homepage and "Venues" page (moved from gs-home.css in GS-REQ-008). */
+.gs-venue-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.gs-venue-card:hover,
+.gs-venue-card:focus {
+  color: inherit;
+}
+
+.gs-venue-card-media {
+  aspect-ratio: 3 / 2;
+  overflow: hidden;
+  border-radius: var(--gs-radius-card);
+  background: var(--gs-media-bg);
+  transition: box-shadow 0.2s ease;
+}
+
+.gs-venue-card-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.gs-venue-card:hover .gs-venue-card-media {
+  box-shadow: var(--gs-shadow-card);
+}
+
+.gs-venue-card:hover .gs-venue-card-name {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.gs-venue-card:focus-visible {
+  outline: 3px solid var(--gs-accent);
+  outline-offset: 4px;
+  border-radius: 16px;
+}
+
+.gs-venue-card-name {
+  margin: 0;
+  font-family: var(--gs-font);
+  font-size: 19px;
+  font-weight: 800;
+  line-height: 1.25;
+  color: var(--gs-ink);
+}
+
+.gs-venue-card-count {
+  margin: -8px 0 0;
+  font-size: 14px;
+  color: var(--gs-muted);
+}

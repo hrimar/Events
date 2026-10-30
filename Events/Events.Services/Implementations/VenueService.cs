@@ -30,6 +30,11 @@ public class VenueService : IVenueService
     public async Task<IEnumerable<VenueWithStatsDto>> GetAllWithStatsAsync() =>
         await _repository.GetAllWithStatsAsync(_clock.Today);
 
+    public async Task<List<VenueWithStatsDto>> GetTopVenuesWithPhotoAsync(int days, int count) =>
+        await _repository.GetTopVenuesWithPhotoAsync(_clock.Today, _clock.Today.AddDays(days - 1), count);
+
+    public async Task<int> GetCountAsync() => await _repository.CountAsync();
+
     public async Task<IEnumerable<UnmappedLocationDto>> GetUnmappedLocationsAsync() =>
         await _repository.GetUnmappedLocationsAsync();
 

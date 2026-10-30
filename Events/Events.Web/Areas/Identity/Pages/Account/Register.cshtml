@@ -10,7 +10,7 @@
             <div class="card shadow-sm border-0">
                 <div class="card-body p-5">
                     <div class="text-center mb-4">
-                        <i class="fas fa-user-plus fa-3x text-primary mb-3"></i>
+                        <gs-icon name="user-plus" size="48" class="gs-text-link mb-3" />
                         <h2 class="fw-bold">@Localizer["Register_Heading"]</h2>
                         <p class="text-muted">@Localizer["Register_Subtitle"]</p>
                     </div>
@@ -20,7 +20,7 @@
                         
                         <div class="mb-3">
                             <label asp-for="Input.Email" class="form-label">
-                                <i class="fas fa-envelope me-2"></i>@Localizer["Account_Email"]
+                                <gs-icon name="mail" class="me-2" />@Localizer["Account_Email"]
                             </label>
                             <input asp-for="Input.Email" class="form-control form-control-lg" autocomplete="username" aria-required="true" placeholder="@Localizer["Account_PlaceholderEmail"]" />
                             <span asp-validation-for="Input.Email" class="text-danger"></span>
@@ -28,7 +28,7 @@
                         
                         <div class="mb-3">
                             <label asp-for="Input.Password" class="form-label">
-                                <i class="fas fa-lock me-2"></i>@Localizer["Account_Password"]
+                                <gs-icon name="lock" class="me-2" />@Localizer["Account_Password"]
                             </label>
                             <input asp-for="Input.Password" class="form-control form-control-lg" type="password" autocomplete="new-password" aria-required="true" placeholder="@Localizer["Account_PlaceholderNewPassword"]" />
                             <span asp-validation-for="Input.Password" class="text-danger"></span>
@@ -39,15 +39,15 @@
                         
                         <div class="mb-4">
                             <label asp-for="Input.ConfirmPassword" class="form-label">
-                                <i class="fas fa-lock me-2"></i>@Localizer["Account_ConfirmPassword"]
+                                <gs-icon name="lock" class="me-2" />@Localizer["Account_ConfirmPassword"]
                             </label>
                             <input asp-for="Input.ConfirmPassword" class="form-control form-control-lg" type="password" autocomplete="new-password" aria-required="true" placeholder="@Localizer["Account_PlaceholderConfirmPassword"]" />
                             <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
                         </div>
                         
                         <div class="d-grid mb-3">
-                            <button id="registerSubmit" type="submit" class="btn btn-primary btn-lg">
-                                <i class="fas fa-user-plus me-2"></i>@Localizer["Register_Submit"]
+                            <button id="registerSubmit" type="submit" class="gs-btn gs-btn-primary">
+                                <gs-icon name="user-plus" class="me-2" />@Localizer["Register_Submit"]
                             </button>
                         </div>
                         
@@ -75,7 +75,7 @@
                                 @foreach (var provider in Model.ExternalLogins!)
                                 {
                                     <button type="submit" class="btn btn-outline-secondary" name="provider" value="@provider.Name" title="@provider.DisplayName">
-                                        <i class="fab fa-@provider.Name.ToLower() me-2"></i>@provider.DisplayName
+                                        <gs-icon name="log-in" class="me-2" />@provider.DisplayName
                                     </button>
                                 }
                             </div>

@@ -1,0 +1,15 @@
+@model Events.Web.Models.HomePageViewModel
+
+@* Personal sections, shared by the desktop and mobile layouts (never cached: they depend on the user). *@
+
+<!-- Saved Events (authenticated users with saved events only) -->
+@if((User.Identity?.IsAuthenticated ?? false) && Model.SavedSection.Events.Any())
+{
+    @await Html.PartialAsync("_EventsSection", Model.SavedSection)
+}
+
+<!-- Recommended Events (authenticated users with saved events that match upcoming events) -->
+@if((User.Identity?.IsAuthenticated ?? false) && Model.RecommendedSection.Events.Any())
+{
+    @await Html.PartialAsync("_EventsSection", Model.RecommendedSection)
+}
