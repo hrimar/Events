@@ -3,6 +3,7 @@ using Events.Crawler.DTOs.Kupibileti;
 using Events.Crawler.Enums;
 using Events.Crawler.Services.Helpers;
 using Events.Crawler.Services.Interfaces;
+using HtmlAgilityPack;
 using Microsoft.Extensions.Logging;
 using Microsoft.Playwright;
 using System.Diagnostics;
@@ -21,15 +22,16 @@ public class KupibiletiCrawler : IWebScrapingCrawler
     // (docker run -d -p 8191:8191 ghcr.io/flaresolverr/flaresolverr:latest); in production this needs
     // to run as a sidecar next to the Azure Function, with the URL below moved to configuration.
     private const string FlareSolverrUrl = "http://localhost:8191/v1";
-    private const string CardSelector = ".card";
-    private const string CardImageContainerSelector = ".position-relative.mb-3";
-    private const string CardDetailLinkSelector = "a.stretched-link[href]";
-    private const string SeatsButtonSelector = "#choose_seats_btn";
-    private const string EventNameSelector = "[itemprop='name']";
-    private const string StartDateSelector = "time[itemprop='startDate']";
-    private const string DescriptionCandidateSelector = "div.col-12";
-    private const string LocationSelector = "[itemprop='location']";
-    private const string ShowLinkContainerSelector = "div.col-xl-3.col-lg-4.col-12";
+    private const string CardSelector = ".snap-start";//".card";
+    private const string CardImageContainerSelector = "article"; // ".position-relative.mb-3";
+    private const string CardDetailLinkSelector = "a.kb-lift[href]"; // "a.stretched-link[href]";
+    // Detail pages are parsed from FlareSolverr's HTML (HtmlAgilityPack XPath): all show data comes from
+    // the schema.org JSON-LD block, and group pages list their performances as "fan-out-day" rows.
+    private const string JsonLdScriptXPath = "//script[@type='application/ld+json']";
+    private const string ShowRowXPath = "//a[@data-testid='fan-out-day'][@href]";
+
+    // Shared across calls to avoid socket exhaustion; FlareSolverr's own maxTimeout is 60s.
+    private static readonly HttpClient FlareSolverrHttpClient = new() { Timeout = TimeSpan.FromSeconds(90) };
 
     private readonly ILogger<KupibiletiCrawler> _logger;
     private static bool _browsersInstalled = false;
@@ -240,7 +242,7 @@ public class KupibiletiCrawler : IWebScrapingCrawler
                 if (string.IsNullOrEmpty(card.DetailUrl))
                     continue;
 
-                var shows = await ExtractShowsForCardAsync(context, card);
+                var shows = await ExtractShowsForCardAsync(card);
                 foreach (var show in shows)
                 {
                     var crawledEvent = MapToStandardDto(card, show);
@@ -264,13 +266,26 @@ public class KupibiletiCrawler : IWebScrapingCrawler
     // to a plain Playwright session (with our own WaitForBotChallengeToClearAsync as a safety net).
     private async Task<(List<Cookie> Cookies, string? UserAgent)> SolveCloudflareChallengeAsync(string url)
     {
+        var solution = await SendFlareSolverrRequestAsync(url);
+        if (solution == null)
+            return (new List<Cookie>(), null);
+
+        _logger.LogInformation("[{Source}] FlareSolverr solved Cloudflare challenge for {Url}, got {CookieCount} cookies", SourceName, url, solution.Cookies.Count);
+        return (solution.Cookies, solution.UserAgent);
+    }
+
+    private sealed record FlareSolverrSolution(string? Html, List<Cookie> Cookies, string? UserAgent);
+
+    // Sends a "request.get" to the local FlareSolverr instance and returns the solved page's HTML, cookies
+    // and User-Agent. Returns null on any failure (logged), so callers can decide how to degrade.
+    private async Task<FlareSolverrSolution?> SendFlareSolverrRequestAsync(string url)
+    {
         try
         {
-            using var httpClient = new HttpClient();
             var requestJson = JsonSerializer.Serialize(new { cmd = "request.get", url, maxTimeout = 60000 });
             using var requestContent = new StringContent(requestJson, System.Text.Encoding.UTF8, "application/json");
 
-            using var response = await httpClient.PostAsync(FlareSolverrUrl, requestContent);
+            using var response = await FlareSolverrHttpClient.PostAsync(FlareSolverrUrl, requestContent);
             response.EnsureSuccessStatusCode();
 
             using var responseStream = await response.Content.ReadAsStreamAsync();
@@ -281,11 +296,12 @@ public class KupibiletiCrawler : IWebScrapingCrawler
             {
                 _logger.LogWarning("[{Source}] FlareSolverr did not report success for {Url}: {Message}",
                     SourceName, url, root.TryGetProperty("message", out var msgEl) ? msgEl.GetString() : "(no message)");
-                return (new List<Cookie>(), null);
+                return null;
             }
 
             var solution = root.GetProperty("solution");
             var userAgent = solution.TryGetProperty("userAgent", out var uaElement) ? uaElement.GetString() : null;
+            var html = solution.TryGetProperty("response", out var htmlElement) ? htmlElement.GetString() : null;
 
             var cookies = new List<Cookie>();
             if (solution.TryGetProperty("cookies", out var cookiesElement))
@@ -304,13 +320,12 @@ public class KupibiletiCrawler : IWebScrapingCrawler
                 }
             }
 
-            _logger.LogInformation("[{Source}] FlareSolverr solved Cloudflare challenge for {Url}, got {CookieCount} cookies", SourceName, url, cookies.Count);
-            return (cookies, userAgent);
+            return new FlareSolverrSolution(html, cookies, userAgent);
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "[{Source}] FlareSolverr call failed for {Url}, proceeding without clearance cookies", SourceName, url);
-            return (new List<Cookie>(), null);
+            _logger.LogWarning(ex, "[{Source}] FlareSolverr call failed for {Url}", SourceName, url);
+            return null;
         }
     }
 
@@ -439,62 +454,46 @@ public class KupibiletiCrawler : IWebScrapingCrawler
         return cards;
     }
 
-    private async Task<List<KupibiletiShowDto>> ExtractShowsForCardAsync(IBrowserContext context, KupibiletiEventDto card)
+    // Detail and performance pages are fetched through FlareSolverr (which reliably passes Cloudflare) and
+    // parsed from their schema.org JSON-LD, instead of being opened in Playwright, where the transferred
+    // cf_clearance cookie was frequently rejected and pages stayed stuck on the challenge interstitial.
+    private async Task<List<KupibiletiShowDto>> ExtractShowsForCardAsync(KupibiletiEventDto card)
     {
         var shows = new List<KupibiletiShowDto>();
-        var detailUrl = card.DetailUrl!.StartsWith("http") ? card.DetailUrl! : $"{BaseUrl}{card.DetailUrl}";
+        var detailUrl = ToAbsoluteUrl(card.DetailUrl!);
 
-        // Use a fresh page per detail navigation instead of reusing the list page.
-        // Reusing one page across dozens of navigations was accumulating renderer
-        // memory and crashing the Chromium process in memory-constrained containers.
-        var detailPage = await context.NewPageAsync();
         try
         {
-            await detailPage.GotoAsync(detailUrl, new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded, Timeout = 30000, Referer = EventsListUrl });
-            await EnsureRealContentLoadedAsync(detailPage, context, detailUrl);
-            await Task.Delay(300);
+            var detailDocument = await FetchHtmlDocumentAsync(detailUrl);
+            if (detailDocument == null)
+                return shows;
 
             _logger.LogDebug("[{Source}] Loaded detail page for '{EventName}': {Url}", SourceName, card.Name, detailUrl);
 
-            var seatsButton = await detailPage.QuerySelectorAsync(SeatsButtonSelector);
-            if (seatsButton != null)
+            // Single-showing event: the page itself carries a schema.org "Event" block.
+            var singleShow = ParseJsonLdEvent(detailDocument, detailUrl);
+            if (singleShow != null)
             {
-                // Single-showing event: all show data is already on this page.
-                var show = await ExtractShowDetailsAsync(detailPage, detailUrl);
-                if (show != null)
-                    shows.Add(show);
-
+                shows.Add(singleShow);
                 return shows;
             }
 
-            // Multi-showing hub page: scroll to load every performance, then visit each one's own detail page.
-            await ScrollToLoadAllShowsAsync(detailPage);
-
-            var showLinks = await ExtractShowLinksAsync(detailPage);
-            _logger.LogDebug("[{Source}] Found {ShowCount} performances for '{EventName}'", SourceName, showLinks.Count, card.Name);
+            // Multi-showing group page ("EventSeries"): visit each Sofia performance's own detail page.
+            var showLinks = ExtractShowLinks(detailDocument);
+            _logger.LogDebug("[{Source}] Found {ShowCount} Sofia performances for '{EventName}'", SourceName, showLinks.Count, card.Name);
 
             foreach (var showLink in showLinks)
             {
-                var showDetailUrl = showLink.StartsWith("http") ? showLink : $"{BaseUrl}{showLink}";
-                var showPage = await context.NewPageAsync();
-                try
-                {
-                    await showPage.GotoAsync(showDetailUrl, new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded, Timeout = 30000, Referer = detailUrl });
-                    await EnsureRealContentLoadedAsync(showPage, context, showDetailUrl);
-                    await Task.Delay(300);
+                var showDetailUrl = ToAbsoluteUrl(showLink);
+                var showDocument = await FetchHtmlDocumentAsync(showDetailUrl);
+                if (showDocument == null)
+                    continue;
 
-                    var show = await ExtractShowDetailsAsync(showPage, showDetailUrl);
-                    if (show != null)
-                        shows.Add(show);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogDebug(ex, "[{Source}] Error extracting performance details for '{EventName}'", SourceName, card.Name);
-                }
-                finally
-                {
-                    await showPage.CloseAsync();
-                }
+                var show = ParseJsonLdEvent(showDocument, showDetailUrl);
+                if (show != null)
+                    shows.Add(show);
+                else
+                    _logger.LogWarning("[{Source}] No JSON-LD Event found on {Url}, skipping performance", SourceName, showDetailUrl);
             }
 
             return shows;
@@ -504,30 +503,74 @@ public class KupibiletiCrawler : IWebScrapingCrawler
             _logger.LogWarning(ex, "[{Source}] Error extracting shows for event '{EventName}'", SourceName, card.Name);
             return shows;
         }
-        finally
-        {
-            await detailPage.CloseAsync();
-        }
     }
 
-    // Extracts show data from the currently loaded page. Assumes the page has already navigated
-    // to a single-showing detail page (i.e. one that has SeatsButtonSelector present).
-    private async Task<KupibiletiShowDto?> ExtractShowDetailsAsync(IPage page, string ticketUrl)
+    private async Task<HtmlDocument?> FetchHtmlDocumentAsync(string url)
     {
-        try
+        var solution = await SendFlareSolverrRequestAsync(url);
+        if (string.IsNullOrEmpty(solution?.Html))
         {
-            var locationElement = await page.QuerySelectorAsync(LocationSelector);
-            if (locationElement == null)
+            _logger.LogWarning("[{Source}] No HTML received from FlareSolverr for {Url}, skipping", SourceName, url);
+            return null;
+        }
+
+        var document = new HtmlDocument();
+        document.LoadHtml(solution.Html);
+        return document;
+    }
+
+    // Builds the show from the first schema.org "Event" object found in the page's JSON-LD blocks
+    // (a block may hold a single object or an array). Returns null when the page has no such object,
+    // e.g. on a group page whose JSON-LD is an "EventSeries".
+    private KupibiletiShowDto? ParseJsonLdEvent(HtmlDocument document, string ticketUrl)
+    {
+        var scriptNodes = document.DocumentNode.SelectNodes(JsonLdScriptXPath);
+        if (scriptNodes == null)
+            return null;
+
+        foreach (var scriptNode in scriptNodes)
+        {
+            var json = scriptNode.InnerHtml;
+            if (string.IsNullOrWhiteSpace(json))
+                continue;
+
+            try
             {
-                _logger.LogWarning("[{Source}] No location element found on {Url}, skipping show", SourceName, ticketUrl);
-                return null;
+                using var jsonDocument = JsonDocument.Parse(json);
+                var root = jsonDocument.RootElement;
+                var candidates = root.ValueKind == JsonValueKind.Array ? root.EnumerateArray().ToList() : new List<JsonElement> { root };
+
+                foreach (var candidate in candidates)
+                {
+                    if (candidate.ValueKind != JsonValueKind.Object || GetJsonString(candidate, "@type") != "Event")
+                        continue;
+
+                    return MapJsonLdEventToShow(candidate, ticketUrl);
+                }
             }
+            catch (JsonException ex)
+            {
+                _logger.LogDebug(ex, "[{Source}] Could not parse JSON-LD block on {Url}", SourceName, ticketUrl);
+            }
+        }
 
-            var venueNameElement = await locationElement.QuerySelectorAsync(EventNameSelector);
-            var venueNameText = venueNameElement != null ? CleanText(await venueNameElement.InnerTextAsync()) : null;
+        return null;
+    }
 
-            string? city = null;
-            string? location = null;
+    private KupibiletiShowDto MapJsonLdEventToShow(JsonElement eventElement, string ticketUrl)
+    {
+        var startDateText = GetJsonString(eventElement, "startDate");
+        DateTime? startDate = string.IsNullOrWhiteSpace(startDateText)
+            ? null
+            : DateTimeOffset.Parse(startDateText, CultureInfo.InvariantCulture, DateTimeStyles.None).DateTime;
+
+        // location.name holds "CITY - venue name", e.g. "СОФИЯ - НДК, ЗАЛА 1".
+        string? city = null;
+        string? location = null;
+        string? address = null;
+        if (eventElement.TryGetProperty("location", out var locationElement) && locationElement.ValueKind == JsonValueKind.Object)
+        {
+            var venueNameText = CleanText(GetJsonString(locationElement, "name"));
             if (!string.IsNullOrEmpty(venueNameText))
             {
                 var parts = venueNameText.Split(" - ", 2, StringSplitOptions.TrimEntries);
@@ -535,136 +578,66 @@ public class KupibiletiCrawler : IWebScrapingCrawler
                 location = parts.Length > 1 ? parts[1] : null;
             }
 
-            var addressElement = await locationElement.QuerySelectorAsync("[itemprop='streetAddress']");
-            var address = addressElement != null ? CleanText(await addressElement.InnerTextAsync()) : null;
-
-            var nameElement = await page.QuerySelectorAsync(EventNameSelector);
-            var name = nameElement != null ? CleanText(await nameElement.InnerTextAsync()) : null;
-
-            var startDate = await ExtractStartDateAsync(page);
-            var description = await ExtractDescriptionAsync(page);
-
-            return new KupibiletiShowDto
-            {
-                Name = name,
-                Description = description,
-                StartDate = startDate,
-                TicketUrl = ticketUrl,
-                City = city,
-                Location = location,
-                Address = address
-            };
+            if (locationElement.TryGetProperty("address", out var addressElement) && addressElement.ValueKind == JsonValueKind.Object)
+                address = CleanText(GetJsonString(addressElement, "streetAddress"));
         }
-        catch (Exception ex)
+
+        return new KupibiletiShowDto
         {
-            _logger.LogDebug(ex, "[{Source}] Error extracting show details from {Url}", SourceName, ticketUrl);
-            return null;
-        }
+            Name = CleanText(GetJsonString(eventElement, "name")),
+            Description = CleanText(GetJsonString(eventElement, "description")),
+            StartDate = startDate,
+            TicketUrl = ticketUrl,
+            City = city,
+            Location = location,
+            Address = address
+        };
     }
 
-    private async Task<DateTime?> ExtractStartDateAsync(IPage page)
+    private static string? GetJsonString(JsonElement element, string propertyName)
     {
-        try
-        {
-            var dateElement = await page.QuerySelectorAsync(StartDateSelector);
-            if (dateElement == null)
-                return null;
-
-            var datetimeAttr = await dateElement.GetAttributeAsync("datetime");
-            if (string.IsNullOrWhiteSpace(datetimeAttr))
-                return null;
-
-            return DateTimeOffset.Parse(datetimeAttr, CultureInfo.InvariantCulture, DateTimeStyles.None).DateTime;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogDebug(ex, "[{Source}] Error extracting start date", SourceName);
-            return null;
-        }
+        return element.TryGetProperty(propertyName, out var property) && property.ValueKind == JsonValueKind.String
+            ? property.GetString()
+            : null;
     }
 
-    private async Task<string?> ExtractDescriptionAsync(IPage page)
-    {
-        try
-        {
-            var candidates = await page.QuerySelectorAllAsync(DescriptionCandidateSelector);
-            string? longestText = null;
-
-            foreach (var candidate in candidates)
-            {
-                var text = await candidate.InnerTextAsync();
-                if (string.IsNullOrWhiteSpace(text))
-                    continue;
-
-                if (longestText == null || text.Length > longestText.Length)
-                    longestText = text;
-            }
-
-            return CleanText(longestText);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogDebug(ex, "[{Source}] Error extracting description", SourceName);
-            return null;
-        }
-    }
-
-    private async Task<List<string>> ExtractShowLinksAsync(IPage page)
+    private List<string> ExtractShowLinks(HtmlDocument document)
     {
         var links = new List<string>();
+        var rowNodes = document.DocumentNode.SelectNodes(ShowRowXPath);
+        if (rowNodes == null)
+            return links;
 
-        try
+        var skippedNonSofia = 0;
+
+        foreach (var rowNode in rowNodes)
         {
-            var showContainers = await page.QuerySelectorAllAsync(ShowLinkContainerSelector);
-
-            foreach (var container in showContainers)
+            // Each row shows the city either as its own line ("София") or as a venue prefix
+            // ("СОФИЯ - Театър ..."), so check the whole row text. Skipping non-Sofia rows here avoids
+            // fetching pages that MapToStandardDto would drop anyway.
+            var rowText = HtmlEntity.DeEntitize(rowNode.InnerText);
+            if (!IsSofia(rowText))
             {
-                var linkElement = await container.QuerySelectorAsync("a[href]");
-                if (linkElement == null)
-                    continue;
-
-                var href = await linkElement.GetAttributeAsync("href");
-                if (!string.IsNullOrEmpty(href))
-                    links.Add(href);
+                skippedNonSofia++;
+                continue;
             }
+
+            var href = rowNode.GetAttributeValue("href", string.Empty);
+            if (!string.IsNullOrEmpty(href))
+                links.Add(href);
         }
-        catch (Exception ex)
-        {
-            _logger.LogDebug(ex, "[{Source}] Error extracting performance links", SourceName);
-        }
+
+        if (skippedNonSofia > 0)
+            _logger.LogDebug("[{Source}] Skipped {SkippedCount} non-Sofia performances before opening them", SourceName, skippedNonSofia);
 
         return links;
     }
 
-    private async Task ScrollToLoadAllShowsAsync(IPage page)
-    {
-        var previousHeight = 0;
-        var maxScrollAttempts = 50;
-        var scrollAttempts = 0;
-
-        while (scrollAttempts < maxScrollAttempts)
-        {
-            var currentHeight = await page.EvaluateAsync<int>("document.body.scrollHeight");
-
-            if (currentHeight == previousHeight)
-            {
-                _logger.LogDebug("[{Source}] Reached end of performances list after {Attempts} scroll attempts", SourceName, scrollAttempts);
-                break;
-            }
-
-            previousHeight = currentHeight;
-            await page.EvaluateAsync("window.scrollBy(0, window.innerHeight)");
-            await Task.Delay(500);
-            scrollAttempts++;
-        }
-    }
+    private static string ToAbsoluteUrl(string url) => url.StartsWith("http") ? url : $"{BaseUrl}{url}";
 
     private CrawledEventDto? MapToStandardDto(KupibiletiEventDto card, KupibiletiShowDto show)
     {
-        var isSofia = !string.IsNullOrEmpty(show.City)
-            && (show.City.Contains("София", StringComparison.OrdinalIgnoreCase) || show.City.Contains("Sofia", StringComparison.OrdinalIgnoreCase));
-
-        if (!isSofia)
+        if (!IsSofia(show.City))
         {
             _logger.LogDebug("[{Source}] Skipping non-Sofia show for '{EventName}': City='{City}'", SourceName, card.Name, show.City);
             return null;
@@ -691,6 +664,12 @@ public class KupibiletiCrawler : IWebScrapingCrawler
                 ["crawled_from"] = EventsListUrl
             }
         };
+    }
+
+    private static bool IsSofia(string? text)
+    {
+        return !string.IsNullOrEmpty(text)
+            && (text.Contains("София", StringComparison.OrdinalIgnoreCase) || text.Contains("Sofia", StringComparison.OrdinalIgnoreCase));
     }
 
     private string GenerateEventId(string? title, string? url)

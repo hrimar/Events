@@ -1,6 +1,6 @@
 namespace Events.Crawler.DTOs.Kupibileti;
 
-// Show-level data read from a single show detail page (itemprop="name"/"startDate"/"location").
+// Show-level data read from a single show detail page's schema.org "Event" JSON-LD block.
 public class KupibiletiShowDto
 {
     public string? Name { get; set; }
