@@ -12,6 +12,7 @@ using Events.Services.Implementations;
 using Events.Services.Import;
 using Events.Services.Import.Parsers;
 using Events.Services.Interfaces;
+using Events.Services.Media;
 using Events.Services.Time;
 using Events.Web.Options;
 using Events.Web.Services.Email;
@@ -158,6 +159,7 @@ static void ConfigureAzureStorage(WebApplicationBuilder builder)
 
         builder.Services.AddSingleton(blobContainerClient);
         builder.Services.AddScoped<IImageUploadService, AzureBlobImageService>();
+        builder.Services.AddMediaImageStore();
     }
     else if (!builder.Environment.IsDevelopment() && !IsDesignTime(builder))
     {
@@ -282,6 +284,8 @@ static void RegisterServices(WebApplicationBuilder builder)
     builder.Services.AddMemoryCache();
     builder.Services.AddSingleton<IEventCacheInvalidator, EventCacheInvalidator>();
     builder.Services.AddSofiaClock();
+    // SSRF-safe downloads of Excel import images and pages (GS-REQ-009, 9.1, 9.2).
+    builder.Services.AddSafeHttpFetcher();
     builder.Services.AddScoped<IEventService, EventService>();
     builder.Services.AddScoped<ITagService, TagService>();
     builder.Services.AddScoped<ISubCategoryService, SubCategoryService>();
