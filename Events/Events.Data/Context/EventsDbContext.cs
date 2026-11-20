@@ -28,6 +28,8 @@ public class EventsDbContext : IdentityDbContext<User>
     public DbSet<SiteContent> SiteContents { get; set; }
     public DbSet<PageSeoMeta> PageSeoMetas { get; set; }
     public DbSet<HomeQuickFilter> HomeQuickFilters { get; set; }
+    public DbSet<EventImportJob> EventImportJobs { get; set; }
+    public DbSet<EventImportJobItem> EventImportJobItems { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -44,6 +46,7 @@ public class EventsDbContext : IdentityDbContext<User>
             entity.Property(e => e.ImageUrl).HasMaxLength(500);
             entity.Property(e => e.TicketUrl).HasMaxLength(500);
             entity.Property(e => e.SourceUrl).HasMaxLength(500);
+            entity.Property(e => e.ImageSourceUrl).HasMaxLength(2000);
             entity.Property(e => e.Price).HasColumnType("decimal(18,2)");
 
             // Configure Category relationship
@@ -103,6 +106,7 @@ public class EventsDbContext : IdentityDbContext<User>
         ConfigureSiteContentEntity(modelBuilder);
         ConfigurePageSeoMetaEntity(modelBuilder);
         ConfigureHomeQuickFilterEntity(modelBuilder);
+        ConfigureEventImportJobEntities(modelBuilder);
 
         SeedCategories(modelBuilder);
         SeedSubCategories(modelBuilder);
@@ -204,6 +208,42 @@ public class EventsDbContext : IdentityDbContext<User>
             entity.Property(f => f.UpdatedAt).HasDefaultValueSql("GETUTCDATE()");
 
             entity.HasIndex(f => f.SortOrder);
+        });
+    }
+
+    // Excel/CSV import image job and its report lines (GS-REQ-009, 9.3.3, 9.3.4).
+    private static void ConfigureEventImportJobEntities(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<EventImportJob>(entity =>
+        {
+            entity.HasKey(j => j.Id);
+            entity.Property(j => j.FileName).IsRequired().HasMaxLength(260);
+            entity.Property(j => j.CreatedBy).IsRequired().HasMaxLength(256);
+
+            // Recent jobs list on the Upload screen, and unfinished jobs resumed on start.
+            entity.HasIndex(j => j.CreatedAtUtc);
+            entity.HasIndex(j => j.Status);
+        });
+
+        modelBuilder.Entity<EventImportJobItem>(entity =>
+        {
+            entity.HasKey(i => i.Id);
+            entity.Property(i => i.EventName).IsRequired().HasMaxLength(200);
+            entity.Property(i => i.SourceImageUrl).HasMaxLength(2000);
+            entity.Property(i => i.PageUrl).HasMaxLength(2000);
+            entity.Property(i => i.Detail).HasMaxLength(500);
+
+            entity.HasOne(i => i.Job)
+                .WithMany(j => j.Items)
+                .HasForeignKey(i => i.JobId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // No navigation to Event: the report keeps its lines when an event is deleted later,
+            // so EventId is set to null instead of removing the line.
+            entity.HasOne<Event>()
+                .WithMany()
+                .HasForeignKey(i => i.EventId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
     }
 
