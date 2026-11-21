@@ -8,6 +8,9 @@ public interface IMediaBlobStorage
     // Overwrites an existing blob with the same name (same name = same content).
     Task UploadAsync(string blobName, byte[] content, string contentType, CancellationToken cancellationToken = default);
 
+    // Returns false when the blob did not exist.
+    Task<bool> DeleteAsync(string blobName, CancellationToken cancellationToken = default);
+
     // Deletes every blob whose name starts with the prefix; returns how many were deleted.
     Task<int> DeleteByPrefixAsync(string prefix, CancellationToken cancellationToken = default);
 }

@@ -26,6 +26,12 @@ public sealed class AzureMediaBlobStorage : IMediaBlobStorage
         await _containerClient.GetBlobClient(blobName).UploadAsync(new BinaryData(content), options, cancellationToken);
     }
 
+    public async Task<bool> DeleteAsync(string blobName, CancellationToken cancellationToken = default)
+    {
+        var response = await _containerClient.DeleteBlobIfExistsAsync(blobName, cancellationToken: cancellationToken);
+        return response.Value;
+    }
+
     public async Task<int> DeleteByPrefixAsync(string prefix, CancellationToken cancellationToken = default)
     {
         var deleted = 0;

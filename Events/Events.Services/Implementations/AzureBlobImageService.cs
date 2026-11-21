@@ -5,7 +5,10 @@ using Microsoft.Extensions.Logging;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Processing;
 using System.Net.Mime;
+using Events.Data.Repositories.Interfaces;
+using Events.Models.Enums;
 using Events.Services.Interfaces;
+using Events.Services.Media;
 
 namespace Events.Services.Implementations;
 
@@ -16,21 +19,27 @@ namespace Events.Services.Implementations;
 public class AzureBlobImageService : IImageUploadService
 {
     private readonly BlobContainerClient _containerClient;
+    private readonly IMediaImageStore _mediaImageStore;
+    private readonly IEventRepository _eventRepository;
     private readonly ILogger<AzureBlobImageService> _logger;
 
     // Image constraints
     private const int MaxFileSizeMB = 5;
     private const int MaxFileSizeBytes = MaxFileSizeMB * 1024 * 1024;
-    private const int ThumbnailWidth = 400;
-    private const int ThumbnailHeight = 300;
     private const int OriginalMaxWidth = 1200;
     private const int OriginalMaxHeight = 900;
 
     private static readonly string[] AllowedMimeTypes = { "image/jpeg", "image/png", "image/webp" };
 
-    public AzureBlobImageService(BlobContainerClient containerClient, ILogger<AzureBlobImageService> logger)
+    public AzureBlobImageService(
+        BlobContainerClient containerClient,
+        IMediaImageStore mediaImageStore,
+        IEventRepository eventRepository,
+        ILogger<AzureBlobImageService> logger)
     {
         _containerClient = containerClient ?? throw new ArgumentNullException(nameof(containerClient));
+        _mediaImageStore = mediaImageStore ?? throw new ArgumentNullException(nameof(mediaImageStore));
+        _eventRepository = eventRepository ?? throw new ArgumentNullException(nameof(eventRepository));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -105,23 +114,89 @@ public class AzureBlobImageService : IImageUploadService
             throw new ArgumentException(validation.ErrorMessage);
         }
 
+        // Same store as the Excel import: original unchanged + 1200/480 WebP variants (GS-REQ-009, 9.4).
+        // No minimum size here: the admin upload keeps its current rules (owner decision, 20.11.2026).
+        MediaStoreResult result;
         try
         {
-            var timestamp = DateTime.UtcNow.Ticks;
-            var originalFileName = $"original/{eventIdOrSessionId}_{timestamp}.jpg";
-            var thumbnailFileName = $"thumbnails/{eventIdOrSessionId}_{timestamp}.jpg";
+            await using var fileStream = file.OpenReadStream();
+            using var buffer = new MemoryStream();
+            await fileStream.CopyToAsync(buffer);
 
-            var originalUrl = await UploadResizedOriginalAsync(file, originalFileName);
-
-            // Create and upload thumbnail
-            var thumbnailUrl = await CreateAndUploadThumbnailAsync(file, thumbnailFileName, eventIdOrSessionId);
-
-            return (originalUrl, thumbnailUrl);
+            result = await _mediaImageStore.StoreAsync(buffer.ToArray(), requireMinimumSize: false);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error uploading image for event {EventId}", eventIdOrSessionId);
             throw new InvalidOperationException("Failed to upload image to storage", ex);
+        }
+
+        if (!result.IsSuccess)
+        {
+            _logger.LogWarning("Image for event {EventId} was not stored: {Reason} ({Detail})",
+                eventIdOrSessionId, result.FailureReason, result.Detail);
+
+            if (result.FailureReason == ImageFetchFailureReason.ProcessingError)
+            {
+                throw new InvalidOperationException("Failed to upload image to storage");
+            }
+
+            throw new ArgumentException(result.Detail);
+        }
+
+        _logger.LogInformation("Image for event {EventId} stored as {ImageId} (reused: {Reused})",
+            eventIdOrSessionId, result.ImageId, result.Reused);
+
+        return (result.LargeUrl!, result.ThumbnailUrl!);
+    }
+
+    public async Task DeleteEventImagesAsync(int eventId, string? imageUrl, string? thumbnailUrl)
+    {
+        var imageId = MediaImagePaths.TryGetImageId(imageUrl) ?? MediaImagePaths.TryGetImageId(thumbnailUrl);
+        if (imageId == null)
+        {
+            // Older uploads (original/{id}_{ticks}.jpg + thumbnails/...): one event per file, deleted as before.
+            await DeleteLegacyImageAsync(eventId, imageUrl);
+            await DeleteLegacyImageAsync(eventId, thumbnailUrl);
+            return;
+        }
+
+        try
+        {
+            var largeUrl = MediaImagePaths.ToUrl(MediaImagePaths.LargeBlobName(imageId));
+            var smallUrl = MediaImagePaths.ToUrl(MediaImagePaths.ThumbnailBlobName(imageId));
+
+            var otherEvents = await _eventRepository.CountOtherEventsUsingImageAsync(largeUrl, smallUrl, eventId);
+            if (otherEvents > 0)
+            {
+                _logger.LogInformation("Kept image {ImageId} of deleted event {EventId}: used by {Count} other event(s)",
+                    imageId, eventId, otherEvents);
+                return;
+            }
+
+            await _mediaImageStore.DeleteAsync(imageId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error deleting image {ImageId} of event {EventId}", imageId, eventId);
+        }
+    }
+
+    private async Task DeleteLegacyImageAsync(int eventId, string? imageUrl)
+    {
+        if (string.IsNullOrEmpty(imageUrl))
+        {
+            return;
+        }
+
+        var deleted = await DeleteImageAsync(imageUrl);
+        if (deleted)
+        {
+            _logger.LogInformation("Deleted image for event {EventId}: {ImageUrl}", eventId, imageUrl);
+        }
+        else
+        {
+            _logger.LogWarning("Failed to delete image for event {EventId}: {ImageUrl}", eventId, imageUrl);
         }
     }
 
@@ -206,33 +281,6 @@ public class AzureBlobImageService : IImageUploadService
             _logger.LogError(ex, "Error deleting image: {ImageUrl}", imageUrl);
             return false;
         }
-    }
-
-    private async Task<string> CreateAndUploadThumbnailAsync(IFormFile file, string thumbnailFileName, string eventIdOrSessionId)
-    {
-        await using var fileStream = file.OpenReadStream();
-        using var image = Image.Load(fileStream);
-
-        // Resize the thumbnail
-        image.Mutate(x => x.Resize(new ResizeOptions
-        {
-            Size = new Size(ThumbnailWidth, ThumbnailHeight),
-            Mode = ResizeMode.Crop,
-            Sampler = KnownResamplers.Lanczos3
-        }));
-
-        // Upload the thumbnail
-        await using var thumbnailStream = new MemoryStream();
-        image.SaveAsJpeg(thumbnailStream);
-        thumbnailStream.Position = 0;
-
-        var thumbnailBlobClient = _containerClient.GetBlobClient(thumbnailFileName);
-        await thumbnailBlobClient.UploadAsync(thumbnailStream, overwrite: true);
-
-        _logger.LogInformation("Thumbnail created for event {EventId}: {BlobName}", eventIdOrSessionId, thumbnailFileName);
-
-        // Relative URL, served through MediaController so the public address stays under our own domain.
-        return "/media/" + thumbnailFileName;
     }
 
     private static string? ExtractBlobNameFromUrl(string imageUrl)

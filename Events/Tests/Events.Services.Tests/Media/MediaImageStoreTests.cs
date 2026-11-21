@@ -76,6 +76,32 @@ public class MediaImageStoreTests
     }
 
     [Fact]
+    public async Task DeleteAsync_RemovesWholeSetAndAllowsStoringAgain()
+    {
+        var content = TestImages.Jpeg(800, 600);
+        var stored = await _store.StoreAsync(content, requireMinimumSize: true);
+
+        await _store.DeleteAsync(stored.ImageId!);
+
+        Assert.Empty(_storage.Blobs);
+        var again = await _store.StoreAsync(content, requireMinimumSize: true);
+        Assert.False(again.Reused);
+        Assert.Equal(3, _storage.Blobs.Count);
+    }
+
+    [Fact]
+    public async Task DeleteAsync_KeepsOtherImages()
+    {
+        var first = await _store.StoreAsync(TestImages.Jpeg(800, 600), requireMinimumSize: true);
+        await _store.StoreAsync(TestImages.Png(800, 600), requireMinimumSize: true);
+
+        await _store.DeleteAsync(first.ImageId!);
+
+        Assert.Equal(3, _storage.Blobs.Count);
+        Assert.DoesNotContain(_storage.Blobs.Keys, k => k.Contains(first.ImageId!));
+    }
+
+    [Fact]
     public void ComputeImageId_Is32LowercaseHexAndStable()
     {
         var content = TestImages.Png(10, 10);
@@ -107,6 +133,9 @@ public class MediaImageStoreTests
             Blobs[blobName] = (content, contentType);
             return Task.CompletedTask;
         }
+
+        public Task<bool> DeleteAsync(string blobName, CancellationToken cancellationToken = default) =>
+            Task.FromResult(Blobs.Remove(blobName));
 
         public Task<int> DeleteByPrefixAsync(string prefix, CancellationToken cancellationToken = default)
         {

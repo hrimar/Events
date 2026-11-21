@@ -64,5 +64,16 @@ public sealed class MediaImageStore : IMediaImageStore
         return MediaStoreResult.Success(imageId, reused: false);
     }
 
+    public async Task DeleteAsync(string imageId, CancellationToken cancellationToken = default)
+    {
+        // Thumbnail first: without it StoreAsync no longer treats the set as complete, so a half-deleted set
+        // is written again in full by the next upload of the same content.
+        await _storage.DeleteAsync(MediaImagePaths.ThumbnailBlobName(imageId), cancellationToken);
+        await _storage.DeleteAsync(MediaImagePaths.LargeBlobName(imageId), cancellationToken);
+        await _storage.DeleteByPrefixAsync(MediaImagePaths.OriginalBlobPrefix(imageId), cancellationToken);
+
+        _logger.LogInformation("Deleted image {ImageId}", imageId);
+    }
+
     public static string ComputeImageId(byte[] content) => Convert.ToHexString(SHA256.HashData(content))[..ImageIdLength].ToLowerInvariant();
 }

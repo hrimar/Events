@@ -509,32 +509,9 @@ public class EventsController : Controller
 
             var eventName = eventEntity.Name;
 
-            // Delete associated images from Azure Blob Storage before deleting the event
-            if (!string.IsNullOrEmpty(eventEntity.ImageUrl))
-            {
-                var originalDeleted = await _imageUploadService.DeleteImageAsync(eventEntity.ImageUrl);
-                if (originalDeleted)
-                {
-                    _logger.LogInformation("Deleted original image for event {EventId}: {ImageUrl}", id, eventEntity.ImageUrl);
-                }
-                else
-                {
-                    _logger.LogWarning("Failed to delete original image for event {EventId}: {ImageUrl}", id, eventEntity.ImageUrl);
-                }
-            }
-
-            if (!string.IsNullOrEmpty(eventEntity.ThumbnailUrl))
-            {
-                var thumbnailDeleted = await _imageUploadService.DeleteImageAsync(eventEntity.ThumbnailUrl);
-                if (thumbnailDeleted)
-                {
-                    _logger.LogInformation("Deleted thumbnail image for event {EventId}: {ThumbnailUrl}", id, eventEntity.ThumbnailUrl);
-                }
-                else
-                {
-                    _logger.LogWarning("Failed to delete thumbnail image for event {EventId}: {ThumbnailUrl}", id, eventEntity.ThumbnailUrl);
-                }
-            }
+            // Delete associated images from Azure Blob Storage before deleting the event.
+            // Images stored by content may be shared with other events and are kept while used (GS-REQ-009, 9.1.6).
+            await _imageUploadService.DeleteEventImagesAsync(id, eventEntity.ImageUrl, eventEntity.ThumbnailUrl);
 
             // Delete the event from database
             await _eventService.DeleteEventAsync(id);

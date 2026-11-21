@@ -589,4 +589,12 @@ public class EventRepository : IEventRepository
             throw new InvalidOperationException($"Error updating canonical venue for location '{location}'", ex);
         }
     }
+
+    public async Task<int> CountOtherEventsUsingImageAsync(string largeUrl, string thumbnailUrl, int excludedEventId)
+    {
+        return await _context.Events
+            .AsNoTracking()
+            .Where(e => e.Id != excludedEventId && (e.ImageUrl == largeUrl || e.ThumbnailUrl == thumbnailUrl))
+            .CountAsync();
+    }
 }
