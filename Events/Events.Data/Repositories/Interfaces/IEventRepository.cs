@@ -62,4 +62,8 @@ public interface IEventRepository
     // How many events other than excludedEventId use this stored image (its large or thumbnail address).
     // Images stored by content can be shared, so they are deleted only when unused (GS-REQ-009, 9.1.6).
     Task<int> CountOtherEventsUsingImageAsync(string largeUrl, string thumbnailUrl, int excludedEventId);
+
+    // Sets only the image fields of one event (Excel import background job, GS-REQ-009, 9.1.5).
+    // Returns false when the event no longer exists.
+    Task<bool> UpdateImageAsync(int eventId, string imageUrl, string thumbnailUrl, string? imageSourceUrl, CancellationToken cancellationToken = default);
 }

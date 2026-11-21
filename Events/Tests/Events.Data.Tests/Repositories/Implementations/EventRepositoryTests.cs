@@ -668,6 +668,32 @@ public class EventRepositoryTests : IDisposable
         Assert.Equal(2, count);
     }
 
+    // UpdateImageAsync (GS-REQ-009, 9.1.5)
+
+    [Fact]
+    public async Task UpdateImageAsync_EventExists_SetsOnlyImageFields()
+    {
+        _context.Categories.Add(_musicCategory);
+        _context.Events.Add(CreateEvent(1, "Concert", new DateTime(2026, 6, 1), _musicCategory.Id));
+        await _context.SaveChangesAsync();
+
+        var updated = await CreateEventRepository().UpdateImageAsync(
+            1, "/media/1200/a.webp", "/media/480/a.webp", "https://scontent.fbcdn.net/v/a.jpg?oe=1");
+
+        Assert.True(updated);
+        var saved = (await _context.Events.FindAsync(1))!;
+        Assert.Equal("/media/1200/a.webp", saved.ImageUrl);
+        Assert.Equal("/media/480/a.webp", saved.ThumbnailUrl);
+        Assert.Equal("https://scontent.fbcdn.net/v/a.jpg?oe=1", saved.ImageSourceUrl);
+        Assert.Equal("Concert", saved.Name);
+    }
+
+    [Fact]
+    public async Task UpdateImageAsync_EventMissing_ReturnsFalse()
+    {
+        Assert.False(await CreateEventRepository().UpdateImageAsync(999, "/media/1200/a.webp", "/media/480/a.webp", null));
+    }
+
     [Fact]
     public async Task CountOtherEventsUsingImageAsync_OnlyTheExcludedEvent_ReturnsZero()
     {

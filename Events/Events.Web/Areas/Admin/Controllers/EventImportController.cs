@@ -143,7 +143,7 @@ public class EventImportController : Controller
             return RedirectToAction(nameof(Preview), new { batchId = batch.BatchId });
         }
 
-        var result = await _eventImportService.CommitAsync(batch);
+        var result = await _eventImportService.CommitAsync(batch, GetUserKey());
         _batchCache.Remove(GetUserKey(), batch.BatchId);
 
         _logger.LogInformation(

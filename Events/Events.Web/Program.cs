@@ -160,6 +160,8 @@ static void ConfigureAzureStorage(WebApplicationBuilder builder)
         builder.Services.AddSingleton(blobContainerClient);
         builder.Services.AddScoped<IImageUploadService, AzureBlobImageService>();
         builder.Services.AddMediaImageStore();
+        // Copies Excel import images into our storage, one row at a time (GS-REQ-009, 9.1, 9.2).
+        builder.Services.AddScoped<IEventImportImageProcessor, EventImportImageProcessor>();
     }
     else if (!builder.Environment.IsDevelopment() && !IsDesignTime(builder))
     {

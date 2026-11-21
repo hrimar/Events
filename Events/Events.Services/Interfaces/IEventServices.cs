@@ -12,6 +12,10 @@ public interface IEventService
     Task<int> GetEventsCountInRangeAsync(DateTime fromDate, DateTime toDate, EventStatus? status = null);
     Task<Event> CreateEventAsync(Event eventEntity);
     Task<Event> UpdateEventAsync(Event eventEntity);
+
+    // Sets the locally stored image of an imported event and refreshes the public caches (GS-REQ-009, 9.1.5).
+    // Returns false when the event no longer exists.
+    Task<bool> SetEventImageAsync(int eventId, string imageUrl, string thumbnailUrl, string? imageSourceUrl, CancellationToken cancellationToken = default);
     Task DeleteEventAsync(int id);
 
     // Public listings (all events, categories, search, related events, sitemap).

@@ -1,3 +1,4 @@
+using Events.Data.Repositories.Interfaces;
 using Events.Models.Entities;
 using Events.Models.Enums;
 using Events.Services.Implementations;
@@ -17,6 +18,7 @@ public class EventImportServiceTests
     private readonly Mock<IEventImportDuplicateDetector> _duplicateDetectorMock = new();
     private readonly Mock<IEventService> _eventServiceMock = new();
     private readonly Mock<ITagService> _tagServiceMock = new();
+    private readonly Mock<IEventImportJobRepository> _jobRepositoryMock = new();
     private readonly Mock<ILogger<EventImportService>> _loggerMock = new();
 
     public EventImportServiceTests()
@@ -30,6 +32,7 @@ public class EventImportServiceTests
         _duplicateDetectorMock.Object,
         _eventServiceMock.Object,
         _tagServiceMock.Object,
+        _jobRepositoryMock.Object,
         _loggerMock.Object);
 
     private static ImportRowResult CreateValidRow(int rowNumber = 1, string name = "Concert") => new()
@@ -107,7 +110,7 @@ public class EventImportServiceTests
     {
         var batch = new EventImportBatch { Rows = { new ImportRowResult { RowNumber = 1, Excluded = true } } };
 
-        var result = await CreateEventImportService().CommitAsync(batch);
+        var result = await CreateEventImportService().CommitAsync(batch, "admin");
 
         Assert.Equal(1, result.SkippedExcludedCount);
         Assert.Equal(0, result.CreatedCount);
@@ -139,7 +142,7 @@ public class EventImportServiceTests
         var batch = new EventImportBatch { Rows = { row } };
 
         // Act
-        var result = await CreateEventImportService().CommitAsync(batch);
+        var result = await CreateEventImportService().CommitAsync(batch, "admin");
 
         // Assert
         Assert.Equal(1, result.FailedCount);
@@ -160,7 +163,7 @@ public class EventImportServiceTests
             .ReturnsAsync(new Event { Id = 99, Name = "Concert" });
 
         // Act
-        var result = await CreateEventImportService().CommitAsync(batch);
+        var result = await CreateEventImportService().CommitAsync(batch, "admin");
 
         // Assert
         Assert.Equal(1, result.CreatedCount);
@@ -174,7 +177,7 @@ public class EventImportServiceTests
         var batch = new EventImportBatch { Rows = { CreateValidRow() } };
         _eventServiceMock.Setup(s => s.CreateEventAsync(It.IsAny<Event>())).ReturnsAsync(new Event { Id = 1 });
 
-        await CreateEventImportService().CommitAsync(batch);
+        await CreateEventImportService().CommitAsync(batch, "admin");
 
         _tagServiceMock.Verify(t => t.BulkAddTagsToEventAsync(It.IsAny<int>(), It.IsAny<List<int>>()), Times.Never);
     }
@@ -196,12 +199,105 @@ public class EventImportServiceTests
             .ReturnsAsync(new Event { Id = 3, Name = "Third" });
 
         // Act
-        var result = await CreateEventImportService().CommitAsync(batch);
+        var result = await CreateEventImportService().CommitAsync(batch, "admin");
 
         // Assert - the failure on row 2 doesn't stop rows 1 and 3 from being committed
         Assert.Equal(2, result.CreatedCount);
         Assert.Equal([1, 3], result.CreatedEventIds);
         Assert.Equal(1, result.FailedCount);
         Assert.Contains(result.Failures, f => f.RowNumber == 2 && f.Error == "db error");
+    }
+
+    // CommitAsync - image job (GS-REQ-009, 9.3.2-9.3.4)
+
+    [Fact]
+    public async Task CommitAsync_RowWithImageUrl_EventGetsNoExternalImageAndItemIsPending()
+    {
+        var row = CreateValidRow();
+        row.ImageUrl = "https://scontent.fbcdn.net/v/photo.jpg?oe=6A1B2C3D";
+        Event? created = null;
+        _eventServiceMock.Setup(s => s.CreateEventAsync(It.IsAny<Event>()))
+            .Callback<Event>(e => created = e)
+            .ReturnsAsync(new Event { Id = 7 });
+        var job = CaptureSavedJob();
+
+        var result = await CreateEventImportService().CommitAsync(new EventImportBatch { Rows = { row } }, "admin");
+
+        Assert.Null(created!.ImageUrl);
+        Assert.Null(created.ThumbnailUrl);
+        var item = Assert.Single(job().Items);
+        Assert.Equal(EventImportImageOutcome.Pending, item.Outcome);
+        Assert.Equal(7, item.EventId);
+        Assert.Equal(row.ImageUrl, item.SourceImageUrl);
+        Assert.Equal(EventImportJobStatus.Queued, job().Status);
+        Assert.Equal(42, result.JobId);
+    }
+
+    [Fact]
+    public async Task CommitAsync_JobHoldsCountsAndOneItemPerNonExcludedRow()
+    {
+        var withPage = CreateValidRow(1, "With page");
+        withPage.TicketUrl = "https://www.facebook.com/events/123/";
+        var withoutSources = CreateValidRow(2, "No sources");
+        var excluded = new ImportRowResult { RowNumber = 3, Excluded = true };
+        var missingData = CreateValidRow(4, "Missing city");
+        missingData.City = "";
+        _eventServiceMock.Setup(s => s.CreateEventAsync(It.IsAny<Event>())).ReturnsAsync(new Event { Id = 1 });
+        var job = CaptureSavedJob();
+        var batch = new EventImportBatch { OriginalFileName = "facebook.xlsx", Rows = { withPage, withoutSources, excluded, missingData } };
+
+        await CreateEventImportService().CommitAsync(batch, "owner@go-sofia");
+
+        var saved = job();
+        Assert.Equal("facebook.xlsx", saved.FileName);
+        Assert.Equal("owner@go-sofia", saved.CreatedBy);
+        Assert.Equal(batch.BatchId, saved.BatchId);
+        Assert.Equal((4, 2, 1, 1), (saved.TotalRows, saved.CreatedCount, saved.SkippedExcludedCount, saved.FailedCount));
+        Assert.Equal([1, 2, 4], saved.Items.Select(i => i.RowNumber));
+        Assert.Equal(EventImportImageOutcome.Pending, saved.Items.Single(i => i.RowNumber == 1).Outcome);
+        Assert.Equal(EventImportImageOutcome.NoImage, saved.Items.Single(i => i.RowNumber == 2).Outcome);
+        var notImported = saved.Items.Single(i => i.RowNumber == 4);
+        Assert.Equal(EventImportImageOutcome.RowNotImported, notImported.Outcome);
+        Assert.Null(notImported.EventId);
+        Assert.NotNull(notImported.Detail);
+    }
+
+    [Fact]
+    public async Task CommitAsync_NothingToFetch_JobIsCompletedImmediately()
+    {
+        _eventServiceMock.Setup(s => s.CreateEventAsync(It.IsAny<Event>())).ReturnsAsync(new Event { Id = 1 });
+        var job = CaptureSavedJob();
+
+        await CreateEventImportService().CommitAsync(new EventImportBatch { Rows = { CreateValidRow() } }, "admin");
+
+        Assert.Equal(EventImportJobStatus.Completed, job().Status);
+        Assert.NotNull(job().CompletedAtUtc);
+    }
+
+    [Fact]
+    public async Task CommitAsync_JobCannotBeSaved_EventsStayCreatedAndJobIdIsNull()
+    {
+        _eventServiceMock.Setup(s => s.CreateEventAsync(It.IsAny<Event>())).ReturnsAsync(new Event { Id = 1 });
+        _jobRepositoryMock.Setup(r => r.AddAsync(It.IsAny<EventImportJob>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("db down"));
+
+        var result = await CreateEventImportService().CommitAsync(new EventImportBatch { Rows = { CreateValidRow() } }, "admin");
+
+        Assert.Equal(1, result.CreatedCount);
+        Assert.Null(result.JobId);
+    }
+
+    // Captures the job passed to the repository and gives it id 42, as the database would.
+    private Func<EventImportJob> CaptureSavedJob()
+    {
+        EventImportJob? saved = null;
+        _jobRepositoryMock.Setup(r => r.AddAsync(It.IsAny<EventImportJob>(), It.IsAny<CancellationToken>()))
+            .Callback<EventImportJob, CancellationToken>((j, _) =>
+            {
+                j.Id = 42;
+                saved = j;
+            })
+            .Returns(Task.CompletedTask);
+        return () => saved ?? throw new InvalidOperationException("No job was saved.");
     }
 }
