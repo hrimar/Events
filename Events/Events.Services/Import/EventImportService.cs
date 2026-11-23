@@ -18,6 +18,7 @@ public class EventImportService : IEventImportService
 
     private readonly ITagService _tagService;
     private readonly IEventImportJobRepository _jobRepository;
+    private readonly TimeProvider _timeProvider;
     private readonly ILogger<EventImportService> _logger;
 
     public EventImportService(
@@ -27,6 +28,7 @@ public class EventImportService : IEventImportService
         IEventService eventService,
         ITagService tagService,
         IEventImportJobRepository jobRepository,
+        TimeProvider timeProvider,
         ILogger<EventImportService> logger)
     {
         _parserFactory = parserFactory;
@@ -35,6 +37,7 @@ public class EventImportService : IEventImportService
         _eventService = eventService;
         _tagService = tagService;
         _jobRepository = jobRepository;
+        _timeProvider = timeProvider;
         _logger = logger;
     }
 
@@ -70,6 +73,9 @@ public class EventImportService : IEventImportService
         var result = new EventImportCommitResult();
         var jobItems = new List<EventImportJobItem>();
 
+        // One timestamp for the whole import: the created events and the image job get the same time.
+        var now = _timeProvider.GetUtcNow().UtcDateTime;
+
         foreach (var row in batch.Rows)
         {
             if (row.Excluded)
@@ -78,9 +84,8 @@ public class EventImportService : IEventImportService
                 continue;
             }
 
-            if (row.Severity == ImportRowSeverity.Error || row.CategoryId == null || row.Status == null
-                || row.Date == null || string.IsNullOrWhiteSpace(row.Name)
-                || string.IsNullOrWhiteSpace(row.City) || string.IsNullOrWhiteSpace(row.Location))
+            if (row.Severity == ImportRowSeverity.Error || row.CategoryId == null || row.Status == null || row.Date == null
+                || string.IsNullOrWhiteSpace(row.Name) || string.IsNullOrWhiteSpace(row.City) || string.IsNullOrWhiteSpace(row.Location))
             {
                 const string missingDataError = "Row is missing required data and was not imported.";
                 result.FailedCount++;
@@ -109,8 +114,8 @@ public class EventImportService : IEventImportService
                     SubCategoryId = row.SubCategoryId,
                     CanonicalVenueId = row.CanonicalVenueId,
                     Status = row.Status.Value,
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
+                    CreatedAt = now,
+                    UpdatedAt = now
                 };
 
                 var createdEvent = await _eventService.CreateEventAsync(eventEntity);
@@ -133,17 +138,16 @@ public class EventImportService : IEventImportService
             }
         }
 
-        result.JobId = await SaveImageJobAsync(batch, createdBy, result, jobItems, cancellationToken);
+        result.JobId = await SaveImageJobAsync(batch, createdBy, now, result, jobItems, cancellationToken);
 
         return result;
     }
 
     // Saves the image job and its report lines (GS-REQ-009, 9.3.3, 9.3.4). The events are already created, so a
     // failure here is logged and the import still succeeds (the images are then not copied for this batch).
-    private async Task<int?> SaveImageJobAsync(
-        EventImportBatch batch, string createdBy, EventImportCommitResult result, List<EventImportJobItem> items, CancellationToken cancellationToken)
+    private async Task<int?> SaveImageJobAsync(EventImportBatch batch, string createdBy, DateTime now, EventImportCommitResult result,
+        List<EventImportJobItem> items, CancellationToken cancellationToken)
     {
-        var now = DateTime.UtcNow;
         var hasPendingItems = items.Any(i => i.Outcome == EventImportImageOutcome.Pending);
 
         var job = new EventImportJob

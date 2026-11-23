@@ -20,6 +20,7 @@ public class EventImportServiceTests
     private readonly Mock<ITagService> _tagServiceMock = new();
     private readonly Mock<IEventImportJobRepository> _jobRepositoryMock = new();
     private readonly Mock<ILogger<EventImportService>> _loggerMock = new();
+    private static readonly DateTimeOffset ImportTime = new(2026, 11, 23, 14, 30, 0, TimeSpan.Zero);
 
     public EventImportServiceTests()
     {
@@ -33,6 +34,7 @@ public class EventImportServiceTests
         _eventServiceMock.Object,
         _tagServiceMock.Object,
         _jobRepositoryMock.Object,
+        new FixedTimeProvider(ImportTime),
         _loggerMock.Object);
 
     private static ImportRowResult CreateValidRow(int rowNumber = 1, string name = "Concert") => new()
@@ -287,6 +289,22 @@ public class EventImportServiceTests
         Assert.Null(result.JobId);
     }
 
+    [Fact]
+    public async Task CommitAsync_EventsAndJobGetTheSameTimestampFromTimeProvider()
+    {
+        Event? created = null;
+        _eventServiceMock.Setup(s => s.CreateEventAsync(It.IsAny<Event>()))
+            .Callback<Event>(e => created = e)
+            .ReturnsAsync(new Event { Id = 1 });
+        var job = CaptureSavedJob();
+
+        await CreateEventImportService().CommitAsync(new EventImportBatch { Rows = { CreateValidRow() } }, "admin");
+
+        var expected = ImportTime.UtcDateTime;
+        Assert.Equal((expected, expected), (created!.CreatedAt, created.UpdatedAt));
+        Assert.Equal((expected, expected), (job().CreatedAtUtc, job().CompletedAtUtc));
+    }
+
     // Captures the job passed to the repository and gives it id 42, as the database would.
     private Func<EventImportJob> CaptureSavedJob()
     {
@@ -299,5 +317,10 @@ public class EventImportServiceTests
             })
             .Returns(Task.CompletedTask);
         return () => saved ?? throw new InvalidOperationException("No job was saved.");
+    }
+
+    private sealed class FixedTimeProvider(DateTimeOffset utcNow) : TimeProvider
+    {
+        public override DateTimeOffset GetUtcNow() => utcNow;
     }
 }
