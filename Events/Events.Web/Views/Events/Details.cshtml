@@ -56,11 +56,14 @@
             <div class="card border-0 shadow-sm">
                 <!-- Event Image -->
                 <div class="event-detail-image">
-                    <img src="@Model.DefaultImage" 
-                         alt="@Model.Name" 
+                    @{ var detailsSrcSet = Events.Web.Models.EventImageSources.BuildSrcSet(Model.DefaultImage); }
+                    <img src="@Model.DefaultImage"
+                         srcset="@detailsSrcSet"
+                         sizes="@Events.Web.Models.EventImageSources.SizesFor(detailsSrcSet, Events.Web.Models.EventImageSources.DetailsSizes)"
+                         alt="@Model.Name"
                          class="w-100"
                          style="height: 400px; object-fit: contain; background: var(--gs-bg-alt);"
-                         onerror="this.src='/images/default_event_image.jpeg'">
+                         onerror="@Events.Web.Models.EventImageSources.FallbackOnError">
                     @* Show 'Free' badge only for free events *@
                     @if (Model.IsFree)
                     {

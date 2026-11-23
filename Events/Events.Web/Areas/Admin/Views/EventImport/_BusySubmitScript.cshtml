@@ -1,0 +1,20 @@
+@* Confirm and "Retry remaining" copy the images inside the request, up to a few minutes (GS-REQ-009, 9.3).
+   While the page waits, the clicked button shows its data-busy-text and the form's buttons are locked, so the import
+   is not sent twice. *@
+<script>
+    document.querySelectorAll('form').forEach(function (form) {
+        form.addEventListener('submit', function (event) {
+            var button = event.submitter;
+            if (!button || !button.hasAttribute('data-busy-text')) {
+                return;
+            }
+
+            // After the browser has taken the submitter's formaction, lock the buttons.
+            setTimeout(function () {
+                form.querySelectorAll('button[type="submit"]').forEach(function (b) { b.disabled = true; });
+                button.innerHTML = '<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>'
+                    + button.getAttribute('data-busy-text');
+            }, 0);
+        });
+    });
+</script>

@@ -357,6 +357,18 @@ public class EventService : IEventService
         }
     }
 
+    public async Task<bool> SetEventImageAsync(int eventId, string imageUrl, string thumbnailUrl, string? imageSourceUrl,
+        CancellationToken cancellationToken = default)
+    {
+        var updated = await _eventRepository.UpdateImageAsync(eventId, imageUrl, thumbnailUrl, imageSourceUrl, cancellationToken);
+        if (updated)
+        {
+            _cacheInvalidator.Invalidate();
+        }
+
+        return updated;
+    }
+
     public async Task DeleteEventAsync(int id)
     {
         try

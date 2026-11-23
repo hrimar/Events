@@ -641,4 +641,72 @@ public class EventRepositoryTests : IDisposable
         Assert.Equal(7, (await _context.Events.FindAsync(2))!.CanonicalVenueId);
         Assert.Null((await _context.Events.FindAsync(3))!.CanonicalVenueId);
     }
+
+    // CountOtherEventsUsingImageAsync (GS-REQ-009, 9.1.6)
+
+    [Fact]
+    public async Task CountOtherEventsUsingImageAsync_CountsOtherEventsByEitherVariant()
+    {
+        const string large = "/media/1200/0123456789abcdef0123456789abcdef.webp";
+        const string thumb = "/media/480/0123456789abcdef0123456789abcdef.webp";
+        _context.Categories.Add(_musicCategory);
+        var deleted = CreateEvent(1, "Deleted", new DateTime(2026, 6, 1), _musicCategory.Id);
+        deleted.ImageUrl = large;
+        deleted.ThumbnailUrl = thumb;
+        var sharesBoth = CreateEvent(2, "Same image", new DateTime(2026, 6, 2), _musicCategory.Id);
+        sharesBoth.ImageUrl = large;
+        sharesBoth.ThumbnailUrl = thumb;
+        var sharesThumbOnly = CreateEvent(3, "Thumb only", new DateTime(2026, 6, 3), _musicCategory.Id);
+        sharesThumbOnly.ThumbnailUrl = thumb;
+        var other = CreateEvent(4, "Other image", new DateTime(2026, 6, 4), _musicCategory.Id);
+        other.ImageUrl = "/media/1200/ffffffffffffffffffffffffffffffff.webp";
+        _context.Events.AddRange(deleted, sharesBoth, sharesThumbOnly, other);
+        await _context.SaveChangesAsync();
+
+        var count = await CreateEventRepository().CountOtherEventsUsingImageAsync(large, thumb, excludedEventId: 1);
+
+        Assert.Equal(2, count);
+    }
+
+    // UpdateImageAsync (GS-REQ-009, 9.1.5)
+
+    [Fact]
+    public async Task UpdateImageAsync_EventExists_SetsOnlyImageFields()
+    {
+        _context.Categories.Add(_musicCategory);
+        _context.Events.Add(CreateEvent(1, "Concert", new DateTime(2026, 6, 1), _musicCategory.Id));
+        await _context.SaveChangesAsync();
+
+        var updated = await CreateEventRepository().UpdateImageAsync(
+            1, "/media/1200/a.webp", "/media/480/a.webp", "https://scontent.fbcdn.net/v/a.jpg?oe=1");
+
+        Assert.True(updated);
+        var saved = (await _context.Events.FindAsync(1))!;
+        Assert.Equal("/media/1200/a.webp", saved.ImageUrl);
+        Assert.Equal("/media/480/a.webp", saved.ThumbnailUrl);
+        Assert.Equal("https://scontent.fbcdn.net/v/a.jpg?oe=1", saved.ImageSourceUrl);
+        Assert.Equal("Concert", saved.Name);
+    }
+
+    [Fact]
+    public async Task UpdateImageAsync_EventMissing_ReturnsFalse()
+    {
+        Assert.False(await CreateEventRepository().UpdateImageAsync(999, "/media/1200/a.webp", "/media/480/a.webp", null));
+    }
+
+    [Fact]
+    public async Task CountOtherEventsUsingImageAsync_OnlyTheExcludedEvent_ReturnsZero()
+    {
+        const string large = "/media/1200/0123456789abcdef0123456789abcdef.webp";
+        _context.Categories.Add(_musicCategory);
+        var single = CreateEvent(1, "Only", new DateTime(2026, 6, 1), _musicCategory.Id);
+        single.ImageUrl = large;
+        _context.Events.Add(single);
+        await _context.SaveChangesAsync();
+
+        var count = await CreateEventRepository().CountOtherEventsUsingImageAsync(
+            large, "/media/480/0123456789abcdef0123456789abcdef.webp", excludedEventId: 1);
+
+        Assert.Equal(0, count);
+    }
 }

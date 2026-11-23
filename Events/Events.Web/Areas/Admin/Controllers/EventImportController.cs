@@ -1,4 +1,5 @@
 using Events.Data.Repositories.Interfaces;
+using Events.Services.Import;
 using Events.Services.Import.Models;
 using Events.Services.Interfaces;
 using Events.Web.Areas.Admin.Services;
@@ -14,11 +15,18 @@ public class EventImportController : Controller
 {
     private static readonly string[] AllowedExtensions = { ".xlsx", ".csv" };
     private const long MaxFileSizeBytes = 10 * 1024 * 1024;
+    private const int RecentJobsCount = 10;
+
+    // Images are copied inside the Confirm request, so one file is limited to a size that always finishes in time
+    // (owner decision, 23.11.2026: usually 20-30 events, at most 50; GS-REQ-009, 9.3.4 replaced).
+    public const int MaxRowsPerImport = 50;
 
     private readonly IEventImportService _eventImportService;
     private readonly ICategoryRepository _categoryRepository;
     private readonly ISubCategoryRepository _subCategoryRepository;
     private readonly ITagService _tagService;
+    private readonly IEventImportJobRepository _jobRepository;
+    private readonly EventImportImageJobRunner _imageJobRunner;
     private readonly EventImportBatchCache _batchCache;
     private readonly ILogger<EventImportController> _logger;
 
@@ -27,6 +35,8 @@ public class EventImportController : Controller
         ICategoryRepository categoryRepository,
         ISubCategoryRepository subCategoryRepository,
         ITagService tagService,
+        IEventImportJobRepository jobRepository,
+        EventImportImageJobRunner imageJobRunner,
         EventImportBatchCache batchCache,
         ILogger<EventImportController> logger)
     {
@@ -34,14 +44,52 @@ public class EventImportController : Controller
         _categoryRepository = categoryRepository;
         _subCategoryRepository = subCategoryRepository;
         _tagService = tagService;
+        _jobRepository = jobRepository;
+        _imageJobRunner = imageJobRunner;
         _batchCache = batchCache;
         _logger = logger;
     }
 
     // GET: Admin/EventImport/Upload
-    public IActionResult Upload()
+    public async Task<IActionResult> Upload()
     {
-        return View(new EventImportUploadViewModel());
+        return View(new EventImportUploadViewModel { RecentJobs = await _jobRepository.GetRecentAsync(RecentJobsCount) });
+    }
+
+    // GET: Admin/EventImport/Job/5 - import report with the image results (GS-REQ-009, 9.3.3, 9.3.5).
+    public async Task<IActionResult> Job(int id)
+    {
+        var job = await _jobRepository.GetWithItemsAsync(id);
+        if (job == null)
+        {
+            return NotFound();
+        }
+
+        return View(new EventImportJobViewModel { Job = job, Report = EventImportReport.From(job) });
+    }
+
+    // GET: Admin/EventImport/JobCsv/5 - the same report as CSV (GS-REQ-009, 9.3.3).
+    public async Task<IActionResult> JobCsv(int id)
+    {
+        var job = await _jobRepository.GetWithItemsAsync(id);
+        if (job == null)
+        {
+            return NotFound();
+        }
+
+        var fileName = $"import-report-{job.Id}-{job.CreatedAtUtc:yyyyMMdd-HHmm}.csv";
+        return File(EventImportReportCsvWriter.Write(job), "text/csv", fileName);
+    }
+
+    // POST: Admin/EventImport/RetryRemaining/5 - copies the images of the rows the first run did not reach
+    // (time limit, app restart); failed rows are fixed by uploading an image by hand (GS-REQ-009, 9.3.5).
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RetryRemaining(int id)
+    {
+        // Not bound to the request: closing the tab does not stop the copy halfway.
+        await _imageJobRunner.RunAsync(id, CancellationToken.None);
+        return RedirectToAction(nameof(Job), new { id });
     }
 
     // POST: Admin/EventImport/Upload
@@ -73,6 +121,14 @@ public class EventImportController : Controller
             if (batch.Rows.Count == 0)
             {
                 return View(new EventImportUploadViewModel { ErrorMessage = "The file contains no data rows." });
+            }
+
+            if (batch.Rows.Count > MaxRowsPerImport)
+            {
+                return View(new EventImportUploadViewModel
+                {
+                    ErrorMessage = $"The file has {batch.Rows.Count} rows. Import at most {MaxRowsPerImport} events at once - split the file."
+                });
             }
 
             _batchCache.Store(GetUserKey(), batch);
@@ -143,12 +199,21 @@ public class EventImportController : Controller
             return RedirectToAction(nameof(Preview), new { batchId = batch.BatchId });
         }
 
-        var result = await _eventImportService.CommitAsync(batch);
+        var result = await _eventImportService.CommitAsync(batch, GetUserKey());
         _batchCache.Remove(GetUserKey(), batch.BatchId);
 
         _logger.LogInformation(
             "Event import batch {BatchId} committed: {Created} created, {Skipped} skipped, {Failed} failed",
             batch.BatchId, result.CreatedCount, result.SkippedExcludedCount, result.FailedCount);
+
+        // Images are copied now, while the Facebook addresses are still valid (GS-REQ-009, 9.1), then the report shows
+        // the result (9.3.3). Not bound to the request: closing the tab does not stop the copy halfway.
+        // The old result page stays as a fallback if the image job could not be saved.
+        if (result.JobId != null)
+        {
+            await _imageJobRunner.RunAsync(result.JobId.Value, CancellationToken.None);
+            return RedirectToAction(nameof(Job), new { id = result.JobId.Value });
+        }
 
         return View("Result", result);
     }

@@ -12,6 +12,7 @@ using Events.Services.Implementations;
 using Events.Services.Import;
 using Events.Services.Import.Parsers;
 using Events.Services.Interfaces;
+using Events.Services.Media;
 using Events.Services.Time;
 using Events.Web.Options;
 using Events.Web.Services.Email;
@@ -158,6 +159,10 @@ static void ConfigureAzureStorage(WebApplicationBuilder builder)
 
         builder.Services.AddSingleton(blobContainerClient);
         builder.Services.AddScoped<IImageUploadService, AzureBlobImageService>();
+        // WebP variants of event images stored by content (GS-REQ-009, 9.4); used by AzureBlobImageService.
+        builder.Services.AddSingleton<ImageVariantGenerator>();
+        // Copies Excel import images into our storage, one row at a time (GS-REQ-009, 9.1, 9.2).
+        builder.Services.AddScoped<IEventImportImageProcessor, EventImportImageProcessor>();
     }
     else if (!builder.Environment.IsDevelopment() && !IsDesignTime(builder))
     {
@@ -275,12 +280,15 @@ static void RegisterServices(WebApplicationBuilder builder)
     builder.Services.AddScoped<ISiteContentRepository, SiteContentRepository>();
     builder.Services.AddScoped<IPageSeoMetaRepository, PageSeoMetaRepository>();
     builder.Services.AddScoped<IHomeQuickFilterRepository, HomeQuickFilterRepository>();
+    builder.Services.AddScoped<IEventImportJobRepository, EventImportJobRepository>();
 
     // Services
     // This IMemoryCache is shared - also used below by EventImportBatchCache for the bulk create from .xlsx/.csv admin feature.
     builder.Services.AddMemoryCache();
     builder.Services.AddSingleton<IEventCacheInvalidator, EventCacheInvalidator>();
     builder.Services.AddSofiaClock();
+    // SSRF-safe downloads of Excel import images and pages (GS-REQ-009, 9.1, 9.2).
+    builder.Services.AddSafeHttpFetcher();
     builder.Services.AddScoped<IEventService, EventService>();
     builder.Services.AddScoped<ITagService, TagService>();
     builder.Services.AddScoped<ISubCategoryService, SubCategoryService>();
@@ -303,6 +311,8 @@ static void RegisterServices(WebApplicationBuilder builder)
     builder.Services.AddScoped<IEventImportDuplicateDetector, EventImportDuplicateDetector>();
     builder.Services.AddScoped<IEventImportService, EventImportService>();
     builder.Services.AddSingleton<Events.Web.Areas.Admin.Services.EventImportBatchCache>();
+    // Copies the import images inside the Confirm request, four rows at a time (GS-REQ-009, 9.1, 9.3).
+    builder.Services.AddSingleton<EventImportImageJobRunner>();
 }
 
 static async Task InitializeDatabaseAsync(WebApplication app)

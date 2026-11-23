@@ -1,3 +1,4 @@
+using Events.Services.Media;
 using Microsoft.AspNetCore.Http;
 
 namespace Events.Services.Interfaces;
@@ -9,16 +10,32 @@ namespace Events.Services.Interfaces;
 public interface IImageUploadService
 {
     /// <summary>
-    /// Uploads an image file and returns original and thumbnail URLs.
-    /// Performs synchronous upload with automatic resizing.
-    /// Supports both numeric event IDs and GUID session IDs.
+    /// Uploads an event image: keeps the original unchanged and stores 1200px and 480px WebP variants,
+    /// named by content so the same image is stored once (GS-REQ-009, 9.4).
+    /// Supports both numeric event IDs and GUID session IDs (used for logging only).
     /// </summary>
     /// <param name="file">The image file to upload</param>
     /// <param name="eventIdOrSessionId">Event ID (int) or session GUID (string)</param>
-    /// <returns>Tuple containing (originalImageUrl, thumbnailUrl)</returns>
+    /// <returns>Tuple containing (1200px image URL for Event.ImageUrl, 480px URL for Event.ThumbnailUrl)</returns>
     /// <exception cref="ArgumentException">Thrown when file validation fails</exception>
     /// <exception cref="InvalidOperationException">Thrown when upload fails</exception>
     Task<(string OriginalUrl, string ThumbnailUrl)> UploadEventImageAsync(IFormFile file, string eventIdOrSessionId);
+
+    /// <summary>
+    /// Stores event image bytes by content: original unchanged + 1200px and 480px WebP variants (GS-REQ-009, 9.1.3, 9.1.4,
+    /// 9.1.6, 9.4). Already stored content is reused without writing. Used by the Excel import and by UploadEventImageAsync.
+    /// Problems with the image itself are returned as a failure, not thrown.
+    /// </summary>
+    /// <param name="content">The image bytes</param>
+    /// <param name="requireMinimumSize">True for the Excel import (300x200px); false for the admin upload</param>
+    Task<MediaStoreResult> StoreEventImageAsync(byte[] content, bool requireMinimumSize, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Deletes the images of an event that is being deleted. Images stored by content (/media/1200|480/{id}.webp)
+    /// are deleted only when no other event uses them (GS-REQ-009, 9.1.6); older uploads are deleted as before.
+    /// Never throws: failures are logged.
+    /// </summary>
+    Task DeleteEventImagesAsync(int eventId, string? imageUrl, string? thumbnailUrl);
 
     /// <summary>
     /// Uploads an image file for a venue and returns the original image URL.

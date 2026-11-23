@@ -11,6 +11,9 @@ public static class SofiaTimeZone
 
     public static TimeZoneInfo Instance { get; } = Resolve();
 
+    // Sofia wall-clock time of a stored UTC moment (e.g. import job times shown in the admin, GS-REQ-009, 9.3.3).
+    public static DateTime FromUtc(DateTime utc) => TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(utc, DateTimeKind.Utc), Instance);
+
     // IANA id works cross-platform on .NET 8 (Linux containers, Windows with ICU);
     // the Windows id is a fallback for hosts without IANA time zone data.
     private static TimeZoneInfo Resolve() =>

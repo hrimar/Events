@@ -589,4 +589,30 @@ public class EventRepository : IEventRepository
             throw new InvalidOperationException($"Error updating canonical venue for location '{location}'", ex);
         }
     }
+
+    public async Task<int> CountOtherEventsUsingImageAsync(string largeUrl, string thumbnailUrl, int excludedEventId)
+    {
+        return await _context.Events
+            .AsNoTracking()
+            .Where(e => e.Id != excludedEventId && (e.ImageUrl == largeUrl || e.ThumbnailUrl == thumbnailUrl))
+            .CountAsync();
+    }
+
+    public async Task<bool> UpdateImageAsync(int eventId, string imageUrl, string thumbnailUrl, string? imageSourceUrl,
+        CancellationToken cancellationToken = default)
+    {
+        var eventEntity = await _context.Events.FirstOrDefaultAsync(e => e.Id == eventId, cancellationToken);
+        if (eventEntity == null)
+        {
+            return false;
+        }
+
+        eventEntity.ImageUrl = imageUrl;
+        eventEntity.ThumbnailUrl = thumbnailUrl;
+        eventEntity.ImageSourceUrl = imageSourceUrl;
+        eventEntity.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync(cancellationToken);
+        return true;
+    }
 }

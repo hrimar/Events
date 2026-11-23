@@ -21,8 +21,12 @@
                 <li>
                     <a class="gs-feature-card" asp-controller="Events" asp-action="Details" asp-route-id="@card.Id">
                         <div class="gs-feature-media">
-                            <img src="@card.ImageUrl" alt="@card.Name" width="150" height="200" loading="lazy" decoding="async"
-                                 onerror="this.onerror=null;this.src='/images/default_event_image.jpeg'">
+                            @{
+                                var cardSrcSet = EventImageSources.BuildSrcSet(card.ImageUrl);
+                                var cardSizes = EventImageSources.SizesFor(cardSrcSet, EventImageSources.FeatureSizes);
+                            }
+                            <img src="@card.ImageUrl" srcset="@cardSrcSet" sizes="@cardSizes" alt="@card.Name" width="150" height="200"
+                                 loading="lazy" decoding="async" onerror="@EventImageSources.FallbackOnError">
                         </div>
                         <div class="gs-feature-body">
                             <p class="gs-feature-date">@dateLine</p>

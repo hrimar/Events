@@ -53,7 +53,7 @@
             <thead>
                 <tr class="table-light small text-uppercase">
                     <th colspan="3" class="text-center">Import Controls</th>
-                    <th colspan="9" class="text-center">From File</th>
+                    <th colspan="10" class="text-center">From File</th>
                     <th colspan="1" class="text-center">Diagnostics</th>
                 </tr>
                 <tr>
@@ -61,6 +61,7 @@
                     <th>Exclude</th>
                     <th>Status</th>
                     <th>Name / Date</th>
+                    <th>Image</th>
                     <th>Location</th>
                     <th>Description</th>
                     <th>Category</th>
@@ -96,6 +97,32 @@
                         <td>
                             @row.Name<br />
                             <span class="text-muted small">@(row.Date?.ToString("yyyy-MM-dd"))</span>
+                        </td>
+                        @* Thumbnail straight from the external address, loaded by the admin's browser only, so an expired
+                           or wrong Facebook address shows up before Confirm (GS-REQ-009, current state section). *@
+                        <td class="text-center">
+                            @if (Uri.TryCreate(row.ImageUrl, UriKind.Absolute, out var previewUri)
+                                 && (previewUri.Scheme == Uri.UriSchemeHttps || previewUri.Scheme == Uri.UriSchemeHttp))
+                            {
+                                <a href="@row.ImageUrl" target="_blank" rel="noopener noreferrer" title="@row.ImageUrl">
+                                    <img src="@row.ImageUrl" alt="" width="48" height="48" loading="lazy" referrerpolicy="no-referrer"
+                                         style="object-fit: cover;" class="rounded"
+                                         onerror="this.hidden=true;this.nextElementSibling.hidden=false">
+                                    <span class="text-danger small" hidden>Not loading</span>
+                                </a>
+                            }
+                            else if (!string.IsNullOrWhiteSpace(row.ImageUrl))
+                            {
+                                <span class="text-danger small" title="@row.ImageUrl">Invalid URL</span>
+                            }
+                            else if (!string.IsNullOrWhiteSpace(row.TicketUrl))
+                            {
+                                <span class="text-muted small" title="The image will be looked for on the Ticket URL page">From page</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">-</span>
+                            }
                         </td>
                         <td class="text-muted small">@row.Location</td>
                         <td class="text-muted small" title="@row.Description">
@@ -185,7 +212,8 @@
     <button type="submit" class="btn btn-outline-primary">
         <i class="fas fa-rotate me-2"></i>Save Corrections &amp; Re-validate
     </button>
-    <button type="submit" formaction="@Url.Action("Confirm")" class="btn btn-success" id="confirmButton" disabled="@hasBlockingRows">
+    <button type="submit" formaction="@Url.Action("Confirm")" class="btn btn-success" id="confirmButton" disabled="@hasBlockingRows"
+            data-busy-text="Importing and copying images, this can take up to 3 minutes...">
         <i class="fas fa-check me-2"></i>Confirm Import
     </button>
     @if (hasBlockingRows)
@@ -195,6 +223,7 @@
 </form>
 
 @section Scripts {
+    <partial name="_BusySubmitScript" />
     <script>
         // Filters each row's Subcategory dropdown to only the options matching its currently
         // selected Category, mirroring the single-row pattern used on the Create Event page.

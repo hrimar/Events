@@ -17,6 +17,10 @@ public class EventImportRowMapper : IEventImportRowMapper
     private const int DescriptionMaxLength = 4000;
     private const int UrlMaxLength = 500;
 
+    // The image address is no longer stored as Event.ImageUrl but downloaded and kept in Event.ImageSourceUrl;
+    // Facebook CDN addresses can exceed 500 characters and a cut address cannot be downloaded (GS-REQ-009, 9.1.5).
+    private const int ImageUrlMaxLength = 2000;
+
     private static readonly string[] TagDelimiters = { "," };
 
     private static readonly Dictionary<string, EventStatus> StatusSynonyms = new(StringComparer.OrdinalIgnoreCase)
@@ -192,7 +196,7 @@ public class EventImportRowMapper : IEventImportRowMapper
             return;
         }
 
-        result.ImageUrl = StringTruncationHelper.TruncateString(raw, UrlMaxLength);
+        result.ImageUrl = StringTruncationHelper.TruncateString(raw, ImageUrlMaxLength);
         if (!Uri.TryCreate(raw, UriKind.Absolute, out _))
         {
             result.AddWarning($"Image URL '{raw}' does not look like a valid absolute URL.");

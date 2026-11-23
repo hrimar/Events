@@ -61,5 +61,10 @@ public class Event
     [MaxLength(500)]
     public string? SourceUrl { get; set; }
 
+    // External address the image was copied from (Excel import); kept for reference only, never displayed.
+    // Longer than ImageUrl because Facebook CDN addresses carry long signature parameters (GS-REQ-009, 9.1.5).
+    [MaxLength(2000)]
+    public string? ImageSourceUrl { get; set; }
+
     public ICollection<EventTag> EventTags { get; set; } = new List<EventTag>();
 }

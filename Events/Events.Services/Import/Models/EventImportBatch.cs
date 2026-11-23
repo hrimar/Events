@@ -26,4 +26,7 @@ public class EventImportCommitResult
     public List<int> CreatedEventIds { get; set; } = new();
 
     public List<(int RowNumber, string Error)> Failures { get; set; } = new();
+
+    // Image job of this import (GS-REQ-009, 9.3.4); null if it could not be saved.
+    public int? JobId { get; set; }
 }

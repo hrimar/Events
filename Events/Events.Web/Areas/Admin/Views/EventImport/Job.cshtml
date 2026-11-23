@@ -1,0 +1,166 @@
+@using Events.Services.Import
+@using Events.Services.Time
+@model EventImportJobViewModel
+
+@{
+    ViewData["Title"] = "Import Report";
+    var job = Model.Job;
+    var report = Model.Report;
+}
+
+@* Import report with image progress, CSV download and manual upload for rows without image (GS-REQ-009, 9.3.3-9.3.5). *@
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <h1 class="mb-0"><i class="fas fa-clipboard-list me-2"></i>Import Report</h1>
+    <div>
+        <a asp-action="JobCsv" asp-route-id="@job.Id" class="btn btn-outline-secondary me-2">
+            <i class="fas fa-file-csv me-2"></i>Download CSV
+        </a>
+        <a asp-action="Upload" class="btn btn-outline-secondary me-2">
+            <i class="fas fa-file-import me-2"></i>Import Another File
+        </a>
+        <a asp-area="Admin" asp-controller="Events" asp-action="Index" class="btn btn-primary">
+            <i class="fas fa-list me-2"></i>Go to Events
+        </a>
+    </div>
+</div>
+
+<p class="text-muted">
+    <strong>@job.FileName</strong> · imported @SofiaTimeZone.FromUtc(job.CreatedAtUtc).ToString("dd.MM.yyyy HH:mm") by @job.CreatedBy
+</p>
+
+@if (report.ImagesToProcess > 0)
+{
+    <div class="alert @(report.RowsWithoutImage.Count > 0 ? "alert-warning" : "alert-success")">
+        Images done: @report.ImagesProcessed of @report.ImagesToProcess
+        @(report.RowsWithoutImage.Count > 0 ? $" - {report.RowsWithoutImage.Count} event(s) are shown with the default image." : ".")
+    </div>
+}
+
+@* Rows the Confirm request did not reach (time limit or app restart) can be run again (GS-REQ-009, 9.3.5). *@
+@if (report.Pending > 0)
+{
+    <form asp-action="RetryRemaining" asp-route-id="@job.Id" method="post" class="mb-4">
+        @Html.AntiForgeryToken()
+        <span class="me-2">@report.Pending row(s) were not processed.</span>
+        <button type="submit" class="btn btn-primary" data-busy-text="Copying images, this can take up to 3 minutes...">
+            <i class="fas fa-rotate me-2"></i>Retry remaining
+        </button>
+    </form>
+}
+
+<div class="row g-4 mb-4">
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header"><h5 class="mb-0">Rows</h5></div>
+            <table class="table table-sm mb-0">
+                <tbody>
+                    <tr><th scope="row">Total rows in file</th><td class="text-end">@report.TotalRows</td></tr>
+                    <tr><th scope="row">Events created</th><td class="text-end">@report.CreatedCount</td></tr>
+                    <tr><th scope="row">Skipped (excluded)</th><td class="text-end">@report.SkippedExcludedCount</td></tr>
+                    <tr><th scope="row">Not imported</th><td class="text-end">@report.NotImportedCount</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header"><h5 class="mb-0">Images</h5></div>
+            <table class="table table-sm mb-0">
+                <tbody>
+                    <tr><th scope="row">Downloaded</th><td class="text-end">@report.Downloaded</td></tr>
+                    <tr><th scope="row">Extracted from page (Ticket URL)</th><td class="text-end">@report.ExtractedFromPage</td></tr>
+                    <tr><th scope="row">Reused (already stored)</th><td class="text-end">@report.Reused</td></tr>
+                    <tr><th scope="row">No image in row</th><td class="text-end">@report.NoImage</td></tr>
+                    <tr><th scope="row">Failed</th><td class="text-end">@report.Failed</td></tr>
+                    @if (report.Pending > 0)
+                    {
+                        <tr><th scope="row">Not processed</th><td class="text-end">@report.Pending</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@if (report.RowsWithoutImage.Count > 0)
+{
+    <div class="card mb-4">
+        <div class="card-header bg-warning">
+            <h5 class="mb-0">Events Without Image</h5>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-sm align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Row</th>
+                        <th>Event</th>
+                        <th>Reason</th>
+                        <th>Detail</th>
+                        <th>Source</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in report.RowsWithoutImage)
+                    {
+                        var source = item.ImageFromPage || string.IsNullOrEmpty(item.SourceImageUrl) ? item.PageUrl : item.SourceImageUrl;
+                        <tr>
+                            <td>@item.RowNumber</td>
+                            <td>@item.EventName</td>
+                            <td>
+                                @(item.FailureReason != null
+                                    ? EventImportReport.GetReasonLabel(item.FailureReason)
+                                    : EventImportReport.GetResultLabel(item))
+                            </td>
+                            <td class="small text-muted">@item.Detail</td>
+                            <td class="small text-break" style="max-width: 18rem;" title="@source">
+                                @(source != null && source.Length > 60 ? source[..60] + "…" : source)
+                            </td>
+                            <td class="text-end">
+                                @if (item.EventId != null)
+                                {
+                                    <a asp-area="Admin" asp-controller="Events" asp-action="Edit" asp-route-id="@item.EventId"
+                                       class="btn btn-sm btn-outline-primary text-nowrap">
+                                        <i class="fas fa-upload me-1"></i>Upload image
+                                    </a>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+@if (report.RowsNotImported.Count > 0)
+{
+    <div class="card mb-4">
+        <div class="card-header bg-danger text-white">
+            <h5 class="mb-0">Rows That Failed to Import</h5>
+        </div>
+        <table class="table table-sm mb-0">
+            <thead>
+                <tr>
+                    <th>Row</th>
+                    <th>Event</th>
+                    <th>Error</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in report.RowsNotImported)
+                {
+                    <tr>
+                        <td>@item.RowNumber</td>
+                        <td>@item.EventName</td>
+                        <td>@item.Detail</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@section Scripts {
+    <partial name="_BusySubmitScript" />
+}
