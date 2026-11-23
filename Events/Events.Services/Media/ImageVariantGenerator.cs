@@ -1,6 +1,9 @@
 using Events.Models.Enums;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats;
+using SixLabors.ImageSharp.Formats.Gif;
+using SixLabors.ImageSharp.Formats.Jpeg;
+using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.Formats.Webp;
 using SixLabors.ImageSharp.Processing;
 
@@ -23,8 +26,14 @@ public sealed class ImageVariantGenerator
     // Upper bound on decoded size: a small file can declare huge dimensions (decompression bomb).
     public const long MaxPixels = 50_000_000;
 
+    // Only the four accepted formats can be decoded (GS-REQ-009, 9.1.3). ImageSharp detects the format from the bytes
+    // itself, so without this a file that slipped past ImageFormatSniffer could still reach e.g. the TIFF or BMP decoder
+    // (most known ImageSharp vulnerabilities were in TIFF). Second line of defence for files from the internet.
+    private static readonly Configuration AcceptedFormats = new(
+        new JpegConfigurationModule(), new PngConfigurationModule(), new WebpConfigurationModule(), new GifConfigurationModule());
+
     // Only the first frame is decoded, so animated GIFs become still images (GS-REQ-009, 9.1.3).
-    private static readonly DecoderOptions FirstFrameOnly = new() { MaxFrames = 1 };
+    private static readonly DecoderOptions FirstFrameOnly = new() { MaxFrames = 1, Configuration = AcceptedFormats };
 
     // requireMinimumSize: true for the Excel import; false for the admin upload, which keeps its current rules.
     public ImageVariantResult Generate(byte[] content, bool requireMinimumSize)

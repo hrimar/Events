@@ -101,6 +101,31 @@ public class ImageVariantGeneratorTests
         Assert.Equal(ImageFetchFailureReason.TooLarge, result.FailureReason);
     }
 
+    [Theory]
+    [InlineData("bmp")]
+    [InlineData("tiff")]
+    [InlineData("tga")]
+    public void Generate_OtherFormatThatImageSharpKnows_IsNotDecoded(string format)
+    {
+        byte[] content;
+        using (var image = new Image<Rgba32>(600, 400, Color.Orange))
+        using (var output = new MemoryStream())
+        {
+            switch (format)
+            {
+                case "bmp": image.SaveAsBmp(output); break;
+                case "tiff": image.SaveAsTiff(output); break;
+                default: image.SaveAsTga(output); break;
+            }
+
+            content = output.ToArray();
+        }
+
+        var result = _generator.Generate(content, requireMinimumSize: true);
+
+        Assert.Equal(ImageFetchFailureReason.ProcessingError, result.FailureReason);
+    }
+
     [Fact]
     public void Generate_CorruptImage_ReturnsProcessingError()
     {
