@@ -436,3 +436,10 @@ FodyWeavers.xsd
 
 # Deployment scripts with secrets
 deploy-to-azure.ps1
+
+# Local working documents
+Events/.claude
+Events/.vscode
+Events/docs
+Events/CLAUDE.md
+Events/.cursorrules
