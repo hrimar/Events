@@ -18,17 +18,15 @@ public sealed class EventImportReport
     public int Reused { get; private init; }
     public int NoImage { get; private init; }
     public int Failed { get; private init; }
+    // Rows the Confirm request did not reach (time budget, database error or app restart); "Retry remaining" runs them.
     public int Pending { get; private init; }
 
-    public bool IsCompleted { get; private init; }
-
-    // Rows with an image to fetch, and how many of them are done (progress indicator, 9.3.4).
+    // Rows with an image to fetch, and how many of them are done.
     public int ImagesToProcess => Downloaded + ExtractedFromPage + Reused + Failed + Pending;
     public int ImagesProcessed => ImagesToProcess - Pending;
-    public int ProgressPercent => ImagesToProcess == 0 ? 100 : ImagesProcessed * 100 / ImagesToProcess;
 
-    // Imported rows left without an image, for the manual upload from the report (9.3.5): failed rows, and rows a
-    // completed job could not process (database error), shown as "Not processed".
+    // Imported rows left without an image, for the manual upload from the report (9.3.5): failed rows, and rows not
+    // processed yet, shown as "Not processed".
     public IReadOnlyList<EventImportJobItem> RowsWithoutImage { get; private init; } = Array.Empty<EventImportJobItem>();
 
     public IReadOnlyList<EventImportJobItem> RowsNotImported { get; private init; } = Array.Empty<EventImportJobItem>();
@@ -37,7 +35,6 @@ public sealed class EventImportReport
     {
         ArgumentNullException.ThrowIfNull(job);
         var items = job.Items.OrderBy(i => i.RowNumber).ToList();
-        var isCompleted = job.Status == EventImportJobStatus.Completed;
 
         return new EventImportReport
         {
@@ -51,16 +48,13 @@ public sealed class EventImportReport
             NoImage = items.Count(i => i.Outcome == EventImportImageOutcome.NoImage),
             Failed = items.Count(i => i.Outcome == EventImportImageOutcome.Failed),
             Pending = items.Count(i => i.Outcome == EventImportImageOutcome.Pending),
-            IsCompleted = isCompleted,
-            RowsWithoutImage = items
-                .Where(i => i.Outcome == EventImportImageOutcome.Failed || (isCompleted && i.Outcome == EventImportImageOutcome.Pending))
-                .ToList(),
+            RowsWithoutImage = items.Where(i => i.Outcome is EventImportImageOutcome.Failed or EventImportImageOutcome.Pending).ToList(),
             RowsNotImported = items.Where(i => i.Outcome == EventImportImageOutcome.RowNotImported).ToList()
         };
     }
 
     // Result column of the report and the CSV.
-    public static string GetResultLabel(EventImportJobItem item, bool jobCompleted) => item.Outcome switch
+    public static string GetResultLabel(EventImportJobItem item) => item.Outcome switch
     {
         EventImportImageOutcome.Downloaded or EventImportImageOutcome.Reused when item.ImageFromPage => "Extracted from page",
         EventImportImageOutcome.Downloaded => "Downloaded",
@@ -68,7 +62,7 @@ public sealed class EventImportReport
         EventImportImageOutcome.NoImage => "No image in row",
         EventImportImageOutcome.Failed => "Failed",
         EventImportImageOutcome.RowNotImported => "Row not imported",
-        EventImportImageOutcome.Pending => jobCompleted ? "Not processed" : "Pending",
+        EventImportImageOutcome.Pending => "Not processed",
         _ => item.Outcome.ToString()
     };
 

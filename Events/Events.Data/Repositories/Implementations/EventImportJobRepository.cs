@@ -58,7 +58,7 @@ public class EventImportJobRepository : IEventImportJobRepository
     public async Task<bool> StartAsync(int jobId, DateTime utcNow, CancellationToken cancellationToken = default)
     {
         var job = await _context.EventImportJobs.FirstOrDefaultAsync(j => j.Id == jobId, cancellationToken);
-        if (job == null || job.Status == EventImportJobStatus.Completed)
+        if (job == null)
         {
             return false;
         }

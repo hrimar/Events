@@ -51,16 +51,15 @@ public class EventImportReportTests
 
         Assert.Equal((20, 18, 1, 1), (report.TotalRows, report.CreatedCount, report.SkippedExcludedCount, report.NotImportedCount));
         Assert.Equal((2, 2, 1, 1, 2, 0), (report.Downloaded, report.ExtractedFromPage, report.Reused, report.NoImage, report.Failed, report.Pending));
-        Assert.Equal(7, report.ImagesToProcess);
-        Assert.Equal(100, report.ProgressPercent);
+        Assert.Equal((7, 7), (report.ImagesToProcess, report.ImagesProcessed));
         Assert.Equal([7, 8], report.RowsWithoutImage.Select(i => i.RowNumber));
         Assert.Equal([9], report.RowsNotImported.Select(i => i.RowNumber));
     }
 
     [Fact]
-    public void From_RunningJob_ShowsProgressAndKeepsPendingOutOfTheFailedList()
+    public void From_RowsNotReached_AreListedAsNotProcessedForRetryOrManualUpload()
     {
-        var job = Job(EventImportJobStatus.Running,
+        var job = Job(EventImportJobStatus.Completed,
             Item(1, EventImportImageOutcome.Downloaded),
             Item(2, EventImportImageOutcome.Pending),
             Item(3, EventImportImageOutcome.Pending),
@@ -68,31 +67,18 @@ public class EventImportReportTests
 
         var report = EventImportReport.From(job);
 
-        Assert.False(report.IsCompleted);
-        Assert.Equal((2, 4, 50), (report.ImagesProcessed, report.ImagesToProcess, report.ProgressPercent));
-        Assert.Equal([4], report.RowsWithoutImage.Select(i => i.RowNumber));
+        Assert.Equal((2, 2, 4), (report.Pending, report.ImagesProcessed, report.ImagesToProcess));
+        Assert.Equal([2, 3, 4], report.RowsWithoutImage.Select(i => i.RowNumber));
+        Assert.Equal("Not processed", EventImportReport.GetResultLabel(report.RowsWithoutImage[0]));
     }
 
     [Fact]
-    public void From_CompletedJobWithPendingRow_ListsItAsNotProcessed()
-    {
-        var pending = Item(2, EventImportImageOutcome.Pending);
-        var job = Job(EventImportJobStatus.Completed, Item(1, EventImportImageOutcome.Downloaded), pending);
-
-        var report = EventImportReport.From(job);
-
-        Assert.Contains(pending, report.RowsWithoutImage);
-        Assert.Equal("Not processed", EventImportReport.GetResultLabel(pending, jobCompleted: true));
-        Assert.Equal("Pending", EventImportReport.GetResultLabel(pending, jobCompleted: false));
-    }
-
-    [Fact]
-    public void From_NothingToFetch_IsFullProgress()
+    public void From_NothingToFetch_HasNoImageRows()
     {
         var report = EventImportReport.From(Job(EventImportJobStatus.Completed, Item(1, EventImportImageOutcome.NoImage)));
 
         Assert.Equal(0, report.ImagesToProcess);
-        Assert.Equal(100, report.ProgressPercent);
+        Assert.Empty(report.RowsWithoutImage);
     }
 
     [Fact]

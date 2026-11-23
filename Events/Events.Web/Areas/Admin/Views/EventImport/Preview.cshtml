@@ -185,7 +185,8 @@
     <button type="submit" class="btn btn-outline-primary">
         <i class="fas fa-rotate me-2"></i>Save Corrections &amp; Re-validate
     </button>
-    <button type="submit" formaction="@Url.Action("Confirm")" class="btn btn-success" id="confirmButton" disabled="@hasBlockingRows">
+    <button type="submit" formaction="@Url.Action("Confirm")" class="btn btn-success" id="confirmButton" disabled="@hasBlockingRows"
+            data-busy-text="Importing and copying images, this can take up to 3 minutes...">
         <i class="fas fa-check me-2"></i>Confirm Import
     </button>
     @if (hasBlockingRows)
@@ -195,6 +196,7 @@
 </form>
 
 @section Scripts {
+    <partial name="_BusySubmitScript" />
     <script>
         // Filters each row's Subcategory dropdown to only the options matching its currently
         // selected Category, mirroring the single-row pattern used on the Create Event page.

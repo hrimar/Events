@@ -20,8 +20,8 @@ public interface IEventImportJobRepository
     // Ids of jobs that are Queued or Running, oldest first (resumed by the worker on start).
     Task<List<int>> GetUnfinishedJobIdsAsync(CancellationToken cancellationToken = default);
 
-    // Marks a Queued or Running job as Running (StartedAtUtc is kept from the first start).
-    // Returns false when the job does not exist or is already Completed.
+    // Marks the job as Running (StartedAtUtc is kept from the first start). A Completed job may run again for
+    // "Retry remaining" on the report. Returns false when the job does not exist.
     Task<bool> StartAsync(int jobId, DateTime utcNow, CancellationToken cancellationToken = default);
 
     // Ids of the job's items that still wait for the worker, by row number.

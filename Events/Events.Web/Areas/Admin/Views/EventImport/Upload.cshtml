@@ -36,7 +36,11 @@
                     <div class="mb-3">
                         <label for="file" class="form-label">Select an .xlsx or .csv file</label>
                         <input type="file" class="form-control" id="file" name="file" accept=".xlsx,.csv" required />
-                        <div class="form-text">Maximum file size: 10 MB.</div>
+                        <div class="form-text">
+                            Maximum file size: 10 MB, up to
+                            @Events.Web.Areas.Admin.Controllers.EventImportController.MaxRowsPerImport events per file.
+                            The images are copied when you confirm the import, which can take up to 3 minutes.
+                        </div>
                     </div>
 
                     <button type="submit" class="btn btn-primary">
@@ -92,7 +96,7 @@
                                 · @job.CreatedCount created
                                 @if (job.Status != EventImportJobStatus.Completed)
                                 {
-                                    <span class="badge bg-info text-dark ms-1">Copying images</span>
+                                    <span class="badge bg-warning text-dark ms-1">Not finished</span>
                                 }
                             </div>
                         </li>

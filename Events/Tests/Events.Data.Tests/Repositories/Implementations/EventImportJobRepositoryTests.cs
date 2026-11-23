@@ -77,13 +77,22 @@ public class EventImportJobRepositoryTests : IDisposable
     }
 
     [Fact]
-    public async Task StartAsync_CompletedOrMissingJob_ReturnsFalse()
+    public async Task StartAsync_CompletedJob_RunsAgainForRetry()
     {
         var job = CreateJob(EventImportJobStatus.Completed, Now);
+        job.StartedAtUtc = Now;
         _context.EventImportJobs.Add(job);
         await _context.SaveChangesAsync();
 
-        Assert.False(await CreateRepository().StartAsync(job.Id, Now));
+        Assert.True(await CreateRepository().StartAsync(job.Id, Now.AddHours(1)));
+
+        Assert.Equal(EventImportJobStatus.Running, job.Status);
+        Assert.Equal(Now, job.StartedAtUtc);
+    }
+
+    [Fact]
+    public async Task StartAsync_MissingJob_ReturnsFalse()
+    {
         Assert.False(await CreateRepository().StartAsync(999, Now));
     }
 

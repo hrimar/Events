@@ -162,9 +162,6 @@ static void ConfigureAzureStorage(WebApplicationBuilder builder)
         builder.Services.AddMediaImageStore();
         // Copies Excel import images into our storage, one row at a time (GS-REQ-009, 9.1, 9.2).
         builder.Services.AddScoped<IEventImportImageProcessor, EventImportImageProcessor>();
-        // Background copy of import images: polls the database for unfinished jobs (GS-REQ-009, 9.3.4).
-        builder.Services.AddSingleton<EventImportImageJobRunner>();
-        builder.Services.AddHostedService<Events.Web.Areas.Admin.Services.EventImportImageWorker>();
     }
     else if (!builder.Environment.IsDevelopment() && !IsDesignTime(builder))
     {
@@ -313,6 +310,8 @@ static void RegisterServices(WebApplicationBuilder builder)
     builder.Services.AddScoped<IEventImportDuplicateDetector, EventImportDuplicateDetector>();
     builder.Services.AddScoped<IEventImportService, EventImportService>();
     builder.Services.AddSingleton<Events.Web.Areas.Admin.Services.EventImportBatchCache>();
+    // Copies the import images inside the Confirm request, four rows at a time (GS-REQ-009, 9.1, 9.3).
+    builder.Services.AddSingleton<EventImportImageJobRunner>();
 }
 
 static async Task InitializeDatabaseAsync(WebApplication app)

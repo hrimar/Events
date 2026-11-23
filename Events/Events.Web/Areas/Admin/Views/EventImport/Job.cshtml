@@ -28,27 +28,24 @@
     <strong>@job.FileName</strong> · imported @SofiaTimeZone.FromUtc(job.CreatedAtUtc).ToString("dd.MM.yyyy HH:mm") by @job.CreatedBy
 </p>
 
-@if (!report.IsCompleted)
-{
-    <div class="card mb-4" aria-live="polite">
-        <div class="card-body">
-            <p class="mb-2">
-                <i class="fas fa-spinner fa-spin me-2"></i>Copying images: <strong>@report.ImagesProcessed of @report.ImagesToProcess</strong>.
-                You can leave this page; the copy continues in the background.
-            </p>
-            <div class="progress" role="progressbar" aria-label="Image copy progress"
-                 aria-valuenow="@report.ProgressPercent" aria-valuemin="0" aria-valuemax="100">
-                <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: @report.ProgressPercent%">@report.ProgressPercent%</div>
-            </div>
-        </div>
-    </div>
-}
-else if (report.ImagesToProcess > 0)
+@if (report.ImagesToProcess > 0)
 {
     <div class="alert @(report.RowsWithoutImage.Count > 0 ? "alert-warning" : "alert-success")">
         Images done: @report.ImagesProcessed of @report.ImagesToProcess
         @(report.RowsWithoutImage.Count > 0 ? $" - {report.RowsWithoutImage.Count} event(s) are shown with the default image." : ".")
     </div>
+}
+
+@* Rows the Confirm request did not reach (time limit or app restart) can be run again (GS-REQ-009, 9.3.5). *@
+@if (report.Pending > 0)
+{
+    <form asp-action="RetryRemaining" asp-route-id="@job.Id" method="post" class="mb-4">
+        @Html.AntiForgeryToken()
+        <span class="me-2">@report.Pending row(s) were not processed.</span>
+        <button type="submit" class="btn btn-primary" data-busy-text="Copying images, this can take up to 3 minutes...">
+            <i class="fas fa-rotate me-2"></i>Retry remaining
+        </button>
+    </form>
 }
 
 <div class="row g-4 mb-4">
@@ -77,7 +74,7 @@ else if (report.ImagesToProcess > 0)
                     <tr><th scope="row">Failed</th><td class="text-end">@report.Failed</td></tr>
                     @if (report.Pending > 0)
                     {
-                        <tr><th scope="row">@(report.IsCompleted ? "Not processed" : "Pending")</th><td class="text-end">@report.Pending</td></tr>
+                        <tr><th scope="row">Not processed</th><td class="text-end">@report.Pending</td></tr>
                     }
                 </tbody>
             </table>
@@ -113,7 +110,7 @@ else if (report.ImagesToProcess > 0)
                             <td>
                                 @(item.FailureReason != null
                                     ? EventImportReport.GetReasonLabel(item.FailureReason)
-                                    : EventImportReport.GetResultLabel(item, report.IsCompleted))
+                                    : EventImportReport.GetResultLabel(item))
                             </td>
                             <td class="small text-muted">@item.Detail</td>
                             <td class="small text-break" style="max-width: 18rem;" title="@source">
@@ -165,11 +162,5 @@ else if (report.ImagesToProcess > 0)
 }
 
 @section Scripts {
-    @if (!report.IsCompleted)
-    {
-        <script>
-            // Refresh the progress while the background job runs (GS-REQ-009, 9.3.4).
-            setTimeout(function () { window.location.reload(); }, 3000);
-        </script>
-    }
+    <partial name="_BusySubmitScript" />
 }

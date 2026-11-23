@@ -2,7 +2,6 @@ using System.Globalization;
 using System.Text;
 using CsvHelper;
 using Events.Models.Entities;
-using Events.Models.Enums;
 
 namespace Events.Services.Import;
 
@@ -13,7 +12,6 @@ public static class EventImportReportCsvWriter
     public static byte[] Write(EventImportJob job)
     {
         ArgumentNullException.ThrowIfNull(job);
-        var jobCompleted = job.Status == EventImportJobStatus.Completed;
 
         using var stream = new MemoryStream();
         using (var writer = new StreamWriter(stream, new UTF8Encoding(encoderShouldEmitUTF8Identifier: true)))
@@ -34,7 +32,7 @@ public static class EventImportReportCsvWriter
                 csv.WriteField(item.RowNumber);
                 csv.WriteField(item.EventId?.ToString(CultureInfo.InvariantCulture) ?? "");
                 csv.WriteField(item.EventName);
-                csv.WriteField(EventImportReport.GetResultLabel(item, jobCompleted));
+                csv.WriteField(EventImportReport.GetResultLabel(item));
                 csv.WriteField(EventImportReport.GetReasonLabel(item.FailureReason));
                 csv.WriteField(item.Detail ?? "");
                 csv.WriteField(item.SourceImageUrl ?? "");
