@@ -159,7 +159,8 @@ static void ConfigureAzureStorage(WebApplicationBuilder builder)
 
         builder.Services.AddSingleton(blobContainerClient);
         builder.Services.AddScoped<IImageUploadService, AzureBlobImageService>();
-        builder.Services.AddMediaImageStore();
+        // WebP variants of event images stored by content (GS-REQ-009, 9.4); used by AzureBlobImageService.
+        builder.Services.AddSingleton<ImageVariantGenerator>();
         // Copies Excel import images into our storage, one row at a time (GS-REQ-009, 9.1, 9.2).
         builder.Services.AddScoped<IEventImportImageProcessor, EventImportImageProcessor>();
     }

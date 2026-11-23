@@ -1,3 +1,4 @@
+using Events.Services.Media;
 using Microsoft.AspNetCore.Http;
 
 namespace Events.Services.Interfaces;
@@ -19,6 +20,15 @@ public interface IImageUploadService
     /// <exception cref="ArgumentException">Thrown when file validation fails</exception>
     /// <exception cref="InvalidOperationException">Thrown when upload fails</exception>
     Task<(string OriginalUrl, string ThumbnailUrl)> UploadEventImageAsync(IFormFile file, string eventIdOrSessionId);
+
+    /// <summary>
+    /// Stores event image bytes by content: original unchanged + 1200px and 480px WebP variants (GS-REQ-009, 9.1.3, 9.1.4,
+    /// 9.1.6, 9.4). Already stored content is reused without writing. Used by the Excel import and by UploadEventImageAsync.
+    /// Problems with the image itself are returned as a failure, not thrown.
+    /// </summary>
+    /// <param name="content">The image bytes</param>
+    /// <param name="requireMinimumSize">True for the Excel import (300x200px); false for the admin upload</param>
+    Task<MediaStoreResult> StoreEventImageAsync(byte[] content, bool requireMinimumSize, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Deletes the images of an event that is being deleted. Images stored by content (/media/1200|480/{id}.webp)

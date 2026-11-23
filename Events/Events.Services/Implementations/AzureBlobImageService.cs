@@ -19,7 +19,7 @@ namespace Events.Services.Implementations;
 public class AzureBlobImageService : IImageUploadService
 {
     private readonly BlobContainerClient _containerClient;
-    private readonly IMediaImageStore _mediaImageStore;
+    private readonly ImageVariantGenerator _variantGenerator;
     private readonly IEventRepository _eventRepository;
     private readonly ILogger<AzureBlobImageService> _logger;
 
@@ -33,12 +33,12 @@ public class AzureBlobImageService : IImageUploadService
 
     public AzureBlobImageService(
         BlobContainerClient containerClient,
-        IMediaImageStore mediaImageStore,
+        ImageVariantGenerator variantGenerator,
         IEventRepository eventRepository,
         ILogger<AzureBlobImageService> logger)
     {
         _containerClient = containerClient ?? throw new ArgumentNullException(nameof(containerClient));
-        _mediaImageStore = mediaImageStore ?? throw new ArgumentNullException(nameof(mediaImageStore));
+        _variantGenerator = variantGenerator ?? throw new ArgumentNullException(nameof(variantGenerator));
         _eventRepository = eventRepository ?? throw new ArgumentNullException(nameof(eventRepository));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
@@ -114,7 +114,7 @@ public class AzureBlobImageService : IImageUploadService
             throw new ArgumentException(validation.ErrorMessage);
         }
 
-        // Same store as the Excel import: original unchanged + 1200/480 WebP variants (GS-REQ-009, 9.4).
+        // Same storage as the Excel import: original unchanged + 1200/480 WebP variants (GS-REQ-009, 9.4).
         // No minimum size here: the admin upload keeps its current rules (owner decision, 20.11.2026).
         MediaStoreResult result;
         try
@@ -123,7 +123,7 @@ public class AzureBlobImageService : IImageUploadService
             using var buffer = new MemoryStream();
             await fileStream.CopyToAsync(buffer);
 
-            result = await _mediaImageStore.StoreAsync(buffer.ToArray(), requireMinimumSize: false);
+            result = await StoreEventImageAsync(buffer.ToArray(), requireMinimumSize: false);
         }
         catch (Exception ex)
         {
@@ -150,6 +150,76 @@ public class AzureBlobImageService : IImageUploadService
         return (result.LargeUrl!, result.ThumbnailUrl!);
     }
 
+    // Images stored by content (GS-REQ-009, 9.1.3, 9.1.4, 9.1.6, 9.4). The image id is the SHA-256 based id from
+    // MediaImagePaths, so the same image always gets the same names and storing it again writes nothing
+    // (acceptance criterion 4 of GS-REQ-009).
+    public async Task<MediaStoreResult> StoreEventImageAsync(byte[] content, bool requireMinimumSize, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(content);
+
+        var format = ImageFormatSniffer.Detect(content);
+        if (format == null)
+        {
+            return MediaStoreResult.Failure(ImageFetchFailureReason.UnsupportedType, "Content is not JPEG, PNG, WebP or GIF.");
+        }
+
+        var imageId = MediaImagePaths.ComputeImageId(content);
+
+        // The thumbnail is written last, so its presence means the whole set is complete.
+        var thumbnailBlob = _containerClient.GetBlobClient(MediaImagePaths.ThumbnailBlobName(imageId));
+        if ((await thumbnailBlob.ExistsAsync(cancellationToken)).Value)
+        {
+            return MediaStoreResult.Success(imageId, reused: true);
+        }
+
+        var variants = _variantGenerator.Generate(content, requireMinimumSize);
+        if (!variants.IsSuccess)
+        {
+            return MediaStoreResult.Failure(variants.FailureReason!.Value, variants.Detail!);
+        }
+
+        try
+        {
+            // Original unchanged, as an archive (GS-REQ-009, 9.4).
+            await UploadBlobAsync(
+                MediaImagePaths.OriginalBlobName(imageId, format.Value), content, ImageFormatSniffer.GetContentType(format.Value), cancellationToken);
+            await UploadBlobAsync(MediaImagePaths.LargeBlobName(imageId), variants.Large, "image/webp", cancellationToken);
+            await UploadBlobAsync(MediaImagePaths.ThumbnailBlobName(imageId), variants.Thumbnail, "image/webp", cancellationToken);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _logger.LogError(ex, "Failed to write image {ImageId} to storage", imageId);
+            return MediaStoreResult.Failure(ImageFetchFailureReason.ProcessingError, "Could not write the image to storage.");
+        }
+
+        _logger.LogInformation("Stored image {ImageId} ({Format}, {Width}x{Height}px)", imageId, format, variants.Width, variants.Height);
+        return MediaStoreResult.Success(imageId, reused: false);
+    }
+
+    private async Task UploadBlobAsync(string blobName, byte[] content, string contentType, CancellationToken cancellationToken)
+    {
+        // Content type is stored on the blob, so MediaController returns image/webp, image/png etc.
+        var options = new BlobUploadOptions { HttpHeaders = new BlobHttpHeaders { ContentType = contentType } };
+        await _containerClient.GetBlobClient(blobName).UploadAsync(new BinaryData(content), options, cancellationToken);
+    }
+
+    // Deletes the whole set of an image stored by content. The caller checks first that no other event uses it.
+    private async Task DeleteStoredImageSetAsync(string imageId)
+    {
+        // Thumbnail first: without it StoreEventImageAsync no longer treats the set as complete, so a half-deleted
+        // set is written again in full by the next upload of the same content.
+        await _containerClient.DeleteBlobIfExistsAsync(MediaImagePaths.ThumbnailBlobName(imageId));
+        await _containerClient.DeleteBlobIfExistsAsync(MediaImagePaths.LargeBlobName(imageId));
+
+        // The original keeps its own extension: one call per accepted format instead of listing the container.
+        foreach (var format in Enum.GetValues<DetectedImageFormat>())
+        {
+            await _containerClient.DeleteBlobIfExistsAsync(MediaImagePaths.OriginalBlobName(imageId, format));
+        }
+
+        _logger.LogInformation("Deleted image {ImageId}", imageId);
+    }
+
     public async Task DeleteEventImagesAsync(int eventId, string? imageUrl, string? thumbnailUrl)
     {
         var imageId = MediaImagePaths.TryGetImageId(imageUrl) ?? MediaImagePaths.TryGetImageId(thumbnailUrl);
@@ -174,7 +244,7 @@ public class AzureBlobImageService : IImageUploadService
                 return;
             }
 
-            await _mediaImageStore.DeleteAsync(imageId);
+            await DeleteStoredImageSetAsync(imageId);
         }
         catch (Exception ex)
         {

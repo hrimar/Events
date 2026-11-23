@@ -20,7 +20,7 @@ public class EventImportImageProcessorTests
     // Before the "oe" expiry of ImageUrl (2026-05-30).
     private readonly SettableTimeProvider _time = new(new DateTimeOffset(2026, 5, 1, 12, 0, 0, TimeSpan.Zero));
     private readonly Mock<ISafeHttpFetcher> _fetcher = new();
-    private readonly Mock<IMediaImageStore> _store = new();
+    private readonly Mock<IImageUploadService> _store = new();
     private readonly Mock<IEventService> _eventService = new();
 
     public EventImportImageProcessorTests()
@@ -56,7 +56,7 @@ public class EventImportImageProcessorTests
         Assert.False(item.ImageFromPage);
         Assert.Null(item.FailureReason);
         Assert.NotNull(item.ProcessedAtUtc);
-        _store.Verify(s => s.StoreAsync(ImageBytes, true, It.IsAny<CancellationToken>()), Times.Once);
+        _store.Verify(s => s.StoreEventImageAsync(ImageBytes, true, It.IsAny<CancellationToken>()), Times.Once);
         _eventService.Verify(s => s.SetEventImageAsync(
             10, $"/media/1200/{ImageId}.webp", $"/media/480/{ImageId}.webp", ImageUrl, It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -169,7 +169,7 @@ public class EventImportImageProcessorTests
     public async Task ProcessAsync_StoreRejectsImage_FailsWithStoreReason(ImageFetchFailureReason reason)
     {
         SetupImageDownload(ImageUrl);
-        _store.Setup(s => s.StoreAsync(ImageBytes, true, It.IsAny<CancellationToken>()))
+        _store.Setup(s => s.StoreEventImageAsync(ImageBytes, true, It.IsAny<CancellationToken>()))
             .ReturnsAsync(MediaStoreResult.Failure(reason, "rejected"));
         var item = PendingItem();
 
@@ -256,7 +256,7 @@ public class EventImportImageProcessorTests
                 RemoteFetchResult.Success(Encoding.UTF8.GetBytes(html), "text/html", new Uri(url), HttpStatusCode.OK));
 
     private void SetupStore(bool reused) =>
-        _store.Setup(s => s.StoreAsync(ImageBytes, true, It.IsAny<CancellationToken>()))
+        _store.Setup(s => s.StoreEventImageAsync(ImageBytes, true, It.IsAny<CancellationToken>()))
             .ReturnsAsync(MediaStoreResult.Success(ImageId, reused));
 
     private void AssertEventNotUpdated() =>

@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 
 namespace Events.Services.Media;
@@ -9,11 +10,13 @@ public static partial class MediaImagePaths
 {
     public const string UrlPrefix = "/media/";
 
+    private const int ImageIdLength = 32;
+
+    // Image id = first 32 hex characters of the SHA-256 of the original bytes (GS-REQ-009, 9.1.6).
+    public static string ComputeImageId(byte[] content) => Convert.ToHexString(SHA256.HashData(content))[..ImageIdLength].ToLowerInvariant();
+
     public static string OriginalBlobName(string imageId, DetectedImageFormat format) =>
         $"original/{imageId}.{ImageFormatSniffer.GetExtension(format)}";
-
-    // Prefix of the original whatever its extension (used to delete it).
-    public static string OriginalBlobPrefix(string imageId) => $"original/{imageId}.";
 
     public static string LargeBlobName(string imageId) => $"{ImageVariantGenerator.LargeWidth}/{imageId}.webp";
 

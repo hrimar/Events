@@ -36,4 +36,16 @@ public class MediaImagePathsTests
     {
         Assert.Null(MediaImagePaths.TryGetImageId(url));
     }
+
+    [Fact]
+    public void ComputeImageId_Is32LowercaseHexAndStable()
+    {
+        var content = TestImages.Png(10, 10);
+
+        var id = MediaImagePaths.ComputeImageId(content);
+
+        Assert.Matches("^[0-9a-f]{32}$", id);
+        Assert.Equal(id, MediaImagePaths.ComputeImageId(content.ToArray()));
+        Assert.NotEqual(id, MediaImagePaths.ComputeImageId(TestImages.Png(11, 10)));
+    }
 }

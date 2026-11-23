@@ -18,20 +18,20 @@ public sealed class EventImportImageProcessor : IEventImportImageProcessor
     private const int DetailMaxLength = 500;
 
     private readonly ISafeHttpFetcher _fetcher;
-    private readonly IMediaImageStore _imageStore;
+    private readonly IImageUploadService _imageService;
     private readonly IEventService _eventService;
     private readonly TimeProvider _timeProvider;
     private readonly ILogger<EventImportImageProcessor> _logger;
 
     public EventImportImageProcessor(
         ISafeHttpFetcher fetcher,
-        IMediaImageStore imageStore,
+        IImageUploadService imageService,
         IEventService eventService,
         TimeProvider timeProvider,
         ILogger<EventImportImageProcessor> logger)
     {
         _fetcher = fetcher;
-        _imageStore = imageStore;
+        _imageService = imageService;
         _eventService = eventService;
         _timeProvider = timeProvider;
         _logger = logger;
@@ -85,7 +85,7 @@ public sealed class EventImportImageProcessor : IEventImportImageProcessor
             return;
         }
 
-        var stored = await _imageStore.StoreAsync(download.Content, requireMinimumSize: true, cancellationToken);
+        var stored = await _imageService.StoreEventImageAsync(download.Content, requireMinimumSize: true, cancellationToken);
         if (!stored.IsSuccess)
         {
             Fail(item, stored.FailureReason!.Value, stored.Detail);

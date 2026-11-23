@@ -14,14 +14,4 @@ public static class MediaServiceCollectionExtensions
         services.TryAddSingleton<ISafeHttpFetcher, SafeHttpFetcher>();
         return services;
     }
-
-    // Images stored by content with WebP variants (GS-REQ-009, 9.1.4, 9.4).
-    // Requires a BlobContainerClient registration (the "event-images" container).
-    public static IServiceCollection AddMediaImageStore(this IServiceCollection services)
-    {
-        services.TryAddSingleton<ImageVariantGenerator>();
-        services.TryAddSingleton<IMediaBlobStorage, AzureMediaBlobStorage>();
-        services.TryAddSingleton<IMediaImageStore, MediaImageStore>();
-        return services;
-    }
 }
