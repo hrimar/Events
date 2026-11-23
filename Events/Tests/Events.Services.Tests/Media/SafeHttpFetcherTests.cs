@@ -26,6 +26,7 @@ public class SafeHttpFetcherTests
     [Theory]
     [InlineData("not a url")]
     [InlineData("/relative/photo.jpg")]
+    [InlineData("file:///etc/passwd")]
     [InlineData("")]
     public async Task FetchImageAsync_NotAbsoluteUrl_ReturnsInvalidUrl(string url)
     {

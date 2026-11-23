@@ -56,9 +56,11 @@ public sealed class SafeHttpFetcher : ISafeHttpFetcher
 
     private async Task<RemoteFetchResult> FetchAsync(string url, long maxBytes, string accept, CancellationToken cancellationToken)
     {
-        if (!Uri.TryCreate(url?.Trim(), UriKind.Absolute, out var uri))
+        // On Linux "/path" parses as an absolute file URI (file:///path), so file URIs are rejected here as well,
+        // giving the same result on every OS.
+        if (!Uri.TryCreate(url?.Trim(), UriKind.Absolute, out var uri) || uri.IsFile)
         {
-            return RemoteFetchResult.Failure(ImageFetchFailureReason.InvalidUrl, "Not an absolute URL.");
+            return RemoteFetchResult.Failure(ImageFetchFailureReason.InvalidUrl, "Not an absolute web URL.");
         }
 
         using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
