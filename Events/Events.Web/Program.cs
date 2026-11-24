@@ -2,6 +2,7 @@ using Azure.Identity;
 using Azure.Storage.Blobs;
 using Events.Data.Context;
 using Events.Web.Infrastructure;
+using Events.Web.Localization;
 using Events.Web.Services;
 using Events.Data.Repositories.Implementations;
 using Events.Data.Repositories.Interfaces;
@@ -194,14 +195,13 @@ static void ConfigureLocalization(WebApplicationBuilder builder)
 
     builder.Services.Configure<RequestLocalizationOptions>(options =>
     {
-        var supportedCultures = new[] { "bg", "en" };
+        options.SetDefaultCulture(SiteCultures.Bulgarian)
+               .AddSupportedCultures(SiteCultures.Supported)
+               .AddSupportedUICultures(SiteCultures.Supported);
 
-        options.SetDefaultCulture("bg")
-               .AddSupportedCultures(supportedCultures)
-               .AddSupportedUICultures(supportedCultures);
-
-        // Cookie provider is first - persists user language choice between sessions
-        options.RequestCultureProviders.Insert(0, new Microsoft.AspNetCore.Localization.CookieRequestCultureProvider());
+        // The language comes only from the URL (GS-REQ-010, 10.2.1-2): no cookie, query string or Accept-Language.
+        options.RequestCultureProviders.Clear();
+        options.RequestCultureProviders.Add(new UrlPathRequestCultureProvider());
     });
 }
 
@@ -369,6 +369,11 @@ static void ConfigureHttpPipeline(WebApplication app)
 
         await next();
     });
+
+    // English under "/en/" (GS-REQ-010, 10.1): moves the prefix into PathBase. Placed before the exception handler,
+    // so an error on an English page re-executes /Home/Error in English, and before UseStaticFiles, so files
+    // referenced with "~/" from English pages ("/en/css/...") are served too.
+    app.UseMiddleware<CulturePathMiddleware>();
 
     if (app.Environment.IsDevelopment())
     {
