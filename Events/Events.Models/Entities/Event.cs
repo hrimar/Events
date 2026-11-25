@@ -27,6 +27,14 @@ public class Event
     [MaxLength(4000)]
     public string? Description { get; set; }
 
+    // English title and description for the /en/ pages; never contain Cyrillic letters. Null until the event is
+    // translated or filled in the admin: the English page then shows Name and is not indexed (GS-REQ-010, 10.4).
+    [MaxLength(200)]
+    public string? NameEn { get; set; }
+
+    [MaxLength(4000)]
+    public string? DescriptionEn { get; set; }
+
     [MaxLength(500)]
     public string? ImageUrl { get; set; }
 

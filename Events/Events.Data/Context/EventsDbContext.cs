@@ -30,6 +30,7 @@ public class EventsDbContext : IdentityDbContext<User>
     public DbSet<HomeQuickFilter> HomeQuickFilters { get; set; }
     public DbSet<EventImportJob> EventImportJobs { get; set; }
     public DbSet<EventImportJobItem> EventImportJobItems { get; set; }
+    public DbSet<TranslationCacheEntry> TranslationCacheEntries { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -43,6 +44,8 @@ public class EventsDbContext : IdentityDbContext<User>
             entity.Property(e => e.City).IsRequired().HasMaxLength(100);
             entity.Property(e => e.Location).IsRequired().HasMaxLength(300);
             entity.Property(e => e.Description).HasMaxLength(4000);
+            entity.Property(e => e.NameEn).HasMaxLength(200);
+            entity.Property(e => e.DescriptionEn).HasMaxLength(4000);
             entity.Property(e => e.ImageUrl).HasMaxLength(500);
             entity.Property(e => e.TicketUrl).HasMaxLength(500);
             entity.Property(e => e.SourceUrl).HasMaxLength(500);
@@ -107,6 +110,7 @@ public class EventsDbContext : IdentityDbContext<User>
         ConfigurePageSeoMetaEntity(modelBuilder);
         ConfigureHomeQuickFilterEntity(modelBuilder);
         ConfigureEventImportJobEntities(modelBuilder);
+        ConfigureTranslationCacheEntity(modelBuilder);
 
         SeedCategories(modelBuilder);
         SeedSubCategories(modelBuilder);
@@ -208,6 +212,19 @@ public class EventsDbContext : IdentityDbContext<User>
             entity.Property(f => f.UpdatedAt).HasDefaultValueSql("GETUTCDATE()");
 
             entity.HasIndex(f => f.SortOrder);
+        });
+    }
+
+    // Machine translations keyed by the hash of the source text (GS-REQ-010, 10.4).
+    private static void ConfigureTranslationCacheEntity(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<TranslationCacheEntry>(entity =>
+        {
+            entity.HasKey(t => t.Hash);
+            entity.Property(t => t.Hash).HasMaxLength(64).IsFixedLength().IsUnicode(false);
+            entity.Property(t => t.TranslatedText).IsRequired();
+            entity.Property(t => t.Model).IsRequired().HasMaxLength(50);
+            entity.Property(t => t.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
         });
     }
 
