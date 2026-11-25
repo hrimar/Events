@@ -9,7 +9,6 @@
 @{
     var relatedEvents = ViewBag.RelatedEvents as List<Events.Web.Models.EventViewModel> ?? new List<Events.Web.Models.EventViewModel>();
     var isOtherSubCategory = (bool)(ViewBag.IsOtherSubCategory ?? true);
-    var currentUrl = SiteUrlProvider.BuildAbsoluteUrl(Context.Request.Path);
     var fullImageUrl = Model.DefaultImage.StartsWith("http") ? Model.DefaultImage : SiteUrlProvider.BuildAbsoluteUrl(Model.DefaultImage);
     var metaDescription = Model.ShortDescription != ""
         ? Model.ShortDescription
@@ -23,8 +22,6 @@
     ViewData["MetaDescription"] = metaDescription;
     ViewData["OgType"] = "event";
     ViewData["OgImageUrl"] = fullImageUrl;
-    ViewData["OgUrl"] = currentUrl;
-    ViewData["CanonicalUrl"] = currentUrl;
 }
 
 @* Open Graph / Twitter Card tags are rendered once, in _Layout.cshtml, driven by the

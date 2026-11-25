@@ -10,12 +10,9 @@
     ViewData["Title"] = Model.Name;
     ViewData["MetaDescription"] = Model.Description ?? $"{Localizer["Venue_EventsAtVenue"]}: {Model.Name}";
     ViewData["OgTitle"] = Model.Name + " | Go Sofia";
-    var currentUrl = SiteUrlProvider.BuildAbsoluteUrl(Context.Request.Path);
     ViewData["OgImageUrl"] = string.IsNullOrEmpty(Model.PhotoUrl)
         ? string.Empty
         : (Model.PhotoUrl.StartsWith("http") ? Model.PhotoUrl : SiteUrlProvider.BuildAbsoluteUrl(Model.PhotoUrl));
-    ViewData["OgUrl"] = currentUrl;
-    ViewData["CanonicalUrl"] = currentUrl;
 }
 
 <div class="container-grid py-4">

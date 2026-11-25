@@ -88,7 +88,8 @@ public class VenuesController : Controller
 
             ViewData["MetaDescription"] = pageMetaDescription;
             ViewData["OgImageUrl"] = _siteUrlProvider.BuildAbsoluteUrl("/images/logo.jpeg");
-            ViewData["OgUrl"] = _siteUrlProvider.BuildAbsoluteUrl("/Venues");
+            // Language-neutral path; _Layout builds the canonical, og:url and hreflang from it (GS-REQ-010, 10.3).
+            ViewData["CanonicalPath"] = "/Venues";
 
             return View(viewModels);
         }
@@ -111,8 +112,6 @@ public class VenuesController : Controller
         var upcomingEvents = (await _venueService.GetUpcomingEventsByVenueAsync(venue.Id)).ToList();
         var eventViewModels = EventViewModel.FromEntities(upcomingEvents, _clock.Today).AsReadOnly();
 
-        var baseUrl = _siteUrlProvider.BaseUrl;
-
         var viewModel = new VenueDetailsViewModel
         {
             Id = venue.Id,
@@ -129,36 +128,38 @@ public class VenuesController : Controller
             WebsiteUrl = venue.WebsiteUrl,
             Capacity = venue.Capacity,
             UpcomingEvents = eventViewModels,
-            JsonLd = BuildJsonLd(venue, upcomingEvents, baseUrl)
+            JsonLd = BuildJsonLd(venue, upcomingEvents)
         };
 
         return View(viewModel);
     }
 
-    private string BuildJsonLd(CanonicalVenue venue, IReadOnlyList<Event> events, string baseUrl)
+    // JSON-LD in the language of the page, with its own-language URLs (GS-REQ-010, 10.3).
+    private string BuildJsonLd(CanonicalVenue venue, IReadOnlyList<Event> events)
     {
-        var ownPageUrl = $"{baseUrl}/venues/{venue.Slug}";
+        var language = SiteCultures.ForRequest(HttpContext);
+        var ownPageUrl = _siteUrlProvider.BuildPageUrl($"/venues/{venue.Slug}");
         var place = PlaceJsonLdBuilder.BuildPlace(venue, ownPageUrl, includeContext: false);
 
         if (events.Any())
             place["event"] = events
-                .Select(ev => EventJsonLdBuilder.BuildEvent(ev, baseUrl, includeContext: false))
+                .Select(ev => EventJsonLdBuilder.BuildEvent(ev, _siteUrlProvider.BaseUrl, includeContext: false, language))
                 .ToList();
 
-        var breadcrumb = BreadcrumbJsonLdBuilder.BuildBreadcrumbList(BuildBreadcrumbItems(venue, baseUrl), includeContext: false);
+        var breadcrumb = BreadcrumbJsonLdBuilder.BuildBreadcrumbList(BuildBreadcrumbItems(venue), includeContext: false);
 
         return SafeJsonLdBuilder.Serialize(SafeJsonLdBuilder.BuildGraph(place, breadcrumb));
     }
 
     // Mirrors the visible <nav aria-label="breadcrumb"> markup in Venues/Details.cshtml
     // (Home > VenueName - there is no intermediate "Venues" crumb in that view today).
-    private List<(string Name, string? Url)> BuildBreadcrumbItems(CanonicalVenue venue, string baseUrl)
+    private List<(string Name, string? Url)> BuildBreadcrumbItems(CanonicalVenue venue)
     {
         var displayName = CultureHelper.IsEnglish() && !string.IsNullOrEmpty(venue.NameEn) ? venue.NameEn : venue.Name;
 
         return new List<(string Name, string? Url)>
         {
-            (_localizer["Venue_Home"].Value, $"{baseUrl}/"),
+            (_localizer["Venue_Home"].Value, _siteUrlProvider.BuildPageUrl("/")),
             (displayName, null)
         };
     }

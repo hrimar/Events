@@ -5,6 +5,7 @@ using Events.Services.Interfaces;
 using Events.Services.Time;
 using Events.Web.Infrastructure;
 using Events.Web.Infrastructure.Sitemap;
+using Events.Web.Localization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Events.Web.Controllers;
@@ -25,21 +26,20 @@ public class SeoController : Controller
     }
 
     // GET /sitemap.xml
+    // Both language versions of each page, each listing the other through xhtml:link alternates (GS-REQ-010, 10.3).
     public async Task<IActionResult> Sitemap()
     {
-        var baseUrl = _siteUrlProvider.BaseUrl;
-        var entries = new List<SitemapEntry>
-        {
-            new($"{baseUrl}/"),
-            new($"{baseUrl}/Home/AboutUs"),
-            new($"{baseUrl}/Events"),
-            new($"{baseUrl}/Venues")
-        };
+        var entries = new List<SitemapEntry>();
+
+        AddPage(entries, "/");
+        AddPage(entries, "/Home/AboutUs");
+        AddPage(entries, "/Events");
+        AddPage(entries, "/Venues");
 
         // The period pages are indexed and canonical (GS-REQ-008, 8.3); one entry per period, without categories,
         // whose combinations are reached through the links on these pages.
         foreach (var period in new[] { EventPeriod.Today, EventPeriod.Tomorrow, EventPeriod.Weekend, EventPeriod.Next7 })
-            entries.Add(new SitemapEntry($"{baseUrl}/Events?period={EventPeriodCalculator.ToQueryValue(period)}"));
+            AddPage(entries, $"/Events?period={EventPeriodCalculator.ToQueryValue(period)}");
 
         foreach (EventCategory category in Enum.GetValues<EventCategory>())
         {
@@ -48,7 +48,7 @@ public class SeoController : Controller
 
             // Matches EventsController.Index's "category" query filter (the working,
             // already-used listing convention), not the separate Category redirect action.
-            entries.Add(new SitemapEntry($"{baseUrl}/Events?category={category}"));
+            AddPage(entries, $"/Events?category={category}");
         }
 
         // Only published, not-yet-past events - a stale sitemap entry for a finished
@@ -60,15 +60,42 @@ public class SeoController : Controller
             FromDate = _clock.Today
         });
 
-        entries.AddRange(upcomingEvents.Select(e => new SitemapEntry($"{baseUrl}/Events/Details/{e.Id}", e.UpdatedAt)));
+        // English event pages join once events have an English title (GS-REQ-010, 10.4); until then only Bulgarian.
+        foreach (var e in upcomingEvents)
+            AddPage(entries, $"/Events/Details/{e.Id}", e.UpdatedAt, includeEnglish: false);
 
         var venues = await _venueService.GetAllAsync();
 
-        entries.AddRange(venues.Select(v => new SitemapEntry($"{baseUrl}/venues/{v.Slug}", v.UpdatedAt)));
+        foreach (var v in venues)
+            AddPage(entries, $"/venues/{v.Slug}", v.UpdatedAt);
 
         var xml = SitemapBuilder.Serialize(SitemapBuilder.Build(entries));
 
         return Content(xml, "application/xml", Encoding.UTF8);
+    }
+
+    // Adds the Bulgarian URL of a page and, when the page has an English version, the English URL too. Both carry the
+    // same alternates (bg, en, x-default = bg); a Bulgarian-only page has none.
+    private void AddPage(List<SitemapEntry> entries, string path, DateTime? lastModified = null, bool includeEnglish = true)
+    {
+        var bulgarianUrl = _siteUrlProvider.BuildLanguageUrl(SiteCultures.Bulgarian, path);
+
+        if (!includeEnglish)
+        {
+            entries.Add(new SitemapEntry(bulgarianUrl, lastModified));
+            return;
+        }
+
+        var englishUrl = _siteUrlProvider.BuildLanguageUrl(SiteCultures.English, path);
+        var alternates = new[]
+        {
+            new SitemapAlternate(SiteCultures.Bulgarian, bulgarianUrl),
+            new SitemapAlternate(SiteCultures.English, englishUrl),
+            new SitemapAlternate("x-default", bulgarianUrl)
+        };
+
+        entries.Add(new SitemapEntry(bulgarianUrl, lastModified, alternates));
+        entries.Add(new SitemapEntry(englishUrl, lastModified, alternates));
     }
 
     // GET /robots.txt
@@ -95,6 +122,15 @@ public class SeoController : Controller
             "Disallow: /Events?*search=\n" +
             "Disallow: /Events?*free=false\n" +
             "Disallow: /Venues?*search=\n" +
+
+            // The same rules for the English version under "/en/" (GS-REQ-010, 10.3). "/en/Admin" and "/en/api"
+            // redirect to the unprefixed URLs (CulturePathMiddleware); Identity also works under "/en/".
+            "Disallow: /en/Identity/\n" +
+            "Disallow: /en/Events?*fromDate=\n" +
+            "Disallow: /en/Events?*toDate=\n" +
+            "Disallow: /en/Events?*search=\n" +
+            "Disallow: /en/Events?*free=false\n" +
+            "Disallow: /en/Venues?*search=\n" +
 
             $"\nSitemap: {baseUrl}/sitemap.xml\n";
 

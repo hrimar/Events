@@ -1,5 +1,6 @@
 using Events.Models.Entities;
 using Events.Models.Enums;
+using Events.Web.Localization;
 
 namespace Events.Web.Infrastructure.JsonLd;
 
@@ -14,8 +15,13 @@ public static class EventJsonLdBuilder
     // includeContext controls whether "@context" is emitted - true when this Event is
     // the root JSON-LD object (event details page), false when nested inside another
     // schema (e.g. VenuesController's "event" array on the venue's own Place schema).
-    public static Dictionary<string, object?> BuildEvent(Event eventEntity, string baseUrl, bool includeContext = true)
+    // baseUrl is the language-neutral site root (images); language ("bg"/"en") selects the page URLs and
+    // "inLanguage" (GS-REQ-010, 10.3).
+    public static Dictionary<string, object?> BuildEvent(
+        Event eventEntity, string baseUrl, bool includeContext = true, string language = SiteCultures.Bulgarian)
     {
+        var pageBaseUrl = $"{baseUrl}{SiteCultures.GetPathPrefix(language)}";
+
         var builder = new SafeJsonLdBuilder();
 
         if (includeContext)
@@ -28,9 +34,10 @@ public static class EventJsonLdBuilder
             .Add("eventStatus", MapEventStatus(eventEntity.Status))
             .Add("eventAttendanceMode", "https://schema.org/OfflineEventAttendanceMode")
             .AddIfNotEmpty("description", eventEntity.Description)
-            .Add("url", $"{baseUrl}/Events/Details/{eventEntity.Id}")
+            .Add("url", $"{pageBaseUrl}/Events/Details/{eventEntity.Id}")
+            .Add("inLanguage", language)
             .Add("image", BuildAbsoluteImageUrl(eventEntity, baseUrl))
-            .Add("location", BuildLocation(eventEntity, baseUrl));
+            .Add("location", BuildLocation(eventEntity, pageBaseUrl));
 
         var offers = BuildOffers(eventEntity);
         if (offers != null)
@@ -41,11 +48,11 @@ public static class EventJsonLdBuilder
         return builder.Build();
     }
 
-    private static Dictionary<string, object?> BuildLocation(Event eventEntity, string baseUrl)
+    private static Dictionary<string, object?> BuildLocation(Event eventEntity, string pageBaseUrl)
     {
         if (eventEntity.CanonicalVenue != null)
         {
-            var ownPageUrl = $"{baseUrl}/venues/{eventEntity.CanonicalVenue.Slug}";
+            var ownPageUrl = $"{pageBaseUrl}/venues/{eventEntity.CanonicalVenue.Slug}";
             return PlaceJsonLdBuilder.BuildPlace(eventEntity.CanonicalVenue, ownPageUrl, includeContext: false);
         }
 

@@ -1,17 +1,22 @@
 ﻿@using Events.Models.Enums
 @using Events.Web.Infrastructure
+@using Events.Web.Localization
 @using Events.Web.Models
 @using Events.Web.Resources
 @using Microsoft.Extensions.Localization
 @inject IStringLocalizer<SharedResources> Localizer
 @inject ISiteUrlProvider SiteUrlProvider
 @inject Microsoft.AspNetCore.Mvc.ViewFeatures.IFileVersionProvider FileVersionProvider
-
-<!-- hreflang alternates are intentionally omitted: bg/en is switched via a cookie
-     (LanguageController + CookieRequestCultureProvider), not via distinct per-language
-     URLs, so there is no separate crawlable URL for hreflang to point to. Emitting
-     hreflang tags that both resolve to the same URL would assert content Google can't
-     actually verify. Revisit only if URL-based localization is introduced. -->
+@{
+    // Canonical and hreflang per language (GS-REQ-010, 10.3). A page sets ViewData["CanonicalPath"] (language-neutral,
+    // e.g. "/Events?category=Music"); otherwise the request path is used. The canonical points to the page's own
+    // language; hreflang lists both languages, x-default is the Bulgarian version. ViewData["NoEnglishAlternate"]
+    // drops hreflang for a page without an English version; ViewData["RobotsNoIndex"] adds "noindex, follow".
+    var canonicalPath = ViewData["CanonicalPath"] as string ?? (Context.Request.Path.HasValue ? Context.Request.Path.Value! : "/");
+    var canonicalUrl = SiteUrlProvider.BuildPageUrl(canonicalPath);
+    var hasEnglishAlternate = ViewData["NoEnglishAlternate"] is not true;
+    var isEnglishPage = SiteCultures.IsEnglishRequest(Context);
+}
 <!DOCTYPE html>
 <html lang="@System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName"
       data-icon-sprite="@FileVersionProvider.AddFileVersionToPath(Context.Request.PathBase, "/icons/gs-icons.svg")">
@@ -39,7 +44,17 @@
         })();
     </script>
     <title>@(ViewData["PageTitle"] ?? ViewData["Title"])</title>
-    <link rel="canonical" href="@(ViewData["CanonicalUrl"] ?? SiteUrlProvider.BuildAbsoluteUrl(Context.Request.Path))" />
+    <link rel="canonical" href="@canonicalUrl" />
+    @if (hasEnglishAlternate)
+    {
+        <link rel="alternate" hreflang="bg" href="@SiteUrlProvider.BuildLanguageUrl(SiteCultures.Bulgarian, canonicalPath)" />
+        <link rel="alternate" hreflang="en" href="@SiteUrlProvider.BuildLanguageUrl(SiteCultures.English, canonicalPath)" />
+        <link rel="alternate" hreflang="x-default" href="@SiteUrlProvider.BuildLanguageUrl(SiteCultures.Bulgarian, canonicalPath)" />
+    }
+    @if (ViewData["RobotsNoIndex"] is true)
+    {
+        <meta name="robots" content="noindex, follow" />
+    }
     <link rel="icon" type="image/png" href="~/images/favicon.png" asp-append-version="true" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -70,12 +85,14 @@
         {
             <meta property="og:image" content="@ViewData["OgImageUrl"]" />
         }
-        @if (!string.IsNullOrEmpty(ViewData["OgUrl"]?.ToString()))
-        {
-            <meta property="og:url" content="@ViewData["OgUrl"]" />
-        }
+        <meta property="og:url" content="@canonicalUrl" />
         <meta property="og:type" content="@(ViewData["OgType"] ?? "website")" />
         <meta property="og:site_name" content="Go Sofia" />
+        <meta property="og:locale" content="@(isEnglishPage ? "en_US" : "bg_BG")" />
+        @if (hasEnglishAlternate)
+        {
+            <meta property="og:locale:alternate" content="@(isEnglishPage ? "bg_BG" : "en_US")" />
+        }
 
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="@(ViewData["OgTitle"] ?? ViewData["Title"])" />

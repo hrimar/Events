@@ -45,4 +45,41 @@ public class SitemapBuilderTests
 
         Assert.StartsWith("<?xml version=\"1.0\" encoding=\"utf-8\"?>", result);
     }
+
+    // hreflang alternates (GS-REQ-010, 10.3)
+
+    [Fact]
+    public void Build_EntryWithAlternates_WritesXhtmlLinks()
+    {
+        var alternates = new[]
+        {
+            new SitemapAlternate("bg", "https://go-sofia.com/Events"),
+            new SitemapAlternate("en", "https://go-sofia.com/en/Events"),
+            new SitemapAlternate("x-default", "https://go-sofia.com/Events")
+        };
+
+        var document = SitemapBuilder.Build([new SitemapEntry("https://go-sofia.com/en/Events", null, alternates)]);
+
+        var links = document.Root!.Elements().Single().Elements().Where(e => e.Name.LocalName == "link").ToList();
+        Assert.All(links, link => Assert.Equal("http://www.w3.org/1999/xhtml", link.Name.NamespaceName));
+        Assert.Equal(["bg", "en", "x-default"], links.Select(l => l.Attribute("hreflang")!.Value));
+        Assert.Equal("https://go-sofia.com/en/Events", links[1].Attribute("href")!.Value);
+        Assert.All(links, link => Assert.Equal("alternate", link.Attribute("rel")!.Value));
+    }
+
+    [Fact]
+    public void Serialize_DeclaresXhtmlNamespaceOnUrlset()
+    {
+        var result = SitemapBuilder.Serialize(SitemapBuilder.Build([new SitemapEntry("https://go-sofia.com/")]));
+
+        Assert.Contains("xmlns:xhtml=\"http://www.w3.org/1999/xhtml\"", result);
+    }
+
+    [Fact]
+    public void Build_EntryWithoutAlternates_HasNoLinks()
+    {
+        var document = SitemapBuilder.Build([new SitemapEntry("https://go-sofia.com/Events/Details/1")]);
+
+        Assert.DoesNotContain(document.Root!.Elements().Single().Elements(), e => e.Name.LocalName == "link");
+    }
 }
