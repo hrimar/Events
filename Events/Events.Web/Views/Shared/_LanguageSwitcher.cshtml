@@ -1,16 +1,17 @@
 ﻿@using System.Globalization
+@using Events.Web.Localization
 
 @* Language switcher. The header shows only the other language ("EN" in BG, "БГ" in EN, GS-REQ-006 6.6);
-   the footer shows both, with the current one marked. Pass ViewData["OtherLanguageOnly"] = true for the header. *@
+   the footer shows both, with the current one marked. Pass ViewData["OtherLanguageOnly"] = true for the header.
+   Plain links to the same page in the other language, with the same query string (GS-REQ-010, 10.2.4). *@
 @{
     var currentCulture = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName.ToLower();
-    var returnUrl = Context.Request.Path + Context.Request.QueryString;
     var otherLanguageOnly = ViewData["OtherLanguageOnly"] is true;
 
     var languages = new[]
     {
-        (Culture: "bg", Label: "БГ", Name: "Български"),
-        (Culture: "en", Label: "EN", Name: "English")
+        (Culture: SiteCultures.Bulgarian, Label: "БГ", Name: "Български"),
+        (Culture: SiteCultures.English, Label: "EN", Name: "English")
     };
 }
 
@@ -23,13 +24,11 @@
             continue;
         }
 
-        <form asp-area="" asp-controller="Language" asp-action="SetLanguage" method="post">
-            <input type="hidden" name="culture" value="@language.Culture" />
-            <input type="hidden" name="returnUrl" value="@returnUrl" />
-            <button type="submit" class="gs-lang-btn @(isCurrent ? "is-current" : "")"
-                    title="@language.Name" lang="@language.Culture" aria-current="@(isCurrent ? "true" : null)">
-                @language.Label
-            </button>
-        </form>
+        <a href="@SiteCultures.BuildPathForCulture(Context.Request, language.Culture)"
+           class="gs-lang-btn @(isCurrent ? "is-current" : "")"
+           title="@language.Name" lang="@language.Culture" hreflang="@language.Culture"
+           aria-current="@(isCurrent ? "true" : null)">
+            @language.Label
+        </a>
     }
 </div>

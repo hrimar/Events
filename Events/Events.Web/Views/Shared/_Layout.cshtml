@@ -297,7 +297,7 @@ $(document).ready(function() {
 
         function performSearch(query) {
             $.ajax({
-                url: '/Events/Search',
+                url: '@Url.Action("Search", "Events")',
                 data: { query: query },
                 success: function(data) {
                     displaySearchResults(data);

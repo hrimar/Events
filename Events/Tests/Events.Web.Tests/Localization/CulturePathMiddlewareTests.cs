@@ -93,6 +93,23 @@ public class CulturePathMiddlewareTests
     }
 
     [Theory]
+    [InlineData("", "/Events", "?category=Music", "en", "/en/Events?category=Music")]
+    [InlineData("/en", "/Events", "?category=Music", "bg", "/Events?category=Music")]
+    [InlineData("", "/", "", "en", "/en/")]
+    [InlineData("/en", "/", "", "bg", "/")]
+    [InlineData("/en", "/venues/ndk", "", "en", "/en/venues/ndk")]
+    public void BuildPathForCulture_SamePageAndQueryInTheOtherLanguage(
+        string pathBase, string path, string query, string culture, string expected)
+    {
+        var context = new DefaultHttpContext();
+        context.Request.PathBase = pathBase;
+        context.Request.Path = path;
+        context.Request.QueryString = new QueryString(query);
+
+        Assert.Equal(expected, SiteCultures.BuildPathForCulture(context.Request, culture));
+    }
+
+    [Theory]
     [InlineData("/en", "en")]
     [InlineData("", "bg")]
     public async Task UrlPathRequestCultureProvider_UsesOnlyPathBase(string pathBase, string expectedCulture)

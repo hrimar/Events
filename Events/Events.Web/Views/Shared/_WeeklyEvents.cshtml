@@ -262,7 +262,7 @@ document.addEventListener('DOMContentLoaded', function () {
         section.style.opacity = '0.5';
         section.style.pointerEvents = 'none';
 
-        fetch(`/Home/WeeklyEventsPartial?fromDate=${fromDate}`)
+        fetch(`@Url.Action("WeeklyEventsPartial", "Home")?fromDate=${fromDate}`)
             .then(r => r.text())
             .then(html => {
                 section.outerHTML = html;

@@ -462,14 +462,15 @@ public class EventsController : Controller
             };
             var (events, _) = await _eventService.GetPagedEventsAsync(upcomingQuery, cancellationToken);
             var venues = await _venueService.SearchByNameAsync(query, MaxVenueSuggestions);
+            var urlPrefix = Request.PathBase.Value ?? string.Empty;
 
             return Json(new SearchSuggestionsDto
             {
                 Events = events
-                    .Select(e => e.ToSearchSuggestionDto(isEnglish, LocalizeCategoryName(e.Category?.Name)))
+                    .Select(e => e.ToSearchSuggestionDto(isEnglish, LocalizeCategoryName(e.Category?.Name), urlPrefix))
                     .ToList(),
                 Venues = venues
-                    .Select(v => v.ToSearchSuggestionDto(isEnglish))
+                    .Select(v => v.ToSearchSuggestionDto(isEnglish, urlPrefix))
                     .ToList()
             });
         }
