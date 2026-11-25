@@ -21,6 +21,7 @@ public static class EventJsonLdBuilder
         Event eventEntity, string baseUrl, bool includeContext = true, string language = SiteCultures.Bulgarian)
     {
         var pageBaseUrl = $"{baseUrl}{SiteCultures.GetPathPrefix(language)}";
+        var isEnglish = language == SiteCultures.English;
 
         var builder = new SafeJsonLdBuilder();
 
@@ -29,15 +30,15 @@ public static class EventJsonLdBuilder
 
         builder
             .Add("@type", "Event")
-            .Add("name", eventEntity.Name)
+            .Add("name", eventEntity.LocalizedName(isEnglish))
             .Add("startDate", EventDateTimeHelper.ToIso8601StartDate(eventEntity.Date, eventEntity.StartTime))
             .Add("eventStatus", MapEventStatus(eventEntity.Status))
             .Add("eventAttendanceMode", "https://schema.org/OfflineEventAttendanceMode")
-            .AddIfNotEmpty("description", eventEntity.Description)
+            .AddIfNotEmpty("description", eventEntity.LocalizedDescription(isEnglish))
             .Add("url", $"{pageBaseUrl}/Events/Details/{eventEntity.Id}")
             .Add("inLanguage", language)
             .Add("image", BuildAbsoluteImageUrl(eventEntity, baseUrl))
-            .Add("location", BuildLocation(eventEntity, pageBaseUrl));
+            .Add("location", BuildLocation(eventEntity, pageBaseUrl, isEnglish));
 
         var offers = BuildOffers(eventEntity);
         if (offers != null)
@@ -48,26 +49,26 @@ public static class EventJsonLdBuilder
         return builder.Build();
     }
 
-    private static Dictionary<string, object?> BuildLocation(Event eventEntity, string pageBaseUrl)
+    private static Dictionary<string, object?> BuildLocation(Event eventEntity, string pageBaseUrl, bool isEnglish)
     {
         if (eventEntity.CanonicalVenue != null)
         {
             var ownPageUrl = $"{pageBaseUrl}/venues/{eventEntity.CanonicalVenue.Slug}";
-            return PlaceJsonLdBuilder.BuildPlace(eventEntity.CanonicalVenue, ownPageUrl, includeContext: false);
+            return PlaceJsonLdBuilder.BuildPlace(eventEntity.CanonicalVenue, ownPageUrl, includeContext: false, isEnglish);
         }
 
         // No canonical venue matched yet - fall back to the crawled free-text location/city
         // only, rather than fabricating a street address we don't have.
         var fallback = new SafeJsonLdBuilder()
             .Add("@type", "Place")
-            .AddIfNotEmpty("name", eventEntity.Location);
+            .AddIfNotEmpty("name", eventEntity.LocalizedLocation(isEnglish));
 
         if (!string.IsNullOrWhiteSpace(eventEntity.City))
         {
             fallback.Add("address", new Dictionary<string, string>
             {
                 ["@type"] = "PostalAddress",
-                ["addressLocality"] = eventEntity.City
+                ["addressLocality"] = eventEntity.LocalizedCity(isEnglish)
             });
         }
 

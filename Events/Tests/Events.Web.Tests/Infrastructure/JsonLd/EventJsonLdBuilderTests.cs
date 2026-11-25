@@ -198,4 +198,31 @@ public class EventJsonLdBuilderTests
         var location = Assert.IsType<Dictionary<string, object?>>(result["location"]);
         Assert.Equal($"{BaseUrl}/en/venues/ndk", location["url"]);
     }
+
+    [Fact]
+    public void BuildEvent_English_UsesEnglishTitleDescriptionAndTransliteratedFreeTextLocation()
+    {
+        var eventEntity = CreateEvent();
+        eventEntity.NameEn = "Concert in English";
+        eventEntity.DescriptionEn = "English description";
+        eventEntity.Location = "Зала България";
+        eventEntity.City = "София";
+
+        var result = EventJsonLdBuilder.BuildEvent(eventEntity, BaseUrl, includeContext: false, language: "en");
+
+        Assert.Equal("Concert in English", result["name"]);
+        Assert.Equal("English description", result["description"]);
+        var location = Assert.IsType<Dictionary<string, object?>>(result["location"]);
+        Assert.Equal("Zala Bulgaria", location["name"]);
+        var address = Assert.IsType<Dictionary<string, string>>(location["address"]);
+        Assert.Equal("Sofia", address["addressLocality"]);
+    }
+
+    [Fact]
+    public void BuildEvent_EnglishWithoutEnglishTitle_FallsBackToTheBulgarianTitle()
+    {
+        var result = EventJsonLdBuilder.BuildEvent(CreateEvent(), BaseUrl, includeContext: false, language: "en");
+
+        Assert.Equal("Concert", result["name"]);
+    }
 }

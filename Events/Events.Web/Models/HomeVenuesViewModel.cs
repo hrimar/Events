@@ -1,3 +1,5 @@
+using Events.Web.Localization;
+
 namespace Events.Web.Models;
 
 // Desktop homepage "Venues" (GS-REQ-007, 7.10): the catalog size and 4 venue cards.
@@ -19,5 +21,5 @@ public class HomeVenueCardViewModel
     public string PhotoUrl { get; init; } = string.Empty;
     public int UpcomingEventsCount { get; init; }
 
-    public string LocalizedName(bool isEnglish) => isEnglish && !string.IsNullOrWhiteSpace(NameEn) ? NameEn : Name;
+    public string LocalizedName(bool isEnglish) => VenueLocalizationExtensions.LocalizeName(Name, NameEn, isEnglish);
 }

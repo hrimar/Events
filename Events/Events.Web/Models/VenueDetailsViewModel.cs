@@ -1,4 +1,5 @@
 using System.Globalization;
+using Events.Web.Localization;
 
 namespace Events.Web.Models;
 
@@ -18,7 +19,10 @@ public class VenueDetailsViewModel
     public string? WebsiteUrl { get; set; }
     public int? Capacity { get; set; }
     public bool HasMap => Latitude.HasValue && Longitude.HasValue;
-    public string DisplayName => CultureInfo.CurrentCulture.TwoLetterISOLanguageName == "en" && !string.IsNullOrEmpty(NameEn) ? NameEn : Name;
+    public string DisplayName => VenueLocalizationExtensions.LocalizeName(Name, NameEn, CultureHelper.IsEnglish());
+
+    // Transliterated on English pages; the description has no English field and stays Bulgarian (GS-REQ-010, 10.4).
+    public string? DisplayAddress => VenueLocalizationExtensions.LocalizeAddress(Address, CultureHelper.IsEnglish());
     public IReadOnlyList<EventViewModel> UpcomingEvents { get; set; } = Array.Empty<EventViewModel>();
     public string JsonLd { get; set; } = string.Empty;
 

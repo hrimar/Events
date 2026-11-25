@@ -60,9 +60,9 @@ public class SeoController : Controller
             FromDate = _clock.Today
         });
 
-        // English event pages join once events have an English title (GS-REQ-010, 10.4); until then only Bulgarian.
+        // The English page of an event without an English title is not indexed, so it is left out (GS-REQ-010, 10.4).
         foreach (var e in upcomingEvents)
-            AddPage(entries, $"/Events/Details/{e.Id}", e.UpdatedAt, includeEnglish: false);
+            AddPage(entries, $"/Events/Details/{e.Id}", e.UpdatedAt, includeEnglish: e.HasEnglishTitle());
 
         var venues = await _venueService.GetAllAsync();
 

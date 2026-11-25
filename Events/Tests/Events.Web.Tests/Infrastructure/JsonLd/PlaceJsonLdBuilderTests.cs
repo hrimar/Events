@@ -80,4 +80,20 @@ public class PlaceJsonLdBuilderTests
 
         Assert.False(result.ContainsKey("@context"));
     }
+
+    // English (GS-REQ-010, 10.4)
+
+    [Fact]
+    public void BuildPlace_English_UsesEnglishNameAndTransliteratedAddress()
+    {
+        var venue = new CanonicalVenue { Name = "НДК", NameEn = "National Palace of Culture", Slug = "ndk", City = "София" };
+        venue.Address = "пл. България 1";
+
+        var result = PlaceJsonLdBuilder.BuildPlace(venue, null, includeContext: false, isEnglish: true);
+
+        Assert.Equal("National Palace of Culture", result["name"]);
+        var address = Assert.IsType<Dictionary<string, string>>(result["address"]);
+        Assert.Equal("pl. Bulgaria 1", address["streetAddress"]);
+        Assert.Equal("Sofia", address["addressLocality"]);
+    }
 }

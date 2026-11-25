@@ -265,11 +265,14 @@ public class EventRepository : IEventRepository
 
     // Single definition of what "matches the search term" means for every listing.
     // Case-insensitivity (incl. Cyrillic) comes from the database collation on nvarchar columns.
+    // Also matches the English title and description, so English words find events on the /en/ pages (GS-REQ-010, 10.4).
     private static IQueryable<Event> ApplySearch(IQueryable<Event> query, string searchTerm)
     {
         return query.Where(e =>
             e.Name.Contains(searchTerm) ||
             (e.Description != null && e.Description.Contains(searchTerm)) ||
+            (e.NameEn != null && e.NameEn.Contains(searchTerm)) ||
+            (e.DescriptionEn != null && e.DescriptionEn.Contains(searchTerm)) ||
             e.Location.Contains(searchTerm));
     }
 

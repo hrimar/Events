@@ -140,4 +140,20 @@ public class EventExtensionsTests
 
         Assert.Equal(expectedUrl, result.Url);
     }
+
+    // English (GS-REQ-010, 10.4)
+
+    [Fact]
+    public void ToSearchSuggestionDto_English_UsesEnglishTitleAndTransliteratedLocation()
+    {
+        var eventEntity = CreateEvent();
+        eventEntity.Name = "Лебедово езеро";
+        eventEntity.NameEn = "Swan Lake";
+        eventEntity.Location = "Операта";
+
+        var result = eventEntity.ToSearchSuggestionDto(isEnglish: true, localizedCategory: "Theatre", urlPrefix: "/en");
+
+        Assert.Equal("Swan Lake", result.Title);
+        Assert.EndsWith("Operata", result.Details);
+    }
 }

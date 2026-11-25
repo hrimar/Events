@@ -539,6 +539,15 @@ public class EventsController : Controller
 
             var viewModel = EventDetailsViewModel.FromEntity(eventEntity, jsonLd, _clock.Today);
 
+            // Without an English title the English page shows the Bulgarian one: it is not indexed and neither
+            // language version lists alternates (GS-REQ-010, 10.4).
+            if (!eventEntity.HasEnglishTitle())
+            {
+                ViewData["NoEnglishAlternate"] = true;
+                if (language == SiteCultures.English)
+                    ViewData["RobotsNoIndex"] = true;
+            }
+
             // EnumValue == OtherSubCategoryEnumValue represents "Other" across all subcategory enums
             var isOtherSubCategory = eventEntity.SubCategory == null || eventEntity.SubCategory.EnumValue == OtherSubCategoryEnumValue;
             // Fetch a few candidates (not int.MaxValue) so filtering can happen in SQL - the buffer covers the current
@@ -638,7 +647,7 @@ public class EventsController : Controller
                 _siteUrlProvider.BuildPageUrl($"/Events?category={eventEntity.Category.Name}")));
         }
 
-        items.Add((eventEntity.Name, null));
+        items.Add((eventEntity.LocalizedName(CultureHelper.IsEnglish()), null));
 
         return items;
     }

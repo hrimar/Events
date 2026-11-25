@@ -139,7 +139,7 @@ public class VenuesController : Controller
     {
         var language = SiteCultures.ForRequest(HttpContext);
         var ownPageUrl = _siteUrlProvider.BuildPageUrl($"/venues/{venue.Slug}");
-        var place = PlaceJsonLdBuilder.BuildPlace(venue, ownPageUrl, includeContext: false);
+        var place = PlaceJsonLdBuilder.BuildPlace(venue, ownPageUrl, includeContext: false, language == SiteCultures.English);
 
         if (events.Any())
             place["event"] = events
@@ -155,7 +155,7 @@ public class VenuesController : Controller
     // (Home > VenueName - there is no intermediate "Venues" crumb in that view today).
     private List<(string Name, string? Url)> BuildBreadcrumbItems(CanonicalVenue venue)
     {
-        var displayName = CultureHelper.IsEnglish() && !string.IsNullOrEmpty(venue.NameEn) ? venue.NameEn : venue.Name;
+        var displayName = venue.LocalizedName(CultureHelper.IsEnglish());
 
         return new List<(string Name, string? Url)>
         {

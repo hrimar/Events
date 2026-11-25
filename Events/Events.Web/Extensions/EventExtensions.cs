@@ -37,13 +37,13 @@ public static class EventExtensions
             ? (eventEntity.StartTime ?? eventEntity.Date.TimeOfDay).ToString(@"hh\:mm", CultureInfo.InvariantCulture)
             : null;
 
-        var venue = eventEntity.CanonicalVenue?.LocalizedName(isEnglish) ?? eventEntity.Location;
+        var venue = eventEntity.CanonicalVenue?.LocalizedName(isEnglish) ?? eventEntity.LocalizedLocation(isEnglish);
 
         var details = string.Join(" · ", new[] { date, time, venue }.Where(part => !string.IsNullOrWhiteSpace(part)));
 
         return new SearchSuggestionDto
         {
-            Title = eventEntity.Name,
+            Title = eventEntity.LocalizedName(isEnglish),
             Url = $"{urlPrefix}/Events/Details/{eventEntity.Id}",
             Details = details,
             Category = localizedCategory

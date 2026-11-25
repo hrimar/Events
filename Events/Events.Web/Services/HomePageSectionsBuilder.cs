@@ -121,7 +121,7 @@ public sealed class HomePageSectionsBuilder : IHomePageSectionsBuilder
         if (!hasFeaturedEvents)
         {
             var fallbackEvent = await _homePageCache.GetOrCreateAsync(
-                HeroFallbackEventSection, HomePageCache.EventsDuration, LoadFallbackEventAsync);
+                HomePageCache.ForCulture(HeroFallbackEventSection), HomePageCache.EventsDuration, LoadFallbackEventAsync);
             if (fallbackEvent != null)
                 slideEvents.Add(fallbackEvent);
         }
@@ -152,7 +152,7 @@ public sealed class HomePageSectionsBuilder : IHomePageSectionsBuilder
     {
         // Cached for both days; what has already started depends on the current time, so it is selected per request.
         var events = await _homePageCache.GetOrCreateAsync(
-            TodayAndTomorrowEventsSection, HomePageCache.EventsDuration, LoadTodayAndTomorrowEventsAsync);
+            HomePageCache.ForCulture(TodayAndTomorrowEventsSection), HomePageCache.EventsDuration, LoadTodayAndTomorrowEventsAsync);
 
         return HomeTonightRowSelector.Select(events, _clock.Now);
     }
@@ -231,7 +231,9 @@ public sealed class HomePageSectionsBuilder : IHomePageSectionsBuilder
     {
         var (fromDate, toDate) = EventPeriodCalculator.GetRange(EventPeriod.Next7, _clock.Today);
 
-        var freeEvents = await _homePageCache.GetOrCreateAsync(FreeThisWeekSection, HomePageCache.EventsDuration, async () =>
+        // Per culture: the cards carry the event texts and are sorted by name (GS-REQ-010, 10.4).
+        var freeEvents = await _homePageCache.GetOrCreateAsync(
+            HomePageCache.ForCulture(FreeThisWeekSection), HomePageCache.EventsDuration, async () =>
         {
             var (events, _) = await _eventService.GetPagedEventsAsync(new PublicEventQuery
             {
@@ -293,7 +295,7 @@ public sealed class HomePageSectionsBuilder : IHomePageSectionsBuilder
     // (same name and venue) keep only the nearest one (decision of 25.10.2026), so one featured
     // event never fills several slides. Shared with "Don't miss" (GS-REQ-007, 7.7), which starts after the carousel.
     private Task<List<EventViewModel>> GetFeaturedEventsAsync() =>
-        _homePageCache.GetOrCreateAsync(FeaturedEventsSection, HomePageCache.EventsDuration, async () =>
+        _homePageCache.GetOrCreateAsync(HomePageCache.ForCulture(FeaturedEventsSection), HomePageCache.EventsDuration, async () =>
         {
             var events = await _eventService.GetFeaturedEventsAsync(FeaturedEventsFetchCount);
 
@@ -366,7 +368,7 @@ public sealed class HomePageSectionsBuilder : IHomePageSectionsBuilder
 
     // All published events of this weekend (Saturday and Sunday, or only Sunday on a Sunday).
     private Task<List<EventViewModel>> GetWeekendEventsAsync() =>
-        _homePageCache.GetOrCreateAsync(WeekendEventsSection, HomePageCache.EventsDuration, async () =>
+        _homePageCache.GetOrCreateAsync(HomePageCache.ForCulture(WeekendEventsSection), HomePageCache.EventsDuration, async () =>
         {
             var today = _clock.Today;
             var (fromDate, toDate) = EventPeriodCalculator.GetWeekendRange(today);
@@ -401,7 +403,7 @@ public sealed class HomePageSectionsBuilder : IHomePageSectionsBuilder
     // Same event, other performance: equal name (ignoring case and extra spaces) at the same venue.
     private static string GetPerformanceGroupKey(EventViewModel eventModel)
     {
-        var name = string.Join(' ', eventModel.Name.Split(' ', StringSplitOptions.RemoveEmptyEntries)).ToUpperInvariant();
+        var name = string.Join(' ', eventModel.BulgarianName.Split(' ', StringSplitOptions.RemoveEmptyEntries)).ToUpperInvariant();
         var venue = eventModel.CanonicalVenueId?.ToString(CultureInfo.InvariantCulture)
             ?? eventModel.Location.Trim().ToUpperInvariant();
 
