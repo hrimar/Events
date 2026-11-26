@@ -19,6 +19,8 @@ public class EventCrawlerFunction
     private readonly ILogger<EventCrawlerFunction> _logger;
     private readonly IHostApplicationLifetime _lifetime;
 
+    private const int OperationTimeMinutes = 55;
+
     public EventCrawlerFunction(
         ICrawlerService crawlerService,
         IEventProcessingService eventProcessingService,
@@ -42,7 +44,9 @@ public class EventCrawlerFunction
     // drifts to 03:00 Bulgaria time in winter (EET, UTC+2) - single fixed-offset cron, no DST switch.
     public async Task CrawlEventsTimerFunction([TimerTrigger("0 0 1 * * *", RunOnStartup = true)] TimerInfo myTimer)
     {
-        var timeout = TimeSpan.FromMinutes(28);
+        // Below functionTimeout in host.json (58 min) and the job's replica_timeout_in_seconds in Terraform (3600 s),
+        // so the run ends on its own; the translation step uses the time left (GS-REQ-010, 10.4).
+        var timeout = TimeSpan.FromMinutes(OperationTimeMinutes);
         var deadlineUtc = DateTime.UtcNow + timeout;
         using var cts = new CancellationTokenSource(timeout);
 
@@ -122,22 +126,20 @@ public class EventCrawlerFunction
 
 
     [Function("CrawlAllEventsManual")]
-    public async Task<HttpResponseData> CrawlAllEventsManual(
-        [HttpTrigger(AuthorizationLevel.Function, "post", Route = "crawl-all")] HttpRequestData req)
+    public async Task<HttpResponseData> CrawlAllEventsManual([HttpTrigger(AuthorizationLevel.Function, "post", Route = "crawl-all")] HttpRequestData req)
     {
         _logger.LogInformation("Manual crawl all sources requested");
 
         try
         {
-            var timeout = TimeSpan.FromMinutes(8);
+            var timeout = TimeSpan.FromMinutes(OperationTimeMinutes);
             var deadlineUtc = DateTime.UtcNow + timeout;
             using var cts = new CancellationTokenSource(timeout);
 
             _logger.LogInformation("Event crawler function started at: {Time}", DateTime.UtcNow);
 
             var crawlResult = await _crawlerService.CrawlAllSourcesAsync();
-            _logger.LogInformation("Parallel crawling completed in {Duration}. Found {EventCount} events",
-                crawlResult.Duration, crawlResult.EventsFound);
+            _logger.LogInformation("Parallel crawling completed in {Duration}. Found {EventCount} events", crawlResult.Duration, crawlResult.EventsFound);
 
             var totalProcessed = 0;
             var totalCreated = 0;
