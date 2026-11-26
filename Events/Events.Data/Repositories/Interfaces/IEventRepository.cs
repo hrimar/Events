@@ -66,4 +66,12 @@ public interface IEventRepository
     // Sets only the image fields of one event (Excel import background job, GS-REQ-009, 9.1.5).
     // Returns false when the event no longer exists.
     Task<bool> UpdateImageAsync(int eventId, string imageUrl, string thumbnailUrl, string? imageSourceUrl, CancellationToken cancellationToken = default);
+
+    // Events from fromDate (Europe/Sofia "today") on without an English title, nearest first, at most maxCount;
+    // cancelled events are left out. Read-only, without related data (GS-REQ-010, 10.4).
+    Task<List<Event>> GetUpcomingWithoutEnglishTitleAsync(DateTime fromDate, int maxCount, CancellationToken cancellationToken = default);
+
+    // Sets the English title and description of one event, only while it still has no English title (an admin may
+    // have entered one meanwhile). Returns false when nothing was saved (GS-REQ-010, 10.4).
+    Task<bool> SetEnglishTextsAsync(int eventId, string nameEn, string? descriptionEn, CancellationToken cancellationToken = default);
 }

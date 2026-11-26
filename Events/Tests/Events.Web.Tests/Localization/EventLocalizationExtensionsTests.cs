@@ -47,6 +47,15 @@ public class EventLocalizationExtensionsTests
         var eventEntity = CreateEvent();
 
         Assert.Equal("Балет в три действия", eventEntity.LocalizedDescription(isEnglish: true));
+    }
+
+    [Fact]
+    public void LocalizedDescription_EnglishWithEnglishTitle_NeverShowsTheBulgarianDescription()
+    {
+        var eventEntity = CreateEvent();
+        eventEntity.NameEn = "Swan Lake";
+
+        Assert.Null(eventEntity.LocalizedDescription(isEnglish: true));
 
         eventEntity.DescriptionEn = "A ballet in three acts";
         Assert.Equal("A ballet in three acts", eventEntity.LocalizedDescription(isEnglish: true));

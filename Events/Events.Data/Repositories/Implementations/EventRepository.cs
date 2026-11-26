@@ -618,4 +618,32 @@ public class EventRepository : IEventRepository
         await _context.SaveChangesAsync(cancellationToken);
         return true;
     }
+
+    public async Task<List<Event>> GetUpcomingWithoutEnglishTitleAsync(DateTime fromDate, int maxCount, CancellationToken cancellationToken = default)
+    {
+        return await _context.Events
+            .AsNoTracking()
+            .Where(e => e.Date >= fromDate && e.NameEn == null && e.Status != EventStatus.Cancelled)
+            .OrderBy(e => e.Date)
+            .ThenBy(e => e.StartTime)
+            .ThenBy(e => e.Id)
+            .Take(maxCount)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<bool> SetEnglishTextsAsync(int eventId, string nameEn, string? descriptionEn, CancellationToken cancellationToken = default)
+    {
+        var eventEntity = await _context.Events.FirstOrDefaultAsync(e => e.Id == eventId, cancellationToken);
+        if (eventEntity == null || eventEntity.NameEn != null)
+        {
+            return false;
+        }
+
+        eventEntity.NameEn = nameEn;
+        eventEntity.DescriptionEn = descriptionEn;
+        eventEntity.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync(cancellationToken);
+        return true;
+    }
 }

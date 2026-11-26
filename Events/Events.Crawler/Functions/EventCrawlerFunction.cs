@@ -1,5 +1,6 @@
 ﻿using Events.Crawler.Models;
 using Events.Crawler.Services.Interfaces;
+using Events.Services.Translation;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Configuration;
@@ -14,17 +15,20 @@ public class EventCrawlerFunction
 {
     private readonly ICrawlerService _crawlerService;
     private readonly IEventProcessingService _eventProcessingService;
+    private readonly IUpcomingEventTranslator _upcomingEventTranslator;
     private readonly ILogger<EventCrawlerFunction> _logger;
     private readonly IHostApplicationLifetime _lifetime;
 
     public EventCrawlerFunction(
         ICrawlerService crawlerService,
         IEventProcessingService eventProcessingService,
+        IUpcomingEventTranslator upcomingEventTranslator,
         ILogger<EventCrawlerFunction> logger,
         IHostApplicationLifetime lifetime)
     {
         _crawlerService = crawlerService;
         _eventProcessingService = eventProcessingService;
+        _upcomingEventTranslator = upcomingEventTranslator;
         _logger = logger;
         _lifetime = lifetime;
     }
@@ -38,7 +42,9 @@ public class EventCrawlerFunction
     // drifts to 03:00 Bulgaria time in winter (EET, UTC+2) - single fixed-offset cron, no DST switch.
     public async Task CrawlEventsTimerFunction([TimerTrigger("0 0 1 * * *", RunOnStartup = true)] TimerInfo myTimer)
     {
-        using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(28));
+        var timeout = TimeSpan.FromMinutes(28);
+        var deadlineUtc = DateTime.UtcNow + timeout;
+        using var cts = new CancellationTokenSource(timeout);
 
         _logger.LogInformation("Event crawler function started at: {Time}", DateTime.UtcNow);
 
@@ -80,11 +86,13 @@ public class EventCrawlerFunction
                     // CrawlResult.FoundBySource, not the already-filtered Events list used above.
                     var found = crawlResult.FoundBySource.GetValueOrDefault(sourceGroup.Key);
 
-                    _logger.LogInformation(
-                        "[{Source}] Completed: Found={Found}, Processed={Processed}, Created={Created}, Updated={Updated}, Skipped={Skipped}",
+                    _logger.LogInformation("[{Source}] Completed: Found={Found}, Processed={Processed}, Created={Created}, Updated={Updated}, Skipped={Skipped}",
                         sourceGroup.Key, found, created + updated + skipped, created, updated, skipped);
                 }
             }
+
+            // Last step: English texts of the upcoming events, in the time left (GS-REQ-010, 10.4). Never throws.
+            await _upcomingEventTranslator.TranslateUpcomingAsync(deadlineUtc, cts.Token);
         }
         catch (OperationCanceledException)
         {
@@ -121,7 +129,9 @@ public class EventCrawlerFunction
 
         try
         {
-            using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(8));
+            var timeout = TimeSpan.FromMinutes(8);
+            var deadlineUtc = DateTime.UtcNow + timeout;
+            using var cts = new CancellationTokenSource(timeout);
 
             _logger.LogInformation("Event crawler function started at: {Time}", DateTime.UtcNow);
 
@@ -157,6 +167,9 @@ public class EventCrawlerFunction
                         (i / batchSize) + 1, processingResult.EventsCreated, processingResult.EventsUpdated, processingResult.EventsSkipped);
                 }
             }
+
+            // Last step: English texts of the upcoming events, in the time left (GS-REQ-010, 10.4). Never throws.
+            await _upcomingEventTranslator.TranslateUpcomingAsync(deadlineUtc, cts.Token);
 
             _logger.LogInformation("Event crawler function completed at: {Time}", DateTime.UtcNow);
 

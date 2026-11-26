@@ -11,8 +11,15 @@ public static class EventLocalizationExtensions
     public static string LocalizedName(this Event eventEntity, bool isEnglish) =>
         isEnglish && eventEntity.HasEnglishTitle() ? eventEntity.NameEn! : eventEntity.Name;
 
-    public static string? LocalizedDescription(this Event eventEntity, bool isEnglish) =>
-        isEnglish && !string.IsNullOrWhiteSpace(eventEntity.DescriptionEn) ? eventEntity.DescriptionEn : eventEntity.Description;
+    // An English page with an English title shows only the English description, or none: no Bulgarian text next to
+    // the English title (GS-REQ-010, 10.4). Without an English title the whole page stays Bulgarian.
+    public static string? LocalizedDescription(this Event eventEntity, bool isEnglish)
+    {
+        if (!isEnglish || !eventEntity.HasEnglishTitle())
+            return eventEntity.Description;
+
+        return string.IsNullOrWhiteSpace(eventEntity.DescriptionEn) ? null : eventEntity.DescriptionEn;
+    }
 
     // Bulgarian pages keep the crawled free-text location. English pages show the venue's English name, or the
     // transliterated free text when the event is not mapped to a venue.
