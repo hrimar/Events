@@ -9,11 +9,11 @@ public sealed class TranslationOptions
     // Turns the requests to the AI model on. Texts without Cyrillic are copied to the English fields either way.
     public bool Enabled { get; set; }
 
-    public string Model { get; set; } = "claude-haiku-4-5-20251001";
+    public string Model { get; set; } = "claude-haiku-5-5";
 
     // Time budget of one run (one service scope), counted from its first request; the events left over are translated
     // in the next run.
-    public int MaxRunMinutes { get; set; } = 8;
+    public int MaxRunMinutes { get; set; } = 25;
 
     public int RequestTimeoutSeconds { get; set; } = 20;
 

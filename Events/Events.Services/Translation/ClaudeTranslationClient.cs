@@ -16,8 +16,9 @@ public sealed record TranslationResponse(bool IsApiError, IReadOnlyDictionary<st
 }
 
 // Calls the Claude Messages API to translate event texts into English (GS-REQ-010, 10.4). The answer is constrained
-// to a JSON object with one string per requested field (structured outputs). No sampling parameters are sent, so the
-// same request works on newer models as well.
+// to a JSON object with one string per requested field (structured outputs). No sampling parameters are sent and
+// thinking is turned off (Claude Haiku 5.5 thinks by default, which costs output tokens and time and does not help a
+// translation), so the same request works on Claude Haiku 4.5 and 5.5.
 public sealed class ClaudeTranslationClient
 {
     public const string TitleField = "title";
@@ -133,6 +134,7 @@ public sealed class ClaudeTranslationClient
         {
             ["model"] = _options.Model,
             ["max_tokens"] = MaxOutputTokens,
+            ["thinking"] = new JsonObject { ["type"] = "disabled" },
             ["system"] = SystemPrompt,
             ["messages"] = new JsonArray
             {
