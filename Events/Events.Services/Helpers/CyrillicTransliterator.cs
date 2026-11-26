@@ -12,6 +12,10 @@ public static class CyrillicTransliterator
     private const char CyrillicFirst = '\u0400';
     private const char CyrillicLast = '\u052F';
 
+    // A whole text without Cyrillic letters, for [RegularExpression] validation; the same pattern works in .NET and in
+    // the browser (jQuery unobtrusive validation) (GS-REQ-010, 10.4).
+    public const string NoCyrillicPattern = @"^[^\u0400-\u052F]*$";
+
     private const char LowercaseI = '\u0438';
     private const char LowercaseYa = '\u044F';
 

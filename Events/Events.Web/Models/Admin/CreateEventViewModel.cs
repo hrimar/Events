@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Events.Web.Models.Admin;
 
-public class CreateEventViewModel
+public class CreateEventViewModel : EventEnglishTextsFormModel
 {
     [Required(ErrorMessage = "Event name is required")]
     [StringLength(200, MinimumLength = 3, ErrorMessage = "Event name must be between 3 and 200 characters")]

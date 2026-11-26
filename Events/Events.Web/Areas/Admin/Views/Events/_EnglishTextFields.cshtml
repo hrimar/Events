@@ -1,0 +1,20 @@
+@model EventEnglishTextsFormModel
+@* English event name and description, shared by Create and Edit (GS-REQ-010, 10.4). *@
+
+<div class="mb-3">
+    <label asp-for="NameEn" class="form-label">Event Name (EN)</label>
+    <input asp-for="NameEn" class="form-control" maxlength="200" placeholder="Enter English event name" />
+    <span asp-validation-for="NameEn" class="text-danger small"></span>
+    <small class="text-muted">No Cyrillic letters allowed.</small>
+</div>
+
+<div class="mb-3">
+    <label asp-for="DescriptionEn" class="form-label">Description (EN)</label>
+    <textarea asp-for="DescriptionEn" class="form-control" rows="4" maxlength="4000" placeholder="Enter English event description..."></textarea>
+    <span asp-validation-for="DescriptionEn" class="text-danger small"></span>
+    <small class="text-muted">
+        Optional. Leave the English event name empty to have both fields translated automatically overnight.
+        If only the English event name is filled in, the English page shows no description.
+        When you change the Bulgarian event name or description, update the English ones too.
+    </small>
+</div>

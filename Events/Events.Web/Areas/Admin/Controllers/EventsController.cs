@@ -310,6 +310,8 @@ public class EventsController : Controller
                 City = eventEntity.City,
                 Location = eventEntity.Location,
                 Description = eventEntity.Description,
+                NameEn = eventEntity.NameEn,
+                DescriptionEn = eventEntity.DescriptionEn,
                 ImageUrl = eventEntity.ImageUrl,
                 TicketUrl = eventEntity.TicketUrl,
                 IsFree = eventEntity.IsFree,
@@ -412,6 +414,8 @@ public class EventsController : Controller
             eventEntity.City = model.City;
             eventEntity.Location = model.Location;
             eventEntity.Description = model.Description;
+            eventEntity.NameEn = model.NameEnToSave;
+            eventEntity.DescriptionEn = model.DescriptionEnToSave;
             eventEntity.ImageUrl = model.ImageUrl;
             eventEntity.ThumbnailUrl = model.ThumbnailUrl;
             eventEntity.TicketUrl = model.TicketUrl;
@@ -622,6 +626,8 @@ public class EventsController : Controller
                 City = model.City,
                 Location = model.Location,
                 Description = model.Description,
+                NameEn = model.NameEnToSave,
+                DescriptionEn = model.DescriptionEnToSave,
                 ImageUrl = model.ImageUrl,
                 ThumbnailUrl = model.ThumbnailUrl,
                 TicketUrl = model.TicketUrl,

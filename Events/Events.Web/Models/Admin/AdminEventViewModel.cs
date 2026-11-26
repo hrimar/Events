@@ -19,6 +19,9 @@ public class AdminEventViewModel
     public bool IsFree { get; set; }
     public decimal? Price { get; set; }
     public bool IsFeatured { get; set; }
+
+    // Shown as an "EN" badge in the event list (GS-REQ-010, 10.4).
+    public bool HasEnglishTitle { get; set; }
     public string PriceDisplay => IsFree ? "Free" : Price?.ToString("F0") + " EUR";
     public string? CategoryName { get; set; }
     public int CategoryId { get; set; }
@@ -59,6 +62,7 @@ public class AdminEventViewModel
             IsFree = eventEntity.IsFree,
             Price = eventEntity.Price,
             IsFeatured = eventEntity.IsFeatured,
+            HasEnglishTitle = !string.IsNullOrWhiteSpace(eventEntity.NameEn),
             CategoryName = eventEntity.Category?.Name,
             CategoryId = eventEntity.CategoryId,
             SubCategoryName = eventEntity.SubCategory?.Name,

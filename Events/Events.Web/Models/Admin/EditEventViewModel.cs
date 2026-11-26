@@ -2,7 +2,7 @@ using Events.Models.Enums;
 
 namespace Events.Web.Models.Admin;
 
-public class EditEventViewModel
+public class EditEventViewModel : EventEnglishTextsFormModel
 {
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
