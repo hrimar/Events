@@ -134,9 +134,19 @@ public sealed class UpcomingEventTranslator : IUpcomingEventTranslator
 
         // Own scope per event: the DbContext is not shared between parallel calls. A finished translation is saved
         // even when the budget runs out at that moment.
-        using var scope = _scopeFactory.CreateScope();
-        var repository = scope.ServiceProvider.GetRequiredService<IEventRepository>();
+        try
+        {
+            using var scope = _scopeFactory.CreateScope();
+            var repository = scope.ServiceProvider.GetRequiredService<IEventRepository>();
 
-        return await repository.SetEnglishTextsAsync(eventEntity.Id, translation.NameEn, translation.DescriptionEn, CancellationToken.None);
+            return await repository.SetEnglishTextsAsync(eventEntity.Id, translation.NameEn, translation.DescriptionEn, CancellationToken.None);
+        }
+        catch (Exception ex)
+        {
+            // One event that cannot be saved (e.g. a database error after the retries) must not stop the other events.
+            // It stays without an English title and is taken again in the next run, where its texts come from the cache.
+            _logger.LogWarning(ex, "Saving the English texts of event {EventId} failed; it is translated again in the next run", eventEntity.Id);
+            return false;
+        }
     }
 }

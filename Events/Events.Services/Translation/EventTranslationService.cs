@@ -71,10 +71,12 @@ public sealed class EventTranslationService : IEventTranslationService
             if (!string.IsNullOrWhiteSpace(description))
                 sources[ClaudeTranslationClient.DescriptionField] = description.Trim();
 
-            var results = await ResolveAsync(sources, cancellationToken);
+            var (results, retryLater) = await ResolveAsync(sources, cancellationToken);
 
+            // A text that got no answer (no request could be sent or the request failed) is not dropped: the event gets
+            // no English texts now and is translated again in the next run. A rejected description is dropped and the title is kept.
             var nameEn = results.GetValueOrDefault(ClaudeTranslationClient.TitleField);
-            if (nameEn is null)
+            if (nameEn is null || retryLater)
                 return EventTranslation.None;
 
             var descriptionEn = results.GetValueOrDefault(ClaudeTranslationClient.DescriptionField);
@@ -98,7 +100,9 @@ public sealed class EventTranslationService : IEventTranslationService
     }
 
     // Returns the English text for each field that has one; a field without a usable translation is missing.
-    private async Task<Dictionary<string, string>> ResolveAsync(Dictionary<string, string> sources, CancellationToken cancellationToken)
+    // RetryLater is true when a field with Cyrillic got no answer: the time budget or the circuit breaker stopped the
+    // request, or the request failed (as opposed to an answer that was rejected).
+    private async Task<(Dictionary<string, string> Results, bool RetryLater)> ResolveAsync(Dictionary<string, string> sources, CancellationToken cancellationToken)
     {
         var results = new Dictionary<string, string>();
         var pending = new Dictionary<string, string>();
@@ -117,7 +121,7 @@ public sealed class EventTranslationService : IEventTranslationService
         }
 
         if (pending.Count == 0)
-            return results;
+            return (results, false);
 
         // Own scope: the caller may use its DbContext at the same time (categorization runs in parallel).
         using var scope = _scopeFactory.CreateScope();
@@ -137,15 +141,15 @@ public sealed class EventTranslationService : IEventTranslationService
         }
 
         if (pending.Count == 0)
-            return results;
+            return (results, false);
 
         if (!CanSendRequest())
         {
             Count(stats => stats.Skipped += pending.Count);
-            return results;
+            return (results, true);
         }
 
-        var translated = await TranslateWithValidationAsync(pending, sources[ClaudeTranslationClient.TitleField], cancellationToken);
+        var (translated, requestFailed) = await TranslateWithValidationAsync(pending, sources[ClaudeTranslationClient.TitleField], cancellationToken);
 
         foreach (var (field, text) in translated)
         {
@@ -161,13 +165,15 @@ public sealed class EventTranslationService : IEventTranslationService
         }
 
         Count(stats => stats.Failed += pending.Count - translated.Count);
-        return results;
+        return (results, requestFailed);
     }
 
     // One request for all pending fields; the rejected ones are sent once more with the reason.
-    private async Task<Dictionary<string, string>> TranslateWithValidationAsync(Dictionary<string, string> pending, string eventName, CancellationToken cancellationToken)
+    // RequestFailed is true when a request failed (network, timeout, HTTP error) instead of returning an answer.
+    private async Task<(Dictionary<string, string> Accepted, bool RequestFailed)> TranslateWithValidationAsync(Dictionary<string, string> pending, string eventName, CancellationToken cancellationToken)
     {
         var accepted = new Dictionary<string, string>();
+        var requestFailed = false;
         var toSend = pending;
         string? correction = null;
 
@@ -184,6 +190,7 @@ public sealed class EventTranslationService : IEventTranslationService
             {
                 RecordRequestResult(succeeded: false);
                 _logger.LogWarning("Translation request for '{EventName}' failed: {Error}", eventName, response.Error);
+                requestFailed = true;
                 break;
             }
 
@@ -217,7 +224,7 @@ public sealed class EventTranslationService : IEventTranslationService
             correction = string.Join("; ", reasons.Distinct());
         }
 
-        return accepted;
+        return (accepted, requestFailed);
     }
 
     private static string? Validate(string field, string source, string? translation)
