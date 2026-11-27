@@ -71,8 +71,10 @@ public sealed class CulturePathMiddleware
     {
         foreach (var section in UnprefixedSections)
         {
+            // Escaped, not Value: the decoded path may contain non-ASCII characters, which are not allowed in the
+            // Location header (Kestrel would answer 500).
             if (remaining.StartsWithSegments(section, StringComparison.OrdinalIgnoreCase))
-                return remaining.Value;
+                return remaining.ToUriComponent();
         }
 
         // "/EN/..." -> "/en/...": one spelling of the prefix.
