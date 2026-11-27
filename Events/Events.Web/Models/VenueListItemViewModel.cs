@@ -1,4 +1,4 @@
-using System.Globalization;
+using Events.Web.Localization;
 
 namespace Events.Web.Models;
 
@@ -13,5 +13,5 @@ public class VenueListItemViewModel
     public string City { get; set; } = string.Empty;
     public int UpcomingEventsCount { get; set; }
 
-    public string DisplayName => CultureInfo.CurrentCulture.TwoLetterISOLanguageName == "en" && !string.IsNullOrEmpty(NameEn) ? NameEn : Name;
+    public string DisplayName => VenueLocalizationExtensions.LocalizeName(Name, NameEn, CultureHelper.IsEnglish());
 }

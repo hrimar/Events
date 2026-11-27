@@ -228,6 +228,23 @@ public class EventRepositoryTests : IDisposable
         Assert.Equal(3, result.Count());
     }
 
+    [Fact]
+    public async Task SearchAsync_MatchesEnglishTitleAndDescription()
+    {
+        _context.Categories.Add(_musicCategory);
+        var byEnglishName = CreateEvent(1, "Лебедово езеро", new DateTime(2026, 6, 1), _musicCategory.Id);
+        byEnglishName.NameEn = "Swan Lake";
+        var byEnglishDescription = CreateEvent(2, "Балет", new DateTime(2026, 6, 2), _musicCategory.Id);
+        byEnglishDescription.DescriptionEn = "The Swan princess";
+        var noMatch = CreateEvent(3, "Unrelated", new DateTime(2026, 6, 3), _musicCategory.Id);
+        _context.Events.AddRange(byEnglishName, byEnglishDescription, noMatch);
+        await _context.SaveChangesAsync();
+
+        var result = await CreateEventRepository().SearchAsync("Swan");
+
+        Assert.Equal([1, 2], result.Select(e => e.Id).Order());
+    }
+
     // GetFeaturedEventsAsync - IsFeatured + Published + not in the past
 
     [Fact]

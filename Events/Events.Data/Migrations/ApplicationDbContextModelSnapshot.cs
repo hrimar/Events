@@ -279,6 +279,10 @@ namespace Events.Data.Migrations
                         .HasMaxLength(4000)
                         .HasColumnType("nvarchar(4000)");
 
+                    b.Property<string>("DescriptionEn")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
                     b.Property<string>("ImageSourceUrl")
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
@@ -300,6 +304,10 @@ namespace Events.Data.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("NameEn")
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
@@ -2694,6 +2702,33 @@ namespace Events.Data.Migrations
                         .IsUnique();
 
                     b.ToTable("Tags");
+                });
+
+            modelBuilder.Entity("Events.Models.Entities.TranslationCacheEntry", b =>
+                {
+                    b.Property<string>("Hash")
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("char(64)")
+                        .IsFixedLength();
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("Model")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("TranslatedText")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Hash");
+
+                    b.ToTable("TranslationCacheEntries");
                 });
 
             modelBuilder.Entity("Events.Models.Entities.User", b =>

@@ -1,6 +1,7 @@
 using Events.Models.Entities;
 using Events.Models.Enums;
 using Events.Web.Infrastructure.JsonLd;
+using Events.Web.Localization;
 
 namespace Events.Web.Models;
 
@@ -8,6 +9,10 @@ public class EventViewModel
 {
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
+
+    // The Bulgarian title in both languages, so performances of one event are grouped the same way on BG and EN
+    // pages even when only some of them have an English title (GS-REQ-010, 10.4).
+    public string BulgarianName { get; set; } = string.Empty;
     public DateTime Date { get; set; }
     public TimeSpan? StartTime { get; set; }
     public string FormattedDate => Date.ToString("dd.MM.yyyy");
@@ -46,15 +51,20 @@ public class EventViewModel
 
     // Shared entity-to-view-model mapping, so subclasses (e.g. EventDetailsViewModel)
     // can add their own fields without duplicating this mapping.
+    // Texts are in the language of the current request (GS-REQ-010, 10.4); cached lists of these models must use
+    // a per-culture cache key (HomePageCache.ForCulture).
     protected static T Populate<T>(T model, Event eventEntity, DateTime sofiaToday) where T : EventViewModel
     {
+        var isEnglish = CultureHelper.IsEnglish();
+
         model.Id = eventEntity.Id;
-        model.Name = eventEntity.Name;
+        model.Name = eventEntity.LocalizedName(isEnglish);
+        model.BulgarianName = eventEntity.Name;
         model.Date = eventEntity.Date;
         model.StartTime = eventEntity.StartTime;
-        model.City = eventEntity.City;
-        model.Location = eventEntity.Location;
-        model.Description = eventEntity.Description;
+        model.City = eventEntity.LocalizedCity(isEnglish);
+        model.Location = eventEntity.LocalizedLocation(isEnglish);
+        model.Description = eventEntity.LocalizedDescription(isEnglish);
         model.ImageUrl = eventEntity.ImageUrl;
         model.ThumbnailUrl = eventEntity.ThumbnailUrl;
         model.TicketUrl = eventEntity.TicketUrl;

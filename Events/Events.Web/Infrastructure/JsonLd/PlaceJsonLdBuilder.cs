@@ -1,4 +1,5 @@
 using Events.Models.Entities;
+using Events.Web.Localization;
 
 namespace Events.Web.Infrastructure.JsonLd;
 
@@ -13,8 +14,9 @@ public static class PlaceJsonLdBuilder
     // instead, which is schema.org's property for links to other profiles of the same entity.
     // includeContext controls whether "@context" is emitted - true when Place is the
     // root JSON-LD object (venue page), false when it is nested inside another schema
-    // (e.g. as an Event's "location").
-    public static Dictionary<string, object?> BuildPlace(CanonicalVenue venue, string? ownPageUrl, bool includeContext = true)
+    // (e.g. as an Event's "location"). isEnglish gives the English name and the transliterated address; the
+    // description has no English field and stays Bulgarian (GS-REQ-010, 10.4).
+    public static Dictionary<string, object?> BuildPlace(CanonicalVenue venue, string? ownPageUrl, bool includeContext = true, bool isEnglish = false)
     {
         var builder = new SafeJsonLdBuilder();
 
@@ -22,7 +24,7 @@ public static class PlaceJsonLdBuilder
             builder.Add("@context", "https://schema.org");
 
         builder.Add("@type", "Place");
-        builder.Add("name", venue.Name);
+        builder.Add("name", venue.LocalizedName(isEnglish));
         builder.AddIfNotEmpty("description", venue.Description);
         builder.AddIfNotEmpty("url", ownPageUrl);
         builder.AddIfNotEmpty("sameAs", venue.WebsiteUrl);
@@ -32,8 +34,8 @@ public static class PlaceJsonLdBuilder
             builder.Add("address", new Dictionary<string, string>
             {
                 ["@type"] = "PostalAddress",
-                ["streetAddress"] = venue.Address,
-                ["addressLocality"] = venue.City
+                ["streetAddress"] = VenueLocalizationExtensions.LocalizeAddress(venue.Address, isEnglish)!,
+                ["addressLocality"] = VenueLocalizationExtensions.LocalizeAddress(venue.City, isEnglish)!
             });
         }
 

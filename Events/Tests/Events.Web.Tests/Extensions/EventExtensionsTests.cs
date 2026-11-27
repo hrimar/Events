@@ -116,4 +116,44 @@ public class EventExtensionsTests
 
         Assert.Equal("15/06/2026 · National Palace of Culture", result.Details);
     }
+
+    [Theory]
+    [InlineData("", "/Events/Details/")]
+    [InlineData("/en", "/en/Events/Details/")]
+    public void ToSearchSuggestionDto_UrlKeepsLanguagePrefix(string urlPrefix, string expectedStart)
+    {
+        var eventEntity = CreateEvent();
+
+        var result = eventEntity.ToSearchSuggestionDto(isEnglish: urlPrefix != "", localizedCategory: null, urlPrefix);
+
+        Assert.Equal($"{expectedStart}{eventEntity.Id}", result.Url);
+    }
+
+    [Theory]
+    [InlineData("", "/venues/ndk")]
+    [InlineData("/en", "/en/venues/ndk")]
+    public void VenueToSearchSuggestionDto_UrlKeepsLanguagePrefix(string urlPrefix, string expectedUrl)
+    {
+        var venue = new CanonicalVenue { Name = "НДК", NameEn = "National Palace of Culture", Slug = "ndk" };
+
+        var result = venue.ToSearchSuggestionDto(isEnglish: urlPrefix != "", urlPrefix);
+
+        Assert.Equal(expectedUrl, result.Url);
+    }
+
+    // English (GS-REQ-010, 10.4)
+
+    [Fact]
+    public void ToSearchSuggestionDto_English_UsesEnglishTitleAndTransliteratedLocation()
+    {
+        var eventEntity = CreateEvent();
+        eventEntity.Name = "Лебедово езеро";
+        eventEntity.NameEn = "Swan Lake";
+        eventEntity.Location = "Операта";
+
+        var result = eventEntity.ToSearchSuggestionDto(isEnglish: true, localizedCategory: "Theatre", urlPrefix: "/en");
+
+        Assert.Equal("Swan Lake", result.Title);
+        Assert.EndsWith("Operata", result.Details);
+    }
 }

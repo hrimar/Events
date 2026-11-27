@@ -28,7 +28,8 @@ public static class EventExtensions
     }
 
     // Autocomplete row: "date · time · venue"; the time is omitted when unknown (stored as 00:00).
-    public static SearchSuggestionDto ToSearchSuggestionDto(this Event eventEntity, bool isEnglish, string? localizedCategory)
+    // urlPrefix is the request's PathBase ("/en" on English pages, GS-REQ-010, 10.2.5).
+    public static SearchSuggestionDto ToSearchSuggestionDto(this Event eventEntity, bool isEnglish, string? localizedCategory, string urlPrefix = "")
     {
         var date = eventEntity.Date.ToString(CultureHelper.ShortDateFormat(isEnglish), CultureInfo.InvariantCulture);
 
@@ -36,14 +37,14 @@ public static class EventExtensions
             ? (eventEntity.StartTime ?? eventEntity.Date.TimeOfDay).ToString(@"hh\:mm", CultureInfo.InvariantCulture)
             : null;
 
-        var venue = eventEntity.CanonicalVenue?.LocalizedName(isEnglish) ?? eventEntity.Location;
+        var venue = eventEntity.CanonicalVenue?.LocalizedName(isEnglish) ?? eventEntity.LocalizedLocation(isEnglish);
 
         var details = string.Join(" · ", new[] { date, time, venue }.Where(part => !string.IsNullOrWhiteSpace(part)));
 
         return new SearchSuggestionDto
         {
-            Title = eventEntity.Name,
-            Url = $"/Events/Details/{eventEntity.Id}",
+            Title = eventEntity.LocalizedName(isEnglish),
+            Url = $"{urlPrefix}/Events/Details/{eventEntity.Id}",
             Details = details,
             Category = localizedCategory
         };

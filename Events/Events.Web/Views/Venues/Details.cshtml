@@ -6,16 +6,16 @@
 @inject ISiteUrlProvider SiteUrlProvider
 @inject Events.Services.Time.ISofiaClock SofiaClock
 @{
-    ViewData["PageTitle"] = Model.Name + " | " + Localizer["Venue_SeoTitleSuffix"];
-    ViewData["Title"] = Model.Name;
-    ViewData["MetaDescription"] = Model.Description ?? $"{Localizer["Venue_EventsAtVenue"]}: {Model.Name}";
-    ViewData["OgTitle"] = Model.Name + " | Go Sofia";
-    var currentUrl = SiteUrlProvider.BuildAbsoluteUrl(Context.Request.Path);
+    // Venue name in the language of the page; the description has no English field, so the English meta
+    // description uses the generic text (GS-REQ-010, 10.4).
+    var isEnglishPage = Events.Web.Localization.CultureHelper.IsEnglish();
+    ViewData["PageTitle"] = Model.DisplayName + " | " + Localizer["Venue_SeoTitleSuffix"];
+    ViewData["Title"] = Model.DisplayName;
+    ViewData["MetaDescription"] = (isEnglishPage ? null : Model.Description) ?? $"{Localizer["Venue_EventsAtVenue"]}: {Model.DisplayName}";
+    ViewData["OgTitle"] = Model.DisplayName + " | Go Sofia";
     ViewData["OgImageUrl"] = string.IsNullOrEmpty(Model.PhotoUrl)
         ? string.Empty
         : (Model.PhotoUrl.StartsWith("http") ? Model.PhotoUrl : SiteUrlProvider.BuildAbsoluteUrl(Model.PhotoUrl));
-    ViewData["OgUrl"] = currentUrl;
-    ViewData["CanonicalUrl"] = currentUrl;
 }
 
 <div class="container-grid py-4">
@@ -25,7 +25,7 @@
             <li class="breadcrumb-item">
                 <a asp-controller="Home" asp-action="Index">@Localizer["Venue_Home"]</a>
             </li>
-            <li class="breadcrumb-item active" aria-current="page">@Model.Name</li>
+            <li class="breadcrumb-item active" aria-current="page">@Model.DisplayName</li>
         </ol>
     </nav>
 
@@ -33,7 +33,7 @@
     <div class="card border-0 shadow-sm mb-4">
         @if (!string.IsNullOrEmpty(Model.PhotoUrl))
         {
-            <img src="@Model.PhotoUrl" alt="@Model.Name"
+            <img src="@Model.PhotoUrl" alt="@Model.DisplayName"
                  class="card-img-top"
                  style="max-height: 320px; object-fit: cover; object-position: center;"
                  onerror="this.style.display='none'">
@@ -56,7 +56,7 @@
                         @if (!string.IsNullOrEmpty(Model.Address))
                         {
                             <span class="text-muted">
-                                <gs-icon name="map-pin" class="me-1 gs-text-link" />@Model.Address
+                                <gs-icon name="map-pin" class="me-1 gs-text-link" />@Model.DisplayAddress
                             </span>
                         }
                         @if (Model.Capacity.HasValue)
@@ -129,14 +129,14 @@
                         height="320"
                         style="border: 0;"
                         loading="lazy"
-                        title="@Model.Name map location">
+                        title="@Model.DisplayName map location">
                     </iframe>
                 </div>
                 @if (!string.IsNullOrEmpty(Model.Address))
                 {
                     <div class="card-body py-2">
                         <small class="text-muted">
-                            <gs-icon name="map-pin" class="me-1" />@Model.Address
+                            <gs-icon name="map-pin" class="me-1" />@Model.DisplayAddress
                         </small>
                     </div>
                 }

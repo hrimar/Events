@@ -2,6 +2,7 @@ using Azure.Identity;
 using Azure.Storage.Blobs;
 using Events.Data.Context;
 using Events.Web.Infrastructure;
+using Events.Web.Localization;
 using Events.Web.Services;
 using Events.Data.Repositories.Implementations;
 using Events.Data.Repositories.Interfaces;
@@ -16,8 +17,10 @@ using Events.Services.Media;
 using Events.Services.Time;
 using Events.Web.Options;
 using Events.Web.Services.Email;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.WebEncoders;
@@ -40,6 +43,7 @@ if (!string.IsNullOrWhiteSpace(appInsightsConnectionString))
 
 ConfigureDatabase(builder);
 ConfigureIdentity(builder);
+ConfigureSiteCookies(builder);
 ConfigureAuthorization(builder);
 ConfigureAzureStorage(builder);
 ConfigureEmail(builder);
@@ -133,6 +137,17 @@ static void ConfigureIdentity(WebApplicationBuilder builder)
     .AddDefaultUI();
 }
 
+// The site cookies are shared by the Bulgarian pages and the English ones under /en/ (GS-REQ-010, 10.1). Without an
+// explicit path ASP.NET Core uses the request PathBase, so a login under /en/ would set Path=/en and the cookie would
+// not reach the Bulgarian pages, /api and /Admin (and a logout under /en/ would not remove a cookie set with Path=/).
+// Covers all Identity cookie schemes (application, external, two-factor), the antiforgery cookie and the TempData cookie.
+static void ConfigureSiteCookies(WebApplicationBuilder builder)
+{
+    builder.Services.PostConfigureAll<CookieAuthenticationOptions>(options => options.Cookie.Path = "/");
+    builder.Services.AddAntiforgery(options => options.Cookie.Path = "/");
+    builder.Services.Configure<CookieTempDataProviderOptions>(options => options.Cookie.Path = "/");
+}
+
 static void ConfigureAuthorization(WebApplicationBuilder builder)
 {
     builder.Services.AddAuthorization(options =>
@@ -194,14 +209,13 @@ static void ConfigureLocalization(WebApplicationBuilder builder)
 
     builder.Services.Configure<RequestLocalizationOptions>(options =>
     {
-        var supportedCultures = new[] { "bg", "en" };
+        options.SetDefaultCulture(SiteCultures.Bulgarian)
+               .AddSupportedCultures(SiteCultures.Supported)
+               .AddSupportedUICultures(SiteCultures.Supported);
 
-        options.SetDefaultCulture("bg")
-               .AddSupportedCultures(supportedCultures)
-               .AddSupportedUICultures(supportedCultures);
-
-        // Cookie provider is first - persists user language choice between sessions
-        options.RequestCultureProviders.Insert(0, new Microsoft.AspNetCore.Localization.CookieRequestCultureProvider());
+        // The language comes only from the URL (GS-REQ-010, 10.2.1-2): no cookie, query string or Accept-Language.
+        options.RequestCultureProviders.Clear();
+        options.RequestCultureProviders.Add(new UrlPathRequestCultureProvider());
     });
 }
 
@@ -369,6 +383,11 @@ static void ConfigureHttpPipeline(WebApplication app)
 
         await next();
     });
+
+    // English under "/en/" (GS-REQ-010, 10.1): moves the prefix into PathBase. Placed before the exception handler,
+    // so an error on an English page re-executes /Home/Error in English, and before UseStaticFiles, so files
+    // referenced with "~/" from English pages ("/en/css/...") are served too.
+    app.UseMiddleware<CulturePathMiddleware>();
 
     if (app.Environment.IsDevelopment())
     {

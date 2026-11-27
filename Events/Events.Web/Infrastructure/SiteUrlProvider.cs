@@ -1,3 +1,4 @@
+using Events.Web.Localization;
 using Microsoft.AspNetCore.Http;
 
 namespace Events.Web.Infrastructure;
@@ -32,5 +33,22 @@ public class SiteUrlProvider : ISiteUrlProvider
             return BaseUrl;
 
         return $"{BaseUrl}{(relativePath.StartsWith('/') ? relativePath : $"/{relativePath}")}";
+    }
+
+    public string BuildLanguageUrl(string culture, string pathAndQuery)
+    {
+        var path = string.IsNullOrWhiteSpace(pathAndQuery) ? "/" : pathAndQuery;
+        if (!path.StartsWith('/'))
+            path = $"/{path}";
+
+        return $"{BaseUrl}{SiteCultures.GetPathPrefix(culture)}{path}";
+    }
+
+    public string BuildPageUrl(string pathAndQuery)
+    {
+        var httpContext = _httpContextAccessor.HttpContext;
+        var culture = httpContext == null ? SiteCultures.Bulgarian : SiteCultures.ForRequest(httpContext);
+
+        return BuildLanguageUrl(culture, pathAndQuery);
     }
 }

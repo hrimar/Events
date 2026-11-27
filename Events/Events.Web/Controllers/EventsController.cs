@@ -199,12 +199,8 @@ public class EventsController : Controller
             // Category listing pages are individually listed in sitemap.xml (see SeoController),
             // so they must self-canonicalize to their own "?category=" URL, not the bare /Events -
             // otherwise Google is told two contradictory things about the same page.
-            var canonicalUrl = hasValidCategory
-                ? _siteUrlProvider.BuildAbsoluteUrl($"/Events?category={parsedCategory}")
-                : _siteUrlProvider.BuildAbsoluteUrl("/Events");
-
-            ViewData["CanonicalUrl"] = canonicalUrl;
-            ViewData["OgUrl"] = canonicalUrl;
+            // Language-neutral path; _Layout builds the canonical, og:url and hreflang from it (GS-REQ-010, 10.3).
+            ViewData["CanonicalPath"] = hasValidCategory ? $"/Events?category={parsedCategory}" : "/Events";
             ViewData["OgImageUrl"] = _siteUrlProvider.BuildAbsoluteUrl("/images/logo.jpeg");
 
             var viewModel = new EventsPageViewModel
@@ -291,10 +287,8 @@ public class EventsController : Controller
         foreach (var day in model.Days)
             day.Route = model.Filters.RouteForDay(day.Day);
 
-        var canonicalUrl = _siteUrlProvider.BuildAbsoluteUrl(BuildPeriodCanonicalPath(period, categoryList));
-
-        ViewData["CanonicalUrl"] = canonicalUrl;
-        ViewData["OgUrl"] = canonicalUrl;
+        // Language-neutral path; _Layout builds the canonical, og:url and hreflang from it (GS-REQ-010, 10.3).
+        ViewData["CanonicalPath"] = BuildPeriodCanonicalPath(period, categoryList);
         ViewData["OgImageUrl"] = _siteUrlProvider.BuildAbsoluteUrl("/images/logo.jpeg");
 
         return View("Period", model);
@@ -462,14 +456,15 @@ public class EventsController : Controller
             };
             var (events, _) = await _eventService.GetPagedEventsAsync(upcomingQuery, cancellationToken);
             var venues = await _venueService.SearchByNameAsync(query, MaxVenueSuggestions);
+            var urlPrefix = Request.PathBase.Value ?? string.Empty;
 
             return Json(new SearchSuggestionsDto
             {
                 Events = events
-                    .Select(e => e.ToSearchSuggestionDto(isEnglish, LocalizeCategoryName(e.Category?.Name)))
+                    .Select(e => e.ToSearchSuggestionDto(isEnglish, LocalizeCategoryName(e.Category?.Name), urlPrefix))
                     .ToList(),
                 Venues = venues
-                    .Select(v => v.ToSearchSuggestionDto(isEnglish))
+                    .Select(v => v.ToSearchSuggestionDto(isEnglish, urlPrefix))
                     .ToList()
             });
         }
@@ -536,12 +531,22 @@ public class EventsController : Controller
                 return NotFound();
             }
 
-            var baseUrl = _siteUrlProvider.BaseUrl;
+            // JSON-LD in the language of the page, with its own-language URLs (GS-REQ-010, 10.3).
+            var language = SiteCultures.ForRequest(HttpContext);
             var jsonLd = SafeJsonLdBuilder.Serialize(SafeJsonLdBuilder.BuildGraph(
-                EventJsonLdBuilder.BuildEvent(eventEntity, baseUrl, includeContext: false),
-                BreadcrumbJsonLdBuilder.BuildBreadcrumbList(BuildBreadcrumbItems(eventEntity, baseUrl), includeContext: false)));
+                EventJsonLdBuilder.BuildEvent(eventEntity, _siteUrlProvider.BaseUrl, includeContext: false, language),
+                BreadcrumbJsonLdBuilder.BuildBreadcrumbList(BuildBreadcrumbItems(eventEntity), includeContext: false)));
 
             var viewModel = EventDetailsViewModel.FromEntity(eventEntity, jsonLd, _clock.Today);
+
+            // Without an English title the English page shows the Bulgarian one: it is not indexed and neither
+            // language version lists alternates (GS-REQ-010, 10.4).
+            if (!eventEntity.HasEnglishTitle())
+            {
+                ViewData["NoEnglishAlternate"] = true;
+                if (language == SiteCultures.English)
+                    ViewData["RobotsNoIndex"] = true;
+            }
 
             // EnumValue == OtherSubCategoryEnumValue represents "Other" across all subcategory enums
             var isOtherSubCategory = eventEntity.SubCategory == null || eventEntity.SubCategory.EnumValue == OtherSubCategoryEnumValue;
@@ -627,22 +632,22 @@ public class EventsController : Controller
     // (Home > Events > [Category] > EventName) so JSON-LD and the on-page trail agree.
     // The category link uses the "?category=" query filter (Index's working convention,
     // same as the sitemap - see SeoController) rather than the separate Category action.
-    private List<(string Name, string? Url)> BuildBreadcrumbItems(Event eventEntity, string baseUrl)
+    private List<(string Name, string? Url)> BuildBreadcrumbItems(Event eventEntity)
     {
         var items = new List<(string Name, string? Url)>
         {
-            (_localizer["Details_Home"].Value, $"{baseUrl}/"),
-            (_localizer["Details_Events"].Value, $"{baseUrl}/Events")
+            (_localizer["Details_Home"].Value, _siteUrlProvider.BuildPageUrl("/")),
+            (_localizer["Details_Events"].Value, _siteUrlProvider.BuildPageUrl("/Events"))
         };
 
         if (!string.IsNullOrEmpty(eventEntity.Category?.Name))
         {
             items.Add((
                 CategoryLocalizationExtensions.LocalizeCategoryName(eventEntity.Category.Name, _localizer),
-                $"{baseUrl}/Events?category={eventEntity.Category.Name}"));
+                _siteUrlProvider.BuildPageUrl($"/Events?category={eventEntity.Category.Name}")));
         }
 
-        items.Add((eventEntity.Name, null));
+        items.Add((eventEntity.LocalizedName(CultureHelper.IsEnglish()), null));
 
         return items;
     }

@@ -9,7 +9,6 @@
 @{
     var relatedEvents = ViewBag.RelatedEvents as List<Events.Web.Models.EventViewModel> ?? new List<Events.Web.Models.EventViewModel>();
     var isOtherSubCategory = (bool)(ViewBag.IsOtherSubCategory ?? true);
-    var currentUrl = SiteUrlProvider.BuildAbsoluteUrl(Context.Request.Path);
     var fullImageUrl = Model.DefaultImage.StartsWith("http") ? Model.DefaultImage : SiteUrlProvider.BuildAbsoluteUrl(Model.DefaultImage);
     var metaDescription = Model.ShortDescription != ""
         ? Model.ShortDescription
@@ -23,8 +22,6 @@
     ViewData["MetaDescription"] = metaDescription;
     ViewData["OgType"] = "event";
     ViewData["OgImageUrl"] = fullImageUrl;
-    ViewData["OgUrl"] = currentUrl;
-    ViewData["CanonicalUrl"] = currentUrl;
 }
 
 @* Open Graph / Twitter Card tags are rendered once, in _Layout.cshtml, driven by the
@@ -84,7 +81,7 @@
                             <div class="mb-3">
                                 @if(!string.IsNullOrEmpty(Model.CategoryName))
                                 {
-                                    <a href="/Events/Category/@Model.CategoryName" class="gs-tag text-decoration-none me-2">
+                                    <a href="@Url.Action("Index", "Events", new { category = Model.CategoryName })" class="gs-tag text-decoration-none me-2">
                                         <gs-icon name="layers" class="me-1" />
                                         @CategoryLocalizationExtensions.LocalizeCategoryName(Model.CategoryName, Localizer)
                                     </a>
@@ -246,8 +243,7 @@
                         }
                         else
                         {
-                            <a href="/Identity/Account/Login?returnUrl=@Url.Action("Details", "Events", 
-                                new { id = Model.Id })" class="gs-btn gs-btn-secondary">
+                            <a href="@Url.Page("/Account/Login", new { area = "Identity", returnUrl = Url.Action("Details", "Events", new { id = Model.Id }) })" class="gs-btn gs-btn-secondary">
                                 <gs-icon name="heart" class="gs-icon-filled" /> @Localizer["Details_LoginToSave"]
                             </a>
                         }

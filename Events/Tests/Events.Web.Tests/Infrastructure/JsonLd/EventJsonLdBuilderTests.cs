@@ -172,4 +172,57 @@ public class EventJsonLdBuilderTests
 
         Assert.False(result.ContainsKey("@context"));
     }
+
+    // Language (GS-REQ-010, 10.3)
+
+    [Fact]
+    public void BuildEvent_DefaultLanguage_IsBulgarianWithUnprefixedUrl()
+    {
+        var result = EventJsonLdBuilder.BuildEvent(CreateEvent(), BaseUrl);
+
+        Assert.Equal("bg", result["inLanguage"]);
+        Assert.Equal($"{BaseUrl}/Events/Details/1", result["url"]);
+    }
+
+    [Fact]
+    public void BuildEvent_English_UsesEnglishPageAndVenueUrlsButSharedImage()
+    {
+        var eventEntity = CreateEvent();
+        eventEntity.CanonicalVenue = new CanonicalVenue { Name = "НДК", NameEn = "NDK", Slug = "ndk", City = "Sofia" };
+
+        var result = EventJsonLdBuilder.BuildEvent(eventEntity, BaseUrl, includeContext: false, language: "en");
+
+        Assert.Equal("en", result["inLanguage"]);
+        Assert.Equal($"{BaseUrl}/en/Events/Details/1", result["url"]);
+        Assert.Equal($"{BaseUrl}/images/default_event_image.jpeg", result["image"]);
+        var location = Assert.IsType<Dictionary<string, object?>>(result["location"]);
+        Assert.Equal($"{BaseUrl}/en/venues/ndk", location["url"]);
+    }
+
+    [Fact]
+    public void BuildEvent_English_UsesEnglishTitleDescriptionAndTransliteratedFreeTextLocation()
+    {
+        var eventEntity = CreateEvent();
+        eventEntity.NameEn = "Concert in English";
+        eventEntity.DescriptionEn = "English description";
+        eventEntity.Location = "Зала България";
+        eventEntity.City = "София";
+
+        var result = EventJsonLdBuilder.BuildEvent(eventEntity, BaseUrl, includeContext: false, language: "en");
+
+        Assert.Equal("Concert in English", result["name"]);
+        Assert.Equal("English description", result["description"]);
+        var location = Assert.IsType<Dictionary<string, object?>>(result["location"]);
+        Assert.Equal("Zala Bulgaria", location["name"]);
+        var address = Assert.IsType<Dictionary<string, string>>(location["address"]);
+        Assert.Equal("Sofia", address["addressLocality"]);
+    }
+
+    [Fact]
+    public void BuildEvent_EnglishWithoutEnglishTitle_FallsBackToTheBulgarianTitle()
+    {
+        var result = EventJsonLdBuilder.BuildEvent(CreateEvent(), BaseUrl, includeContext: false, language: "en");
+
+        Assert.Equal("Concert", result["name"]);
+    }
 }

@@ -265,11 +265,14 @@ public class EventRepository : IEventRepository
 
     // Single definition of what "matches the search term" means for every listing.
     // Case-insensitivity (incl. Cyrillic) comes from the database collation on nvarchar columns.
+    // Also matches the English title and description, so English words find events on the /en/ pages (GS-REQ-010, 10.4).
     private static IQueryable<Event> ApplySearch(IQueryable<Event> query, string searchTerm)
     {
         return query.Where(e =>
             e.Name.Contains(searchTerm) ||
             (e.Description != null && e.Description.Contains(searchTerm)) ||
+            (e.NameEn != null && e.NameEn.Contains(searchTerm)) ||
+            (e.DescriptionEn != null && e.DescriptionEn.Contains(searchTerm)) ||
             e.Location.Contains(searchTerm));
     }
 
@@ -610,6 +613,34 @@ public class EventRepository : IEventRepository
         eventEntity.ImageUrl = imageUrl;
         eventEntity.ThumbnailUrl = thumbnailUrl;
         eventEntity.ImageSourceUrl = imageSourceUrl;
+        eventEntity.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync(cancellationToken);
+        return true;
+    }
+
+    public async Task<List<Event>> GetUpcomingWithoutEnglishTitleAsync(DateTime fromDate, int maxCount, CancellationToken cancellationToken = default)
+    {
+        return await _context.Events
+            .AsNoTracking()
+            .Where(e => e.Date >= fromDate && e.NameEn == null && e.Status != EventStatus.Cancelled)
+            .OrderBy(e => e.Date)
+            .ThenBy(e => e.StartTime)
+            .ThenBy(e => e.Id)
+            .Take(maxCount)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<bool> SetEnglishTextsAsync(int eventId, string nameEn, string? descriptionEn, CancellationToken cancellationToken = default)
+    {
+        var eventEntity = await _context.Events.FirstOrDefaultAsync(e => e.Id == eventId, cancellationToken);
+        if (eventEntity == null || eventEntity.NameEn != null)
+        {
+            return false;
+        }
+
+        eventEntity.NameEn = nameEn;
+        eventEntity.DescriptionEn = descriptionEn;
         eventEntity.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync(cancellationToken);

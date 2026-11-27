@@ -9,6 +9,7 @@ using Events.Services.Caching;
 using Events.Services.Implementations;
 using Events.Services.Interfaces;
 using Events.Services.Time;
+using Events.Services.Translation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -75,6 +76,10 @@ var host = new HostBuilder()
         services.AddScoped<ICrawlerService, CrawlerService>();
         services.AddScoped<IEventProcessingService, EventProcessingService>();
         services.AddScoped<IAiTaggingService, ClaudeProcessingService>();
+
+        // English title and description of upcoming events, the last step of a run (GS-REQ-010, 10.4);
+        // "Translation:Enabled" turns the AI requests on.
+        services.AddEventTranslation(context.Configuration);
 
         // HTTP clients
         services.AddHttpClient<BiletBgApiCrawler>(client =>

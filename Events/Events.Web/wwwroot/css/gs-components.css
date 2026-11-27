@@ -305,8 +305,13 @@
   text-overflow: ellipsis;
 }
 
-/* Language switcher: text button in the header, current language marked in the footer */
+/* Language switcher: text button in the header, current language marked in the footer.
+   A link to the other language's URL since GS-REQ-010 (10.2.4), so it is centred as a flex box. */
 .gs-lang-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
   min-width: 44px;
   height: 44px;
   padding: 0 12px;
