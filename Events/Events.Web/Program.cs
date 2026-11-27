@@ -17,8 +17,10 @@ using Events.Services.Media;
 using Events.Services.Time;
 using Events.Web.Options;
 using Events.Web.Services.Email;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.WebEncoders;
@@ -41,6 +43,7 @@ if (!string.IsNullOrWhiteSpace(appInsightsConnectionString))
 
 ConfigureDatabase(builder);
 ConfigureIdentity(builder);
+ConfigureSiteCookies(builder);
 ConfigureAuthorization(builder);
 ConfigureAzureStorage(builder);
 ConfigureEmail(builder);
@@ -132,6 +135,17 @@ static void ConfigureIdentity(WebApplicationBuilder builder)
     .AddEntityFrameworkStores<EventsDbContext>()
     .AddDefaultTokenProviders()
     .AddDefaultUI();
+}
+
+// The site cookies are shared by the Bulgarian pages and the English ones under /en/ (GS-REQ-010, 10.1). Without an
+// explicit path ASP.NET Core uses the request PathBase, so a login under /en/ would set Path=/en and the cookie would
+// not reach the Bulgarian pages, /api and /Admin (and a logout under /en/ would not remove a cookie set with Path=/).
+// Covers all Identity cookie schemes (application, external, two-factor), the antiforgery cookie and the TempData cookie.
+static void ConfigureSiteCookies(WebApplicationBuilder builder)
+{
+    builder.Services.PostConfigureAll<CookieAuthenticationOptions>(options => options.Cookie.Path = "/");
+    builder.Services.AddAntiforgery(options => options.Cookie.Path = "/");
+    builder.Services.Configure<CookieTempDataProviderOptions>(options => options.Cookie.Path = "/");
 }
 
 static void ConfigureAuthorization(WebApplicationBuilder builder)
