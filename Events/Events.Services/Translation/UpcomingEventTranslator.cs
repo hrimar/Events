@@ -82,21 +82,32 @@ public sealed class UpcomingEventTranslator : IUpcomingEventTranslator
                 CancellationToken = budgetCts.Token
             };
 
-            // Up to MaxParallelRequests events at a time, taken in the order of the list (nearest first). When the
-            // budget token is cancelled, no new event is started, the running ones end (a finished translation is
-            // still saved) and ForEachAsync then throws OperationCanceledException, handled below.
-            await Parallel.ForEachAsync(candidates, parallelOptions, async (eventEntity, token) =>
-            {
-                // The slow part (request and save) runs outside the lock, in parallel with the other events.
-                var isSaved = await TranslateAndSaveAsync(eventEntity, token);
+            // Events with the same title and description (performances of one show on different dates) form one group.
+            // The groups run in parallel and the events of a group one after another, so the first one translates the
+            // texts and the others take them from the cache: no duplicate request and no duplicate cache entry.
+            // GroupBy keeps the order of the first event of each group (nearest first).
+            var groups = candidates.GroupBy(e => (e.Name, e.Description)).ToList();
 
-                // Only the counter update is guarded: a short, atomic step shared by all workers.
-                lock (countersSync)
+            // Up to MaxParallelRequests groups at a time, taken in the order of the list. When the budget token is
+            // cancelled, no new group or event is started, the running ones end (a finished translation is still
+            // saved) and ForEachAsync then throws OperationCanceledException, handled below.
+            await Parallel.ForEachAsync(groups, parallelOptions, async (group, token) =>
+            {
+                foreach (var eventEntity in group)
                 {
-                    if (isSaved)
-                        saved++;
-                    else
-                        withoutTranslation++;
+                    token.ThrowIfCancellationRequested();
+
+                    // The slow part (request and save) runs outside the lock, in parallel with the other groups.
+                    var isSaved = await TranslateAndSaveAsync(eventEntity, token);
+
+                    // Only the counter update is guarded: a short, atomic step shared by all workers.
+                    lock (countersSync)
+                    {
+                        if (isSaved)
+                            saved++;
+                        else
+                            withoutTranslation++;
+                    }
                 }
             });
         }
