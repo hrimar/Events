@@ -31,6 +31,9 @@ public class EventsDbContext : IdentityDbContext<User>
     public DbSet<EventImportJob> EventImportJobs { get; set; }
     public DbSet<EventImportJobItem> EventImportJobItems { get; set; }
     public DbSet<TranslationCacheEntry> TranslationCacheEntries { get; set; }
+    public DbSet<EventSubmission> EventSubmissions { get; set; }
+    public DbSet<EventSubmissionDate> EventSubmissionDates { get; set; }
+    public DbSet<EventSubmissionAction> EventSubmissionActions { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -111,6 +114,7 @@ public class EventsDbContext : IdentityDbContext<User>
         ConfigureHomeQuickFilterEntity(modelBuilder);
         ConfigureEventImportJobEntities(modelBuilder);
         ConfigureTranslationCacheEntity(modelBuilder);
+        ConfigureEventSubmissionEntities(modelBuilder);
 
         SeedCategories(modelBuilder);
         SeedSubCategories(modelBuilder);
@@ -179,6 +183,8 @@ public class EventsDbContext : IdentityDbContext<User>
             entity.Property(sc => sc.HeroSubtitleEn).IsRequired().HasMaxLength(500);
             entity.Property(sc => sc.AboutUsContentBg).IsRequired();
             entity.Property(sc => sc.AboutUsContentEn).IsRequired();
+            entity.Property(sc => sc.AddEventIntroBg).IsRequired().HasMaxLength(500);
+            entity.Property(sc => sc.AddEventIntroEn).IsRequired().HasMaxLength(500);
             entity.Property(sc => sc.UpdatedAt).HasDefaultValueSql("GETUTCDATE()");
         });
     }
@@ -261,6 +267,88 @@ public class EventsDbContext : IdentityDbContext<User>
                 .WithMany()
                 .HasForeignKey(i => i.EventId)
                 .OnDelete(DeleteBehavior.SetNull);
+        });
+    }
+
+    // Organizer "Add event" submissions, their days and the admin history (GS-REQ-011, 11.7).
+    private static void ConfigureEventSubmissionEntities(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<EventSubmission>(entity =>
+        {
+            entity.HasKey(s => s.Id);
+            entity.Property(s => s.Culture).IsRequired().HasMaxLength(5).IsUnicode(false);
+            entity.Property(s => s.IpAddress).HasMaxLength(45).IsUnicode(false);
+            entity.Property(s => s.Name).IsRequired().HasMaxLength(150);
+            entity.Property(s => s.NameEn).HasMaxLength(150);
+            entity.Property(s => s.StartDate).HasColumnType("date");
+            entity.Property(s => s.EndDate).HasColumnType("date");
+            entity.Property(s => s.NewVenueName).HasMaxLength(200);
+            entity.Property(s => s.NewVenueAddress).HasMaxLength(300);
+            entity.Property(s => s.Description).IsRequired().HasMaxLength(3000);
+            entity.Property(s => s.ImageUrl).IsRequired().HasMaxLength(500);
+            entity.Property(s => s.ThumbnailUrl).IsRequired().HasMaxLength(500);
+            entity.Property(s => s.TicketUrl).HasMaxLength(500);
+            entity.Property(s => s.OrganizerName).IsRequired().HasMaxLength(100);
+            entity.Property(s => s.OrganizerPhone).HasMaxLength(30);
+            entity.Property(s => s.OrganizerWebsite).HasMaxLength(500);
+            entity.Property(s => s.RejectionReason).HasMaxLength(500);
+
+            // Deleting an account deletes its submissions (personal data); published events stay.
+            entity.HasOne(s => s.User)
+                .WithMany()
+                .HasForeignKey(s => s.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(s => s.Category)
+                .WithMany()
+                .HasForeignKey(s => s.CategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(s => s.SubCategory)
+                .WithMany()
+                .HasForeignKey(s => s.SubCategoryId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(s => s.CanonicalVenue)
+                .WithMany()
+                .HasForeignKey(s => s.CanonicalVenueId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            // Admin list by status (oldest first) and "My events" (newest first).
+            entity.HasIndex(s => new { s.Status, s.SubmittedAtUtc });
+            entity.HasIndex(s => new { s.UserId, s.SubmittedAtUtc });
+        });
+
+        modelBuilder.Entity<EventSubmissionDate>(entity =>
+        {
+            entity.HasKey(d => d.Id);
+            entity.Property(d => d.Date).HasColumnType("date");
+
+            entity.HasOne(d => d.Submission)
+                .WithMany(s => s.Dates)
+                .HasForeignKey(d => d.SubmissionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // No navigation to Event: deleting an event keeps the submission and only clears the link.
+            entity.HasOne<Event>()
+                .WithMany()
+                .HasForeignKey(d => d.EventId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasIndex(d => new { d.SubmissionId, d.Date }).IsUnique();
+        });
+
+        modelBuilder.Entity<EventSubmissionAction>(entity =>
+        {
+            entity.HasKey(a => a.Id);
+            entity.Property(a => a.PerformedByUserId).IsRequired().HasMaxLength(450);
+            entity.Property(a => a.PerformedBy).IsRequired().HasMaxLength(256);
+            entity.Property(a => a.Note).HasMaxLength(500);
+
+            entity.HasOne(a => a.Submission)
+                .WithMany(s => s.Actions)
+                .HasForeignKey(a => a.SubmissionId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 
@@ -858,6 +946,9 @@ public class EventsDbContext : IdentityDbContext<User>
                 "to enjoy Sofia's cultural and urban life.</p>" +
                 "<p>We believe that when event information is easier to access, the city becomes more open, more connected, and more enjoyable for everyone " +
                 "— whether you live here or are visiting Sofia for a few days.</p>",
+            // Text from GS-REQ-011, 11.1.
+            AddEventIntroBg = "Организираш събитие в София? Изпрати го тук. Ще го прегледаме и публикуваме до 2 работни дни.",
+            AddEventIntroEn = "Organising an event in Sofia? Submit it here. We will review it and publish it within 2 working days.",
             UpdatedAt = SeedDate
         });
     }

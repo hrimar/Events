@@ -74,5 +74,8 @@ public class Event
     [MaxLength(2000)]
     public string? ImageSourceUrl { get; set; }
 
+    // OrganizerForm for events created from an approved "Add event" submission; Unknown otherwise (GS-REQ-011, 11.6.4).
+    public EventSource Source { get; set; } = EventSource.Unknown;
+
     public ICollection<EventTag> EventTags { get; set; } = new List<EventTag>();
 }

@@ -314,6 +314,9 @@ namespace Events.Data.Migrations
                     b.Property<decimal?>("Price")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<int>("Source")
+                        .HasColumnType("int");
+
                     b.Property<string>("SourceUrl")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
@@ -469,6 +472,196 @@ namespace Events.Data.Migrations
                     b.HasIndex("JobId");
 
                     b.ToTable("EventImportJobItems");
+                });
+
+            modelBuilder.Entity("Events.Models.Entities.EventSubmission", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("CanonicalVenueId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CategoryId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("ConsentAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Culture")
+                        .IsRequired()
+                        .HasMaxLength(5)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(5)");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(3000)
+                        .HasColumnType("nvarchar(3000)");
+
+                    b.Property<DateTime?>("EndDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("IpAddress")
+                        .HasMaxLength(45)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(45)");
+
+                    b.Property<bool>("IsFree")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<string>("NameEn")
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<string>("NewVenueAddress")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<string>("NewVenueName")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("OrganizerName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("OrganizerPhone")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<string>("OrganizerWebsite")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("RejectionReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("ReviewedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("date");
+
+                    b.Property<TimeSpan?>("StartTime")
+                        .HasColumnType("time");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("SubCategoryId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("SubmittedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ThumbnailUrl")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("TicketUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CanonicalVenueId");
+
+                    b.HasIndex("CategoryId");
+
+                    b.HasIndex("SubCategoryId");
+
+                    b.HasIndex("Status", "SubmittedAtUtc");
+
+                    b.HasIndex("UserId", "SubmittedAtUtc");
+
+                    b.ToTable("EventSubmissions");
+                });
+
+            modelBuilder.Entity("Events.Models.Entities.EventSubmissionAction", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Action")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime>("PerformedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("PerformedBy")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("PerformedByUserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("SubmissionId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SubmissionId");
+
+                    b.ToTable("EventSubmissionActions");
+                });
+
+            modelBuilder.Entity("Events.Models.Entities.EventSubmissionDate", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<int?>("EventId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SubmissionId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EventId");
+
+                    b.HasIndex("SubmissionId", "Date")
+                        .IsUnique();
+
+                    b.ToTable("EventSubmissionDates");
                 });
 
             modelBuilder.Entity("Events.Models.Entities.EventTag", b =>
@@ -777,6 +970,16 @@ namespace Events.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("AddEventIntroBg")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("AddEventIntroEn")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
                     b.Property<string>("HeroSubtitleBg")
                         .IsRequired()
                         .HasMaxLength(500)
@@ -812,6 +1015,8 @@ namespace Events.Data.Migrations
                             Id = 1,
                             AboutUsContentBg = "<p>Създадохме Go Sofia с една ясна цел – да направим откриването на събития в София по-лесно, по-удобно и по-достъпно. В динамичен град като София всеки ден се случват концерти, фестивали, изложби, спектакли, семейни събития и още много интересни инициативи, но тази информация често е разпръсната на различни места и трудно достига до хората навреме.</p><p>С go-sofia.com искаме да съберем на едно място информация за събитията в града, така че жителите на София и посетителите на града да могат по-лесно да откриват какво се случва около тях. Нашата идея е да помогнем на повече хора да намират събития, които отговарят на интересите им, и да планират по-лесно свободното си време в София.</p><p>Вярваме, че когато достъпът до такава информация е по-лесен, градът става по-жив, по-свързан и по-интересен както за хората, които живеят тук, така и за тези, които го посещават.</p>",
                             AboutUsContentEn = "<p>We created Go Sofia with a simple goal: to make discovering events in Sofia easier, more convenient, and more accessible. In a city as active and diverse as Sofia, there are concerts, festivals, exhibitions, performances, family events, and many other activities happening all the time. Yet this information is often scattered across different websites, social media pages, and local sources, making it difficult to find in one place.</p><p>With go-sofia.com, we aim to bring together useful and up-to-date event information so that both Sofia residents and international visitors can more easily explore what is happening in the city. Our goal is to help people discover events that match their interests and make it easier to enjoy Sofia's cultural and urban life.</p><p>We believe that when event information is easier to access, the city becomes more open, more connected, and more enjoyable for everyone — whether you live here or are visiting Sofia for a few days.</p>",
+                            AddEventIntroBg = "Организираш събитие в София? Изпрати го тук. Ще го прегледаме и публикуваме до 2 работни дни.",
+                            AddEventIntroEn = "Organising an event in Sofia? Submit it here. We will review it and publish it within 2 working days.",
                             HeroSubtitleBg = "Концерти, театър, спорт и много повече. Намерете следващото си незабравимо преживяване!",
                             HeroSubtitleEn = "Concerts, theatre, sports, and much more. Find your next amazing experience!",
                             HeroTitleBg = "Открийте най-добрите събития в София",
@@ -3032,6 +3237,66 @@ namespace Events.Data.Migrations
                     b.Navigation("Job");
                 });
 
+            modelBuilder.Entity("Events.Models.Entities.EventSubmission", b =>
+                {
+                    b.HasOne("Events.Models.Entities.CanonicalVenue", "CanonicalVenue")
+                        .WithMany()
+                        .HasForeignKey("CanonicalVenueId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Events.Models.Entities.Category", "Category")
+                        .WithMany()
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Events.Models.Entities.SubCategory", "SubCategory")
+                        .WithMany()
+                        .HasForeignKey("SubCategoryId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Events.Models.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CanonicalVenue");
+
+                    b.Navigation("Category");
+
+                    b.Navigation("SubCategory");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Events.Models.Entities.EventSubmissionAction", b =>
+                {
+                    b.HasOne("Events.Models.Entities.EventSubmission", "Submission")
+                        .WithMany("Actions")
+                        .HasForeignKey("SubmissionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Submission");
+                });
+
+            modelBuilder.Entity("Events.Models.Entities.EventSubmissionDate", b =>
+                {
+                    b.HasOne("Events.Models.Entities.Event", null)
+                        .WithMany()
+                        .HasForeignKey("EventId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Events.Models.Entities.EventSubmission", "Submission")
+                        .WithMany("Dates")
+                        .HasForeignKey("SubmissionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Submission");
+                });
+
             modelBuilder.Entity("Events.Models.Entities.EventTag", b =>
                 {
                     b.HasOne("Events.Models.Entities.Event", "Event")
@@ -3165,6 +3430,13 @@ namespace Events.Data.Migrations
             modelBuilder.Entity("Events.Models.Entities.EventImportJob", b =>
                 {
                     b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("Events.Models.Entities.EventSubmission", b =>
+                {
+                    b.Navigation("Actions");
+
+                    b.Navigation("Dates");
                 });
 
             modelBuilder.Entity("Events.Models.Entities.SubCategory", b =>

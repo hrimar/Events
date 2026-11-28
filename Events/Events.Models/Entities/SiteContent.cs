@@ -29,5 +29,14 @@ public class SiteContent
     // Sanitized HTML (bold, links, paragraphs only) - safe to render with Html.Raw.
     public string AboutUsContentEn { get; set; } = string.Empty;
 
+    // Plain-text introduction above the organizer "Add event" form (GS-REQ-011, 11.1).
+    [Required]
+    [MaxLength(500)]
+    public string AddEventIntroBg { get; set; } = string.Empty;
+
+    [Required]
+    [MaxLength(500)]
+    public string AddEventIntroEn { get; set; } = string.Empty;
+
     public DateTime UpdatedAt { get; set; }
 }
