@@ -33,7 +33,12 @@ namespace Events.Web.Areas.Identity.Pages.Account
         /// </summary>
         [TempData]
         public string StatusMessage { get; set; }
-        public async Task<IActionResult> OnGetAsync(string userId, string code)
+
+        // Local page the user came from (e.g. the organizer form); offered after a successful confirmation
+        // (GS-REQ-011, 11.1). Null when there is none, it is the home page or it is not local.
+        public string ContinueUrl { get; private set; }
+
+        public async Task<IActionResult> OnGetAsync(string userId, string code, string returnUrl = null)
         {
             if (userId == null || code == null)
             {
@@ -49,6 +54,12 @@ namespace Events.Web.Areas.Identity.Pages.Account
             code = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(code));
             var result = await _userManager.ConfirmEmailAsync(user, code);
             StatusMessage = result.Succeeded ? _messages.ConfirmEmail_Success : _messages.ConfirmEmail_Error;
+
+            if (result.Succeeded && Url.IsLocalUrl(returnUrl) && Url.Content(returnUrl) != Url.Content("~/"))
+            {
+                ContinueUrl = returnUrl;
+            }
+
             return Page();
         }
     }

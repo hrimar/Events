@@ -18,6 +18,13 @@
                             <partial name="_StatusMessage" model="Model.StatusMessage" />
                         </div>
 
+                        @if (Model.ContinueUrl != null)
+                        {
+                            <div class="d-grid mt-4">
+                                <a href="@Url.Content(Model.ContinueUrl)" class="gs-btn gs-btn-primary">@Localizer["ConfirmEmail_Continue"]</a>
+                            </div>
+                        }
+
                         <hr class="my-4">
 
                         <div class="text-center">

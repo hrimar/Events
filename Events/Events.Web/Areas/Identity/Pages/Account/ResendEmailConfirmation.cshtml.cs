@@ -9,6 +9,7 @@ using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using Events.Models.Entities;
 using Events.Web.Localization;
+using Events.Web.Services.Email;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
@@ -22,15 +23,22 @@ namespace Events.Web.Areas.Identity.Pages.Account
     public class ResendEmailConfirmationModel : PageModel
     {
         private readonly UserManager<User> _userManager;
-        private readonly IEmailSender _emailSender;
+        private readonly IAccountConfirmationEmailSender _confirmationEmailSender;
         private readonly IdentityMessages _messages;
 
-        public ResendEmailConfirmationModel(UserManager<User> userManager, IEmailSender emailSender, IdentityMessages messages)
+        public ResendEmailConfirmationModel(
+            UserManager<User> userManager,
+            IAccountConfirmationEmailSender confirmationEmailSender,
+            IdentityMessages messages)
         {
             _userManager = userManager;
-            _emailSender = emailSender;
+            _confirmationEmailSender = confirmationEmailSender;
             _messages = messages;
         }
+
+        // Page to offer after the confirmation, e.g. the organizer form (GS-REQ-011, 11.1).
+        [BindProperty(SupportsGet = true)]
+        public string ReturnUrl { get; set; }
 
         /// <summary>
         ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
@@ -72,18 +80,7 @@ namespace Events.Web.Areas.Identity.Pages.Account
                 return Page();
             }
 
-            var userId = await _userManager.GetUserIdAsync(user);
-            var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-            code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
-            var callbackUrl = Url.Page(
-                "/Account/ConfirmEmail",
-                pageHandler: null,
-                values: new { userId = userId, code = code },
-                protocol: Request.Scheme);
-            await _emailSender.SendEmailAsync(
-                Input.Email,
-                "Confirm your email",
-                $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+            await _confirmationEmailSender.SendAsync(HttpContext, user, ReturnUrl);
 
             ModelState.AddModelError(string.Empty, _messages.ResendEmail_Sent);
             return Page();

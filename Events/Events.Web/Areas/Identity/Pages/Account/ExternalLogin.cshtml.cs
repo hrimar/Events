@@ -11,6 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Events.Models.Entities;
 using Events.Web.Localization;
+using Events.Web.Services.Email;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.Identity;
@@ -29,7 +30,7 @@ namespace Events.Web.Areas.Identity.Pages.Account
         private readonly UserManager<User> _userManager;
         private readonly IUserStore<User> _userStore;
         private readonly IUserEmailStore<User> _emailStore;
-        private readonly IEmailSender _emailSender;
+        private readonly IAccountConfirmationEmailSender _confirmationEmailSender;
         private readonly ILogger<ExternalLoginModel> _logger;
         private readonly IdentityMessages _messages;
 
@@ -38,7 +39,7 @@ namespace Events.Web.Areas.Identity.Pages.Account
             UserManager<User> userManager,
             IUserStore<User> userStore,
             ILogger<ExternalLoginModel> logger,
-            IEmailSender emailSender,
+            IAccountConfirmationEmailSender confirmationEmailSender,
             IdentityMessages messages)
         {
             _signInManager = signInManager;
@@ -46,7 +47,7 @@ namespace Events.Web.Areas.Identity.Pages.Account
             _userStore = userStore;
             _emailStore = GetEmailStore();
             _logger = logger;
-            _emailSender = emailSender;
+            _confirmationEmailSender = confirmationEmailSender;
             _messages = messages;
         }
 
@@ -169,17 +170,8 @@ namespace Events.Web.Areas.Identity.Pages.Account
                     {
                         _logger.LogInformation("User created an account using {Name} provider.", info.LoginProvider);
 
-                        var userId = await _userManager.GetUserIdAsync(user);
-                        var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-                        code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
-                        var callbackUrl = Url.Page(
-                            "/Account/ConfirmEmail",
-                            pageHandler: null,
-                            values: new { area = "Identity", userId = userId, code = code },
-                            protocol: Request.Scheme);
-
-                        await _emailSender.SendEmailAsync(Input.Email, "Confirm your email",
-                            $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+                        // Localized confirmation e-mail (GS-REQ-011, 11.1).
+                        await _confirmationEmailSender.SendAsync(HttpContext, user, returnUrl);
 
                         // If account confirmation is required, we need to show the link if we don't have a real email sender
                         if (_userManager.Options.SignIn.RequireConfirmedAccount)

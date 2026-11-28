@@ -201,6 +201,8 @@ static void ConfigureEmail(WebApplicationBuilder builder)
         .ValidateOnStart();
 
     builder.Services.AddTransient<IEmailSender, SmtpEmailSender>();
+    // Localized account confirmation e-mail that keeps the return URL (GS-REQ-011, 11.1).
+    builder.Services.AddScoped<IAccountConfirmationEmailSender, AccountConfirmationEmailSender>();
 }
 
 static void ConfigureLocalization(WebApplicationBuilder builder)

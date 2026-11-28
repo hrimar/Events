@@ -2397,4 +2397,26 @@
   <data name="Details_InfoRedirect" xml:space="preserve">
     <value>Ще бъдете пренасочени към официалния сайт на събитието</value>
   </data>
+  <!-- GS-REQ-011: account confirmation -->
+  <data name="Email_Confirm_Subject" xml:space="preserve">
+    <value>Потвърди имейла си за Go Sofia</value>
+  </data>
+  <data name="Email_Confirm_Greeting" xml:space="preserve">
+    <value>Здравей,</value>
+  </data>
+  <data name="Email_Confirm_Intro" xml:space="preserve">
+    <value>Благодарим, че се регистрира в Go Sofia. За да потвърдиш имейла си, отвори линка по-долу.</value>
+  </data>
+  <data name="Email_Confirm_Link" xml:space="preserve">
+    <value>Потвърди имейла</value>
+  </data>
+  <data name="Email_Confirm_Ignore" xml:space="preserve">
+    <value>Ако регистрацията не е направена от теб, просто игнорирай това писмо.</value>
+  </data>
+  <data name="Msg_Login_EmailNotConfirmed" xml:space="preserve">
+    <value>Имейлът ти още не е потвърден. Отвори линка от писмото за потвърждение или поискай ново писмо по-долу.</value>
+  </data>
+  <data name="ConfirmEmail_Continue" xml:space="preserve">
+    <value>Продължи</value>
+  </data>
 </root>

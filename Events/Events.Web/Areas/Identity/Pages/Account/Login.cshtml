@@ -62,7 +62,7 @@
                                 </a>
                             </p>
                             <p class="mb-0">
-                                <a id="resend-confirmation" asp-page="./ResendEmailConfirmation" class="text-decoration-none">
+                                <a id="resend-confirmation" asp-page="./ResendEmailConfirmation" asp-route-returnUrl="@Model.ReturnUrl" class="text-decoration-none">
                                     <gs-icon name="mail-open" class="me-1" />@Localizer["Login_ResendConfirmation"]
                                 </a>
                             </p>

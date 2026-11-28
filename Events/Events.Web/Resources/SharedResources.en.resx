@@ -901,4 +901,13 @@
   <data name="Venue_NoUpcomingEventsShort" xml:space="preserve"><value>No upcoming events</value></data>
   <data name="Details_MoreInfo" xml:space="preserve"><value>More info</value></data>
   <data name="Details_InfoRedirect" xml:space="preserve"><value>You'll be redirected to the official event site</value></data>
+
+  <!-- GS-REQ-011: account confirmation -->
+  <data name="Email_Confirm_Subject" xml:space="preserve"><value>Confirm your email for Go Sofia</value></data>
+  <data name="Email_Confirm_Greeting" xml:space="preserve"><value>Hello,</value></data>
+  <data name="Email_Confirm_Intro" xml:space="preserve"><value>Thank you for registering with Go Sofia. To confirm your email address, open the link below.</value></data>
+  <data name="Email_Confirm_Link" xml:space="preserve"><value>Confirm my email</value></data>
+  <data name="Email_Confirm_Ignore" xml:space="preserve"><value>If you did not create this account, simply ignore this email.</value></data>
+  <data name="Msg_Login_EmailNotConfirmed" xml:space="preserve"><value>Your email address is not confirmed yet. Open the link in the confirmation email or request a new one below.</value></data>
+  <data name="ConfirmEmail_Continue" xml:space="preserve"><value>Continue</value></data>
 </root>

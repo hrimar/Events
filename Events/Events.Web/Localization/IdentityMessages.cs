@@ -11,6 +11,7 @@ public class IdentityMessages(IStringLocalizer<SharedResources> localizer)
     public string StatusErrorPrefix => localizer["Msg_StatusErrorPrefix"];
 
     public string Login_InvalidAttempt => localizer["Msg_Login_InvalidAttempt"];
+    public string Login_EmailNotConfirmed => localizer["Msg_Login_EmailNotConfirmed"];
     public string Login2fa_InvalidCode => localizer["Msg_Login2fa_InvalidCode"];
     public string LoginRecovery_InvalidCode => localizer["Msg_LoginRecovery_InvalidCode"];
     public string ExternalLogin_ErrorFromProvider(string error) => string.Format(localizer["Msg_ExternalLogin_ErrorFromProvider"], error);

@@ -32,6 +32,18 @@ namespace Events.Web.Areas.Identity.Pages.Account
             _messages = messages;
         }
 
+        // True when the sign-in failed only because the e-mail is not confirmed yet. The password is checked first, so
+        // the message does not reveal to a stranger that an address is registered (GS-REQ-011, 11.1).
+        private async Task<bool> IsOnlyEmailUnconfirmedAsync(string email, string password)
+        {
+            var userManager = _signInManager.UserManager;
+            var user = await userManager.FindByEmailAsync(email);
+
+            return user != null
+                && !await userManager.IsEmailConfirmedAsync(user)
+                && await userManager.CheckPasswordAsync(user, password);
+        }
+
         /// <summary>
         ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
         ///     directly from your code. This API may change or be removed in future releases.
@@ -129,6 +141,12 @@ namespace Events.Web.Areas.Identity.Pages.Account
                 {
                     _logger.LogWarning("User account locked out.");
                     return RedirectToPage("./Lockout");
+                }
+                if (result.IsNotAllowed && await IsOnlyEmailUnconfirmedAsync(Input.Email, Input.Password))
+                {
+                    ModelState.AddModelError(string.Empty, _messages.Login_EmailNotConfirmed);
+                    ReturnUrl = returnUrl;
+                    return Page();
                 }
                 else
                 {
